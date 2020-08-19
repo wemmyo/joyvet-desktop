@@ -287,6 +287,8 @@
     "redux": "^4.0.5",
     "redux-thunk": "^2.3.0",
     "regenerator-runtime": "^0.13.5",
+    "semantic-ui-css": "^2.4.1",
+    "semantic-ui-react": "^1.2.0",
     "source-map-support": "^0.5.19"
   },
   "devEngines": {
@@ -329,5 +331,8 @@
     "hooks": {
       "pre-commit": "lint-staged"
     }
+  },
+  "resolutions": {
+    "styled-components": "^5"
   }
 }
