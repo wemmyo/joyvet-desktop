@@ -1,6 +1,51 @@
 .sidebar {
-  border: 2px solid pink;
+  /* border: 2px solid pink; */
   height: 100vh;
-  width: 250px;
-  background-color: #e9ebed;
+  width: var(--sidebarMainDiff);
+  background-color: var(--gray30);
+  padding: 70px 10px 10px;
+  position: fixed;
+  top: 0;
+  left: 0;
+}
+
+.sidebar__mainItem {
+  /* border: 2px solid pink; */
+  padding: 7px 10px;
+  margin-top: 8px;
+  margin-bottom: 5px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+}
+
+.sidebar__mainItemText {
+  margin-left: 5px;
+  font-size: 16px;
+}
+
+.sidebar__subItemContainer {
+  list-style: none;
+  margin: 0;
+}
+
+.sidebar__subItem {
+  /* border: 2px solid pink; */
+  margin-bottom: 5px;
+  padding: 5px 10px;
+}
+.sidebar__mainItemActive {
+  background-color: #fff;
+  border-radius: 8px;
+  /* color: red !important; */
+}
+.sidebar__mainItemActive p,
+.sidebar__mainItemActive i {
+  color: var(--blue);
+}
+
+.sidebar__subItemActive {
+  color: var(--blue);
+  background-color: #fff;
+  border-radius: 5px;
 }

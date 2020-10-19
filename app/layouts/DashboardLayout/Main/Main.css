@@ -1,0 +1,19 @@
+.main {
+  margin-left: var(--sidebarMainDiff);
+  padding: 15px 35px;
+}
+
+.main__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.main__headerTitle {
+  margin: 0;
+}
+
+.main__headerLeft {
+  display: flex;
+  align-items: center;
+}

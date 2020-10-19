@@ -7,6 +7,11 @@
 
 :root {
   --black: #112b42;
+  --gray20: #e9ebed;
+  --gray30: #dfe1e2;
+  --gray90: #7f878a;
+  --blue: #2490ef;
+  --sidebarMainDiff: 230px;
 }
 
 * {
