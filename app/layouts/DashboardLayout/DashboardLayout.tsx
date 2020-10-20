@@ -1,14 +1,24 @@
 import * as React from 'react';
-import Sidebar from './Sidebar/Sidebar';
-import Main from './Main/Main';
+import Sidebar from './SideNav/SideNav';
+import styles from './DashboardLayout.css';
+import HeaderSection from './HeaderSection/HeaderSection';
 
-// export interface DashboardLayoutProps {}
+export interface DashboardLayoutProps {
+  children?: any;
+  screenTitle: string;
+}
 
-const DashboardLayout = () => {
+const DashboardLayout: React.SFC<DashboardLayoutProps> = ({
+  children,
+  screenTitle,
+}) => {
   return (
-    <div>
+    <div style={{ display: 'flex' }}>
       <Sidebar />
-      <Main />
+      <div className={styles.main}>
+        <HeaderSection screenTitle={screenTitle} />
+        {children}
+      </div>
     </div>
   );
 };

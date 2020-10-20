@@ -11,7 +11,7 @@
 
 const Sequelize = require('sequelize');
 
-export default new Sequelize('node-complete', 'root', '', {
+export default new Sequelize('joyvetDB', 'root', '', {
   dialect: 'mysql',
   host: 'localhost',
 });

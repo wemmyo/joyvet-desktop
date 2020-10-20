@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { Button, Form, Grid, Segment, Header } from 'semantic-ui-react';
 import { Link } from 'react-router-dom';
-import routes from '../../../../constants/routes.json';
+import routes from '../../../../constants/routes';
 
 // export interface LoginFormProps {}
 
