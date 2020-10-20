@@ -11240,6 +11240,13 @@ react-test-renderer@^16.0.0-0, react-test-renderer@^16.12.0:
     react-is "^16.8.6"
     scheduler "^0.19.1"
 
+react-to-print@^2.10.3:
+  version "2.10.3"
+  resolved "https://registry.yarnpkg.com/react-to-print/-/react-to-print-2.10.3.tgz#397276d04baa6cb50b61b1d08a91d3bb318efe58"
+  integrity sha512-kRRWpMz34s4lqulHVGokQBf8jvfgBzBeyE6duoKgyEyPnPPnvb6HY6o1J/SME5nqpE1iBr6JEWTJBQ2dFBxd9w==
+  dependencies:
+    prop-types "^15.7.2"
+
 react@^16.13.1:
   version "16.13.1"
   resolved "https://registry.yarnpkg.com/react/-/react-16.13.1.tgz#2e818822f1a9743122c063d6410d85c1e3afe48e"

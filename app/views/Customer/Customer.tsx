@@ -5,6 +5,7 @@ import { useSelector, useDispatch } from 'react-redux';
 import {
   selectCustomerState,
   getCustomersFn,
+  createCustomerFn,
 } from '../../slices/customerSlice';
 
 export interface CustomersScreenProps {}
@@ -20,31 +21,48 @@ const CustomersScreen: React.FC<CustomersScreenProps> = () => {
 
   useEffect(fetchCustomers, []);
 
+  const handleNewCustomer = () => {
+    dispatch(
+      createCustomerFn(() => {
+        fetchCustomers();
+        // console.log('created');
+      })
+    );
+  };
+
   const renderRows = () => {
     console.log(customers);
     // return <p>yes</p>;
     const rows = customers.map((each: any) => {
       return (
-        <Table.Row>
-          <Table.Cell>{each.cust_company_name}</Table.Cell>
+        <Table.Row key={each.id}>
+          <Table.Cell>{each.id}</Table.Cell>
+          <Table.Cell>{each.fullName}</Table.Cell>
           <Table.Cell>{each.address}</Table.Cell>
+          <Table.Cell>{each.phoneNumber}</Table.Cell>
+          <Table.Cell>{each.balance}</Table.Cell>
         </Table.Row>
       );
     });
     return rows;
   };
+
   return (
     <DashboardLayout screenTitle="Customers">
       <Table striped>
         <Table.Header>
           <Table.Row>
-            <Table.HeaderCell>Name</Table.HeaderCell>
+            <Table.HeaderCell>ID</Table.HeaderCell>
+            <Table.HeaderCell>Full Name</Table.HeaderCell>
             <Table.HeaderCell>Address</Table.HeaderCell>
+            <Table.HeaderCell>Phone Number</Table.HeaderCell>
+            <Table.HeaderCell>balance</Table.HeaderCell>
           </Table.Row>
         </Table.Header>
 
         <Table.Body>{renderRows()}</Table.Body>
       </Table>
+      <button onClick={handleNewCustomer}>Add new customer</button>
     </DashboardLayout>
   );
 };

@@ -1,5 +1,11 @@
 export default {
   LOGIN: '/',
   OVERVIEW: '/overview',
-  CUSTOMERS: '/customers',
+  CUSTOMER: '/customer',
+  INVOICE: '/invoice',
+  PRODUCT: '/product',
+  SUPPLIER: '/supplier',
+  RECEIPT: '/receipt',
+  PAYMENT: '/payment',
+  PURCHASE: '/purchase',
 };

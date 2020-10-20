@@ -14,6 +14,11 @@ const initialState = {
     data: {},
     error: {},
   },
+  createCustomerState: {
+    loading: false,
+    data: {},
+    error: {},
+  },
 };
 
 const customerSlice = createSlice({
@@ -57,6 +62,24 @@ const customerSlice = createSlice({
       customerData.data = {};
       customerData.error = payload;
     },
+    createCustomer: (state) => {
+      let { createCustomerState } = state;
+      createCustomerState.loading = true;
+      createCustomerState.data = {};
+      createCustomerState.error = {};
+    },
+    createCustomerSuccess: (state, { payload }) => {
+      let { createCustomerState } = state;
+      createCustomerState.loading = false;
+      createCustomerState.data = payload;
+      createCustomerState.error = {};
+    },
+    createCustomerFailed: (state, { payload }) => {
+      let { createCustomerState } = state;
+      createCustomerState.loading = false;
+      createCustomerState.data = {};
+      createCustomerState.error = payload;
+    },
   },
 });
 
@@ -67,6 +90,9 @@ export const {
   getSingleCustomer,
   getSingleCustomerSuccess,
   getSingleCustomerFailed,
+  createCustomer,
+  createCustomerSuccess,
+  createCustomerFailed,
 } = customerSlice.actions;
 
 export const getCustomersFn = () => async (
@@ -74,11 +100,33 @@ export const getCustomersFn = () => async (
 ) => {
   try {
     dispatch(getCustomers());
-    const response = await CustomerModel.findAll();
+    const response = await CustomerModel.findAll({
+      // raw: true,
+    });
+    console.log(response);
 
     dispatch(getCustomersSuccess(response));
   } catch (error) {
-    dispatch(getCustomersFailed(error.response.data || error.response));
+    dispatch(getCustomersFailed({}));
+  }
+};
+export const createCustomerFn = (cb: () => void) => async (
+  dispatch: (arg0: { payload: any; type: string }) => void
+) => {
+  try {
+    dispatch(createCustomer());
+    const response = await CustomerModel.create({
+      fullName: 'Oyedeji Wemimo',
+      address: 'Block 185, flat 3, LSDPC IV, Ogba, Lagos',
+      phoneNumber: '08080062284',
+      balance: 1000,
+    });
+    console.log("Wemimo's auto-generated ID:", response.id);
+    cb();
+
+    dispatch(createCustomerSuccess({}));
+  } catch (error) {
+    dispatch(createCustomerFailed({}));
   }
 };
 

@@ -1,16 +1,16 @@
 import * as React from 'react';
 // import { Icon } from 'semantic-ui-react';
 import styles from './SideNav.css';
-import NavItem from './components/NavItem/NavItem';
-import { Link } from 'react-router-dom';
+// import NavItem from './components/NavItem/NavItem';
+import { Link, NavLink } from 'react-router-dom';
 import routes from '../../../constants/routes';
-// export interface SidebarProps {}
+// export interface SideNavProps {}
 
-const Sidebar = () => {
+const SideNav = () => {
   return (
-    <section className={styles.sidebar}>
+    <section className={styles.sideNav}>
       <h4>Menu</h4>
-      <NavItem
+      {/* <NavItem
         title="Customer Enquiry"
         link="/overview"
         links={[
@@ -27,109 +27,88 @@ const Sidebar = () => {
             link: '/overview',
           },
         ]}
-      />
-      <NavItem
-        title="Stock Enquiry"
-        link="/overview"
-        links={[
-          {
-            title: 'Stock balance',
-            link: '/overview',
-          },
-          {
-            title: 'Stock movement history',
-            link: '/overview',
-          },
-        ]}
-      />
-      <NavItem
-        title="Supplier Enquiry"
-        link="/overview"
-        links={[
-          {
-            title: 'Supplier account balance',
-            link: '/overview',
-          },
-          {
-            title: 'Supplier account history',
-            link: '/overview',
-          },
-        ]}
-      />
-      <NavItem
-        title="Daily Transaction"
-        link="/overview"
-        links={[
-          {
-            title: 'POS Sales',
-            link: '/overview',
-          },
-          {
-            title: 'Sales Transaction',
-            link: '/overview',
-          },
-          {
-            title: 'Receipt',
-            link: '/overview',
-          },
-          {
-            title: 'Purchases',
-            link: '/overview',
-          },
-          {
-            title: 'Payment',
-            link: '/overview',
-          },
-        ]}
-      />
-      <NavItem
-        title="Stock"
-        link="/overview"
-        links={[
-          {
-            title: 'Stock taking',
-            link: '/overview',
-          },
-        ]}
-      />
-      <NavItem
-        title="Report"
-        link="/overview"
-        links={[
-          {
-            title: 'Stock list',
-            link: '/overview',
-          },
-          {
-            title: 'Reorder list',
-            link: '/overview',
-          },
-          {
-            title: 'Customer list',
-            link: '/overview',
-          },
-        ]}
-      />
-      <div>
-        <Link to={routes.CUSTOMERS}>Customers</Link>
-      </div>
+      /> */}
 
-      <Link to="/">Log out</Link>
+      <NavLink
+        activeClassName={styles.sideNav__mainItemActive}
+        className={styles.sideNav__mainItem}
+        to={routes.OVERVIEW}
+      >
+        Overview
+      </NavLink>
+      <NavLink
+        activeClassName={styles.sideNav__mainItemActive}
+        className={styles.sideNav__mainItem}
+        to={routes.INVOICE}
+      >
+        Invoices
+      </NavLink>
+      <NavLink
+        activeClassName={styles.sideNav__mainItemActive}
+        className={styles.sideNav__mainItem}
+        to={routes.PRODUCT}
+      >
+        Products
+      </NavLink>
+
+      <NavLink
+        activeClassName={styles.sideNav__mainItemActive}
+        className={styles.sideNav__mainItem}
+        to={routes.CUSTOMER}
+      >
+        Customers
+      </NavLink>
+      <NavLink
+        activeClassName={styles.sideNav__mainItemActive}
+        className={styles.sideNav__mainItem}
+        to={routes.SUPPLIER}
+      >
+        Suppliers
+      </NavLink>
+      <NavLink
+        activeClassName={styles.sideNav__mainItemActive}
+        className={styles.sideNav__mainItem}
+        to={routes.RECEIPT}
+      >
+        Receipt
+      </NavLink>
+      <NavLink
+        activeClassName={styles.sideNav__mainItemActive}
+        className={styles.sideNav__mainItem}
+        to={routes.PAYMENT}
+      >
+        Payment
+      </NavLink>
+      <NavLink
+        activeClassName={styles.sideNav__mainItemActive}
+        className={styles.sideNav__mainItem}
+        to={routes.PURCHASE}
+      >
+        Purchase
+      </NavLink>
+
+      <Link
+        style={{ color: 'red' }}
+        className={styles.sideNav__mainItem}
+        to="/"
+      >
+        Log out
+      </Link>
       {/* <IconNavItem title="Get Started" /> */}
       {/* <IconNavWithChildren title="Sales" /> */}
     </section>
   );
 };
 
-export default Sidebar;
+export default SideNav;
 
 // const IconNavItem = ({ title }: { title: string }) => {
 //   return (
 //     <div
-//       className={`${styles.sidebar__mainItem} ${styles.sidebar__mainItemActive}`}
+//       className={`${styles.sideNav__mainItem} ${styles.sideNav__mainItemActive}`}
 //     >
 //       {/* <Icon size="large" name="settings" /> */}
-//       <p className={styles.sidebar__mainItemText}>{title}</p>
+//       <p className={styles.sideNav__mainItemText}>{title}</p>
 //     </div>
 //   );
 // };
@@ -138,14 +117,14 @@ export default Sidebar;
 //   return (
 //     <div>
 //       <IconNavItem title={title} />
-//       <ul className={styles.sidebar__subItemContainer}>
+//       <ul className={styles.sideNav__subItemContainer}>
 //         <li
-//           className={`${styles.sidebar__subItem} ${styles.sidebar__subItemActive}`}
+//           className={`${styles.sideNav__subItem} ${styles.sideNav__subItemActive}`}
 //         >
 //           Invoices
 //         </li>
-//         <li className={styles.sidebar__subItem}>Customers</li>
-//         <li className={styles.sidebar__subItem}>Items</li>
+//         <li className={styles.sideNav__subItem}>Customers</li>
+//         <li className={styles.sideNav__subItem}>Items</li>
 //       </ul>
 //     </div>
 //   );

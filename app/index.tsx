@@ -3,6 +3,7 @@ import { render } from 'react-dom';
 import { AppContainer as ReactHotAppContainer } from 'react-hot-loader';
 import { history, configuredStore } from './store';
 import './app.global.css';
+import sequelize from './utils/database';
 
 const store = configuredStore();
 
@@ -18,3 +19,13 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('root')
   );
 });
+
+sequelize
+  // .sync({ force: true })
+  .sync()
+  .then((result: any) => {
+    console.log(result);
+  })
+  .catch((error: any) => {
+    console.log(error);
+  });
