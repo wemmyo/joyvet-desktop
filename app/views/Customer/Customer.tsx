@@ -7,6 +7,7 @@ import {
   getCustomersFn,
   createCustomerFn,
 } from '../../slices/customerSlice';
+import CreateCustomer from './components/CreateCustomer/CreateCustomer';
 
 export interface CustomersScreenProps {}
 
@@ -21,9 +22,9 @@ const CustomersScreen: React.FC<CustomersScreenProps> = () => {
 
   useEffect(fetchCustomers, []);
 
-  const handleNewCustomer = () => {
+  const handleNewCustomer = (values: any) => {
     dispatch(
-      createCustomerFn(() => {
+      createCustomerFn(values, () => {
         fetchCustomers();
         // console.log('created');
       })
@@ -48,7 +49,10 @@ const CustomersScreen: React.FC<CustomersScreenProps> = () => {
   };
 
   return (
-    <DashboardLayout screenTitle="Customers">
+    <DashboardLayout
+      screenTitle="Customers"
+      rightSidebar={<CreateCustomer createCustomerFn={handleNewCustomer} />}
+    >
       <Table striped>
         <Table.Header>
           <Table.Row>
@@ -62,7 +66,6 @@ const CustomersScreen: React.FC<CustomersScreenProps> = () => {
 
         <Table.Body>{renderRows()}</Table.Body>
       </Table>
-      <button onClick={handleNewCustomer}>Add new customer</button>
     </DashboardLayout>
   );
 };

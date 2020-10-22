@@ -9,10 +9,8 @@ export default sequelize.define('customer', {
     allowNull: false,
     primaryKey: true,
   },
-  fullName: Sequelize.STRING,
-  address: Sequelize.STRING,
-  phoneNumber: Sequelize.STRING,
-  balance: Sequelize.DOUBLE,
+  fullName: { type: Sequelize.STRING, allowNull: true },
+  address: { type: Sequelize.STRING, allowNull: true },
+  phoneNumber: { type: Sequelize.STRING, allowNull: true },
+  balance: { type: Sequelize.DOUBLE, allowNull: true },
 });
-
-// module.exports = Product;

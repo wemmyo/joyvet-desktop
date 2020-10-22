@@ -11,18 +11,7 @@ export default sequelize.define('product', {
     primaryKey: true,
   },
   title: Sequelize.STRING,
-  price: {
-    type: Sequelize.DOUBLE,
-    allowNull: false,
-  },
-  imageUrl: {
-    type: Sequelize.STRING,
-    allowNull: false,
-  },
-  description: {
-    type: Sequelize.STRING,
-    allowNull: false,
-  },
+  stock: Sequelize.INTEGER,
 });
 
 // module.exports = Product;

@@ -4,9 +4,13 @@ import styles from './HeaderSection.css';
 
 export interface HeaderSectionProps {
   screenTitle: string;
+  openRightSidebarFn: () => void;
 }
 
-const HeaderSection: React.SFC<HeaderSectionProps> = ({ screenTitle }) => {
+const HeaderSection: React.SFC<HeaderSectionProps> = ({
+  screenTitle,
+  openRightSidebarFn,
+}) => {
   return (
     <header className={styles.headerSection}>
       <h2 className={styles.headerSection__title}>{screenTitle}</h2>
@@ -15,7 +19,12 @@ const HeaderSection: React.SFC<HeaderSectionProps> = ({ screenTitle }) => {
           <Icon name="filter" />
           Filter
         </Button>
-        <Button color="blue" icon labelPosition="left">
+        <Button
+          color="blue"
+          icon
+          labelPosition="left"
+          onClick={() => openRightSidebarFn()}
+        >
           <Icon inverted color="grey" name="add" />
           Create
         </Button>

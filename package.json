@@ -274,10 +274,12 @@
     "@fortawesome/fontawesome-free": "^5.14.0",
     "@hot-loader/react-dom": "^16.13.0",
     "@reduxjs/toolkit": "^1.4.0",
+    "@types/yup": "^0.29.8",
     "connected-react-router": "^6.6.1",
     "electron-debug": "^3.1.0",
     "electron-log": "^4.2.2",
     "electron-updater": "^4.3.1",
+    "formik": "^2.2.0",
     "history": "^4.7.2",
     "react": "^16.13.1",
     "react-dom": "^16.12.0",
@@ -290,7 +292,8 @@
     "regenerator-runtime": "^0.13.5",
     "semantic-ui-css": "^2.4.1",
     "semantic-ui-react": "^1.2.0",
-    "source-map-support": "^0.5.19"
+    "source-map-support": "^0.5.19",
+    "yup": "^0.29.3"
   },
   "devEngines": {
     "node": ">=7.x",

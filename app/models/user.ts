@@ -2,15 +2,16 @@ const Sequelize = require('sequelize');
 
 import sequelize from '../utils/database';
 
-export default sequelize.define('supplier', {
+export default sequelize.define('user', {
   id: {
     type: Sequelize.INTEGER,
     autoIncrement: true,
     allowNull: false,
     primaryKey: true,
   },
-  fullName: Sequelize.STRING,
-  address: Sequelize.STRING,
-  phoneNumber: Sequelize.STRING,
-  balance: Sequelize.DOUBLE,
+  name: Sequelize.STRING,
+  email: Sequelize.STRING,
+  password: Sequelize.STRING,
+  isAdmin: Sequelize.BOOLEAN,
+  isManager: Sequelize.BOOLEAN,
 });

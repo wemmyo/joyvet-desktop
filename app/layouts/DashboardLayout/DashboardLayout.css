@@ -1,5 +1,19 @@
 .main {
-  /* margin-left: var(--sidebarMainDiff); */
   width: 100%;
   padding: 15px 35px;
+}
+
+.rightSidebar {
+  border: 1px solid rgba(34, 36, 38, 0.15);
+  transition: width 0.2s ease-out;
+  padding: 30px 15px;
+}
+
+.rightSidebar__open {
+  width: 450px;
+}
+.rightSidebar__close {
+  width: 0px;
+  overflow: hidden;
+  padding: 0;
 }
