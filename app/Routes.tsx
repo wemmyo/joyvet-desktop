@@ -14,6 +14,7 @@ import SupplierScreen from './views/Supplier/Supplier';
 import ReceiptScreen from './views/Receipt/Receipt';
 import PaymentScreen from './views/Payment/Payment';
 import PurchaseScreen from './views/Purchase/Purchase';
+import { ToastContainer } from 'react-toastify';
 
 // Lazily load routes and code split with webpacck
 // const LazyCounterPage = React.lazy(() =>
@@ -29,6 +30,7 @@ import PurchaseScreen from './views/Purchase/Purchase';
 export default function Routes() {
   return (
     <App>
+      <ToastContainer autoClose={10000} />
       <Switch>
         <Route path={routes.PURCHASE} component={PurchaseScreen} />
         <Route path={routes.PAYMENT} component={PaymentScreen} />

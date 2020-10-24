@@ -3,8 +3,8 @@ import { Button, Form } from 'semantic-ui-react';
 import { Field, Formik } from 'formik';
 import * as Yup from 'yup';
 
-export interface CreateCustomerProps {
-  createCustomerFn: (values: any) => void;
+export interface CreatePurchaseProps {
+  createPurchaseFn: (values: any) => void;
 }
 
 // const options = [
@@ -33,8 +33,8 @@ const TextInput = ({
     </Form.Input>
   );
 };
-const CreateCustomer: React.FC<CreateCustomerProps> = ({
-  createCustomerFn,
+const CreatePurchase: React.FC<CreatePurchaseProps> = ({
+  createPurchaseFn,
 }) => {
   return (
     <Formik
@@ -44,10 +44,10 @@ const CreateCustomer: React.FC<CreateCustomerProps> = ({
         phoneNumber: '',
         balance: '',
       }}
-      validationSchema={CreateCustomerSchema}
+      validationSchema={CreatePurchaseSchema}
       onSubmit={(values, actions) => {
         //   submitForm(values);
-        createCustomerFn(values);
+        createPurchaseFn(values);
         actions.resetForm();
         // console.log(values);
       }}
@@ -90,8 +90,8 @@ const CreateCustomer: React.FC<CreateCustomerProps> = ({
     </Formik>
   );
 };
-export default CreateCustomer;
+export default CreatePurchase;
 
-const CreateCustomerSchema = Yup.object().shape({
+const CreatePurchaseSchema = Yup.object().shape({
   fullName: Yup.string().required('Required'),
 });

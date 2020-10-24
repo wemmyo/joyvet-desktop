@@ -10,4 +10,5 @@ export default sequelize.define('invoice', {
     primaryKey: true,
   },
   quantity: Sequelize.INTEGER,
+  saleType: Sequelize.STRING,
 });

@@ -1,5 +1,6 @@
 import { createSlice } from '@reduxjs/toolkit';
 import CustomerModel from '../models/customer';
+import { toast } from 'react-toastify';
 
 const initialState = {
   customers: {
@@ -73,6 +74,7 @@ export const getCustomersFn = () => async (
     const response = await CustomerModel.findAll({
       raw: true,
     });
+    // console.log((await CustomerModel.findAll()).toJSON());
     console.log(response);
     dispatch(getCustomersSuccess(response));
   } catch (error) {
@@ -87,14 +89,16 @@ export const createCustomerFn = (values: any, cb: () => void) => async (
 ) => {
   try {
     dispatch(createCustomer());
-    const response = await CustomerModel.create(values);
-    // const response = await CustomerModel.create({
-    //   fullName: values.fullName || null,
-    //   address: values.address || null,
-    //   phoneNumber: values.phoneNumber || null,
-    //   balance: values.balance || null,
-    // });
+    // const response = await CustomerModel.create(values);
+    const response = await CustomerModel.create({
+      fullName: values.fullName || null,
+      address: values.address || null,
+      phoneNumber: values.phoneNumber || null,
+      balance: values.balance || null,
+    });
     console.log(response);
+    toast.success('Customer successfully created');
+
     cb();
     dispatch(createCustomerSuccess({}));
   } catch (error) {

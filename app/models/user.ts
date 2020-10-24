@@ -10,7 +10,7 @@ export default sequelize.define('user', {
     primaryKey: true,
   },
   name: Sequelize.STRING,
-  email: Sequelize.STRING,
+  username: Sequelize.STRING,
   password: Sequelize.STRING,
   isAdmin: Sequelize.BOOLEAN,
   isManager: Sequelize.BOOLEAN,

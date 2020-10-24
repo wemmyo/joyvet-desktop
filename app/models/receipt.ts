@@ -9,5 +9,6 @@ export default sequelize.define('receipt', {
     allowNull: false,
     primaryKey: true,
   },
-  amountPaid: Sequelize.INTEGER,
+  amount: Sequelize.INTEGER,
+  note: Sequelize.STRING,
 });

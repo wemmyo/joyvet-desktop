@@ -8,6 +8,7 @@ import {
   createCustomerFn,
 } from '../../slices/customerSlice';
 import CreateCustomer from './components/CreateCustomer/CreateCustomer';
+import { numberWithCommas } from '../../utils/helpers';
 
 export interface CustomersScreenProps {}
 
@@ -37,11 +38,10 @@ const CustomersScreen: React.FC<CustomersScreenProps> = () => {
     const rows = customers.map((each: any) => {
       return (
         <Table.Row key={each.id}>
-          <Table.Cell>{each.id}</Table.Cell>
           <Table.Cell>{each.fullName}</Table.Cell>
           <Table.Cell>{each.address}</Table.Cell>
           <Table.Cell>{each.phoneNumber}</Table.Cell>
-          <Table.Cell>{each.balance}</Table.Cell>
+          <Table.Cell>{numberWithCommas(each.balance)}</Table.Cell>
         </Table.Row>
       );
     });
@@ -53,14 +53,13 @@ const CustomersScreen: React.FC<CustomersScreenProps> = () => {
       screenTitle="Customers"
       rightSidebar={<CreateCustomer createCustomerFn={handleNewCustomer} />}
     >
-      <Table striped>
+      <Table celled striped>
         <Table.Header>
           <Table.Row>
-            <Table.HeaderCell>ID</Table.HeaderCell>
             <Table.HeaderCell>Full Name</Table.HeaderCell>
             <Table.HeaderCell>Address</Table.HeaderCell>
             <Table.HeaderCell>Phone Number</Table.HeaderCell>
-            <Table.HeaderCell>balance</Table.HeaderCell>
+            <Table.HeaderCell>Outstanding Amount</Table.HeaderCell>
           </Table.Row>
         </Table.Header>
 

@@ -9,6 +9,8 @@ export default sequelize.define('purchase', {
     allowNull: false,
     primaryKey: true,
   },
-  price: Sequelize.INTEGER,
+  unitPrice: Sequelize.INTEGER,
   quantity: Sequelize.INTEGER,
+  invoiceNumber: Sequelize.STRING,
+  invoiceDate: Sequelize.DATE,
 });

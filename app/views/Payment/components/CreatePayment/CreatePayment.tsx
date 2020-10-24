@@ -3,8 +3,8 @@ import { Button, Form } from 'semantic-ui-react';
 import { Field, Formik } from 'formik';
 import * as Yup from 'yup';
 
-export interface CreateCustomerProps {
-  createCustomerFn: (values: any) => void;
+export interface CreatePaymentProps {
+  createPaymentFn: (values: any) => void;
 }
 
 // const options = [
@@ -33,21 +33,17 @@ const TextInput = ({
     </Form.Input>
   );
 };
-const CreateCustomer: React.FC<CreateCustomerProps> = ({
-  createCustomerFn,
-}) => {
+const CreatePayment: React.FC<CreatePaymentProps> = ({ createPaymentFn }) => {
   return (
     <Formik
       initialValues={{
-        fullName: '',
-        address: '',
-        phoneNumber: '',
-        balance: '',
+        supplier: '',
+        amountPaid: '',
       }}
-      validationSchema={CreateCustomerSchema}
+      validationSchema={CreatePaymentSchema}
       onSubmit={(values, actions) => {
         //   submitForm(values);
-        createCustomerFn(values);
+        createPaymentFn(values);
         actions.resetForm();
         // console.log(values);
       }}
@@ -55,31 +51,24 @@ const CreateCustomer: React.FC<CreateCustomerProps> = ({
       {({ handleSubmit }) => (
         <Form>
           <Field
-            name="fullName"
-            placeholder="Full Name"
-            label="Full Name"
+            name="supplier"
+            placeholder="Supplier"
+            label="Supplier"
             type="text"
             component={TextInput}
           />
           <Field
-            name="address"
-            placeholder="Address"
-            label="Address"
+            name="amountPaid"
+            placeholder="Amount Paid"
+            label="Amount Paid"
             type="text"
             component={TextInput}
           />
           <Field
-            name="phoneNumber"
-            placeholder="Phone Number"
-            label="Phone Number"
-            type="tel"
-            component={TextInput}
-          />
-          <Field
-            name="balance"
-            placeholder="Balance"
-            label="Balance"
-            type="number"
+            name="note"
+            placeholder="Note"
+            label="Note"
+            type="text"
             component={TextInput}
           />
           <Button onClick={() => handleSubmit()} type="Submit" fluid primary>
@@ -90,8 +79,11 @@ const CreateCustomer: React.FC<CreateCustomerProps> = ({
     </Formik>
   );
 };
-export default CreateCustomer;
+export default CreatePayment;
 
-const CreateCustomerSchema = Yup.object().shape({
-  fullName: Yup.string().required('Required'),
+const CreatePaymentSchema = Yup.object().shape({
+  supplier: Yup.string().required('Required'),
+  amountPaid: Yup.number()
+    .required('Required')
+    .positive('Amount cannot be negative'),
 });

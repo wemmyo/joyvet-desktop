@@ -11,9 +11,8 @@ import Product from './models/product';
 import Purchase from './models/purchase';
 import Receipt from './models/receipt';
 import Supplier from './models/supplier';
-import User from './models/user';
+// import User from './models/user';
 import PriceLevel from './models/priceLevel';
-import SaleType from './models/saleType';
 import ProductGroup from './models/productGroup';
 
 const store = configuredStore();
@@ -31,33 +30,34 @@ document.addEventListener('DOMContentLoaded', () => {
   );
 });
 
-Customer.hasOne(PriceLevel);
+// Invoice.hasMany(Product);
+// Product.belongsTo(Invoice);
+Invoice.belongsToMany(Product, { through: 'ProductInvoice' });
+Product.belongsToMany(Invoice, { through: 'ProductInvoice' });
 
-Invoice.hasOne(Customer);
-Invoice.hasMany(Product);
-// Invoice.hasMany(PriceLevel);
-Invoice.hasOne(SaleType);
-Invoice.hasOne(User);
+Customer.hasMany(Invoice);
+Invoice.belongsTo(Customer);
 
-Product.hasMany(PriceLevel);
-// Product.hasMany(Supplier);
-Product.hasOne(ProductGroup);
+Customer.belongsTo(PriceLevel);
+PriceLevel.hasOne(Customer);
 
-Supplier.hasMany(Product);
+Product.belongsTo(ProductGroup);
+ProductGroup.hasOne(Product);
 
-Receipt.hasOne(Customer);
-Receipt.hasOne(User);
+Receipt.belongsTo(Customer);
+Customer.hasMany(Receipt);
 
-Payment.hasOne(Supplier);
-Payment.hasOne(User);
+Payment.belongsTo(Supplier);
+Supplier.hasMany(Payment);
 
-Purchase.hasOne(User);
-Purchase.hasOne(Supplier);
-Purchase.hasMany(Product);
+Purchase.belongsTo(Supplier);
+Supplier.hasMany(Purchase);
+Purchase.belongsToMany(Product, { through: 'ProductPurchase' });
+Product.belongsToMany(Purchase, { through: 'ProductPurchase' });
 
 sequelize
-  .sync({ force: true })
-  // .sync()
+  // .sync({ force: true })
+  .sync()
   .then((result: any) => {
     console.log(result);
   })

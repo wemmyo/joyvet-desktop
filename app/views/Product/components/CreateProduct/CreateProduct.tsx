@@ -3,8 +3,8 @@ import { Button, Form } from 'semantic-ui-react';
 import { Field, Formik } from 'formik';
 import * as Yup from 'yup';
 
-export interface CreateCustomerProps {
-  createCustomerFn: (values: any) => void;
+export interface CreateProductProps {
+  createProductFn: (values: any) => void;
 }
 
 // const options = [
@@ -33,55 +33,47 @@ const TextInput = ({
     </Form.Input>
   );
 };
-const CreateCustomer: React.FC<CreateCustomerProps> = ({
-  createCustomerFn,
-}) => {
+const CreateProduct: React.FC<CreateProductProps> = ({ createProductFn }) => {
   return (
     <Formik
       initialValues={{
-        fullName: '',
-        address: '',
-        phoneNumber: '',
-        balance: '',
+        title: '',
+        stock: '',
+        price: '',
       }}
-      validationSchema={CreateCustomerSchema}
+      validationSchema={CreateProductSchema}
       onSubmit={(values, actions) => {
         //   submitForm(values);
-        createCustomerFn(values);
+        console.log(values);
+
+        createProductFn(values);
         actions.resetForm();
-        // console.log(values);
       }}
     >
       {({ handleSubmit }) => (
         <Form>
           <Field
-            name="fullName"
-            placeholder="Full Name"
-            label="Full Name"
+            name="title"
+            placeholder="Title"
+            label="Title"
             type="text"
             component={TextInput}
           />
           <Field
-            name="address"
-            placeholder="Address"
-            label="Address"
-            type="text"
-            component={TextInput}
-          />
-          <Field
-            name="phoneNumber"
-            placeholder="Phone Number"
-            label="Phone Number"
-            type="tel"
-            component={TextInput}
-          />
-          <Field
-            name="balance"
-            placeholder="Balance"
-            label="Balance"
+            name="stock"
+            placeholder="Number In Stock"
+            label="Number In Stock"
             type="number"
             component={TextInput}
           />
+          <Field
+            name="price"
+            placeholder="Price"
+            label="Price"
+            type="number"
+            component={TextInput}
+          />
+
           <Button onClick={() => handleSubmit()} type="Submit" fluid primary>
             Save
           </Button>
@@ -90,8 +82,8 @@ const CreateCustomer: React.FC<CreateCustomerProps> = ({
     </Formik>
   );
 };
-export default CreateCustomer;
+export default CreateProduct;
 
-const CreateCustomerSchema = Yup.object().shape({
-  fullName: Yup.string().required('Required'),
+const CreateProductSchema = Yup.object().shape({
+  title: Yup.string().required('Required'),
 });
