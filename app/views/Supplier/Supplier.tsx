@@ -15,7 +15,7 @@ export interface SuppliersScreenProps {}
 const SuppliersScreen: React.FC<SuppliersScreenProps> = () => {
   const dispatch = useDispatch();
   const supplierState = useSelector(selectSupplierState);
-  const { data: supplier } = supplierState.supplier;
+  const { data: suppliers } = supplierState.suppliers;
 
   const fetchSuppliers = () => {
     dispatch(getSuppliersFn());
@@ -33,9 +33,9 @@ const SuppliersScreen: React.FC<SuppliersScreenProps> = () => {
   };
 
   const renderRows = () => {
-    console.log(supplier);
+    console.log(suppliers);
     // return <p>yes</p>;
-    const rows = supplier.map((each: any) => {
+    const rows = suppliers.map((each: any) => {
       return (
         <Table.Row key={each.id}>
           <Table.Cell>{each.fullName}</Table.Cell>

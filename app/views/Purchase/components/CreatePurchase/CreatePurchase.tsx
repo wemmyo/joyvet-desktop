@@ -1,17 +1,129 @@
-import * as React from 'react';
+import React, { useEffect } from 'react';
 import { Button, Form } from 'semantic-ui-react';
 import { Field, Formik } from 'formik';
-import * as Yup from 'yup';
+// import * as Yup from 'yup';
+import {
+  getSuppliersFn,
+  selectSupplierState,
+} from '../../../../slices/supplierSlice';
+import {
+  getProductsFn,
+  selectProductState,
+} from '../../../../slices/productSlice';
+import {
+  createPurchaseFn,
+  getPurchasesFn,
+} from '../../../../slices/purchaseSlice';
+import { useSelector, useDispatch } from 'react-redux';
 
-export interface CreatePurchaseProps {
-  createPurchaseFn: (values: any) => void;
-}
+export interface CreatePurchaseProps {}
 
-// const options = [
-//   { key: 'm', text: 'Male', value: 'male' },
-//   { key: 'f', text: 'Female', value: 'female' },
-//   { key: 'o', text: 'Other', value: 'other' },
-// ];
+const CreatePurchase: React.FC<CreatePurchaseProps> = () => {
+  const dispatch = useDispatch();
+  const supplierState = useSelector(selectSupplierState);
+  const { data: suppliers } = supplierState.suppliers;
+  const productState = useSelector(selectProductState);
+  const { data: products } = productState.products;
+
+  const fetchSuppliers = () => {
+    dispatch(getSuppliersFn());
+  };
+
+  const fetchProducts = () => {
+    dispatch(getProductsFn());
+  };
+
+  const fetchPurchases = () => {
+    dispatch(getPurchasesFn());
+  };
+
+  useEffect(() => {
+    fetchSuppliers();
+    fetchProducts();
+  }, []);
+
+  const handleNewPurchase = (values: any) => {
+    dispatch(
+      createPurchaseFn(values, () => {
+        fetchPurchases();
+      })
+    );
+  };
+
+  const renderSuppliers = () => {
+    const supplierList = suppliers.map((supplier: any) => {
+      return (
+        <option key={supplier.id} value={supplier.id}>
+          {supplier.fullName}
+        </option>
+      );
+    });
+    return supplierList;
+  };
+
+  const renderProducts = () => {
+    const supplierList = products.map((product: any) => {
+      return (
+        <option key={product.id} value={product.id}>
+          {product.title}
+        </option>
+      );
+    });
+    return supplierList;
+  };
+
+  return (
+    <Formik
+      initialValues={{
+        supplierId: '',
+        productId: '',
+        amount: '',
+        note: '',
+      }}
+      // validationSchema={CreatePurchaseSchema}
+      onSubmit={(values, actions) => {
+        handleNewPurchase(values);
+        actions.resetForm();
+      }}
+    >
+      {({ handleSubmit }) => (
+        <Form>
+          <Field name="supplierId" component="select" className="ui dropdown">
+            <option value="" disabled hidden>
+              Select Supplier
+            </option>
+            {renderSuppliers()}
+          </Field>
+          <Field name="productId" component="select" className="ui dropdown">
+            <option value="" disabled hidden>
+              Select Product
+            </option>
+            {renderProducts()}
+          </Field>
+
+          <Field
+            name="amount"
+            placeholder="Amount Paid"
+            label="Amount Paid"
+            type="text"
+            component={TextInput}
+          />
+          <Field
+            name="note"
+            placeholder="Note"
+            label="Note"
+            type="text"
+            component={TextInput}
+          />
+          <Button onClick={() => handleSubmit()} type="Submit" fluid primary>
+            Save
+          </Button>
+        </Form>
+      )}
+    </Formik>
+  );
+};
+export default CreatePurchase;
 
 const TextInput = ({
   field, // { name, value, onChange, onBlur }
@@ -33,65 +145,3 @@ const TextInput = ({
     </Form.Input>
   );
 };
-const CreatePurchase: React.FC<CreatePurchaseProps> = ({
-  createPurchaseFn,
-}) => {
-  return (
-    <Formik
-      initialValues={{
-        fullName: '',
-        address: '',
-        phoneNumber: '',
-        balance: '',
-      }}
-      validationSchema={CreatePurchaseSchema}
-      onSubmit={(values, actions) => {
-        //   submitForm(values);
-        createPurchaseFn(values);
-        actions.resetForm();
-        // console.log(values);
-      }}
-    >
-      {({ handleSubmit }) => (
-        <Form>
-          <Field
-            name="fullName"
-            placeholder="Full Name"
-            label="Full Name"
-            type="text"
-            component={TextInput}
-          />
-          <Field
-            name="address"
-            placeholder="Address"
-            label="Address"
-            type="text"
-            component={TextInput}
-          />
-          <Field
-            name="phoneNumber"
-            placeholder="Phone Number"
-            label="Phone Number"
-            type="tel"
-            component={TextInput}
-          />
-          <Field
-            name="balance"
-            placeholder="Balance"
-            label="Balance"
-            type="number"
-            component={TextInput}
-          />
-          <Button onClick={() => handleSubmit()} type="Submit" fluid primary>
-            Save
-          </Button>
-        </Form>
-      )}
-    </Formik>
-  );
-};
-export default CreatePurchase;
-
-const CreatePurchaseSchema = Yup.object().shape({
-  fullName: Yup.string().required('Required'),
-});

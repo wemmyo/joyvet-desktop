@@ -92,7 +92,8 @@ export const createProductFn = (values: any, cb: () => void) => async (
     const response = await ProductModel.create({
       title: values.title || null,
       stock: values.stock || null,
-      price: values.price || null,
+      unitPrice: values.unitPrice || null,
+      productGroup: values.productGroup || null,
     });
     console.log(response);
     toast.success('Product successfully created');

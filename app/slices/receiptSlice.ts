@@ -3,7 +3,7 @@ import ReceiptModel from '../models/receipt';
 import { toast } from 'react-toastify';
 
 const initialState = {
-  receipt: {
+  receipts: {
     loading: true,
     data: [],
     error: {},
@@ -20,21 +20,21 @@ const receiptSlice = createSlice({
   initialState: initialState,
   reducers: {
     getReceipts: (state) => {
-      let { receipt } = state;
-      receipt.loading = true;
-      receipt.error = {};
+      let { receipts } = state;
+      receipts.loading = true;
+      receipts.error = {};
     },
     getReceiptsSuccess: (state, { payload }) => {
-      let { receipt } = state;
-      receipt.loading = false;
-      receipt.data = payload;
-      receipt.error = {};
+      let { receipts } = state;
+      receipts.loading = false;
+      receipts.data = payload;
+      receipts.error = {};
     },
     getReceiptsFailed: (state, { payload }) => {
-      let { receipt } = state;
-      receipt.loading = false;
-      receipt.data = [];
-      receipt.error = payload;
+      let { receipts } = state;
+      receipts.loading = false;
+      receipts.data = [];
+      receipts.error = payload;
     },
     createReceipt: (state) => {
       let { createReceiptState } = state;
@@ -90,10 +90,9 @@ export const createReceiptFn = (values: any, cb: () => void) => async (
     dispatch(createReceipt());
     // const response = await ReceiptModel.create(values);
     const response = await ReceiptModel.create({
-      fullName: values.fullName || null,
-      address: values.address || null,
-      phoneNumber: values.phoneNumber || null,
-      balance: values.balance || null,
+      amount: values.amount || null,
+      note: values.note || null,
+      customerId: values.customerId || null,
     });
     console.log(response);
     toast.success('Receipt successfully created');

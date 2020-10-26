@@ -3,7 +3,7 @@ import PurchaseModel from '../models/purchase';
 import { toast } from 'react-toastify';
 
 const initialState = {
-  purchase: {
+  purchases: {
     loading: true,
     data: [],
     error: {},
@@ -16,25 +16,25 @@ const initialState = {
 };
 
 const purchaseSlice = createSlice({
-  name: 'purchase',
+  name: 'purchases',
   initialState: initialState,
   reducers: {
     getPurchases: (state) => {
-      let { purchase } = state;
-      purchase.loading = true;
-      purchase.error = {};
+      let { purchases } = state;
+      purchases.loading = true;
+      purchases.error = {};
     },
     getPurchasesSuccess: (state, { payload }) => {
-      let { purchase } = state;
-      purchase.loading = false;
-      purchase.data = payload;
-      purchase.error = {};
+      let { purchases } = state;
+      purchases.loading = false;
+      purchases.data = payload;
+      purchases.error = {};
     },
     getPurchasesFailed: (state, { payload }) => {
-      let { purchase } = state;
-      purchase.loading = false;
-      purchase.data = [];
-      purchase.error = payload;
+      let { purchases } = state;
+      purchases.loading = false;
+      purchases.data = [];
+      purchases.error = payload;
     },
     createPurchase: (state) => {
       let { createPurchaseState } = state;
@@ -90,10 +90,11 @@ export const createPurchaseFn = (values: any, cb: () => void) => async (
     dispatch(createPurchase());
     // const response = await PurchaseModel.create(values);
     const response = await PurchaseModel.create({
-      fullName: values.fullName || null,
-      address: values.address || null,
-      phoneNumber: values.phoneNumber || null,
-      balance: values.balance || null,
+      supplierId: values.supplierId || null,
+      unitPrice: values.unitPrice || null,
+      quantity: values.quantity || null,
+      invoiceNumber: values.invoiceNumber || null,
+      invoiceDate: values.invoiceDate || null,
     });
     console.log(response);
     toast.success('Purchase successfully created');

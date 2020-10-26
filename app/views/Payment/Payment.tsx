@@ -2,11 +2,7 @@ import React, { useEffect } from 'react';
 import DashboardLayout from '../../layouts/DashboardLayout/DashboardLayout';
 import { Table } from 'semantic-ui-react';
 import { useSelector, useDispatch } from 'react-redux';
-import {
-  selectPaymentState,
-  getPaymentsFn,
-  createPaymentFn,
-} from '../../slices/paymentSlice';
+import { selectPaymentState, getPaymentsFn } from '../../slices/paymentSlice';
 import CreatePayment from './components/CreatePayment/CreatePayment';
 import { numberWithCommas } from '../../utils/helpers';
 
@@ -15,7 +11,7 @@ export interface PaymentsScreenProps {}
 const PaymentsScreen: React.FC<PaymentsScreenProps> = () => {
   const dispatch = useDispatch();
   const paymentState = useSelector(selectPaymentState);
-  const { data: payment } = paymentState.payment;
+  const { data: payments } = paymentState.payments;
 
   const fetchPayments = () => {
     dispatch(getPaymentsFn());
@@ -23,25 +19,16 @@ const PaymentsScreen: React.FC<PaymentsScreenProps> = () => {
 
   useEffect(fetchPayments, []);
 
-  const handleNewPayment = (values: any) => {
-    dispatch(
-      createPaymentFn(values, () => {
-        fetchPayments();
-        // console.log('created');
-      })
-    );
-  };
-
   const renderRows = () => {
-    console.log(payment);
-    // return <p>yes</p>;
-    const rows = payment.map((each: any) => {
+    const rows = payments.map((each: any) => {
       return (
         <Table.Row key={each.id}>
-          <Table.Cell>{each.fullName}</Table.Cell>
-          <Table.Cell>{each.address}</Table.Cell>
-          <Table.Cell>{each.phoneNumber}</Table.Cell>
-          <Table.Cell>{numberWithCommas(each.balance)}</Table.Cell>
+          <Table.Cell>{each.id}</Table.Cell>
+          <Table.Cell>{numberWithCommas(each.amount)}</Table.Cell>
+          <Table.Cell>
+            {new Date(each.createdAt).toLocaleDateString('en-gb')}
+          </Table.Cell>
+          <Table.Cell>{each.note}</Table.Cell>
         </Table.Row>
       );
     });
@@ -49,22 +36,18 @@ const PaymentsScreen: React.FC<PaymentsScreenProps> = () => {
   };
 
   return (
-    <DashboardLayout
-      screenTitle="Payments"
-      rightSidebar={<CreatePayment createPaymentFn={handleNewPayment} />}
-    >
+    <DashboardLayout screenTitle="Payments" rightSidebar={<CreatePayment />}>
       <Table celled striped>
         <Table.Header>
           <Table.Row>
-            <Table.HeaderCell>Supplier Name</Table.HeaderCell>
+            <Table.HeaderCell>Payment no</Table.HeaderCell>
             <Table.HeaderCell>Amount</Table.HeaderCell>
             <Table.HeaderCell>Date</Table.HeaderCell>
             <Table.HeaderCell>Note</Table.HeaderCell>
-            <Table.HeaderCell>Posted by</Table.HeaderCell>
           </Table.Row>
         </Table.Header>
 
-        <Table.Body>{renderRows()}</Table.Body>
+        <Table.Body> {renderRows()} </Table.Body>
       </Table>
     </DashboardLayout>
   );

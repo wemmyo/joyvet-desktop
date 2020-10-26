@@ -1,64 +1,76 @@
-import * as React from 'react';
+import React, { useEffect } from 'react';
 import { Button, Form } from 'semantic-ui-react';
 import { Field, Formik } from 'formik';
-import * as Yup from 'yup';
+// import * as Yup from 'yup';
+import {
+  getSuppliersFn,
+  selectSupplierState,
+} from '../../../../slices/supplierSlice';
+import {
+  createPaymentFn,
+  getPaymentsFn,
+} from '../../../../slices/paymentSlice';
+import { useSelector, useDispatch } from 'react-redux';
 
-export interface CreatePaymentProps {
-  createPaymentFn: (values: any) => void;
-}
+export interface CreatePaymentProps {}
 
-// const options = [
-//   { key: 'm', text: 'Male', value: 'male' },
-//   { key: 'f', text: 'Female', value: 'female' },
-//   { key: 'o', text: 'Other', value: 'other' },
-// ];
+const CreatePayment: React.FC<CreatePaymentProps> = () => {
+  const dispatch = useDispatch();
+  const supplierState = useSelector(selectSupplierState);
+  const { data: suppliers } = supplierState.suppliers;
 
-const TextInput = ({
-  field, // { name, value, onChange, onBlur }
-  form: { touched, errors }, // also values, setXXXX, handleXXXX, dirty, isValid, status, etc.
-  ...props
-}: {
-  [x: string]: any;
-  field: any;
-  form: any;
-}) => {
-  return (
-    <Form.Input
-      error={
-        touched[field.name] && errors[field.name] ? errors[field.name] : false
-      }
-      label={props.label}
-    >
-      <input placeholder={props.placeholder} {...field} {...props} />
-    </Form.Input>
-  );
-};
-const CreatePayment: React.FC<CreatePaymentProps> = ({ createPaymentFn }) => {
+  const fetchSuppliers = () => {
+    dispatch(getSuppliersFn());
+  };
+  const fetchPayments = () => {
+    dispatch(getPaymentsFn());
+  };
+
+  useEffect(fetchSuppliers, []);
+
+  const handleNewPayment = (values: any) => {
+    dispatch(
+      createPaymentFn(values, () => {
+        fetchPayments();
+      })
+    );
+  };
+
+  const renderSuppliers = () => {
+    const supplierList = suppliers.map((supplier: any) => {
+      return (
+        <option key={supplier.id} value={supplier.id}>
+          {supplier.fullName}
+        </option>
+      );
+    });
+    return supplierList;
+  };
+
   return (
     <Formik
       initialValues={{
-        supplier: '',
-        amountPaid: '',
+        supplierId: '',
+        amount: '',
+        note: '',
       }}
-      validationSchema={CreatePaymentSchema}
+      // validationSchema={CreatePaymentSchema}
       onSubmit={(values, actions) => {
-        //   submitForm(values);
-        createPaymentFn(values);
+        handleNewPayment(values);
         actions.resetForm();
-        // console.log(values);
       }}
     >
       {({ handleSubmit }) => (
         <Form>
+          <Field name="supplierId" component="select" className="ui dropdown">
+            <option value="" disabled hidden>
+              Select Supplier
+            </option>
+            {renderSuppliers()}
+          </Field>
+
           <Field
-            name="supplier"
-            placeholder="Supplier"
-            label="Supplier"
-            type="text"
-            component={TextInput}
-          />
-          <Field
-            name="amountPaid"
+            name="amount"
             placeholder="Amount Paid"
             label="Amount Paid"
             type="text"
@@ -81,9 +93,23 @@ const CreatePayment: React.FC<CreatePaymentProps> = ({ createPaymentFn }) => {
 };
 export default CreatePayment;
 
-const CreatePaymentSchema = Yup.object().shape({
-  supplier: Yup.string().required('Required'),
-  amountPaid: Yup.number()
-    .required('Required')
-    .positive('Amount cannot be negative'),
-});
+const TextInput = ({
+  field, // { name, value, onChange, onBlur }
+  form: { touched, errors }, // also values, setXXXX, handleXXXX, dirty, isValid, status, etc.
+  ...props
+}: {
+  [x: string]: any;
+  field: any;
+  form: any;
+}) => {
+  return (
+    <Form.Input
+      error={
+        touched[field.name] && errors[field.name] ? errors[field.name] : false
+      }
+      label={props.label}
+    >
+      <input placeholder={props.placeholder} {...field} {...props} />
+    </Form.Input>
+  );
+};

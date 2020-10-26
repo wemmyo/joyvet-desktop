@@ -3,7 +3,7 @@ import SupplierModel from '../models/supplier';
 import { toast } from 'react-toastify';
 
 const initialState = {
-  supplier: {
+  suppliers: {
     loading: true,
     data: [],
     error: {},
@@ -20,21 +20,21 @@ const supplierSlice = createSlice({
   initialState: initialState,
   reducers: {
     getSuppliers: (state) => {
-      let { supplier } = state;
-      supplier.loading = true;
-      supplier.error = {};
+      let { suppliers } = state;
+      suppliers.loading = true;
+      suppliers.error = {};
     },
     getSuppliersSuccess: (state, { payload }) => {
-      let { supplier } = state;
-      supplier.loading = false;
-      supplier.data = payload;
-      supplier.error = {};
+      let { suppliers } = state;
+      suppliers.loading = false;
+      suppliers.data = payload;
+      suppliers.error = {};
     },
     getSuppliersFailed: (state, { payload }) => {
-      let { supplier } = state;
-      supplier.loading = false;
-      supplier.data = [];
-      supplier.error = payload;
+      let { suppliers } = state;
+      suppliers.loading = false;
+      suppliers.data = [];
+      suppliers.error = payload;
     },
     createSupplier: (state) => {
       let { createSupplierState } = state;
@@ -74,6 +74,7 @@ export const getSuppliersFn = () => async (
     const response = await SupplierModel.findAll({
       raw: true,
     });
+    // console.log((await SupplierModel.findAll()).toJSON());
     console.log(response);
     dispatch(getSuppliersSuccess(response));
   } catch (error) {

@@ -3,7 +3,7 @@ import PaymentModel from '../models/payment';
 import { toast } from 'react-toastify';
 
 const initialState = {
-  payment: {
+  payments: {
     loading: true,
     data: [],
     error: {},
@@ -20,21 +20,21 @@ const paymentSlice = createSlice({
   initialState: initialState,
   reducers: {
     getPayments: (state) => {
-      let { payment } = state;
-      payment.loading = true;
-      payment.error = {};
+      let { payments } = state;
+      payments.loading = true;
+      payments.error = {};
     },
     getPaymentsSuccess: (state, { payload }) => {
-      let { payment } = state;
-      payment.loading = false;
-      payment.data = payload;
-      payment.error = {};
+      let { payments } = state;
+      payments.loading = false;
+      payments.data = payload;
+      payments.error = {};
     },
     getPaymentsFailed: (state, { payload }) => {
-      let { payment } = state;
-      payment.loading = false;
-      payment.data = [];
-      payment.error = payload;
+      let { payments } = state;
+      payments.loading = false;
+      payments.data = [];
+      payments.error = payload;
     },
     createPayment: (state) => {
       let { createPaymentState } = state;
@@ -90,10 +90,9 @@ export const createPaymentFn = (values: any, cb: () => void) => async (
     dispatch(createPayment());
     // const response = await PaymentModel.create(values);
     const response = await PaymentModel.create({
-      fullName: values.fullName || null,
-      address: values.address || null,
-      phoneNumber: values.phoneNumber || null,
-      balance: values.balance || null,
+      amount: values.amount || null,
+      note: values.note || null,
+      customerId: values.customerId || null,
     });
     console.log(response);
     toast.success('Payment successfully created');

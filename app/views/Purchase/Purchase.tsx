@@ -5,16 +5,16 @@ import { useSelector, useDispatch } from 'react-redux';
 import {
   selectPurchaseState,
   getPurchasesFn,
-  createPurchaseFn,
 } from '../../slices/purchaseSlice';
 import CreatePurchase from './components/CreatePurchase/CreatePurchase';
+import { numberWithCommas } from '../../utils/helpers';
 
 export interface PurchasesScreenProps {}
 
 const PurchasesScreen: React.FC<PurchasesScreenProps> = () => {
   const dispatch = useDispatch();
   const purchaseState = useSelector(selectPurchaseState);
-  const { data: purchase } = purchaseState.purchase;
+  const { data: purchases } = purchaseState.purchases;
 
   const fetchPurchases = () => {
     dispatch(getPurchasesFn());
@@ -22,24 +22,16 @@ const PurchasesScreen: React.FC<PurchasesScreenProps> = () => {
 
   useEffect(fetchPurchases, []);
 
-  const handleNewPurchase = (values: any) => {
-    dispatch(
-      createPurchaseFn(values, () => {
-        fetchPurchases();
-        // console.log('created');
-      })
-    );
-  };
-
   const renderRows = () => {
-    console.log(purchase);
-    // return <p>yes</p>;
-    const rows = purchase.map((each: any) => {
+    const rows = purchases.map((each: any) => {
       return (
         <Table.Row key={each.id}>
-          <Table.Cell>{each.title}</Table.Cell>
-          <Table.Cell>{each.stock}</Table.Cell>
-          <Table.Cell>{each.unitPrice}</Table.Cell>
+          <Table.Cell>{each.id}</Table.Cell>
+          <Table.Cell>{numberWithCommas(each.amount)}</Table.Cell>
+          <Table.Cell>
+            {new Date(each.createdAt).toLocaleDateString('en-gb')}
+          </Table.Cell>
+          <Table.Cell>{each.note}</Table.Cell>
         </Table.Row>
       );
     });
@@ -47,16 +39,14 @@ const PurchasesScreen: React.FC<PurchasesScreenProps> = () => {
   };
 
   return (
-    <DashboardLayout
-      screenTitle="Purchases"
-      rightSidebar={<CreatePurchase createPurchaseFn={handleNewPurchase} />}
-    >
+    <DashboardLayout screenTitle="Purchases" rightSidebar={<CreatePurchase />}>
       <Table celled striped>
         <Table.Header>
           <Table.Row>
-            <Table.HeaderCell>Title</Table.HeaderCell>
-            <Table.HeaderCell>Stock</Table.HeaderCell>
-            <Table.HeaderCell>Price</Table.HeaderCell>
+            <Table.HeaderCell>Purchase no</Table.HeaderCell>
+            <Table.HeaderCell>Amount</Table.HeaderCell>
+            <Table.HeaderCell>Date</Table.HeaderCell>
+            <Table.HeaderCell>Note</Table.HeaderCell>
           </Table.Row>
         </Table.Header>
 
