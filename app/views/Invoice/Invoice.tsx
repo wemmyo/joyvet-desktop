@@ -60,7 +60,7 @@ const InvoiceScreen: React.SFC<InvoiceProps> = () => {
   };
 
   const amount = (item: any) => {
-    return item.total;
+    return item.amount;
   };
 
   const sum = (prev: number, next: number) => {
@@ -75,7 +75,7 @@ const InvoiceScreen: React.SFC<InvoiceProps> = () => {
     if (orders.length === 0) {
       return 0;
     }
-    return numberWithCommas(orders.map(amount).reduce(sum));
+    return orders.map(amount).reduce(sum);
   };
 
   const removeOrder = (id: number) => {
@@ -92,7 +92,7 @@ const InvoiceScreen: React.SFC<InvoiceProps> = () => {
           <Table.Cell>{order.title}</Table.Cell>
           <Table.Cell>{order.quantity}</Table.Cell>
           <Table.Cell>{numberWithCommas(order.unitPrice)}</Table.Cell>
-          <Table.Cell>{numberWithCommas(order.total)}</Table.Cell>
+          <Table.Cell>{numberWithCommas(order.amount)}</Table.Cell>
           <Table.Cell>
             <Button
               onClick={() => {
@@ -114,7 +114,7 @@ const InvoiceScreen: React.SFC<InvoiceProps> = () => {
       <Grid>
         <Grid.Row>
           <Grid.Column width={11}>
-            <h1>Total: ₦{sumOfOrders()}</h1>
+            <h1>Total: ₦{numberWithCommas(sumOfOrders())}</h1>
             <Table celled>
               <Table.Header>
                 <Table.Row>
@@ -135,7 +135,9 @@ const InvoiceScreen: React.SFC<InvoiceProps> = () => {
                   <Table.HeaderCell></Table.HeaderCell>
                   <Table.HeaderCell></Table.HeaderCell>
                   <Table.HeaderCell>Total</Table.HeaderCell>
-                  <Table.HeaderCell>₦{sumOfOrders()}</Table.HeaderCell>
+                  <Table.HeaderCell>
+                    ₦{numberWithCommas(sumOfOrders())}
+                  </Table.HeaderCell>
                   <Table.HeaderCell></Table.HeaderCell>
                 </Table.Row>
               </Table.Footer>
@@ -158,7 +160,7 @@ const InvoiceScreen: React.SFC<InvoiceProps> = () => {
                   addToOrders({
                     ...JSON.parse(values.product),
                     quantity: values.quantity,
-                    total:
+                    amount:
                       JSON.parse(values.product).unitPrice *
                       Number(values.quantity),
                   });
@@ -239,6 +241,7 @@ const InvoiceScreen: React.SFC<InvoiceProps> = () => {
                           createInvoiceFn(orders, {
                             customerId: values.customerId,
                             saleType: values.saleType,
+                            amount: sumOfOrders(),
                           })
                         );
                       }}

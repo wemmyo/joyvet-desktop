@@ -8,4 +8,5 @@ export default {
   RECEIPT: '/receipt',
   PAYMENT: '/payment',
   PURCHASE: '/purchase',
+  SALES: '/sales',
 };

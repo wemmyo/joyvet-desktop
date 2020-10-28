@@ -46,6 +46,13 @@ const SideNav = () => {
       <NavLink
         activeClassName={styles.sideNav__mainItemActive}
         className={styles.sideNav__mainItem}
+        to={routes.SALES}
+      >
+        Sales
+      </NavLink>
+      <NavLink
+        activeClassName={styles.sideNav__mainItemActive}
+        className={styles.sideNav__mainItem}
         to={routes.PRODUCT}
       >
         Products

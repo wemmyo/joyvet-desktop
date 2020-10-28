@@ -1,9 +1,8 @@
 import { createSlice } from '@reduxjs/toolkit';
 import InvoiceModel from '../models/invoice';
-import { toast } from 'react-toastify';
+// import { toast } from 'react-toastify';
 import Customer from '../models/customer';
 import Product from '../models/product';
-import InvoiceItem from '../models/invoiceItem';
 
 const initialState = {
   invoices: {
@@ -95,7 +94,10 @@ export const createInvoiceFn = (
   try {
     dispatch(createInvoice());
     const customer = await Customer.findByPk(meta.customerId);
-    const invoice = await customer.createInvoice();
+    const invoice = await customer.createInvoice({
+      saleType: meta.saleType,
+      amount: meta.amount,
+    });
     const prodArr: any = [];
     await Promise.all(
       values.map(async (each: any) => {
@@ -105,7 +107,9 @@ export const createInvoiceFn = (
       })
     );
     await invoice.addProducts(prodArr);
-    // cb();
+    if (cb) {
+      cb();
+    }
     dispatch(createInvoiceSuccess({}));
   } catch (error) {
     dispatch(createInvoiceFailed({}));
