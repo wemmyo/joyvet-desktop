@@ -88,18 +88,24 @@ const CreatePurchase: React.FC<CreatePurchaseProps> = () => {
     >
       {({ handleSubmit }) => (
         <Form>
-          <Field name="supplierId" component="select" className="ui dropdown">
-            <option value="" disabled hidden>
-              Select Supplier
-            </option>
-            {renderSuppliers()}
-          </Field>
-          <Field name="productId" component="select" className="ui dropdown">
-            <option value="" disabled hidden>
-              Select Product
-            </option>
-            {renderProducts()}
-          </Field>
+          <div className="field">
+            <label>Supplier</label>
+            <Field name="supplierId" component="select" className="ui dropdown">
+              <option value="" disabled hidden>
+                Select Supplier
+              </option>
+              {renderSuppliers()}
+            </Field>
+          </div>
+          <div className="field">
+            <label>Product</label>
+            <Field name="productId" component="select" className="ui dropdown">
+              <option value="" disabled hidden>
+                Select Product
+              </option>
+              {renderProducts()}
+            </Field>
+          </div>
 
           <Field
             name="amount"

@@ -14,6 +14,7 @@ import Supplier from './models/supplier';
 // import User from './models/user';
 import PriceLevel from './models/priceLevel';
 import ProductGroup from './models/productGroup';
+import InvoiceItem from './models/invoiceItem';
 
 const store = configuredStore();
 
@@ -32,8 +33,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // Invoice.hasMany(Product);
 // Product.belongsTo(Invoice);
-Invoice.belongsToMany(Product, { through: 'ProductInvoice' });
-Product.belongsToMany(Invoice, { through: 'ProductInvoice' });
+Invoice.belongsToMany(Product, { through: InvoiceItem });
+Product.belongsToMany(Invoice, { through: InvoiceItem });
 
 Customer.hasMany(Invoice);
 Invoice.belongsTo(Customer);

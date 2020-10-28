@@ -9,6 +9,5 @@ export default sequelize.define('invoice', {
     allowNull: false,
     primaryKey: true,
   },
-  quantity: Sequelize.INTEGER,
   saleType: Sequelize.STRING,
 });

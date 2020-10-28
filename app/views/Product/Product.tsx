@@ -8,6 +8,7 @@ import {
   createProductFn,
 } from '../../slices/productSlice';
 import CreateProduct from './components/CreateProduct/CreateProduct';
+import { numberWithCommas } from '../../utils/helpers';
 
 export interface ProductsScreenProps {}
 
@@ -39,7 +40,7 @@ const ProductsScreen: React.FC<ProductsScreenProps> = () => {
         <Table.Row key={each.id}>
           <Table.Cell>{each.title}</Table.Cell>
           <Table.Cell>{each.stock}</Table.Cell>
-          <Table.Cell>{each.unitPrice}</Table.Cell>
+          <Table.Cell>{numberWithCommas(each.unitPrice)}</Table.Cell>
         </Table.Row>
       );
     });

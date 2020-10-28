@@ -62,12 +62,15 @@ const CreatePayment: React.FC<CreatePaymentProps> = () => {
     >
       {({ handleSubmit }) => (
         <Form>
-          <Field name="supplierId" component="select" className="ui dropdown">
-            <option value="" disabled hidden>
-              Select Supplier
-            </option>
-            {renderSuppliers()}
-          </Field>
+          <div className="field">
+            <label>Supplier</label>
+            <Field name="supplierId" component="select" className="ui dropdown">
+              <option value="" disabled hidden>
+                Select Supplier
+              </option>
+              {renderSuppliers()}
+            </Field>
+          </div>
 
           <Field
             name="amount"

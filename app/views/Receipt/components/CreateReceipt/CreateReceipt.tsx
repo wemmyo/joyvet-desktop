@@ -62,12 +62,15 @@ const CreateReceipt: React.FC<CreateReceiptProps> = () => {
     >
       {({ handleSubmit }) => (
         <Form>
-          <Field name="customerId" component="select" className="ui dropdown">
-            <option value="" disabled hidden>
-              Select Customer
-            </option>
-            {renderCustomers()}
-          </Field>
+          <div className="field">
+            <label>Customer</label>
+            <Field name="customerId" component="select" className="ui dropdown">
+              <option value="" disabled hidden>
+                Select Customer
+              </option>
+              {renderCustomers()}
+            </Field>
+          </div>
 
           <Field
             name="amount"
