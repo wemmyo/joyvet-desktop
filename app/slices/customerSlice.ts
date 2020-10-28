@@ -1,6 +1,6 @@
 import { createSlice } from '@reduxjs/toolkit';
 import CustomerModel from '../models/customer';
-import { toast } from 'react-toastify';
+// import { toast } from 'react-toastify';
 
 const initialState = {
   customers: {
@@ -97,7 +97,7 @@ export const createCustomerFn = (values: any, cb: () => void) => async (
       balance: values.balance || null,
     });
     console.log(response);
-    toast.success('Customer successfully created');
+    // toast.success('Customer successfully created');
 
     cb();
     dispatch(createCustomerSuccess({}));

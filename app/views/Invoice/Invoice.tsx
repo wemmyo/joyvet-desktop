@@ -164,7 +164,6 @@ const InvoiceScreen: React.SFC<InvoiceProps> = () => {
                       JSON.parse(values.product).unitPrice *
                       Number(values.quantity),
                   });
-                  // actions.resetForm({ quantity: '', product: '' });
                   // actions.resetForm({
                   //   values: {
                   //     product: '',

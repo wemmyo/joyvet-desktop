@@ -15,6 +15,7 @@ import Supplier from './models/supplier';
 import PriceLevel from './models/priceLevel';
 import ProductGroup from './models/productGroup';
 import InvoiceItem from './models/invoiceItem';
+import PurchaseItem from './models/purchaseItem';
 
 const store = configuredStore();
 
@@ -53,8 +54,8 @@ Supplier.hasMany(Payment);
 
 Purchase.belongsTo(Supplier);
 Supplier.hasMany(Purchase);
-Purchase.belongsToMany(Product, { through: 'ProductPurchase' });
-Product.belongsToMany(Purchase, { through: 'ProductPurchase' });
+Purchase.belongsToMany(Product, { through: PurchaseItem });
+Product.belongsToMany(Purchase, { through: PurchaseItem });
 
 sequelize
   // .sync({ force: true })

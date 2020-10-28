@@ -1,6 +1,8 @@
 import { createSlice } from '@reduxjs/toolkit';
 import PurchaseModel from '../models/purchase';
-import { toast } from 'react-toastify';
+// import { toast } from 'react-toastify';
+import Supplier from '../models/supplier';
+import Product from '../models/product';
 
 const initialState = {
   purchases: {
@@ -83,23 +85,31 @@ export const getPurchasesFn = () => async (
   }
 };
 
-export const createPurchaseFn = (values: any, cb: () => void) => async (
-  dispatch: (arg0: { payload: any; type: string }) => void
-) => {
+export const createPurchaseFn = (
+  values: any,
+  meta?: any,
+  cb?: () => void
+) => async (dispatch: (arg0: { payload: any; type: string }) => void) => {
   try {
     dispatch(createPurchase());
-    // const response = await PurchaseModel.create(values);
-    const response = await PurchaseModel.create({
-      supplierId: values.supplierId || null,
-      unitPrice: values.unitPrice || null,
-      quantity: values.quantity || null,
-      invoiceNumber: values.invoiceNumber || null,
-      invoiceDate: values.invoiceDate || null,
+    const supplier = await Supplier.findByPk(meta.supplierId);
+    const purchase = await supplier.createPurchase({
+      invoiceNumber: meta.invoiceNumber,
+      invoiceDate: meta.invoiceDate,
+      amount: meta.amount,
     });
-    console.log(response);
-    toast.success('Purchase successfully created');
-
-    cb();
+    const prodArr: any = [];
+    await Promise.all(
+      values.map(async (each: any) => {
+        const prod = await Product.findByPk(each.id);
+        prod.purchaseItem = { quantity: each.quantity };
+        prodArr.push(prod);
+      })
+    );
+    await purchase.addProducts(prodArr);
+    if (cb) {
+      cb();
+    }
     dispatch(createPurchaseSuccess({}));
   } catch (error) {
     dispatch(createPurchaseFailed({}));

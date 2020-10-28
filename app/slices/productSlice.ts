@@ -1,6 +1,6 @@
 import { createSlice } from '@reduxjs/toolkit';
 import ProductModel from '../models/product';
-import { toast } from 'react-toastify';
+// import { toast } from 'react-toastify';
 
 const initialState = {
   products: {
@@ -96,7 +96,7 @@ export const createProductFn = (values: any, cb: () => void) => async (
       productGroup: values.productGroup || null,
     });
     console.log(response);
-    toast.success('Product successfully created');
+    // toast.success('Product successfully created');
 
     cb();
     dispatch(createProductSuccess({}));
