@@ -2,16 +2,17 @@ import * as React from 'react';
 
 // import { ComponentToPrint } from "../ComponentToPrint";
 import ReactToPrint from 'react-to-print';
+import PrintedReceipt from '../components/PrintedReceipt/PrintedReceipt';
 
-class ComponentToPrint extends React.Component {
-  render() {
-    return (
-      <div>
-        <p>Printed Content</p>
-      </div>
-    );
-  }
-}
+// class ComponentToPrint extends React.Component {
+//   render() {
+//     return (
+//       <div>
+//         <p>Printed Content</p>
+//       </div>
+//     );
+//   }
+// }
 
 export const FunctionalComponent = () => {
   const componentRef = React.useRef(null);
@@ -82,7 +83,7 @@ export const FunctionalComponent = () => {
         trigger={reactToPrintTrigger}
       />
       {loading && <p className="indicator">Loading...</p>}
-      <ComponentToPrint ref={componentRef} />
+      <PrintedReceipt ref={componentRef} />
     </div>
   );
 };

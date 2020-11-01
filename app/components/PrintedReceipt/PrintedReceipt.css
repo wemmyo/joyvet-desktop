@@ -1,0 +1,9 @@
+.receipt {
+  /* border: 1px solid red; */
+  max-width: 280px;
+  padding: 35px 25px 25px;
+  font-size: x-small;
+}
+.receipt__companyInfo {
+  text-align: center;
+}

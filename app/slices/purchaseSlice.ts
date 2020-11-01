@@ -102,6 +102,10 @@ export const createPurchaseFn = (
     await Promise.all(
       values.map(async (each: any) => {
         const prod = await Product.findByPk(each.id);
+        await Product.increment('stock', {
+          by: each.quantity,
+          where: { id: each.id },
+        });
         prod.purchaseItem = { quantity: each.quantity };
         prodArr.push(prod);
       })

@@ -1,6 +1,6 @@
 import { createSlice } from '@reduxjs/toolkit';
 import InvoiceModel from '../models/invoice';
-// import { toast } from 'react-toastify';
+import { toast } from 'react-toastify';
 import Customer from '../models/customer';
 import Product from '../models/product';
 
@@ -102,16 +102,31 @@ export const createInvoiceFn = (
     await Promise.all(
       values.map(async (each: any) => {
         const prod = await Product.findByPk(each.id);
+        // console.log('prod ', prod.stock);
+        // console.log('each ', each.stock);
+        if (prod.stock < each.quantity) {
+          throw new Error(`${prod.title} is out of stock`);
+        }
+        await Product.decrement('stock', {
+          by: each.quantity,
+          where: { id: each.id },
+        });
         prod.invoiceItem = { quantity: each.quantity };
         prodArr.push(prod);
       })
     );
     await invoice.addProducts(prodArr);
+    // await Captain.bulkCreate([
+    //   { name: 'Jack Sparrow' },
+    //   { name: 'Davy Jones' }
+    // ], { updateOnDuplicate: ["name"] });
+
     if (cb) {
       cb();
     }
     dispatch(createInvoiceSuccess({}));
   } catch (error) {
+    toast.error(error.message);
     dispatch(createInvoiceFailed({}));
     console.log(error);
   }
