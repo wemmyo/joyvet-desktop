@@ -24,7 +24,7 @@ const LoginForm = () => {
             </Form.Field>
             <Button fluid>Login</Button>
           </Segment>
-          <Link to={routes.OVERVIEW}>to Overview</Link>
+          <Link to={routes.INVOICE}>to Overview</Link>
         </Form>
       </Grid.Column>
     </Grid>

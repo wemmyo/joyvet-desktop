@@ -13,12 +13,40 @@ const initialState = {
     data: {},
     error: {},
   },
+  supplier: {
+    loading: false,
+    data: {},
+    error: {},
+  },
 };
 
 const supplierSlice = createSlice({
   name: 'supplier',
   initialState: initialState,
   reducers: {
+    clearSingleSupplier: (state) => {
+      let { supplier } = state;
+      supplier.loading = false;
+      supplier.data = {};
+      supplier.error = {};
+    },
+    getSingleSupplier: (state) => {
+      let { supplier } = state;
+      supplier.loading = true;
+      supplier.error = {};
+    },
+    getSingleSupplierSuccess: (state, { payload }) => {
+      let { supplier } = state;
+      supplier.loading = false;
+      supplier.data = payload;
+      supplier.error = {};
+    },
+    getSingleSupplierFailed: (state, { payload }) => {
+      let { supplier } = state;
+      supplier.loading = false;
+      supplier.data = [];
+      supplier.error = payload;
+    },
     getSuppliers: (state) => {
       let { suppliers } = state;
       suppliers.loading = true;
@@ -58,6 +86,10 @@ const supplierSlice = createSlice({
 });
 
 export const {
+  getSingleSupplier,
+  getSingleSupplierSuccess,
+  getSingleSupplierFailed,
+  clearSingleSupplier,
   getSuppliers,
   getSuppliersSuccess,
   getSuppliersFailed,
@@ -65,6 +97,28 @@ export const {
   createSupplierSuccess,
   createSupplierFailed,
 } = supplierSlice.actions;
+
+export const getSingleSupplierFn = (supplierId: number) => async (
+  dispatch: (arg0: { payload: any; type: string }) => void
+) => {
+  try {
+    dispatch(getSingleSupplier());
+    const response = await SupplierModel.findByPk(supplierId);
+    console.log(response);
+
+    // console.log((await SupplierModel.findAll()).toJSON());
+    dispatch(getSingleSupplierSuccess(response));
+  } catch (error) {
+    console.log(error);
+
+    dispatch(getSingleSupplierFailed({}));
+  }
+};
+export const clearSingleSupplierFn = () => async (
+  dispatch: (arg0: { payload: any; type: string }) => void
+) => {
+  dispatch(clearSingleSupplier());
+};
 
 export const getSuppliersFn = () => async (
   dispatch: (arg0: { payload: any; type: string }) => void

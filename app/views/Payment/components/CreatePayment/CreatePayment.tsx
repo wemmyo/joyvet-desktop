@@ -1,10 +1,12 @@
 import React, { useEffect } from 'react';
-import { Button, Form } from 'semantic-ui-react';
+import { Button, Form, Message } from 'semantic-ui-react';
 import { Field, Formik } from 'formik';
 // import * as Yup from 'yup';
 import {
   getSuppliersFn,
+  getSingleSupplierFn,
   selectSupplierState,
+  clearSingleSupplierFn,
 } from '../../../../slices/supplierSlice';
 import {
   createPaymentFn,
@@ -18,6 +20,7 @@ const CreatePayment: React.FC<CreatePaymentProps> = () => {
   const dispatch = useDispatch();
   const supplierState = useSelector(selectSupplierState);
   const { data: suppliers } = supplierState.suppliers;
+  const { data: supplier } = supplierState.supplier;
 
   const fetchSuppliers = () => {
     dispatch(getSuppliersFn());
@@ -37,14 +40,21 @@ const CreatePayment: React.FC<CreatePaymentProps> = () => {
   };
 
   const renderSuppliers = () => {
-    const supplierList = suppliers.map((supplier: any) => {
+    const supplierList = suppliers.map((eachSupplier: any) => {
       return (
-        <option key={supplier.id} value={supplier.id}>
-          {supplier.fullName}
+        <option key={eachSupplier.id} value={eachSupplier.id}>
+          {eachSupplier.fullName}
         </option>
       );
     });
     return supplierList;
+  };
+
+  const showSupplierBalance = () => {
+    if (supplier.balance) {
+      return <Message>Outstanding balance: {supplier.balance}</Message>;
+    }
+    return null;
   };
 
   return (
@@ -58,19 +68,36 @@ const CreatePayment: React.FC<CreatePaymentProps> = () => {
       onSubmit={(values, actions) => {
         handleNewPayment(values);
         actions.resetForm();
+        dispatch(clearSingleSupplierFn());
       }}
     >
-      {({ handleSubmit }) => (
+      {({ handleSubmit, handleChange }) => (
         <Form>
           <div className="field">
             <label>Supplier</label>
-            <Field name="supplierId" component="select" className="ui dropdown">
+            <Field
+              name="supplierId"
+              component="select"
+              className="ui dropdown"
+              onChange={(e: { currentTarget: { value: any } }) => {
+                // call the built-in handleBur
+                handleChange(e);
+                // and do something about e
+                let supplierId = e.currentTarget.value;
+                // console.log(someValue);
+                dispatch(getSingleSupplierFn(supplierId));
+
+                // ...
+              }}
+            >
               <option value="" disabled hidden>
                 Select Supplier
               </option>
               {renderSuppliers()}
             </Field>
           </div>
+
+          {showSupplierBalance()}
 
           <Field
             name="amount"

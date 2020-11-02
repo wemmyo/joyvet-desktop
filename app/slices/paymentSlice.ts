@@ -1,5 +1,6 @@
 import { createSlice } from '@reduxjs/toolkit';
 import PaymentModel from '../models/payment';
+import SupplierModel from '../models/supplier';
 import { toast } from 'react-toastify';
 
 const initialState = {
@@ -92,9 +93,22 @@ export const createPaymentFn = (values: any, cb: () => void) => async (
     const response = await PaymentModel.create({
       amount: values.amount || null,
       note: values.note || null,
-      customerId: values.customerId || null,
+      supplierId: values.supplierId || null,
     });
     console.log(response);
+    // const supplier = await SupplierModel.findByPk(values.supplierId);
+    await SupplierModel.decrement('balance', {
+      by: values.amount,
+      where: { id: values.supplierId },
+    });
+
+    // if(supplier.balance)
+
+    // await SupplierModel.decrement('balance', {
+    //   by: each.quantity,
+    //   where: { id: each.id },
+    // });
+
     toast.success('Payment successfully created');
 
     cb();
