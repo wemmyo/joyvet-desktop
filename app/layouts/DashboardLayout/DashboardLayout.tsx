@@ -1,8 +1,14 @@
-import React, { useState } from 'react';
+import React from 'react';
 import Sidebar from './SideNav/SideNav';
 import styles from './DashboardLayout.css';
 import HeaderSection from './HeaderSection/HeaderSection';
 import { Button } from 'semantic-ui-react';
+import { useDispatch, useSelector } from 'react-redux';
+import {
+  selectDashboardState,
+  openSideContentFn,
+  closeSideContentFn,
+} from '../../slices/dashboardSlice';
 
 export interface DashboardLayoutProps {
   children?: any;
@@ -15,11 +21,9 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
   screenTitle,
   rightSidebar,
 }) => {
-  const [rightSidebarIsOpen, setRightSidebarIsOpen] = useState(false);
-
-  const openRightSidebar = () => {
-    setRightSidebarIsOpen(true);
-  };
+  const dispatch = useDispatch();
+  const dashboardState = useSelector(selectDashboardState);
+  const { sideContentisOpen } = dashboardState;
 
   return (
     <div style={{ display: 'flex' }}>
@@ -27,14 +31,14 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
       <div style={{ display: 'flex', flex: 1 }}>
         <div className={styles.main}>
           <HeaderSection
-            openRightSidebarFn={openRightSidebar}
+            openRightSidebarFn={() => dispatch(openSideContentFn())}
             screenTitle={screenTitle}
           />
           {children}
         </div>
         <div
           className={`${styles.rightSidebar} ${
-            rightSidebarIsOpen
+            sideContentisOpen
               ? styles.rightSidebar__open
               : styles.rightSidebar__close
           }`}
@@ -42,7 +46,9 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
           <div style={{ marginBottom: '2rem' }}>
             <Button
               content="Close"
-              onClick={() => setRightSidebarIsOpen(false)}
+              onClick={() => {
+                dispatch(closeSideContentFn());
+              }}
             />
           </div>
 

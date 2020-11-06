@@ -4,6 +4,11 @@ import SupplierModel from '../models/supplier';
 import { toast } from 'react-toastify';
 
 const initialState = {
+  singlePayment: {
+    loading: true,
+    data: '',
+    error: {},
+  },
   payments: {
     loading: true,
     data: [],
@@ -20,6 +25,23 @@ const paymentSlice = createSlice({
   name: 'payment',
   initialState: initialState,
   reducers: {
+    getSinglePayment: (state) => {
+      let { singlePayment } = state;
+      singlePayment.loading = true;
+      singlePayment.error = {};
+    },
+    getSinglePaymentSuccess: (state, { payload }) => {
+      let { singlePayment } = state;
+      singlePayment.loading = false;
+      singlePayment.data = payload;
+      singlePayment.error = {};
+    },
+    getSinglePaymentFailed: (state, { payload }) => {
+      let { singlePayment } = state;
+      singlePayment.loading = false;
+      singlePayment.data = '';
+      singlePayment.error = payload;
+    },
     getPayments: (state) => {
       let { payments } = state;
       payments.loading = true;
@@ -59,6 +81,9 @@ const paymentSlice = createSlice({
 });
 
 export const {
+  getSinglePayment,
+  getSinglePaymentSuccess,
+  getSinglePaymentFailed,
   getPayments,
   getPaymentsSuccess,
   getPaymentsFailed,
@@ -67,6 +92,26 @@ export const {
   createPaymentFailed,
 } = paymentSlice.actions;
 
+export const getSinglePaymentFn = (
+  id: string | number,
+  cb: () => void
+) => async (dispatch: (arg0: { payload: any; type: string }) => void) => {
+  try {
+    dispatch(getSinglePayment());
+    const response = await PaymentModel.findByPk(id, {
+      include: SupplierModel,
+    });
+    // console.log(JSON.stringify(response));
+
+    dispatch(getSinglePaymentSuccess(JSON.stringify(response)));
+    cb();
+    // dispatch(getSinglePaymentSuccess(JSON.stringify(response)));
+  } catch (error) {
+    console.log(error);
+
+    dispatch(getSinglePaymentFailed({}));
+  }
+};
 export const getPaymentsFn = () => async (
   dispatch: (arg0: { payload: any; type: string }) => void
 ) => {

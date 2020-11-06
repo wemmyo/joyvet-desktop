@@ -98,7 +98,7 @@ export const {
   createSupplierFailed,
 } = supplierSlice.actions;
 
-export const getSingleSupplierFn = (supplierId: number) => async (
+export const getSingleSupplierFn = (supplierId: number | string) => async (
   dispatch: (arg0: { payload: any; type: string }) => void
 ) => {
   try {
