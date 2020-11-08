@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import DashboardLayout from '../../layouts/DashboardLayout/DashboardLayout';
 import { Table, Grid, Button, Form, Segment } from 'semantic-ui-react';
 import { Field, Formik } from 'formik';
 import { useSelector, useDispatch } from 'react-redux';
+
+import DashboardLayout from '../../layouts/DashboardLayout/DashboardLayout';
 import {
   getCustomersFn,
   selectCustomerState,
@@ -11,16 +12,40 @@ import { getProductsFn, selectProductState } from '../../slices/productSlice';
 import { numberWithCommas } from '../../utils/helpers';
 import { createInvoiceFn } from '../../slices/invoiceSlice';
 
-export interface InvoiceProps {}
+const TextInput = ({
+  field, // { name, value, onChange, onBlur }
+  form: { touched, errors }, // also values, setXXXX, handleXXXX, dirty, isValid, status, etc.
+  ...props
+}: {
+  [x: string]: any;
+  field: any;
+  form: any;
+}) => {
+  return (
+    <Form.Input
+      error={
+        touched[field.name] && errors[field.name] ? errors[field.name] : false
+      }
+      label={props.label}
+    >
+      <input placeholder={props.placeholder} {...field} {...props} />
+    </Form.Input>
+  );
+};
 
-const InvoiceScreen: React.SFC<InvoiceProps> = () => {
-  const [orders, setOrders]: any = useState([]);
+const InvoiceScreen: React.FC = () => {
+  const [orders, setOrders] = useState([]);
 
   const dispatch = useDispatch();
+
   const customerState = useSelector(selectCustomerState);
-  const { data: customers } = customerState.customers;
   const productState = useSelector(selectProductState);
-  const { data: products } = productState.products;
+
+  const { data: customersRaw } = customerState.customers;
+  const { data: productsRaw } = productState.products;
+
+  const customers = customersRaw ? JSON.parse(customersRaw) : [];
+  const products = productsRaw ? JSON.parse(productsRaw) : [];
 
   const fetchCustomers = () => {
     dispatch(getCustomersFn());
@@ -84,11 +109,11 @@ const InvoiceScreen: React.SFC<InvoiceProps> = () => {
   };
 
   const renderOrders = () => {
-    let serialNumber = 1;
+    const serialNumber = 1;
     const orderList = orders.map((order: any) => {
       return (
         <Table.Row key={serialNumber}>
-          <Table.Cell>{serialNumber++}</Table.Cell>
+          <Table.Cell>{serialNumber + 1}</Table.Cell>
           <Table.Cell>{order.title}</Table.Cell>
           <Table.Cell>{order.quantity}</Table.Cell>
           <Table.Cell>{numberWithCommas(order.unitPrice)}</Table.Cell>
@@ -155,8 +180,6 @@ const InvoiceScreen: React.SFC<InvoiceProps> = () => {
                 }}
                 // validationSchema={CreatePaymentSchema}
                 onSubmit={(values, actions) => {
-                  console.log(values);
-
                   addToOrders({
                     ...JSON.parse(values.product),
                     quantity: values.quantity,
@@ -175,8 +198,9 @@ const InvoiceScreen: React.SFC<InvoiceProps> = () => {
                 {({ handleSubmit, values }) => (
                   <Form>
                     <div className="field">
-                      <label>Customer</label>
+                      <label htmlFor="customer">Customer</label>
                       <Field
+                        id="customer"
                         name="customerId"
                         component="select"
                         className="ui dropdown"
@@ -188,8 +212,9 @@ const InvoiceScreen: React.SFC<InvoiceProps> = () => {
                       </Field>
                     </div>
                     <div className="field">
-                      <label>Sale Type</label>
+                      <label htmlFor="saleType">Sale Type</label>
                       <Field
+                        id="saleType"
                         name="saleType"
                         component="select"
                         className="ui dropdown"
@@ -204,8 +229,9 @@ const InvoiceScreen: React.SFC<InvoiceProps> = () => {
                     </div>
                     <Segment raised>
                       <div className="field">
-                        <label>Item</label>
+                        <label htmlFor="product">Item</label>
                         <Field
+                          id="product"
                           name="product"
                           component="select"
                           className="ui dropdown"
@@ -257,30 +283,8 @@ const InvoiceScreen: React.SFC<InvoiceProps> = () => {
           </Grid.Column>
         </Grid.Row>
       </Grid>
-      {/* <Divider vertical>And</Divider> */}
     </DashboardLayout>
   );
 };
 
 export default InvoiceScreen;
-
-const TextInput = ({
-  field, // { name, value, onChange, onBlur }
-  form: { touched, errors }, // also values, setXXXX, handleXXXX, dirty, isValid, status, etc.
-  ...props
-}: {
-  [x: string]: any;
-  field: any;
-  form: any;
-}) => {
-  return (
-    <Form.Input
-      error={
-        touched[field.name] && errors[field.name] ? errors[field.name] : false
-      }
-      label={props.label}
-    >
-      <input placeholder={props.placeholder} {...field} {...props} />
-    </Form.Input>
-  );
-};

@@ -1,6 +1,6 @@
-const Sequelize = require('sequelize');
-
 import sequelize from '../utils/database';
+
+const Sequelize = require('sequelize');
 
 export default sequelize.define('customer', {
   id: {
@@ -9,7 +9,7 @@ export default sequelize.define('customer', {
     allowNull: false,
     primaryKey: true,
   },
-  fullName: Sequelize.STRING,
+  fullName: { type: Sequelize.STRING, allowNull: false },
   address: Sequelize.STRING,
   phoneNumber: Sequelize.STRING,
   balance: Sequelize.DOUBLE,

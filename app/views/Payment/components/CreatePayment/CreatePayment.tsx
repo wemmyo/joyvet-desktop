@@ -1,6 +1,7 @@
 import React, { useEffect } from 'react';
 import { Button, Form, Message } from 'semantic-ui-react';
 import { Field, Formik } from 'formik';
+import { useSelector, useDispatch } from 'react-redux';
 // import * as Yup from 'yup';
 import {
   getSuppliersFn,
@@ -12,15 +13,38 @@ import {
   createPaymentFn,
   getPaymentsFn,
 } from '../../../../slices/paymentSlice';
-import { useSelector, useDispatch } from 'react-redux';
 
-export interface CreatePaymentProps {}
+const TextInput = ({
+  field, // { name, value, onChange, onBlur }
+  form: { touched, errors }, // also values, setXXXX, handleXXXX, dirty, isValid, status, etc.
+  ...props
+}: {
+  [x: string]: any;
+  field: any;
+  form: any;
+}) => {
+  return (
+    <Form.Input
+      error={
+        touched[field.name] && errors[field.name] ? errors[field.name] : false
+      }
+      label={props.label}
+    >
+      <input placeholder={props.placeholder} {...field} {...props} />
+    </Form.Input>
+  );
+};
 
-const CreatePayment: React.FC<CreatePaymentProps> = () => {
+const CreatePayment: React.FC = () => {
   const dispatch = useDispatch();
+
   const supplierState = useSelector(selectSupplierState);
-  const { data: suppliers } = supplierState.suppliers;
-  const { data: supplier } = supplierState.supplier;
+
+  const { data: suppliersRaw } = supplierState.suppliers;
+  const { data: singleSupplierRaw } = supplierState.singleSupplier;
+
+  const suppliers = suppliersRaw ? JSON.parse(suppliersRaw) : [];
+  const singleSupplier = singleSupplierRaw ? JSON.parse(singleSupplierRaw) : {};
 
   const fetchSuppliers = () => {
     dispatch(getSuppliersFn());
@@ -30,14 +54,6 @@ const CreatePayment: React.FC<CreatePaymentProps> = () => {
   };
 
   useEffect(fetchSuppliers, []);
-
-  const handleNewPayment = (values: any) => {
-    dispatch(
-      createPaymentFn(values, () => {
-        fetchPayments();
-      })
-    );
-  };
 
   const renderSuppliers = () => {
     const supplierList = suppliers.map((eachSupplier: any) => {
@@ -51,8 +67,8 @@ const CreatePayment: React.FC<CreatePaymentProps> = () => {
   };
 
   const showSupplierBalance = () => {
-    if (supplier.balance) {
-      return <Message>Outstanding balance: {supplier.balance}</Message>;
+    if (singleSupplier.balance) {
+      return <Message>Outstanding balance: {singleSupplier.balance}</Message>;
     }
     return null;
   };
@@ -66,16 +82,21 @@ const CreatePayment: React.FC<CreatePaymentProps> = () => {
       }}
       // validationSchema={CreatePaymentSchema}
       onSubmit={(values, actions) => {
-        handleNewPayment(values);
-        actions.resetForm();
-        dispatch(clearSingleSupplierFn());
+        dispatch(
+          createPaymentFn(values, () => {
+            fetchPayments();
+            actions.resetForm();
+            dispatch(clearSingleSupplierFn());
+          })
+        );
       }}
     >
       {({ handleSubmit, handleChange }) => (
         <Form>
           <div className="field">
-            <label>Supplier</label>
+            <label htmlFor="supplierId">Supplier</label>
             <Field
+              id="supplierId"
               name="supplierId"
               component="select"
               className="ui dropdown"
@@ -83,7 +104,7 @@ const CreatePayment: React.FC<CreatePaymentProps> = () => {
                 // call the built-in handleBur
                 handleChange(e);
                 // and do something about e
-                let supplierId = e.currentTarget.value;
+                const supplierId = e.currentTarget.value;
                 // console.log(someValue);
                 dispatch(getSingleSupplierFn(supplierId));
 
@@ -122,24 +143,3 @@ const CreatePayment: React.FC<CreatePaymentProps> = () => {
   );
 };
 export default CreatePayment;
-
-const TextInput = ({
-  field, // { name, value, onChange, onBlur }
-  form: { touched, errors }, // also values, setXXXX, handleXXXX, dirty, isValid, status, etc.
-  ...props
-}: {
-  [x: string]: any;
-  field: any;
-  form: any;
-}) => {
-  return (
-    <Form.Input
-      error={
-        touched[field.name] && errors[field.name] ? errors[field.name] : false
-      }
-      label={props.label}
-    >
-      <input placeholder={props.placeholder} {...field} {...props} />
-    </Form.Input>
-  );
-};

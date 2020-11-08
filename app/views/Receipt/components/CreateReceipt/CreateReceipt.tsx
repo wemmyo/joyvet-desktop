@@ -1,6 +1,7 @@
 import React, { useEffect } from 'react';
 import { Button, Form } from 'semantic-ui-react';
 import { Field, Formik } from 'formik';
+import { useSelector, useDispatch } from 'react-redux';
 // import * as Yup from 'yup';
 import {
   getCustomersFn,
@@ -10,14 +11,36 @@ import {
   createReceiptFn,
   getReceiptsFn,
 } from '../../../../slices/receiptSlice';
-import { useSelector, useDispatch } from 'react-redux';
 
-export interface CreateReceiptProps {}
+const TextInput = ({
+  field, // { name, value, onChange, onBlur }
+  form: { touched, errors }, // also values, setXXXX, handleXXXX, dirty, isValid, status, etc.
+  ...props
+}: {
+  [x: string]: any;
+  field: any;
+  form: any;
+}) => {
+  return (
+    <Form.Input
+      error={
+        touched[field.name] && errors[field.name] ? errors[field.name] : false
+      }
+      label={props.label}
+    >
+      <input placeholder={props.placeholder} {...field} {...props} />
+    </Form.Input>
+  );
+};
 
-const CreateReceipt: React.FC<CreateReceiptProps> = () => {
+const CreateReceipt: React.FC = () => {
   const dispatch = useDispatch();
+
   const customerState = useSelector(selectCustomerState);
-  const { data: customers } = customerState.customers;
+
+  const { data: customersRaw } = customerState.customers;
+
+  const customers = customersRaw ? JSON.parse(customersRaw) : [];
 
   const fetchCustomers = () => {
     dispatch(getCustomersFn());
@@ -63,8 +86,13 @@ const CreateReceipt: React.FC<CreateReceiptProps> = () => {
       {({ handleSubmit }) => (
         <Form>
           <div className="field">
-            <label>Customer</label>
-            <Field name="customerId" component="select" className="ui dropdown">
+            <label htmlFor="customerId">Customer</label>
+            <Field
+              id="customerId"
+              name="customerId"
+              component="select"
+              className="ui dropdown"
+            >
               <option value="" disabled hidden>
                 Select Customer
               </option>
@@ -95,24 +123,3 @@ const CreateReceipt: React.FC<CreateReceiptProps> = () => {
   );
 };
 export default CreateReceipt;
-
-const TextInput = ({
-  field, // { name, value, onChange, onBlur }
-  form: { touched, errors }, // also values, setXXXX, handleXXXX, dirty, isValid, status, etc.
-  ...props
-}: {
-  [x: string]: any;
-  field: any;
-  form: any;
-}) => {
-  return (
-    <Form.Input
-      error={
-        touched[field.name] && errors[field.name] ? errors[field.name] : false
-      }
-      label={props.label}
-    >
-      <input placeholder={props.placeholder} {...field} {...props} />
-    </Form.Input>
-  );
-};

@@ -1,58 +1,48 @@
 import { createSlice } from '@reduxjs/toolkit';
+import { toast } from 'react-toastify';
 import ProductModel from '../models/product';
-// import { toast } from 'react-toastify';
 
 const initialState = {
   products: {
-    loading: true,
-    data: [],
-    error: {},
+    loading: false,
+    data: '',
   },
   createProductState: {
     loading: false,
-    data: {},
-    error: {},
+    data: '',
   },
 };
 
 const productSlice = createSlice({
   name: 'product',
-  initialState: initialState,
+  initialState,
   reducers: {
     getProducts: (state) => {
-      let { products } = state;
+      const { products } = state;
       products.loading = true;
-      products.error = {};
     },
     getProductsSuccess: (state, { payload }) => {
-      let { products } = state;
+      const { products } = state;
       products.loading = false;
       products.data = payload;
-      products.error = {};
     },
-    getProductsFailed: (state, { payload }) => {
-      let { products } = state;
+    getProductsFailed: (state) => {
+      const { products } = state;
       products.loading = false;
-      products.data = [];
-      products.error = payload;
     },
     createProduct: (state) => {
-      let { createProductState } = state;
+      const { createProductState } = state;
       createProductState.loading = true;
-      createProductState.data = {};
-      createProductState.error = {};
+      createProductState.data = '';
     },
     createProductSuccess: (state, { payload }) => {
-      let { createProductState } = state;
+      const { createProductState } = state;
       createProductState.loading = false;
       createProductState.data = payload;
-      createProductState.error = {};
     },
-    createProductFailed: (state, { payload }) => {
-      let { createProductState } = state;
+    createProductFailed: (state) => {
+      const { createProductState } = state;
       createProductState.loading = false;
-      createProductState.data = {};
-      createProductState.error = payload;
     },
   },
 });
@@ -71,38 +61,32 @@ export const getProductsFn = () => async (
 ) => {
   try {
     dispatch(getProducts());
-    const response = await ProductModel.findAll({
-      raw: true,
-    });
-    console.log(response);
-    dispatch(getProductsSuccess(response));
+    const products = await ProductModel.findAll();
+    dispatch(getProductsSuccess(JSON.stringify(products)));
   } catch (error) {
-    console.log(error);
-
-    dispatch(getProductsFailed({}));
+    toast.error(error.message || '');
   }
 };
 
-export const createProductFn = (values: any, cb: () => void) => async (
+export const createProductFn = (values: any, cb?: () => void) => async (
   dispatch: (arg0: { payload: any; type: string }) => void
 ) => {
   try {
     dispatch(createProduct());
     // const response = await ProductModel.create(values);
-    const response = await ProductModel.create({
+    await ProductModel.create({
       title: values.title || null,
       stock: values.stock || null,
       unitPrice: values.unitPrice || null,
       productGroup: values.productGroup || null,
     });
-    console.log(response);
-    // toast.success('Product successfully created');
 
-    cb();
+    if (cb) {
+      cb();
+    }
     dispatch(createProductSuccess({}));
   } catch (error) {
-    dispatch(createProductFailed({}));
-    console.log(error);
+    toast.error(error.message || '');
   }
 };
 

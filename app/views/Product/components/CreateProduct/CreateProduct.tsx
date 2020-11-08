@@ -7,12 +7,6 @@ export interface CreateProductProps {
   createProductFn: (values: any) => void;
 }
 
-// const options = [
-//   { key: 'm', text: 'Male', value: 'male' },
-//   { key: 'f', text: 'Female', value: 'female' },
-//   { key: 'o', text: 'Other', value: 'other' },
-// ];
-
 const TextInput = ({
   field, // { name, value, onChange, onBlur }
   form: { touched, errors }, // also values, setXXXX, handleXXXX, dirty, isValid, status, etc.

@@ -1,7 +1,6 @@
-const Sequelize = require('sequelize');
-
-// const sequelize = require('../utils/database');
 import sequelize from '../utils/database';
+
+const Sequelize = require('sequelize');
 
 export default sequelize.define('product', {
   id: {
@@ -10,7 +9,7 @@ export default sequelize.define('product', {
     allowNull: false,
     primaryKey: true,
   },
-  title: Sequelize.STRING,
+  title: { type: Sequelize.STRING, allowNull: false },
   stock: Sequelize.INTEGER,
   unitPrice: Sequelize.INTEGER,
 });

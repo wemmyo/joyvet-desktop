@@ -1,81 +1,68 @@
 import { createSlice } from '@reduxjs/toolkit';
+import { toast } from 'react-toastify';
 import PaymentModel from '../models/payment';
 import SupplierModel from '../models/supplier';
-import { toast } from 'react-toastify';
 
 const initialState = {
   singlePayment: {
-    loading: true,
+    loading: false,
     data: '',
-    error: {},
   },
   payments: {
-    loading: true,
-    data: [],
-    error: {},
+    loading: false,
+    data: '',
   },
   createPaymentState: {
     loading: false,
-    data: {},
-    error: {},
+    data: '',
   },
 };
 
 const paymentSlice = createSlice({
   name: 'payment',
-  initialState: initialState,
+  initialState,
   reducers: {
     getSinglePayment: (state) => {
-      let { singlePayment } = state;
+      const { singlePayment } = state;
       singlePayment.loading = true;
-      singlePayment.error = {};
     },
     getSinglePaymentSuccess: (state, { payload }) => {
-      let { singlePayment } = state;
+      const { singlePayment } = state;
       singlePayment.loading = false;
       singlePayment.data = payload;
-      singlePayment.error = {};
     },
-    getSinglePaymentFailed: (state, { payload }) => {
-      let { singlePayment } = state;
+    getSinglePaymentFailed: (state) => {
+      const { singlePayment } = state;
       singlePayment.loading = false;
       singlePayment.data = '';
-      singlePayment.error = payload;
     },
     getPayments: (state) => {
-      let { payments } = state;
+      const { payments } = state;
       payments.loading = true;
-      payments.error = {};
     },
     getPaymentsSuccess: (state, { payload }) => {
-      let { payments } = state;
+      const { payments } = state;
       payments.loading = false;
       payments.data = payload;
-      payments.error = {};
     },
-    getPaymentsFailed: (state, { payload }) => {
-      let { payments } = state;
+    getPaymentsFailed: (state) => {
+      const { payments } = state;
       payments.loading = false;
-      payments.data = [];
-      payments.error = payload;
+      payments.data = '';
     },
     createPayment: (state) => {
-      let { createPaymentState } = state;
+      const { createPaymentState } = state;
       createPaymentState.loading = true;
-      createPaymentState.data = {};
-      createPaymentState.error = {};
+      createPaymentState.data = '';
     },
     createPaymentSuccess: (state, { payload }) => {
-      let { createPaymentState } = state;
+      const { createPaymentState } = state;
       createPaymentState.loading = false;
       createPaymentState.data = payload;
-      createPaymentState.error = {};
     },
-    createPaymentFailed: (state, { payload }) => {
-      let { createPaymentState } = state;
+    createPaymentFailed: (state) => {
+      const { createPaymentState } = state;
       createPaymentState.loading = false;
-      createPaymentState.data = {};
-      createPaymentState.error = payload;
     },
   },
 });
@@ -98,18 +85,14 @@ export const getSinglePaymentFn = (
 ) => async (dispatch: (arg0: { payload: any; type: string }) => void) => {
   try {
     dispatch(getSinglePayment());
-    const response = await PaymentModel.findByPk(id, {
+    const getSinglePaymentResponse = await PaymentModel.findByPk(id, {
       include: SupplierModel,
     });
-    // console.log(JSON.stringify(response));
 
-    dispatch(getSinglePaymentSuccess(JSON.stringify(response)));
+    dispatch(getSinglePaymentSuccess(JSON.stringify(getSinglePaymentResponse)));
     cb();
-    // dispatch(getSinglePaymentSuccess(JSON.stringify(response)));
   } catch (error) {
-    console.log(error);
-
-    dispatch(getSinglePaymentFailed({}));
+    toast.error(error.message || '');
   }
 };
 export const getPaymentsFn = () => async (
@@ -117,15 +100,10 @@ export const getPaymentsFn = () => async (
 ) => {
   try {
     dispatch(getPayments());
-    const response = await PaymentModel.findAll({
-      raw: true,
-    });
-    console.log(response);
-    dispatch(getPaymentsSuccess(response));
+    const payments = await PaymentModel.findAll();
+    dispatch(getPaymentsSuccess(JSON.stringify(payments)));
   } catch (error) {
-    console.log(error);
-
-    dispatch(getPaymentsFailed({}));
+    toast.error(error.message || '');
   }
 };
 
@@ -135,32 +113,22 @@ export const createPaymentFn = (values: any, cb: () => void) => async (
   try {
     dispatch(createPayment());
     // const response = await PaymentModel.create(values);
-    const response = await PaymentModel.create({
+    await PaymentModel.create({
       amount: values.amount || null,
       note: values.note || null,
       supplierId: values.supplierId || null,
     });
-    console.log(response);
-    // const supplier = await SupplierModel.findByPk(values.supplierId);
+
     await SupplierModel.decrement('balance', {
       by: values.amount,
       where: { id: values.supplierId },
     });
-
-    // if(supplier.balance)
-
-    // await SupplierModel.decrement('balance', {
-    //   by: each.quantity,
-    //   where: { id: each.id },
-    // });
-
     toast.success('Payment successfully created');
 
     cb();
     dispatch(createPaymentSuccess({}));
   } catch (error) {
-    dispatch(createPaymentFailed({}));
-    console.log(error);
+    toast.error(error.message || '');
   }
 };
 

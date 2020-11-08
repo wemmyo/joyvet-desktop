@@ -1,7 +1,8 @@
 import React, { useEffect } from 'react';
-import DashboardLayout from '../../layouts/DashboardLayout/DashboardLayout';
 import { Table } from 'semantic-ui-react';
 import { useSelector, useDispatch } from 'react-redux';
+
+import DashboardLayout from '../../layouts/DashboardLayout/DashboardLayout';
 import {
   selectCustomerState,
   getCustomersFn,
@@ -10,12 +11,13 @@ import {
 import CreateCustomer from './components/CreateCustomer/CreateCustomer';
 import { numberWithCommas } from '../../utils/helpers';
 
-export interface CustomersScreenProps {}
-
-const CustomersScreen: React.FC<CustomersScreenProps> = () => {
+const CustomersScreen: React.FC = () => {
   const dispatch = useDispatch();
+
   const customerState = useSelector(selectCustomerState);
-  const { data: customers } = customerState.customers;
+  const { data: customersRaw } = customerState.customers;
+
+  const customers = customersRaw ? JSON.parse(customersRaw) : [];
 
   const fetchCustomers = () => {
     dispatch(getCustomersFn());
@@ -27,14 +29,11 @@ const CustomersScreen: React.FC<CustomersScreenProps> = () => {
     dispatch(
       createCustomerFn(values, () => {
         fetchCustomers();
-        // console.log('created');
       })
     );
   };
 
   const renderRows = () => {
-    console.log(customers);
-    // return <p>yes</p>;
     const rows = customers.map((each: any) => {
       return (
         <Table.Row key={each.id}>

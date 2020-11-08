@@ -1,58 +1,48 @@
 import { createSlice } from '@reduxjs/toolkit';
+import { toast } from 'react-toastify';
 import CustomerModel from '../models/customer';
-// import { toast } from 'react-toastify';
 
 const initialState = {
   customers: {
-    loading: true,
-    data: [],
-    error: {},
+    loading: false,
+    data: '',
   },
   createCustomerState: {
     loading: false,
-    data: {},
-    error: {},
+    data: '',
   },
 };
 
 const customerSlice = createSlice({
   name: 'customer',
-  initialState: initialState,
+  initialState,
   reducers: {
     getCustomers: (state) => {
-      let { customers } = state;
+      const { customers } = state;
       customers.loading = true;
-      customers.error = {};
     },
     getCustomersSuccess: (state, { payload }) => {
-      let { customers } = state;
+      const { customers } = state;
       customers.loading = false;
       customers.data = payload;
-      customers.error = {};
     },
-    getCustomersFailed: (state, { payload }) => {
-      let { customers } = state;
+    getCustomersFailed: (state) => {
+      const { customers } = state;
       customers.loading = false;
-      customers.data = [];
-      customers.error = payload;
     },
     createCustomer: (state) => {
-      let { createCustomerState } = state;
+      const { createCustomerState } = state;
       createCustomerState.loading = true;
-      createCustomerState.data = {};
-      createCustomerState.error = {};
+      createCustomerState.data = '';
     },
     createCustomerSuccess: (state, { payload }) => {
-      let { createCustomerState } = state;
+      const { createCustomerState } = state;
       createCustomerState.loading = false;
       createCustomerState.data = payload;
-      createCustomerState.error = {};
     },
-    createCustomerFailed: (state, { payload }) => {
-      let { createCustomerState } = state;
+    createCustomerFailed: (state) => {
+      const { createCustomerState } = state;
       createCustomerState.loading = false;
-      createCustomerState.data = {};
-      createCustomerState.error = payload;
     },
   },
 });
@@ -67,43 +57,34 @@ export const {
 } = customerSlice.actions;
 
 export const getCustomersFn = () => async (
-  dispatch: (arg0: { payload: any; type: string }) => void
+  dispatch: (arg0: { payload: unknown; type: string }) => void
 ) => {
   try {
     dispatch(getCustomers());
-    const response = await CustomerModel.findAll({
-      raw: true,
-    });
-    // console.log((await CustomerModel.findAll()).toJSON());
-    console.log(response);
-    dispatch(getCustomersSuccess(response));
+    const customers = await CustomerModel.findAll();
+    dispatch(getCustomersSuccess(JSON.stringify(customers)));
   } catch (error) {
-    console.log(error);
-
-    dispatch(getCustomersFailed({}));
+    toast.error(error.message || '');
   }
 };
 
-export const createCustomerFn = (values: any, cb: () => void) => async (
-  dispatch: (arg0: { payload: any; type: string }) => void
+export const createCustomerFn = (values: any, cb?: () => void) => async (
+  dispatch: (arg0: { payload: unknown; type: string }) => void
 ) => {
   try {
     dispatch(createCustomer());
-    // const response = await CustomerModel.create(values);
-    const response = await CustomerModel.create({
+    const createCustomerResponse = await CustomerModel.create({
       fullName: values.fullName || null,
       address: values.address || null,
       phoneNumber: values.phoneNumber || null,
       balance: values.balance || null,
     });
-    console.log(response);
-    // toast.success('Customer successfully created');
-
-    cb();
-    dispatch(createCustomerSuccess({}));
+    dispatch(createCustomerSuccess(JSON.stringify(createCustomerResponse)));
+    if (cb) {
+      cb();
+    }
   } catch (error) {
-    dispatch(createCustomerFailed({}));
-    console.log(error);
+    toast.error(error.message || '');
   }
 };
 

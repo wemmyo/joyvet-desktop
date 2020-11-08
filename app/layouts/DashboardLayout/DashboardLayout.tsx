@@ -1,25 +1,26 @@
 import React from 'react';
-import Sidebar from './SideNav/SideNav';
-import styles from './DashboardLayout.css';
-import HeaderSection from './HeaderSection/HeaderSection';
 import { Button } from 'semantic-ui-react';
 import { useDispatch, useSelector } from 'react-redux';
+
 import {
   selectDashboardState,
-  openSideContentFn,
   closeSideContentFn,
 } from '../../slices/dashboardSlice';
+import Sidebar from './SideNav/SideNav';
+import styles from './DashboardLayout.css';
 
 export interface DashboardLayoutProps {
   children?: any;
   screenTitle: string;
   rightSidebar?: any;
+  headerContent?: any;
 }
 
 const DashboardLayout: React.FC<DashboardLayoutProps> = ({
   children,
   screenTitle,
   rightSidebar,
+  headerContent,
 }) => {
   const dispatch = useDispatch();
   const dashboardState = useSelector(selectDashboardState);
@@ -30,10 +31,10 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
       <Sidebar />
       <div style={{ display: 'flex', flex: 1 }}>
         <div className={styles.main}>
-          <HeaderSection
-            openRightSidebarFn={() => dispatch(openSideContentFn())}
-            screenTitle={screenTitle}
-          />
+          <header className={styles.headerSection}>
+            <h2 className={styles.headerSection__title}>{screenTitle}</h2>
+            <div className={styles.headerSection__right}>{headerContent}</div>
+          </header>
           {children}
         </div>
         <div

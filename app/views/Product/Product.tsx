@@ -1,7 +1,8 @@
 import React, { useEffect } from 'react';
-import DashboardLayout from '../../layouts/DashboardLayout/DashboardLayout';
 import { Table } from 'semantic-ui-react';
 import { useSelector, useDispatch } from 'react-redux';
+
+import DashboardLayout from '../../layouts/DashboardLayout/DashboardLayout';
 import {
   selectProductState,
   getProductsFn,
@@ -10,12 +11,13 @@ import {
 import CreateProduct from './components/CreateProduct/CreateProduct';
 import { numberWithCommas } from '../../utils/helpers';
 
-export interface ProductsScreenProps {}
-
-const ProductsScreen: React.FC<ProductsScreenProps> = () => {
+const ProductsScreen: React.FC = () => {
   const dispatch = useDispatch();
   const productState = useSelector(selectProductState);
-  const { data: products } = productState.products;
+
+  const { data: productsRaw } = productState.products;
+
+  const products = productsRaw ? JSON.parse(productsRaw) : [];
 
   const fetchProducts = () => {
     dispatch(getProductsFn());
@@ -27,14 +29,11 @@ const ProductsScreen: React.FC<ProductsScreenProps> = () => {
     dispatch(
       createProductFn(values, () => {
         fetchProducts();
-        // console.log('created');
       })
     );
   };
 
   const renderRows = () => {
-    console.log(products);
-    // return <p>yes</p>;
     const rows = products.map((each: any) => {
       return (
         <Table.Row key={each.id}>

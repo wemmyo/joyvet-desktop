@@ -1,6 +1,7 @@
 import React, { useEffect } from 'react';
 import { Button, Form } from 'semantic-ui-react';
 import { Field, Formik } from 'formik';
+import { useSelector, useDispatch } from 'react-redux';
 // import * as Yup from 'yup';
 import {
   getSuppliersFn,
@@ -14,16 +15,39 @@ import {
   createPurchaseFn,
   getPurchasesFn,
 } from '../../../../slices/purchaseSlice';
-import { useSelector, useDispatch } from 'react-redux';
 
-export interface CreatePurchaseProps {}
+const TextInput = ({
+  field, // { name, value, onChange, onBlur }
+  form: { touched, errors }, // also values, setXXXX, handleXXXX, dirty, isValid, status, etc.
+  ...props
+}: {
+  [x: string]: any;
+  field: any;
+  form: any;
+}) => {
+  return (
+    <Form.Input
+      error={
+        touched[field.name] && errors[field.name] ? errors[field.name] : false
+      }
+      label={props.label}
+    >
+      <input placeholder={props.placeholder} {...field} {...props} />
+    </Form.Input>
+  );
+};
 
-const CreatePurchase: React.FC<CreatePurchaseProps> = () => {
+const CreatePurchase: React.FC = () => {
   const dispatch = useDispatch();
+
   const supplierState = useSelector(selectSupplierState);
-  const { data: suppliers } = supplierState.suppliers;
   const productState = useSelector(selectProductState);
-  const { data: products } = productState.products;
+
+  const { data: suppliersRaw } = supplierState.suppliers;
+  const { data: productsRaw } = productState.products;
+
+  const suppliers = suppliersRaw ? JSON.parse(suppliersRaw) : [];
+  const products = productsRaw ? JSON.parse(productsRaw) : [];
 
   const fetchSuppliers = () => {
     dispatch(getSuppliersFn());
@@ -89,8 +113,13 @@ const CreatePurchase: React.FC<CreatePurchaseProps> = () => {
       {({ handleSubmit }) => (
         <Form>
           <div className="field">
-            <label>Supplier</label>
-            <Field name="supplierId" component="select" className="ui dropdown">
+            <label htmlFor="supplierId">Supplier</label>
+            <Field
+              id="supplierId"
+              name="supplierId"
+              component="select"
+              className="ui dropdown"
+            >
               <option value="" disabled hidden>
                 Select Supplier
               </option>
@@ -98,8 +127,13 @@ const CreatePurchase: React.FC<CreatePurchaseProps> = () => {
             </Field>
           </div>
           <div className="field">
-            <label>Product</label>
-            <Field name="productId" component="select" className="ui dropdown">
+            <label htmlFor="product">Product</label>
+            <Field
+              id="product"
+              name="productId"
+              component="select"
+              className="ui dropdown"
+            >
               <option value="" disabled hidden>
                 Select Product
               </option>
@@ -130,24 +164,3 @@ const CreatePurchase: React.FC<CreatePurchaseProps> = () => {
   );
 };
 export default CreatePurchase;
-
-const TextInput = ({
-  field, // { name, value, onChange, onBlur }
-  form: { touched, errors }, // also values, setXXXX, handleXXXX, dirty, isValid, status, etc.
-  ...props
-}: {
-  [x: string]: any;
-  field: any;
-  form: any;
-}) => {
-  return (
-    <Form.Input
-      error={
-        touched[field.name] && errors[field.name] ? errors[field.name] : false
-      }
-      label={props.label}
-    >
-      <input placeholder={props.placeholder} {...field} {...props} />
-    </Form.Input>
-  );
-};

@@ -1,7 +1,8 @@
 import React, { useEffect } from 'react';
-import DashboardLayout from '../../layouts/DashboardLayout/DashboardLayout';
 import { Table } from 'semantic-ui-react';
 import { useSelector, useDispatch } from 'react-redux';
+
+import DashboardLayout from '../../layouts/DashboardLayout/DashboardLayout';
 import {
   selectSupplierState,
   getSuppliersFn,
@@ -10,12 +11,14 @@ import {
 import CreateSupplier from './components/CreateSupplier/CreateSupplier';
 import { numberWithCommas } from '../../utils/helpers';
 
-export interface SuppliersScreenProps {}
-
-const SuppliersScreen: React.FC<SuppliersScreenProps> = () => {
+const SuppliersScreen: React.FC = () => {
   const dispatch = useDispatch();
+
   const supplierState = useSelector(selectSupplierState);
-  const { data: suppliers } = supplierState.suppliers;
+
+  const { data: suppliersRaw } = supplierState.suppliers;
+
+  const suppliers = suppliersRaw ? JSON.parse(suppliersRaw) : [];
 
   const fetchSuppliers = () => {
     dispatch(getSuppliersFn());
@@ -33,8 +36,6 @@ const SuppliersScreen: React.FC<SuppliersScreenProps> = () => {
   };
 
   const renderRows = () => {
-    console.log(suppliers);
-    // return <p>yes</p>;
     const rows = suppliers.map((each: any) => {
       return (
         <Table.Row key={each.id}>

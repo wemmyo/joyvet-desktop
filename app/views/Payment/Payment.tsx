@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react';
-import DashboardLayout from '../../layouts/DashboardLayout/DashboardLayout';
-import { Table } from 'semantic-ui-react';
+import { Table, Input, Button, Icon } from 'semantic-ui-react';
 import { useSelector, useDispatch } from 'react-redux';
+
+import DashboardLayout from '../../layouts/DashboardLayout/DashboardLayout';
 import {
   selectPaymentState,
   getPaymentsFn,
@@ -10,36 +11,52 @@ import {
 import CreatePayment from './components/CreatePayment/CreatePayment';
 import { numberWithCommas } from '../../utils/helpers';
 import PaymentDetail from './components/PaymentDetail/PaymentDetail';
-import { openSideContentFn } from '../../slices/dashboardSlice';
+import {
+  openSideContentFn,
+  closeSideContentFn,
+} from '../../slices/dashboardSlice';
 
-export interface PaymentsScreenProps {}
+const CONTENT_CREATE = 'create';
+const CONTENT_DETAIL = 'detail';
 
-const PaymentsScreen: React.FC<PaymentsScreenProps> = () => {
+const PaymentsScreen: React.FC = () => {
   const [sideContent, setSideContent] = useState('');
 
   const dispatch = useDispatch();
   const paymentState = useSelector(selectPaymentState);
-  const { data: payments } = paymentState.payments;
-  const { data: payment } = paymentState.singlePayment;
-  console.log(payment);
 
-  // console.log(singlePayment);
+  const { data: paymentsRaw } = paymentState.payments;
+  const { data: singlePaymentRaw } = paymentState.singlePayment;
 
-  // console.log(payment);
-  // console.log(JSON.parse(payment));
-
-  // const payment = {};
+  const payments = paymentsRaw ? JSON.parse(paymentsRaw) : [];
+  const singlePayment = singlePaymentRaw ? JSON.parse(singlePaymentRaw) : {};
 
   const fetchPayments = () => {
     dispatch(getPaymentsFn());
   };
 
-  useEffect(fetchPayments, []);
+  const openSideContent = (content: string) => {
+    dispatch(openSideContentFn());
+    setSideContent(content);
+  };
+
+  const closeSideContent = () => {
+    dispatch(closeSideContentFn());
+    setSideContent('');
+  };
+
+  useEffect(() => {
+    fetchPayments();
+
+    return () => {
+      closeSideContent();
+    };
+  }, []);
 
   const openSinglePayment = (id: number | string) => {
     dispatch(
       getSinglePaymentFn(id, () => {
-        openSideContent('detail');
+        openSideContent(CONTENT_DETAIL);
       })
     );
   };
@@ -61,23 +78,44 @@ const PaymentsScreen: React.FC<PaymentsScreenProps> = () => {
   };
 
   const renderSideContent = () => {
-    if (sideContent === 'detail') {
-      // return <p>Hello</p>;
-      return <PaymentDetail payment={JSON.parse(payment)} />;
-    } else if (sideContent === 'create') {
+    if (sideContent === CONTENT_DETAIL) {
+      return <PaymentDetail singlePayment={singlePayment} />;
+    } else if (sideContent === CONTENT_CREATE) {
       return <CreatePayment />;
-    } else {
-      return null;
     }
+    return null;
   };
 
-  const openSideContent = (content: string) => {
-    dispatch(openSideContentFn());
-    setSideContent(content);
+  const headerContent = () => {
+    return (
+      <>
+        <Button icon labelPosition="left">
+          <Icon name="filter" />
+          Filter
+        </Button>
+        <Button
+          color="blue"
+          icon
+          labelPosition="left"
+          onClick={() => {
+            openSideContent(CONTENT_CREATE);
+          }}
+        >
+          <Icon inverted color="grey" name="add" />
+          Create
+        </Button>
+
+        <Input icon="search" placeholder="Search..." />
+      </>
+    );
   };
 
   return (
-    <DashboardLayout screenTitle="Payments" rightSidebar={renderSideContent()}>
+    <DashboardLayout
+      screenTitle="Payments"
+      rightSidebar={renderSideContent()}
+      headerContent={headerContent()}
+    >
       <Table celled striped>
         <Table.Header>
           <Table.Row>

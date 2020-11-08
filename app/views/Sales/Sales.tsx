@@ -1,21 +1,23 @@
 import React, { useEffect } from 'react';
-import DashboardLayout from '../../layouts/DashboardLayout/DashboardLayout';
 import { Table } from 'semantic-ui-react';
 import { useSelector, useDispatch } from 'react-redux';
+
+import DashboardLayout from '../../layouts/DashboardLayout/DashboardLayout';
 import {
   selectInvoiceState,
   getInvoicesFn,
   //   createInvoiceFn,
 } from '../../slices/invoiceSlice';
-// import CreateInvoice from './components/CreateInvoice/CreateInvoice';
 import { numberWithCommas } from '../../utils/helpers';
 
-export interface SalesScreenProps {}
-
-const SalesScreen: React.FC<SalesScreenProps> = () => {
+const SalesScreen: React.FC = () => {
   const dispatch = useDispatch();
+
   const invoiceState = useSelector(selectInvoiceState);
-  const { data: invoices } = invoiceState.invoices;
+
+  const { data: invoicesRaw } = invoiceState.invoices;
+
+  const invoices = invoicesRaw ? JSON.parse(invoicesRaw) : [];
 
   const fetchInvoices = () => {
     dispatch(getInvoicesFn());
@@ -23,18 +25,7 @@ const SalesScreen: React.FC<SalesScreenProps> = () => {
 
   useEffect(fetchInvoices, []);
 
-  //   const handleNewInvoice = (values: any) => {
-  //     dispatch(
-  //       createInvoiceFn(values, () => {
-  //         fetchInvoices();
-  //         // console.log('created');
-  //       })
-  //     );
-  //   };
-
   const renderRows = () => {
-    console.log(invoices);
-    // return <p>yes</p>;
     const rows = invoices.map((each: any) => {
       return (
         <Table.Row key={each.id}>

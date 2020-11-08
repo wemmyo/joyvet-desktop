@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import DashboardLayout from '../../layouts/DashboardLayout/DashboardLayout';
 import { Table, Grid, Button, Form, Segment } from 'semantic-ui-react';
 import { Field, Formik } from 'formik';
 import { useSelector, useDispatch } from 'react-redux';
+
+import DashboardLayout from '../../layouts/DashboardLayout/DashboardLayout';
 import {
   getSuppliersFn,
   selectSupplierState,
@@ -11,16 +12,43 @@ import { getProductsFn, selectProductState } from '../../slices/productSlice';
 import { numberWithCommas } from '../../utils/helpers';
 import { createPurchaseFn } from '../../slices/purchaseSlice';
 
-export interface PurchaseProps {}
+const TextInput = ({
+  field, // { name, value, onChange, onBlur }
+  form: { touched, errors }, // also values, setXXXX, handleXXXX, dirty, isValid, status, etc.
+  ...props
+}: {
+  [x: string]: any;
+  field: any;
+  form: any;
+  label: string;
+  placeholder: string;
+}) => {
+  // const { src, alt } = props;
+  // const { src, alt } = field;
+  return (
+    <Form.Input
+      error={
+        touched[field.name] && errors[field.name] ? errors[field.name] : false
+      }
+      label={props.label}
+    >
+      <input placeholder={props.placeholder} {...field} {...props} />
+    </Form.Input>
+  );
+};
 
-const PurchaseScreen: React.SFC<PurchaseProps> = () => {
-  const [orders, setOrders]: any = useState([]);
+const PurchaseScreen: React.FC = () => {
+  const [orders, setOrders] = useState([]);
 
   const dispatch = useDispatch();
   const supplierState = useSelector(selectSupplierState);
-  const { data: suppliers } = supplierState.suppliers;
   const productState = useSelector(selectProductState);
-  const { data: products } = productState.products;
+
+  const { data: suppliersRaw } = supplierState.suppliers;
+  const { data: productsRaw } = productState.products;
+
+  const suppliers = suppliersRaw ? JSON.parse(suppliersRaw) : [];
+  const products = productsRaw ? JSON.parse(productsRaw) : [];
 
   const fetchSuppliers = () => {
     dispatch(getSuppliersFn());
@@ -84,11 +112,11 @@ const PurchaseScreen: React.SFC<PurchaseProps> = () => {
   };
 
   const renderOrders = () => {
-    let serialNumber = 1;
+    const serialNumber = 1;
     const orderList = orders.map((order: any) => {
       return (
         <Table.Row key={serialNumber}>
-          <Table.Cell>{serialNumber++}</Table.Cell>
+          <Table.Cell>{serialNumber + 1}</Table.Cell>
           <Table.Cell>{order.title}</Table.Cell>
           <Table.Cell>{order.quantity}</Table.Cell>
           <Table.Cell>{numberWithCommas(order.unitPrice)}</Table.Cell>
@@ -131,14 +159,14 @@ const PurchaseScreen: React.SFC<PurchaseProps> = () => {
 
               <Table.Footer>
                 <Table.Row>
-                  <Table.HeaderCell></Table.HeaderCell>
-                  <Table.HeaderCell></Table.HeaderCell>
-                  <Table.HeaderCell></Table.HeaderCell>
+                  <Table.HeaderCell />
+                  <Table.HeaderCell />
+                  <Table.HeaderCell />
                   <Table.HeaderCell>Total</Table.HeaderCell>
                   <Table.HeaderCell>
                     ₦{numberWithCommas(sumOfOrders())}
                   </Table.HeaderCell>
-                  <Table.HeaderCell></Table.HeaderCell>
+                  <Table.HeaderCell />
                 </Table.Row>
               </Table.Footer>
             </Table>
@@ -155,9 +183,7 @@ const PurchaseScreen: React.SFC<PurchaseProps> = () => {
                   quantity: '',
                 }}
                 // validationSchema={CreatePaymentSchema}
-                onSubmit={(values, actions) => {
-                  console.log(values);
-
+                onSubmit={(values) => {
                   addToOrders({
                     ...JSON.parse(values.product),
                     quantity: values.quantity,
@@ -176,8 +202,9 @@ const PurchaseScreen: React.SFC<PurchaseProps> = () => {
                 {({ handleSubmit, values }) => (
                   <Form>
                     <div className="field">
-                      <label>Supplier</label>
+                      <label htmlFor="supplier">Supplier</label>
                       <Field
+                        id="supplier"
                         name="supplierId"
                         component="select"
                         className="ui dropdown"
@@ -204,8 +231,9 @@ const PurchaseScreen: React.SFC<PurchaseProps> = () => {
                     />
                     <Segment raised>
                       <div className="field">
-                        <label>Item</label>
+                        <label htmlFor="product">Item</label>
                         <Field
+                          id="product"
                           name="product"
                           component="select"
                           className="ui dropdown"
@@ -258,30 +286,8 @@ const PurchaseScreen: React.SFC<PurchaseProps> = () => {
           </Grid.Column>
         </Grid.Row>
       </Grid>
-      {/* <Divider vertical>And</Divider> */}
     </DashboardLayout>
   );
 };
 
 export default PurchaseScreen;
-
-const TextInput = ({
-  field, // { name, value, onChange, onBlur }
-  form: { touched, errors }, // also values, setXXXX, handleXXXX, dirty, isValid, status, etc.
-  ...props
-}: {
-  [x: string]: any;
-  field: any;
-  form: any;
-}) => {
-  return (
-    <Form.Input
-      error={
-        touched[field.name] && errors[field.name] ? errors[field.name] : false
-      }
-      label={props.label}
-    >
-      <input placeholder={props.placeholder} {...field} {...props} />
-    </Form.Input>
-  );
-};

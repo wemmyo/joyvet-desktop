@@ -1,58 +1,50 @@
 import { createSlice } from '@reduxjs/toolkit';
-import ReceiptModel from '../models/receipt';
 import { toast } from 'react-toastify';
+import ReceiptModel from '../models/receipt';
 
 const initialState = {
   receipts: {
     loading: true,
-    data: [],
-    error: {},
+    data: '',
   },
   createReceiptState: {
     loading: false,
-    data: {},
-    error: {},
+    data: '',
   },
 };
 
 const receiptSlice = createSlice({
   name: 'receipt',
-  initialState: initialState,
+  initialState,
   reducers: {
     getReceipts: (state) => {
-      let { receipts } = state;
+      const { receipts } = state;
       receipts.loading = true;
-      receipts.error = {};
     },
     getReceiptsSuccess: (state, { payload }) => {
-      let { receipts } = state;
+      const { receipts } = state;
       receipts.loading = false;
       receipts.data = payload;
-      receipts.error = {};
     },
-    getReceiptsFailed: (state, { payload }) => {
-      let { receipts } = state;
+    getReceiptsFailed: (state) => {
+      const { receipts } = state;
       receipts.loading = false;
-      receipts.data = [];
-      receipts.error = payload;
+      receipts.data = '';
     },
     createReceipt: (state) => {
-      let { createReceiptState } = state;
+      const { createReceiptState } = state;
       createReceiptState.loading = true;
-      createReceiptState.data = {};
-      createReceiptState.error = {};
+      createReceiptState.data = '';
     },
     createReceiptSuccess: (state, { payload }) => {
-      let { createReceiptState } = state;
+      const { createReceiptState } = state;
       createReceiptState.loading = false;
       createReceiptState.data = payload;
-      createReceiptState.error = {};
     },
-    createReceiptFailed: (state, { payload }) => {
-      let { createReceiptState } = state;
+    createReceiptFailed: (state) => {
+      const { createReceiptState } = state;
       createReceiptState.loading = false;
-      createReceiptState.data = {};
-      createReceiptState.error = payload;
+      createReceiptState.data = '';
     },
   },
 });
@@ -71,37 +63,33 @@ export const getReceiptsFn = () => async (
 ) => {
   try {
     dispatch(getReceipts());
-    const response = await ReceiptModel.findAll({
-      raw: true,
-    });
-    console.log(response);
-    dispatch(getReceiptsSuccess(response));
+    const receipts = await ReceiptModel.findAll();
+    dispatch(getReceiptsSuccess(JSON.stringify(receipts)));
   } catch (error) {
-    console.log(error);
-
-    dispatch(getReceiptsFailed({}));
+    toast.error(error.message || '');
   }
 };
 
-export const createReceiptFn = (values: any, cb: () => void) => async (
+export const createReceiptFn = (values: any, cb?: () => void) => async (
   dispatch: (arg0: { payload: any; type: string }) => void
 ) => {
   try {
     dispatch(createReceipt());
     // const response = await ReceiptModel.create(values);
-    const response = await ReceiptModel.create({
+    await ReceiptModel.create({
       amount: values.amount || null,
       note: values.note || null,
       customerId: values.customerId || null,
     });
-    console.log(response);
+
+    dispatch(createReceiptSuccess({}));
     toast.success('Receipt successfully created');
 
-    cb();
-    dispatch(createReceiptSuccess({}));
+    if (cb) {
+      cb();
+    }
   } catch (error) {
-    dispatch(createReceiptFailed({}));
-    console.log(error);
+    toast.error(error.message || '');
   }
 };
 

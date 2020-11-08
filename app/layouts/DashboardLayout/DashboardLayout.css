@@ -17,3 +17,18 @@
   overflow: hidden;
   padding: 0;
 }
+.headerSection {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin: 20px 0;
+}
+
+.headerSection__title {
+  margin: 0;
+}
+
+.headerSection__right {
+  display: flex;
+  align-items: center;
+}

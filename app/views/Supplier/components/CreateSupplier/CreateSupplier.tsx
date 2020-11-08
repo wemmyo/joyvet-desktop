@@ -3,16 +3,6 @@ import { Button, Form } from 'semantic-ui-react';
 import { Field, Formik } from 'formik';
 import * as Yup from 'yup';
 
-export interface CreateSupplierProps {
-  createSupplierFn: (values: any) => void;
-}
-
-// const options = [
-//   { key: 'm', text: 'Male', value: 'male' },
-//   { key: 'f', text: 'Female', value: 'female' },
-//   { key: 'o', text: 'Other', value: 'other' },
-// ];
-
 const TextInput = ({
   field, // { name, value, onChange, onBlur }
   form: { touched, errors }, // also values, setXXXX, handleXXXX, dirty, isValid, status, etc.
@@ -33,6 +23,15 @@ const TextInput = ({
     </Form.Input>
   );
 };
+
+const CreateSupplierSchema = Yup.object().shape({
+  fullName: Yup.string().required('Required'),
+});
+
+export interface CreateSupplierProps {
+  createSupplierFn: (values: any) => void;
+}
+
 const CreateSupplier: React.FC<CreateSupplierProps> = ({
   createSupplierFn,
 }) => {
@@ -91,7 +90,3 @@ const CreateSupplier: React.FC<CreateSupplierProps> = ({
   );
 };
 export default CreateSupplier;
-
-const CreateSupplierSchema = Yup.object().shape({
-  fullName: Yup.string().required('Required'),
-});

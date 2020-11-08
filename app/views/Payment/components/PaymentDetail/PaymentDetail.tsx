@@ -2,36 +2,38 @@ import React from 'react';
 import { Table } from 'semantic-ui-react';
 
 export interface PaymentDetailProps {
-  payment: any;
+  singlePayment: any;
 }
 
-const PaymentDetail: React.SFC<PaymentDetailProps> = ({ payment }) => {
-  console.log(payment);
-
+const PaymentDetail: React.SFC<PaymentDetailProps> = ({ singlePayment }) => {
   return (
-    // <p>Hello world</p>
     <Table>
       <Table.Body>
         <Table.Row>
           <Table.Cell>Supplier</Table.Cell>
-          <Table.Cell>{payment.supplier.fullName || ''}</Table.Cell>
+          <Table.Cell>
+            {singlePayment.supplier ? singlePayment.supplier.fullName : ''}
+          </Table.Cell>
         </Table.Row>
         <Table.Row>
           <Table.Cell>Supplier's balance</Table.Cell>
-          <Table.Cell>{payment.supplier.balance || 0.0}</Table.Cell>
+          <Table.Cell>
+            {singlePayment.supplier ? singlePayment.supplier.balance : 0.0}
+          </Table.Cell>
         </Table.Row>
         <Table.Row>
           <Table.Cell>Amount</Table.Cell>
-          <Table.Cell>{payment.amount || ''}</Table.Cell>
+          <Table.Cell>{singlePayment.amount || ''}</Table.Cell>
         </Table.Row>
         <Table.Row>
           <Table.Cell>Note</Table.Cell>
-          <Table.Cell>{payment.note || ''}</Table.Cell>
+          <Table.Cell>{singlePayment.note || ''}</Table.Cell>
         </Table.Row>
         <Table.Row>
           <Table.Cell>Date</Table.Cell>
           <Table.Cell>
-            {new Date(payment.createdAt).toLocaleDateString('en-gb') || ''}
+            {new Date(singlePayment.createdAt).toLocaleDateString('en-gb') ||
+              ''}
           </Table.Cell>
         </Table.Row>
       </Table.Body>

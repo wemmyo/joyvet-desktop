@@ -1,60 +1,51 @@
 import { createSlice } from '@reduxjs/toolkit';
+import { toast } from 'react-toastify';
 import PurchaseModel from '../models/purchase';
-// import { toast } from 'react-toastify';
 import Supplier from '../models/supplier';
 import Product from '../models/product';
 
 const initialState = {
   purchases: {
-    loading: true,
-    data: [],
-    error: {},
+    loading: false,
+    data: '',
   },
   createPurchaseState: {
     loading: false,
-    data: {},
-    error: {},
+    data: '',
   },
 };
 
 const purchaseSlice = createSlice({
   name: 'purchases',
-  initialState: initialState,
+  initialState,
   reducers: {
     getPurchases: (state) => {
-      let { purchases } = state;
+      const { purchases } = state;
       purchases.loading = true;
-      purchases.error = {};
     },
     getPurchasesSuccess: (state, { payload }) => {
-      let { purchases } = state;
+      const { purchases } = state;
       purchases.loading = false;
       purchases.data = payload;
-      purchases.error = {};
     },
-    getPurchasesFailed: (state, { payload }) => {
-      let { purchases } = state;
+    getPurchasesFailed: (state) => {
+      const { purchases } = state;
       purchases.loading = false;
-      purchases.data = [];
-      purchases.error = payload;
+      purchases.data = '';
     },
     createPurchase: (state) => {
-      let { createPurchaseState } = state;
+      const { createPurchaseState } = state;
       createPurchaseState.loading = true;
-      createPurchaseState.data = {};
-      createPurchaseState.error = {};
+      createPurchaseState.data = '';
     },
     createPurchaseSuccess: (state, { payload }) => {
-      let { createPurchaseState } = state;
+      const { createPurchaseState } = state;
       createPurchaseState.loading = false;
       createPurchaseState.data = payload;
-      createPurchaseState.error = {};
     },
-    createPurchaseFailed: (state, { payload }) => {
-      let { createPurchaseState } = state;
+    createPurchaseFailed: (state) => {
+      const { createPurchaseState } = state;
       createPurchaseState.loading = false;
-      createPurchaseState.data = {};
-      createPurchaseState.error = payload;
     },
   },
 });
@@ -73,15 +64,10 @@ export const getPurchasesFn = () => async (
 ) => {
   try {
     dispatch(getPurchases());
-    const response = await PurchaseModel.findAll({
-      raw: true,
-    });
-    console.log(response);
-    dispatch(getPurchasesSuccess(response));
+    const purchases = await PurchaseModel.findAll();
+    dispatch(getPurchasesSuccess(JSON.stringify(purchases)));
   } catch (error) {
-    console.log(error);
-
-    dispatch(getPurchasesFailed({}));
+    toast.error(error.message || '');
   }
 };
 
@@ -116,8 +102,7 @@ export const createPurchaseFn = (
     }
     dispatch(createPurchaseSuccess({}));
   } catch (error) {
-    dispatch(createPurchaseFailed({}));
-    console.log(error);
+    toast.error(error.message || '');
   }
 };
 

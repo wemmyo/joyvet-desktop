@@ -1,17 +1,19 @@
 import React, { useEffect } from 'react';
-import DashboardLayout from '../../layouts/DashboardLayout/DashboardLayout';
 import { Table } from 'semantic-ui-react';
 import { useSelector, useDispatch } from 'react-redux';
+import DashboardLayout from '../../layouts/DashboardLayout/DashboardLayout';
+
 import { selectReceiptState, getReceiptsFn } from '../../slices/receiptSlice';
 import CreateReceipt from './components/CreateReceipt/CreateReceipt';
 import { numberWithCommas } from '../../utils/helpers';
 
-export interface ReceiptsScreenProps {}
-
-const ReceiptsScreen: React.FC<ReceiptsScreenProps> = () => {
+const ReceiptsScreen: React.FC = () => {
   const dispatch = useDispatch();
+
   const receiptState = useSelector(selectReceiptState);
-  const { data: receipts } = receiptState.receipts;
+
+  const { data: receiptsRaw } = receiptState.receipts;
+  const receipts = receiptsRaw ? JSON.parse(receiptsRaw) : [];
 
   const fetchReceipts = () => {
     dispatch(getReceiptsFn());

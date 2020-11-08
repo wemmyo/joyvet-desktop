@@ -3,15 +3,13 @@ import { Button, Form } from 'semantic-ui-react';
 import { Field, Formik } from 'formik';
 import * as Yup from 'yup';
 
+const CreateCustomerSchema = Yup.object().shape({
+  fullName: Yup.string().required('Required'),
+});
+
 export interface CreateCustomerProps {
   createCustomerFn: (values: any) => void;
 }
-
-// const options = [
-//   { key: 'm', text: 'Male', value: 'male' },
-//   { key: 'f', text: 'Female', value: 'female' },
-//   { key: 'o', text: 'Other', value: 'other' },
-// ];
 
 const TextInput = ({
   field, // { name, value, onChange, onBlur }
@@ -21,6 +19,8 @@ const TextInput = ({
   [x: string]: any;
   field: any;
   form: any;
+  label: string;
+  placeholder: string;
 }) => {
   return (
     <Form.Input
@@ -91,7 +91,3 @@ const CreateCustomer: React.FC<CreateCustomerProps> = ({
   );
 };
 export default CreateCustomer;
-
-const CreateCustomerSchema = Yup.object().shape({
-  fullName: Yup.string().required('Required'),
-});

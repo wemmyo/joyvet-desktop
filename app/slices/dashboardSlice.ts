@@ -6,7 +6,7 @@ const initialState = {
 
 const dashboardSlice = createSlice({
   name: 'dashboard',
-  initialState: initialState,
+  initialState,
   reducers: {
     openSideContent: (state) => {
       state.sideContentisOpen = true;
@@ -20,12 +20,13 @@ const dashboardSlice = createSlice({
 export const { openSideContent, closeSideContent } = dashboardSlice.actions;
 
 export const openSideContentFn = () => async (
-  dispatch: (arg0: { payload: any; type: string }) => void
+  dispatch: (arg0: { payload: unknown; type: string }) => void
 ) => {
   dispatch(openSideContent());
 };
+
 export const closeSideContentFn = () => async (
-  dispatch: (arg0: { payload: any; type: string }) => void
+  dispatch: (arg0: { payload: unknown; type: string }) => void
 ) => {
   dispatch(closeSideContent());
 };
