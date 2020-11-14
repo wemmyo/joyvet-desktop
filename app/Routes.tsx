@@ -1,8 +1,9 @@
 /* eslint react/jsx-props-no-spreading: off */
 import React from 'react';
 import { Switch, Route } from 'react-router-dom';
+import { ToastContainer } from 'react-toastify';
+
 import routes from './constants/routes';
-// import routes from './constants/routes';
 import App from './views/App';
 // import HomePage from './views/HomePage';
 import LoginScreen from './views/Login/Login';
@@ -14,7 +15,6 @@ import SupplierScreen from './views/Supplier/Supplier';
 import ReceiptScreen from './views/Receipt/Receipt';
 import PaymentScreen from './views/Payment/Payment';
 import PurchaseScreen from './views/Purchase/Purchase';
-import { ToastContainer } from 'react-toastify';
 import SalesScreen from './views/Sales/Sales';
 
 // Lazily load routes and code split with webpacck

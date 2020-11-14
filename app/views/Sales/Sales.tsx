@@ -1,6 +1,7 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Table } from 'semantic-ui-react';
 import { useSelector, useDispatch } from 'react-redux';
+import { useHistory } from 'react-router-dom';
 
 import DashboardLayout from '../../layouts/DashboardLayout/DashboardLayout';
 import {
@@ -9,9 +10,20 @@ import {
   //   createInvoiceFn,
 } from '../../slices/invoiceSlice';
 import { numberWithCommas } from '../../utils/helpers';
+import {
+  openSideContentFn,
+  closeSideContentFn,
+} from '../../slices/dashboardSlice';
+import SalesDetail from './components/SalesDetail';
+
+const CONTENT_DETAIL = 'detail';
 
 const SalesScreen: React.FC = () => {
+  const [sideContent, setSideContent] = useState('');
+  const [salesId, setSalesId] = useState('');
+
   const dispatch = useDispatch();
+  const history = useHistory();
 
   const invoiceState = useSelector(selectInvoiceState);
 
@@ -23,12 +35,42 @@ const SalesScreen: React.FC = () => {
     dispatch(getInvoicesFn());
   };
 
-  useEffect(fetchInvoices, []);
+  const openSideContent = (content: string) => {
+    dispatch(openSideContentFn());
+    setSideContent(content);
+  };
+
+  const closeSideContent = () => {
+    dispatch(closeSideContentFn());
+    setSideContent('');
+    setSalesId('');
+  };
+
+  // useEffect(fetchInvoices, []);
+
+  useEffect(() => {
+    fetchInvoices();
+
+    return () => {
+      closeSideContent();
+    };
+  }, []);
+
+  const openSingleSale = (id: any) => {
+    setSalesId(id);
+    openSideContent(CONTENT_DETAIL);
+  };
 
   const renderRows = () => {
     const rows = invoices.map((each: any) => {
       return (
-        <Table.Row key={each.id}>
+        <Table.Row
+          // onClick={() => {
+          //   history.push(`/sales/${each.id}`);
+          // }}
+          onClick={() => openSingleSale(each.id)}
+          key={each.id}
+        >
           <Table.Cell>{each.id}</Table.Cell>
           <Table.Cell>{each.saleType}</Table.Cell>
           <Table.Cell>{numberWithCommas(each.amount)}</Table.Cell>
@@ -41,11 +83,15 @@ const SalesScreen: React.FC = () => {
     return rows;
   };
 
+  const renderSideContent = () => {
+    if (sideContent === CONTENT_DETAIL) {
+      return <SalesDetail salesId={salesId} />;
+    }
+    return null;
+  };
+
   return (
-    <DashboardLayout
-      screenTitle="Sales"
-      //   rightSidebar={<CreateInvoice createInvoiceFn={handleNewInvoice} />}
-    >
+    <DashboardLayout screenTitle="Sales" rightSidebar={renderSideContent()}>
       <Table celled striped>
         <Table.Header>
           <Table.Row>

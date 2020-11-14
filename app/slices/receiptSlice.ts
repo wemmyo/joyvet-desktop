@@ -1,8 +1,13 @@
 import { createSlice } from '@reduxjs/toolkit';
 import { toast } from 'react-toastify';
 import ReceiptModel from '../models/receipt';
+import CustomerModel from '../models/customer';
 
 const initialState = {
+  singleReceipt: {
+    loading: false,
+    data: '',
+  },
   receipts: {
     loading: true,
     data: '',
@@ -17,6 +22,20 @@ const receiptSlice = createSlice({
   name: 'receipt',
   initialState,
   reducers: {
+    getSingleReceipt: (state) => {
+      const { singleReceipt } = state;
+      singleReceipt.loading = true;
+    },
+    getSingleReceiptSuccess: (state, { payload }) => {
+      const { singleReceipt } = state;
+      singleReceipt.loading = false;
+      singleReceipt.data = payload;
+    },
+    getSingleReceiptFailed: (state) => {
+      const { singleReceipt } = state;
+      singleReceipt.loading = false;
+      singleReceipt.data = '';
+    },
     getReceipts: (state) => {
       const { receipts } = state;
       receipts.loading = true;
@@ -50,6 +69,9 @@ const receiptSlice = createSlice({
 });
 
 export const {
+  getSingleReceipt,
+  getSingleReceiptSuccess,
+  getSingleReceiptFailed,
   getReceipts,
   getReceiptsSuccess,
   getReceiptsFailed,
@@ -57,6 +79,23 @@ export const {
   createReceiptSuccess,
   createReceiptFailed,
 } = receiptSlice.actions;
+
+export const getSingleReceiptFn = (
+  id: string | number,
+  cb: () => void
+) => async (dispatch: (arg0: { payload: any; type: string }) => void) => {
+  try {
+    dispatch(getSingleReceipt());
+    const getSingleReceiptResponse = await ReceiptModel.findByPk(id, {
+      include: CustomerModel,
+    });
+
+    dispatch(getSingleReceiptSuccess(JSON.stringify(getSingleReceiptResponse)));
+    cb();
+  } catch (error) {
+    toast.error(error.message || '');
+  }
+};
 
 export const getReceiptsFn = () => async (
   dispatch: (arg0: { payload: any; type: string }) => void

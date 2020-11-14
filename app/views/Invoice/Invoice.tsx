@@ -109,11 +109,12 @@ const InvoiceScreen: React.FC = () => {
   };
 
   const renderOrders = () => {
-    const serialNumber = 1;
+    let serialNumber = 0;
     const orderList = orders.map((order: any) => {
+      serialNumber += 1;
       return (
         <Table.Row key={serialNumber}>
-          <Table.Cell>{serialNumber + 1}</Table.Cell>
+          <Table.Cell>{serialNumber}</Table.Cell>
           <Table.Cell>{order.title}</Table.Cell>
           <Table.Cell>{order.quantity}</Table.Cell>
           <Table.Cell>{numberWithCommas(order.unitPrice)}</Table.Cell>
@@ -156,14 +157,14 @@ const InvoiceScreen: React.FC = () => {
 
               <Table.Footer>
                 <Table.Row>
-                  <Table.HeaderCell></Table.HeaderCell>
-                  <Table.HeaderCell></Table.HeaderCell>
-                  <Table.HeaderCell></Table.HeaderCell>
+                  <Table.HeaderCell />
+                  <Table.HeaderCell />
+                  <Table.HeaderCell />
                   <Table.HeaderCell>Total</Table.HeaderCell>
                   <Table.HeaderCell>
                     ₦{numberWithCommas(sumOfOrders())}
                   </Table.HeaderCell>
-                  <Table.HeaderCell></Table.HeaderCell>
+                  <Table.HeaderCell />
                 </Table.Row>
               </Table.Footer>
             </Table>

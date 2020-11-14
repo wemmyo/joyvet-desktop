@@ -1,10 +1,15 @@
 import { createSlice } from '@reduxjs/toolkit';
 import { toast } from 'react-toastify';
-import InvoiceModel from '../models/invoice';
+import Invoice from '../models/invoice';
 import Customer from '../models/customer';
 import Product from '../models/product';
+import InvoiceItem from '../models/invoiceItem';
 
 const initialState = {
+  singleInvoice: {
+    loading: false,
+    data: '',
+  },
   invoices: {
     loading: false,
     data: '',
@@ -19,6 +24,20 @@ const invoiceSlice = createSlice({
   name: 'invoice',
   initialState,
   reducers: {
+    getSingleInvoice: (state) => {
+      const { singleInvoice } = state;
+      singleInvoice.loading = true;
+    },
+    getSingleInvoiceSuccess: (state, { payload }) => {
+      const { singleInvoice } = state;
+      singleInvoice.loading = false;
+      singleInvoice.data = payload;
+    },
+    getSingleInvoiceFailed: (state) => {
+      const { singleInvoice } = state;
+      singleInvoice.loading = false;
+      singleInvoice.data = '';
+    },
     getInvoices: (state) => {
       const { invoices } = state;
       invoices.loading = true;
@@ -52,6 +71,9 @@ const invoiceSlice = createSlice({
 });
 
 export const {
+  getSingleInvoice,
+  getSingleInvoiceSuccess,
+  getSingleInvoiceFailed,
   getInvoices,
   getInvoicesSuccess,
   getInvoicesFailed,
@@ -60,12 +82,58 @@ export const {
   createInvoiceFailed,
 } = invoiceSlice.actions;
 
+export const getSingleInvoiceFn = (
+  id: string | number,
+  cb?: () => void
+) => async (dispatch: (arg0: { payload: any; type: string }) => void) => {
+  try {
+    dispatch(getSingleInvoice());
+
+    // const getSingleInvoiceResponse = await InvoiceItem.findOne({
+    //   where: { invoiceId: id },
+    //   include: { all: true, nested: true },
+    //   // include: [{ model: Invoice }, { model: Product }],
+    // });
+
+    // const getSingleInvoiceResponse = await Invoice.findByPk(id, {
+    //   include: { all: true, nested: true },
+    // });
+
+    const getSingleInvoiceResponse = await Invoice.findByPk(id, {
+      include: [
+        { model: Customer },
+        {
+          model: Product,
+          // include: InvoiceItem,
+        },
+      ],
+    });
+    // const getSingleInvoiceResponse = await Invoice.findByPk(id, {
+    //   include: [
+    //     { model: Customer },
+    //     {
+    //       model: Product,
+    //       include: { all: true },
+    //     },
+    //   ],
+    // });
+
+    dispatch(getSingleInvoiceSuccess(JSON.stringify(getSingleInvoiceResponse)));
+    if (cb) {
+      cb();
+    }
+    console.log(getSingleInvoiceResponse);
+  } catch (error) {
+    toast.error(error.message || '');
+  }
+};
+
 export const getInvoicesFn = () => async (
   dispatch: (arg0: { payload: any; type: string }) => void
 ) => {
   try {
     dispatch(getInvoices());
-    const invoices = await InvoiceModel.findAll();
+    const invoices = await Invoice.findAll();
 
     dispatch(getInvoicesSuccess(JSON.stringify(invoices)));
   } catch (error) {

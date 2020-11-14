@@ -95,6 +95,7 @@ export const getSinglePaymentFn = (
     toast.error(error.message || '');
   }
 };
+
 export const getPaymentsFn = () => async (
   dispatch: (arg0: { payload: any; type: string }) => void
 ) => {
