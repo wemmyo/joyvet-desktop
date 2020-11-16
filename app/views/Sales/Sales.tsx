@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Table } from 'semantic-ui-react';
 import { useSelector, useDispatch } from 'react-redux';
-import { useHistory } from 'react-router-dom';
 
 import DashboardLayout from '../../layouts/DashboardLayout/DashboardLayout';
 import {
@@ -23,7 +22,6 @@ const SalesScreen: React.FC = () => {
   const [salesId, setSalesId] = useState('');
 
   const dispatch = useDispatch();
-  const history = useHistory();
 
   const invoiceState = useSelector(selectInvoiceState);
 
@@ -64,13 +62,7 @@ const SalesScreen: React.FC = () => {
   const renderRows = () => {
     const rows = invoices.map((each: any) => {
       return (
-        <Table.Row
-          // onClick={() => {
-          //   history.push(`/sales/${each.id}`);
-          // }}
-          onClick={() => openSingleSale(each.id)}
-          key={each.id}
-        >
+        <Table.Row onClick={() => openSingleSale(each.id)} key={each.id}>
           <Table.Cell>{each.id}</Table.Cell>
           <Table.Cell>{each.saleType}</Table.Cell>
           <Table.Cell>{numberWithCommas(each.amount)}</Table.Cell>

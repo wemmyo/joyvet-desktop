@@ -15,7 +15,7 @@ interface SalesDetailProps {
 
 const SalesDetail: React.FC<SalesDetailProps> = ({ salesId }) => {
   const dispatch = useDispatch();
-  //   const { id: salesId } = useParams();
+
   const fetchData = () => {
     dispatch(getSingleInvoiceFn(salesId));
   };

@@ -1,8 +1,12 @@
 import { createSlice } from '@reduxjs/toolkit';
 import { toast } from 'react-toastify';
-import ProductModel from '../models/product';
+import Product from '../models/product';
 
 const initialState = {
+  singleProduct: {
+    loading: false,
+    data: '',
+  },
   products: {
     loading: false,
     data: '',
@@ -17,6 +21,20 @@ const productSlice = createSlice({
   name: 'product',
   initialState,
   reducers: {
+    getSingleProduct: (state) => {
+      const { singleProduct } = state;
+      singleProduct.loading = true;
+    },
+    getSingleProductSuccess: (state, { payload }) => {
+      const { singleProduct } = state;
+      singleProduct.loading = false;
+      singleProduct.data = payload;
+    },
+    getSingleProductFailed: (state) => {
+      const { singleProduct } = state;
+      singleProduct.loading = false;
+      singleProduct.data = '';
+    },
     getProducts: (state) => {
       const { products } = state;
       products.loading = true;
@@ -48,6 +66,9 @@ const productSlice = createSlice({
 });
 
 export const {
+  getSingleProduct,
+  getSingleProductSuccess,
+  getSingleProductFailed,
   getProducts,
   getProductsSuccess,
   getProductsFailed,
@@ -56,12 +77,56 @@ export const {
   createProductFailed,
 } = productSlice.actions;
 
+export const updateProductFn = (
+  values: any,
+  id: string | number,
+  cb?: () => void
+) => async (dispatch: (arg0: { payload: any; type: string }) => void) => {
+  try {
+    // dispatch(updateProduct());
+    console.log(values, id);
+
+    const response = await Product.update(values, {
+      where: {
+        id,
+      },
+    });
+    console.log(response);
+
+    // dispatch(updateProductSuccess(JSON.stringify(updateProductResponse)));
+    toast.success('Successfully updated');
+    if (cb) {
+      cb();
+    }
+  } catch (error) {
+    toast.error(error.message || '');
+  }
+};
+export const getSingleProductFn = (
+  id: string | number,
+  cb?: () => void
+) => async (dispatch: (arg0: { payload: any; type: string }) => void) => {
+  try {
+    dispatch(getSingleProduct());
+
+    const getSingleProductResponse = await Product.findByPk(id);
+
+    dispatch(getSingleProductSuccess(JSON.stringify(getSingleProductResponse)));
+    if (cb) {
+      cb();
+    }
+    console.log(getSingleProductResponse);
+  } catch (error) {
+    toast.error(error.message || '');
+  }
+};
+
 export const getProductsFn = () => async (
   dispatch: (arg0: { payload: any; type: string }) => void
 ) => {
   try {
     dispatch(getProducts());
-    const products = await ProductModel.findAll();
+    const products = await Product.findAll();
     dispatch(getProductsSuccess(JSON.stringify(products)));
   } catch (error) {
     toast.error(error.message || '');
@@ -73,8 +138,8 @@ export const createProductFn = (values: any, cb?: () => void) => async (
 ) => {
   try {
     dispatch(createProduct());
-    // const response = await ProductModel.create(values);
-    await ProductModel.create({
+    // const response = await Product.create(values);
+    await Product.create({
       title: values.title || null,
       stock: values.stock || null,
       unitPrice: values.unitPrice || null,

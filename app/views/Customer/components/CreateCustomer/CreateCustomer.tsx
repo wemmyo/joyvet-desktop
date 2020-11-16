@@ -2,6 +2,7 @@ import * as React from 'react';
 import { Button, Form } from 'semantic-ui-react';
 import { Field, Formik } from 'formik';
 import * as Yup from 'yup';
+import TextInput from '../../../../components/TextInput/TextInput';
 
 const CreateCustomerSchema = Yup.object().shape({
   fullName: Yup.string().required('Required'),
@@ -11,28 +12,6 @@ export interface CreateCustomerProps {
   createCustomerFn: (values: any) => void;
 }
 
-const TextInput = ({
-  field, // { name, value, onChange, onBlur }
-  form: { touched, errors }, // also values, setXXXX, handleXXXX, dirty, isValid, status, etc.
-  ...props
-}: {
-  [x: string]: any;
-  field: any;
-  form: any;
-  label: string;
-  placeholder: string;
-}) => {
-  return (
-    <Form.Input
-      error={
-        touched[field.name] && errors[field.name] ? errors[field.name] : false
-      }
-      label={props.label}
-    >
-      <input placeholder={props.placeholder} {...field} {...props} />
-    </Form.Input>
-  );
-};
 const CreateCustomer: React.FC<CreateCustomerProps> = ({
   createCustomerFn,
 }) => {

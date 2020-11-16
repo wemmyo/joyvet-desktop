@@ -2,31 +2,16 @@ import * as React from 'react';
 import { Button, Form } from 'semantic-ui-react';
 import { Field, Formik } from 'formik';
 import * as Yup from 'yup';
+import TextInput from '../../../../components/TextInput/TextInput';
 
 export interface CreateProductProps {
   createProductFn: (values: any) => void;
 }
 
-const TextInput = ({
-  field, // { name, value, onChange, onBlur }
-  form: { touched, errors }, // also values, setXXXX, handleXXXX, dirty, isValid, status, etc.
-  ...props
-}: {
-  [x: string]: any;
-  field: any;
-  form: any;
-}) => {
-  return (
-    <Form.Input
-      error={
-        touched[field.name] && errors[field.name] ? errors[field.name] : false
-      }
-      label={props.label}
-    >
-      <input placeholder={props.placeholder} {...field} {...props} />
-    </Form.Input>
-  );
-};
+const CreateProductSchema = Yup.object().shape({
+  title: Yup.string().required('Required'),
+});
+
 const CreateProduct: React.FC<CreateProductProps> = ({ createProductFn }) => {
   return (
     <Formik
@@ -77,7 +62,3 @@ const CreateProduct: React.FC<CreateProductProps> = ({ createProductFn }) => {
   );
 };
 export default CreateProduct;
-
-const CreateProductSchema = Yup.object().shape({
-  title: Yup.string().required('Required'),
-});

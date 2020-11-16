@@ -2,27 +2,7 @@ import * as React from 'react';
 import { Button, Form } from 'semantic-ui-react';
 import { Field, Formik } from 'formik';
 import * as Yup from 'yup';
-
-const TextInput = ({
-  field, // { name, value, onChange, onBlur }
-  form: { touched, errors }, // also values, setXXXX, handleXXXX, dirty, isValid, status, etc.
-  ...props
-}: {
-  [x: string]: any;
-  field: any;
-  form: any;
-}) => {
-  return (
-    <Form.Input
-      error={
-        touched[field.name] && errors[field.name] ? errors[field.name] : false
-      }
-      label={props.label}
-    >
-      <input placeholder={props.placeholder} {...field} {...props} />
-    </Form.Input>
-  );
-};
+import TextInput from '../../../../components/TextInput/TextInput';
 
 const CreateSupplierSchema = Yup.object().shape({
   fullName: Yup.string().required('Required'),

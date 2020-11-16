@@ -89,34 +89,14 @@ export const getSingleInvoiceFn = (
   try {
     dispatch(getSingleInvoice());
 
-    // const getSingleInvoiceResponse = await InvoiceItem.findOne({
-    //   where: { invoiceId: id },
-    //   include: { all: true, nested: true },
-    //   // include: [{ model: Invoice }, { model: Product }],
-    // });
-
-    // const getSingleInvoiceResponse = await Invoice.findByPk(id, {
-    //   include: { all: true, nested: true },
-    // });
-
     const getSingleInvoiceResponse = await Invoice.findByPk(id, {
       include: [
         { model: Customer },
         {
           model: Product,
-          // include: InvoiceItem,
         },
       ],
     });
-    // const getSingleInvoiceResponse = await Invoice.findByPk(id, {
-    //   include: [
-    //     { model: Customer },
-    //     {
-    //       model: Product,
-    //       include: { all: true },
-    //     },
-    //   ],
-    // });
 
     dispatch(getSingleInvoiceSuccess(JSON.stringify(getSingleInvoiceResponse)));
     if (cb) {

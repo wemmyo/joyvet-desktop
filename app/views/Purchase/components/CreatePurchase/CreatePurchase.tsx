@@ -15,27 +15,7 @@ import {
   createPurchaseFn,
   getPurchasesFn,
 } from '../../../../slices/purchaseSlice';
-
-const TextInput = ({
-  field, // { name, value, onChange, onBlur }
-  form: { touched, errors }, // also values, setXXXX, handleXXXX, dirty, isValid, status, etc.
-  ...props
-}: {
-  [x: string]: any;
-  field: any;
-  form: any;
-}) => {
-  return (
-    <Form.Input
-      error={
-        touched[field.name] && errors[field.name] ? errors[field.name] : false
-      }
-      label={props.label}
-    >
-      <input placeholder={props.placeholder} {...field} {...props} />
-    </Form.Input>
-  );
-};
+import TextInput from '../../../../components/TextInput/TextInput';
 
 const CreatePurchase: React.FC = () => {
   const dispatch = useDispatch();
