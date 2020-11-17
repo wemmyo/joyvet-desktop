@@ -84,15 +84,11 @@ export const updateProductFn = (
 ) => async (dispatch: (arg0: { payload: any; type: string }) => void) => {
   try {
     // dispatch(updateProduct());
-    console.log(values, id);
-
-    const response = await Product.update(values, {
+    await Product.update(values, {
       where: {
         id,
       },
     });
-    console.log(response);
-
     // dispatch(updateProductSuccess(JSON.stringify(updateProductResponse)));
     toast.success('Successfully updated');
     if (cb) {
@@ -102,6 +98,7 @@ export const updateProductFn = (
     toast.error(error.message || '');
   }
 };
+
 export const getSingleProductFn = (
   id: string | number,
   cb?: () => void

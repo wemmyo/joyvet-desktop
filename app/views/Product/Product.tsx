@@ -116,7 +116,6 @@ const ProductsScreen: React.FC = () => {
     <DashboardLayout
       screenTitle="Products"
       rightSidebar={renderSideContent()}
-      // rightSidebar={<CreateProduct createProductFn={handleNewProduct} />}
       headerContent={headerContent()}
     >
       <Table celled striped>
