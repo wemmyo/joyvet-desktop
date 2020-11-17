@@ -1,17 +1,17 @@
 import { createSlice } from '@reduxjs/toolkit';
 import { toast } from 'react-toastify';
-import SupplierModel from '../models/supplier';
+import Supplier from '../models/supplier';
 
 const initialState = {
+  singleSupplier: {
+    loading: false,
+    data: '',
+  },
   suppliers: {
     loading: false,
     data: '',
   },
   createSupplierState: {
-    loading: false,
-    data: '',
-  },
-  singleSupplier: {
     loading: false,
     data: '',
   },
@@ -85,12 +85,34 @@ export const {
   createSupplierFailed,
 } = supplierSlice.actions;
 
+export const updateSupplierFn = (
+  values: any,
+  id: string | number,
+  cb?: () => void
+) => async (dispatch: (arg0: { payload: any; type: string }) => void) => {
+  try {
+    // dispatch(updateSupplier());
+    await Supplier.update(values, {
+      where: {
+        id,
+      },
+    });
+    // dispatch(updateSupplierSuccess(JSON.stringify(updateSupplierResponse)));
+    toast.success('Successfully updated');
+    if (cb) {
+      cb();
+    }
+  } catch (error) {
+    toast.error(error.message || '');
+  }
+};
+
 export const getSingleSupplierFn = (supplierId: number | string) => async (
   dispatch: (arg0: { payload: any; type: string }) => void
 ) => {
   try {
     dispatch(getSingleSupplier());
-    const singleSupplier = await SupplierModel.findByPk(supplierId);
+    const singleSupplier = await Supplier.findByPk(supplierId);
     dispatch(getSingleSupplierSuccess(JSON.stringify(singleSupplier)));
   } catch (error) {
     toast.error(error.message || '');
@@ -108,7 +130,7 @@ export const getSuppliersFn = () => async (
 ) => {
   try {
     dispatch(getSuppliers());
-    const suppliers = await SupplierModel.findAll();
+    const suppliers = await Supplier.findAll();
     dispatch(getSuppliersSuccess(JSON.stringify(suppliers)));
   } catch (error) {
     toast.error(error.message || '');
@@ -120,8 +142,8 @@ export const createSupplierFn = (values: any, cb?: () => void) => async (
 ) => {
   try {
     dispatch(createSupplier());
-    // const response = await SupplierModel.create(values);
-    await SupplierModel.create({
+    // const response = await Supplier.create(values);
+    await Supplier.create({
       fullName: values.fullName || null,
       address: values.address || null,
       phoneNumber: values.phoneNumber || null,

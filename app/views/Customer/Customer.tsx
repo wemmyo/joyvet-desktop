@@ -26,6 +26,7 @@ const CustomersScreen: React.FC = () => {
   const dispatch = useDispatch();
 
   const customerState = useSelector(selectCustomerState);
+
   const { data: customersRaw } = customerState.customers;
 
   const customers = customersRaw ? JSON.parse(customersRaw) : [];
