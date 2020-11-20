@@ -1,6 +1,7 @@
 import { createSlice } from '@reduxjs/toolkit';
 import { toast } from 'react-toastify';
 import bycrpt from 'bcryptjs';
+import jwt from 'jsonwebtoken';
 import User from '../models/user';
 
 const initialState = {
@@ -78,6 +79,47 @@ export const {
   createUserFailed,
 } = userSlice.actions;
 
+export const loginUserFn = (
+  values: { username: string; password: string },
+  cb?: () => void
+) => async (dispatch: (arg0: { payload: any; type: string }) => void) => {
+  let loadedUser;
+  try {
+    // dispatch(updateUser());
+    const user = await User.findOne({
+      where: {
+        username: values.username,
+      },
+    });
+    if (!user) {
+      throw new Error('A user with this username could not be found');
+    } else {
+      loadedUser = user;
+
+      await bycrpt.compare(values.password, user.password);
+
+      const token = await jwt.sign(
+        {
+          email: loadedUser.email,
+          userId: loadedUser.id,
+        },
+        'joyvettoken',
+        { expiresIn: '1h' }
+      );
+
+      localStorage.setItem('access_token', token);
+      // dispatch(updateUserSuccess(JSON.stringify(updateUserResponse)));
+      toast.success('Successfully updated');
+      if (cb) {
+        cb();
+      }
+    }
+  } catch (error) {
+    console.log(error.message);
+
+    toast.error(error.message || '');
+  }
+};
 export const updateUserFn = (
   values: any,
   id: string | number,

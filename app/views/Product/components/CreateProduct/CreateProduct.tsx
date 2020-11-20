@@ -22,9 +22,6 @@ const CreateProduct: React.FC<CreateProductProps> = ({ createProductFn }) => {
       }}
       validationSchema={CreateProductSchema}
       onSubmit={(values, actions) => {
-        //   submitForm(values);
-        console.log(values);
-
         createProductFn(values);
         actions.resetForm();
       }}
