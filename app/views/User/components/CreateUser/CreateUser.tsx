@@ -23,11 +23,9 @@ const CreateUser: React.FC<CreateUserProps> = ({ createUserFn }) => {
       }}
       validationSchema={CreateUserSchema}
       onSubmit={(values, actions) => {
-        //   submitForm(values);
-        console.log(values);
-
-        createUserFn(values);
-        actions.resetForm();
+        createUserFn(values, () => {
+          actions.resetForm();
+        });
       }}
     >
       {({ handleSubmit }) => (
@@ -62,7 +60,7 @@ const CreateUser: React.FC<CreateUserProps> = ({ createUserFn }) => {
               className="ui dropdown"
             >
               <option value="" disabled hidden>
-                Select Sale
+                Select Role
               </option>
               <option value="admin">Admin</option>
               <option value="manager">Manager</option>

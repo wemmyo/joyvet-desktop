@@ -1,5 +1,6 @@
 import { createSlice } from '@reduxjs/toolkit';
 import { toast } from 'react-toastify';
+import bycrpt from 'bcryptjs';
 import User from '../models/user';
 
 const initialState = {
@@ -135,11 +136,12 @@ export const createUserFn = (values: any, cb?: () => void) => async (
   try {
     dispatch(createUser());
     // const response = await User.create(values);
+    const hashedPassword = await bycrpt.hash(values.password, 12);
     await User.create({
-      title: values.title || null,
-      stock: values.stock || null,
-      unitPrice: values.unitPrice || null,
-      userGroup: values.userGroup || null,
+      fullName: values.fullName || null,
+      username: values.username || null,
+      password: hashedPassword || null,
+      role: values.role || null,
     });
 
     if (cb) {
