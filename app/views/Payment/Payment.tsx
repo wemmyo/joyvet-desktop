@@ -15,21 +15,22 @@ import {
   openSideContentFn,
   closeSideContentFn,
 } from '../../slices/dashboardSlice';
+import EditPayment from './components/EditPayment/EditPayment';
 
 const CONTENT_CREATE = 'create';
 const CONTENT_DETAIL = 'detail';
+const CONTENT_EDIT = 'edit';
 
 const PaymentsScreen: React.FC = () => {
   const [sideContent, setSideContent] = useState('');
+  const [paymentId, setPaymentId] = useState('');
 
   const dispatch = useDispatch();
   const paymentState = useSelector(selectPaymentState);
 
   const { data: paymentsRaw } = paymentState.payments;
-  const { data: singlePaymentRaw } = paymentState.singlePayment;
 
   const payments = paymentsRaw ? JSON.parse(paymentsRaw) : [];
-  const singlePayment = singlePaymentRaw ? JSON.parse(singlePaymentRaw) : {};
 
   const fetchPayments = () => {
     dispatch(getPaymentsFn());
@@ -43,6 +44,7 @@ const PaymentsScreen: React.FC = () => {
   const closeSideContent = () => {
     dispatch(closeSideContentFn());
     setSideContent('');
+    setPaymentId('');
   };
 
   useEffect(() => {
@@ -53,24 +55,38 @@ const PaymentsScreen: React.FC = () => {
     };
   }, []);
 
-  const openSinglePayment = (id: number | string) => {
-    dispatch(
-      getSinglePaymentFn(id, () => {
-        openSideContent(CONTENT_DETAIL);
-      })
-    );
+  const viewPaymentReceipt = (id: any) => {
+    setPaymentId(id);
+    openSideContent(CONTENT_DETAIL);
+  };
+
+  const editPaymentReceipt = (id: any) => {
+    setPaymentId(id);
+    openSideContent(CONTENT_EDIT);
   };
 
   const renderRows = () => {
     const rows = payments.map((each: any) => {
       return (
-        <Table.Row key={each.id} onClick={() => openSinglePayment(each.id)}>
+        <Table.Row key={each.id}>
           <Table.Cell>{each.id}</Table.Cell>
           <Table.Cell>{numberWithCommas(each.amount)}</Table.Cell>
           <Table.Cell>
             {new Date(each.createdAt).toLocaleDateString('en-gb')}
           </Table.Cell>
           <Table.Cell>{each.note}</Table.Cell>
+          <Table.Cell
+            style={{ cursor: 'pointer' }}
+            onClick={() => viewPaymentReceipt(each.id)}
+          >
+            View
+          </Table.Cell>
+          <Table.Cell
+            style={{ cursor: 'pointer', color: 'red' }}
+            onClick={() => editPaymentReceipt(each.id)}
+          >
+            Edit
+          </Table.Cell>
         </Table.Row>
       );
     });
@@ -79,9 +95,11 @@ const PaymentsScreen: React.FC = () => {
 
   const renderSideContent = () => {
     if (sideContent === CONTENT_DETAIL) {
-      return <PaymentDetail singlePayment={singlePayment} />;
+      return <PaymentDetail paymentId={paymentId} />;
     } else if (sideContent === CONTENT_CREATE) {
       return <CreatePayment />;
+    } else if (sideContent === CONTENT_EDIT) {
+      return <EditPayment paymentId={paymentId} />;
     }
     return null;
   };
@@ -123,6 +141,8 @@ const PaymentsScreen: React.FC = () => {
             <Table.HeaderCell>Amount</Table.HeaderCell>
             <Table.HeaderCell>Date</Table.HeaderCell>
             <Table.HeaderCell>Note</Table.HeaderCell>
+            <Table.HeaderCell />
+            <Table.HeaderCell />
           </Table.Row>
         </Table.Header>
         <Table.Body>{renderRows()}</Table.Body>

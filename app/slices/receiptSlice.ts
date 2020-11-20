@@ -1,7 +1,7 @@
 import { createSlice } from '@reduxjs/toolkit';
 import { toast } from 'react-toastify';
-import ReceiptModel from '../models/receipt';
-import CustomerModel from '../models/customer';
+import Receipt from '../models/receipt';
+import Customer from '../models/customer';
 
 const initialState = {
   singleReceipt: {
@@ -80,18 +80,42 @@ export const {
   createReceiptFailed,
 } = receiptSlice.actions;
 
+export const updateReceiptFn = (
+  values: any,
+  id: string | number,
+  cb?: () => void
+) => async (dispatch: (arg0: { payload: any; type: string }) => void) => {
+  try {
+    // dispatch(updateReceipt());
+    await Receipt.update(values, {
+      where: {
+        id,
+      },
+    });
+    // dispatch(updateReceiptSuccess(JSON.stringify(updateReceiptResponse)));
+    toast.success('Successfully updated');
+    if (cb) {
+      cb();
+    }
+  } catch (error) {
+    toast.error(error.message || '');
+  }
+};
+
 export const getSingleReceiptFn = (
   id: string | number,
-  cb: () => void
+  cb?: () => void
 ) => async (dispatch: (arg0: { payload: any; type: string }) => void) => {
   try {
     dispatch(getSingleReceipt());
-    const getSingleReceiptResponse = await ReceiptModel.findByPk(id, {
-      include: CustomerModel,
+    const getSingleReceiptResponse = await Receipt.findByPk(id, {
+      include: Customer,
     });
 
     dispatch(getSingleReceiptSuccess(JSON.stringify(getSingleReceiptResponse)));
-    cb();
+    if (cb) {
+      cb();
+    }
   } catch (error) {
     toast.error(error.message || '');
   }
@@ -102,7 +126,7 @@ export const getReceiptsFn = () => async (
 ) => {
   try {
     dispatch(getReceipts());
-    const receipts = await ReceiptModel.findAll();
+    const receipts = await Receipt.findAll();
     dispatch(getReceiptsSuccess(JSON.stringify(receipts)));
   } catch (error) {
     toast.error(error.message || '');
@@ -114,8 +138,8 @@ export const createReceiptFn = (values: any, cb?: () => void) => async (
 ) => {
   try {
     dispatch(createReceipt());
-    // const response = await ReceiptModel.create(values);
-    await ReceiptModel.create({
+    // const response = await Receipt.create(values);
+    await Receipt.create({
       amount: values.amount || null,
       note: values.note || null,
       customerId: values.customerId || null,

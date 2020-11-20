@@ -1,7 +1,7 @@
 import { createSlice } from '@reduxjs/toolkit';
 import { toast } from 'react-toastify';
-import PaymentModel from '../models/payment';
-import SupplierModel from '../models/supplier';
+import Payment from '../models/payment';
+import Supplier from '../models/supplier';
 
 const initialState = {
   singlePayment: {
@@ -79,18 +79,42 @@ export const {
   createPaymentFailed,
 } = paymentSlice.actions;
 
+export const updatePaymentFn = (
+  values: any,
+  id: string | number,
+  cb?: () => void
+) => async (dispatch: (arg0: { payload: any; type: string }) => void) => {
+  try {
+    // dispatch(updatePayment());
+    await Payment.update(values, {
+      where: {
+        id,
+      },
+    });
+    // dispatch(updatePaymentSuccess(JSON.stringify(updatePaymentResponse)));
+    toast.success('Successfully updated');
+    if (cb) {
+      cb();
+    }
+  } catch (error) {
+    toast.error(error.message || '');
+  }
+};
+
 export const getSinglePaymentFn = (
   id: string | number,
-  cb: () => void
+  cb?: () => void
 ) => async (dispatch: (arg0: { payload: any; type: string }) => void) => {
   try {
     dispatch(getSinglePayment());
-    const getSinglePaymentResponse = await PaymentModel.findByPk(id, {
-      include: SupplierModel,
+    const getSinglePaymentResponse = await Payment.findByPk(id, {
+      include: Supplier,
     });
 
     dispatch(getSinglePaymentSuccess(JSON.stringify(getSinglePaymentResponse)));
-    cb();
+    if (cb) {
+      cb();
+    }
   } catch (error) {
     toast.error(error.message || '');
   }
@@ -101,7 +125,7 @@ export const getPaymentsFn = () => async (
 ) => {
   try {
     dispatch(getPayments());
-    const payments = await PaymentModel.findAll();
+    const payments = await Payment.findAll();
     dispatch(getPaymentsSuccess(JSON.stringify(payments)));
   } catch (error) {
     toast.error(error.message || '');
@@ -113,14 +137,14 @@ export const createPaymentFn = (values: any, cb: () => void) => async (
 ) => {
   try {
     dispatch(createPayment());
-    // const response = await PaymentModel.create(values);
-    await PaymentModel.create({
+    // const response = await Payment.create(values);
+    await Payment.create({
       amount: values.amount || null,
       note: values.note || null,
       supplierId: values.supplierId || null,
     });
 
-    await SupplierModel.decrement('balance', {
+    await Supplier.decrement('balance', {
       by: values.amount,
       where: { id: values.supplierId },
     });

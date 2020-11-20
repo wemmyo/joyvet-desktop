@@ -2,41 +2,41 @@ import React, { useEffect } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { Table } from 'semantic-ui-react';
 import {
-  getSinglePaymentFn,
-  selectPaymentState,
-} from '../../../../slices/paymentSlice';
+  getSingleReceiptFn,
+  selectReceiptState,
+} from '../../../../slices/receiptSlice';
 
-export interface PaymentDetailProps {
-  paymentId: string | number;
+export interface ReceiptDetailProps {
+  receiptId: string | number;
 }
 
-const PaymentDetail: React.SFC<PaymentDetailProps> = ({ paymentId }) => {
+const ReceiptDetail: React.SFC<ReceiptDetailProps> = ({ receiptId }) => {
   const dispatch = useDispatch();
 
   const fetchData = () => {
-    dispatch(getSinglePaymentFn(paymentId));
+    dispatch(getSingleReceiptFn(receiptId));
   };
 
-  useEffect(fetchData, [paymentId]);
+  useEffect(fetchData, [receiptId]);
 
-  const paymentState = useSelector(selectPaymentState);
+  const receiptState = useSelector(selectReceiptState);
 
-  const { data: singlePaymentRaw } = paymentState.singlePayment;
+  const { data: singleReceiptRaw } = receiptState.singleReceipt;
 
-  const singlePayment = singlePaymentRaw ? JSON.parse(singlePaymentRaw) : {};
+  const singleReceipt = singleReceiptRaw ? JSON.parse(singleReceiptRaw) : {};
 
-  const { supplier, amount, note, createdAt } = singlePayment;
+  const { customer, amount, note, createdAt } = singleReceipt;
 
   return (
     <Table>
       <Table.Body>
         <Table.Row>
-          <Table.Cell>Supplier</Table.Cell>
-          <Table.Cell>{supplier ? supplier.fullName : ''}</Table.Cell>
+          <Table.Cell>Customer</Table.Cell>
+          <Table.Cell>{customer ? customer.fullName : ''}</Table.Cell>
         </Table.Row>
         <Table.Row>
-          <Table.Cell>Supplier's balance</Table.Cell>
-          <Table.Cell>{supplier ? supplier.balance : 0.0}</Table.Cell>
+          <Table.Cell>Customer's balance</Table.Cell>
+          <Table.Cell>{customer ? customer.balance : 0.0}</Table.Cell>
         </Table.Row>
         <Table.Row>
           <Table.Cell>Amount</Table.Cell>
@@ -57,4 +57,4 @@ const PaymentDetail: React.SFC<PaymentDetailProps> = ({ paymentId }) => {
   );
 };
 
-export default PaymentDetail;
+export default ReceiptDetail;

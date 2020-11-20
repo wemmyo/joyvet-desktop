@@ -2,43 +2,43 @@ import React, { useEffect } from 'react';
 import { Button, Form } from 'semantic-ui-react';
 import { Field, Formik } from 'formik';
 import { useSelector, useDispatch } from 'react-redux';
+
 // import * as Yup from 'yup';
+import TextInput from '../../../../components/TextInput/TextInput';
+import {
+  getSingleReceiptFn,
+  selectReceiptState,
+  updateReceiptFn,
+  getReceiptsFn,
+} from '../../../../slices/receiptSlice';
+import { closeSideContentFn } from '../../../../slices/dashboardSlice';
 import {
   getCustomersFn,
   selectCustomerState,
 } from '../../../../slices/customerSlice';
-import {
-  createReceiptFn,
-  getReceiptsFn,
-} from '../../../../slices/receiptSlice';
-import TextInput from '../../../../components/TextInput/TextInput';
 
-const CreateReceipt: React.FC = () => {
+export interface EditReceiptProps {
+  receiptId: string | number;
+}
+
+const EditReceipt: React.FC<EditReceiptProps> = ({ receiptId }) => {
   const dispatch = useDispatch();
 
-  const customerState = useSelector(selectCustomerState);
-
-  const { data: customersRaw } = customerState.customers;
-
-  const customers = customersRaw ? JSON.parse(customersRaw) : [];
-
-  const fetchCustomers = () => {
+  const fetchData = () => {
+    dispatch(getSingleReceiptFn(receiptId));
     dispatch(getCustomersFn());
   };
 
-  const fetchReceipts = () => {
-    dispatch(getReceiptsFn());
-  };
+  useEffect(fetchData, [receiptId]);
 
-  useEffect(fetchCustomers, []);
+  const receiptState = useSelector(selectReceiptState);
+  const customerState = useSelector(selectCustomerState);
 
-  const handleNewReceipt = (values: any) => {
-    dispatch(
-      createReceiptFn(values, () => {
-        fetchReceipts();
-      })
-    );
-  };
+  const { data: receiptRaw } = receiptState.singleReceipt;
+  const { data: customersRaw } = customerState.customers;
+
+  const receipt = receiptRaw ? JSON.parse(receiptRaw) : {};
+  const customers = customersRaw ? JSON.parse(customersRaw) : [];
 
   const renderCustomers = () => {
     const customerList = customers.map((customer: any) => {
@@ -51,17 +51,27 @@ const CreateReceipt: React.FC = () => {
     return customerList;
   };
 
+  const { customerId, amount, note } = receipt;
+
   return (
     <Formik
+      enableReinitialize
       initialValues={{
-        customerId: '',
-        amount: '',
-        note: '',
+        customerId: customerId || '',
+        amount: amount || '',
+        note: note || '',
       }}
-      // validationSchema={CreateReceiptSchema}
+      // validationSchema={EditReceiptSchema}
       onSubmit={(values, actions) => {
-        handleNewReceipt(values);
-        actions.resetForm();
+        //   submitForm(values);
+        // console.log(values);
+
+        dispatch(
+          updateReceiptFn(values, receiptId, () => {
+            dispatch(closeSideContentFn());
+            dispatch(getReceiptsFn());
+          })
+        );
       }}
     >
       {({ handleSubmit }) => (
@@ -95,12 +105,17 @@ const CreateReceipt: React.FC = () => {
             type="text"
             component={TextInput}
           />
+
           <Button onClick={() => handleSubmit()} type="Submit" fluid primary>
-            Save
+            Update
           </Button>
         </Form>
       )}
     </Formik>
   );
 };
-export default CreateReceipt;
+export default EditReceipt;
+
+// const EditReceiptSchema = Yup.object().shape({
+//   title: Yup.string().required('Required'),
+// });
