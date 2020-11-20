@@ -82,7 +82,7 @@ export const {
 export const loginUserFn = (
   values: { username: string; password: string },
   cb?: () => void
-) => async (dispatch: (arg0: { payload: any; type: string }) => void) => {
+) => async () => {
   let loadedUser;
   try {
     // dispatch(updateUser());
@@ -96,35 +96,35 @@ export const loginUserFn = (
     } else {
       loadedUser = user;
 
-      await bycrpt.compare(values.password, user.password);
-
-      const token = await jwt.sign(
-        {
-          email: loadedUser.email,
-          userId: loadedUser.id,
-        },
-        'joyvettoken',
-        { expiresIn: '1h' }
+      const validPassword = await bycrpt.compare(
+        values.password,
+        user.password
       );
+      if (validPassword) {
+        localStorage.setItem('user', JSON.stringify(loadedUser));
 
-      localStorage.setItem('access_token', token);
-      // dispatch(updateUserSuccess(JSON.stringify(updateUserResponse)));
-      toast.success('Successfully updated');
-      if (cb) {
-        cb();
+        // dispatch(updateUserSuccess(JSON.stringify(updateUserResponse)));
+        if (cb) {
+          cb();
+        }
+      } else {
+        throw new Error('Invalid password');
       }
     }
   } catch (error) {
-    console.log(error.message);
-
     toast.error(error.message || '');
   }
 };
+export const logoutFn = (cb: () => void) => async () => {
+  localStorage.removeItem('user');
+  cb();
+};
+
 export const updateUserFn = (
   values: any,
   id: string | number,
   cb?: () => void
-) => async (dispatch: (arg0: { payload: any; type: string }) => void) => {
+) => async () => {
   try {
     // dispatch(updateUser());
     await User.update(values, {
@@ -133,7 +133,7 @@ export const updateUserFn = (
       },
     });
     // dispatch(updateUserSuccess(JSON.stringify(updateUserResponse)));
-    toast.success('Successfully updated');
+    // toast.success('Successfully updated');
     if (cb) {
       cb();
     }
@@ -154,7 +154,6 @@ export const getSingleUserFn = (id: string | number, cb?: () => void) => async (
     if (cb) {
       cb();
     }
-    console.log(getSingleUserResponse);
   } catch (error) {
     toast.error(error.message || '');
   }

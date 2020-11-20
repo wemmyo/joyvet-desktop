@@ -1,12 +1,17 @@
 import * as React from 'react';
-import { Link, NavLink } from 'react-router-dom';
+import { NavLink, useHistory } from 'react-router-dom';
+import { useDispatch } from 'react-redux';
 // import { Icon } from 'semantic-ui-react';
 import styles from './SideNav.css';
 // import NavItem from './components/NavItem/NavItem';
-import routes from '../../../constants/routes';
+import routes from '../../../routing/routes';
+import { logoutFn } from '../../../slices/userSlice';
 // export interface SideNavProps {}
 
 const SideNav = () => {
+  const dispatch = useDispatch();
+  const history = useHistory();
+
   return (
     <section className={styles.sideNav}>
       <h4>Menu</h4>
@@ -101,13 +106,20 @@ const SideNav = () => {
         Users
       </NavLink>
 
-      <Link
-        style={{ color: 'red' }}
+      <div
+        // type="div"
+        style={{ color: 'red', cursor: 'pointer' }}
         className={styles.sideNav__mainItem}
-        to="/"
+        onClick={() => {
+          dispatch(
+            logoutFn(() => {
+              history.push(routes.LOGIN);
+            })
+          );
+        }}
       >
         Log out
-      </Link>
+      </div>
       {/* <IconNavItem title="Get Started" /> */}
       {/* <IconNavWithChildren title="Sales" /> */}
     </section>

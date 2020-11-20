@@ -1,10 +1,10 @@
 import * as React from 'react';
 import { Button, Form, Grid, Segment, Header } from 'semantic-ui-react';
-import { Link } from 'react-router-dom';
+import { useHistory } from 'react-router-dom';
 import { Field, Formik } from 'formik';
 import * as Yup from 'yup';
 import { useDispatch } from 'react-redux';
-import routes from '../../../../constants/routes';
+import routes from '../../../../routing/routes';
 import TextInput from '../../../../components/TextInput/TextInput';
 import { loginUserFn } from '../../../../slices/userSlice';
 
@@ -16,6 +16,7 @@ const CreateProductSchema = Yup.object().shape({
 
 const LoginForm = () => {
   const dispatch = useDispatch();
+  const history = useHistory();
 
   return (
     <Grid centered style={{ height: '100vh' }} verticalAlign="middle">
@@ -31,10 +32,9 @@ const LoginForm = () => {
           validationSchema={CreateProductSchema}
           onSubmit={(values, actions) => {
             //   submitForm(values);
-            console.log(values);
-
             dispatch(
               loginUserFn(values, () => {
+                history.push(routes.INVOICE);
                 actions.resetForm();
               })
             );
@@ -66,7 +66,7 @@ const LoginForm = () => {
                   Login
                 </Button>
               </Segment>
-              <Link to={routes.INVOICE}>to Overview</Link>
+              {/* <Link to={routes.INVOICE}>to Overview</Link> */}
             </Form>
           )}
         </Formik>
