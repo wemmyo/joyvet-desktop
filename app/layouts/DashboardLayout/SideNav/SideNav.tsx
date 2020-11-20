@@ -1,8 +1,8 @@
 import * as React from 'react';
+import { Link, NavLink } from 'react-router-dom';
 // import { Icon } from 'semantic-ui-react';
 import styles from './SideNav.css';
 // import NavItem from './components/NavItem/NavItem';
-import { Link, NavLink } from 'react-router-dom';
 import routes from '../../../constants/routes';
 // export interface SideNavProps {}
 
@@ -92,6 +92,13 @@ const SideNav = () => {
         to={routes.PURCHASE}
       >
         Purchase
+      </NavLink>
+      <NavLink
+        activeClassName={styles.sideNav__mainItemActive}
+        className={styles.sideNav__mainItem}
+        to={routes.USER}
+      >
+        Users
       </NavLink>
 
       <Link

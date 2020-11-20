@@ -9,9 +9,8 @@ export default sequelize.define('user', {
     allowNull: false,
     primaryKey: true,
   },
-  name: Sequelize.STRING,
+  fullName: Sequelize.STRING,
   username: Sequelize.STRING,
   password: Sequelize.STRING,
-  isAdmin: Sequelize.BOOLEAN,
-  isManager: Sequelize.BOOLEAN,
+  role: Sequelize.STRING,
 });

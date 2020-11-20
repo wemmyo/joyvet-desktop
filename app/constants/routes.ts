@@ -9,4 +9,5 @@ export default {
   PAYMENT: '/payment',
   PURCHASE: '/purchase',
   SALES: '/sales',
+  USER: '/use',
 };

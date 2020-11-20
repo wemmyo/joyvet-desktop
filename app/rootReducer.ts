@@ -9,6 +9,7 @@ import purchaseReducer from './slices/purchaseSlice';
 import receiptReducer from './slices/receiptSlice';
 import invoiceReducer from './slices/invoiceSlice';
 import dashboardReducer from './slices/dashboardSlice';
+import userReducer from './slices/userSlice';
 // eslint-disable-next-line import/no-cycle
 // import counterReducer from './features/counter/counterSlice';
 
@@ -23,5 +24,6 @@ export default function createRootReducer(history: History) {
     purchase: purchaseReducer,
     invoice: invoiceReducer,
     dashboard: dashboardReducer,
+    user: userReducer,
   });
 }
