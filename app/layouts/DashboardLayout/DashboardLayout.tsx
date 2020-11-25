@@ -16,6 +16,8 @@ export interface DashboardLayoutProps {
   headerContent?: any;
 }
 
+const user = JSON.parse(localStorage.getItem('user'));
+
 const DashboardLayout: React.FC<DashboardLayoutProps> = ({
   children,
   screenTitle,
@@ -31,9 +33,17 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
       <Sidebar />
       <div style={{ display: 'flex', flex: 1 }}>
         <div className={styles.main}>
-          <header className={styles.headerSection}>
-            <h2 className={styles.headerSection__title}>{screenTitle}</h2>
-            <div className={styles.headerSection__right}>{headerContent}</div>
+          <header>
+            <div className={styles.headerSectionUser}>
+              <div className={styles.headerSectionUser__avatar}>
+                {user.fullName.slice(0, 2)}
+              </div>
+              <p className={styles.headerSectionUser__name}>{user.fullName}</p>
+            </div>
+            <div className={styles.headerSection}>
+              <h2 className={styles.headerSection__title}>{screenTitle}</h2>
+              <div className={styles.headerSection__right}>{headerContent}</div>
+            </div>
           </header>
           {children}
         </div>

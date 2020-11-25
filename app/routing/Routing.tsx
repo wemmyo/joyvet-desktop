@@ -15,6 +15,7 @@ import SupplierScreen from '../views/Supplier/Supplier';
 import ReceiptScreen from '../views/Receipt/Receipt';
 import PaymentScreen from '../views/Payment/Payment';
 import PurchaseScreen from '../views/Purchase/Purchase';
+import AllPurchasesScreen from '../views/AllPurchases/AllPurchases';
 import SalesScreen from '../views/Sales/Sales';
 import UserScreen from '../views/User/User';
 import PrivateRoute from './PrivateRoute';
@@ -37,6 +38,10 @@ export default function Routes() {
       <Switch>
         <PrivateRoute path={routes.USER} component={UserScreen} />
         <PrivateRoute path={routes.SALES} component={SalesScreen} />
+        <PrivateRoute
+          path={routes.ALL_PURCHASES}
+          component={AllPurchasesScreen}
+        />
         <PrivateRoute path={routes.PURCHASE} component={PurchaseScreen} />
         <PrivateRoute path={routes.PAYMENT} component={PaymentScreen} />
         <PrivateRoute path={routes.RECEIPT} component={ReceiptScreen} />

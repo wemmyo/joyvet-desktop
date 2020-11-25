@@ -101,6 +101,13 @@ const SideNav = () => {
       <NavLink
         activeClassName={styles.sideNav__mainItemActive}
         className={styles.sideNav__mainItem}
+        to={routes.ALL_PURCHASES}
+      >
+        All Purchases
+      </NavLink>
+      <NavLink
+        activeClassName={styles.sideNav__mainItemActive}
+        className={styles.sideNav__mainItem}
         to={routes.USER}
       >
         Users

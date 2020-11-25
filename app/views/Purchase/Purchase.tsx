@@ -113,9 +113,9 @@ const PurchaseScreen: React.FC = () => {
 
   const renderOrders = () => {
     const serialNumber = 1;
-    const orderList = orders.map((order: any) => {
+    const orderList = orders.map((order: any, index: number) => {
       return (
-        <Table.Row key={serialNumber}>
+        <Table.Row key={index}>
           <Table.Cell>{serialNumber + 1}</Table.Cell>
           <Table.Cell>{order.title}</Table.Cell>
           <Table.Cell>{order.quantity}</Table.Cell>

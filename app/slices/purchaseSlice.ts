@@ -1,10 +1,14 @@
 import { createSlice } from '@reduxjs/toolkit';
 import { toast } from 'react-toastify';
-import PurchaseModel from '../models/purchase';
+import Purchase from '../models/purchase';
 import Supplier from '../models/supplier';
 import Product from '../models/product';
 
 const initialState = {
+  singlePurchase: {
+    loading: false,
+    data: '',
+  },
   purchases: {
     loading: false,
     data: '',
@@ -19,6 +23,20 @@ const purchaseSlice = createSlice({
   name: 'purchases',
   initialState,
   reducers: {
+    getSinglePurchase: (state) => {
+      const { singlePurchase } = state;
+      singlePurchase.loading = true;
+    },
+    getSinglePurchaseSuccess: (state, { payload }) => {
+      const { singlePurchase } = state;
+      singlePurchase.loading = false;
+      singlePurchase.data = payload;
+    },
+    getSinglePurchaseFailed: (state) => {
+      const { singlePurchase } = state;
+      singlePurchase.loading = false;
+      singlePurchase.data = '';
+    },
     getPurchases: (state) => {
       const { purchases } = state;
       purchases.loading = true;
@@ -51,6 +69,9 @@ const purchaseSlice = createSlice({
 });
 
 export const {
+  getSinglePurchase,
+  getSinglePurchaseSuccess,
+  getSinglePurchaseFailed,
   getPurchases,
   getPurchasesSuccess,
   getPurchasesFailed,
@@ -59,12 +80,40 @@ export const {
   createPurchaseFailed,
 } = purchaseSlice.actions;
 
+export const getSinglePurchaseFn = (
+  id: string | number,
+  cb?: () => void
+) => async (dispatch: (arg0: { payload: any; type: string }) => void) => {
+  try {
+    dispatch(getSinglePurchase());
+
+    const getSinglePurchaseResponse = await Purchase.findByPk(id, {
+      include: [
+        { model: Supplier },
+        {
+          model: Product,
+        },
+      ],
+    });
+
+    dispatch(
+      getSinglePurchaseSuccess(JSON.stringify(getSinglePurchaseResponse))
+    );
+    if (cb) {
+      cb();
+    }
+    console.log(getSinglePurchaseResponse);
+  } catch (error) {
+    toast.error(error.message || '');
+  }
+};
+
 export const getPurchasesFn = () => async (
   dispatch: (arg0: { payload: any; type: string }) => void
 ) => {
   try {
     dispatch(getPurchases());
-    const purchases = await PurchaseModel.findAll();
+    const purchases = await Purchase.findAll();
     dispatch(getPurchasesSuccess(JSON.stringify(purchases)));
   } catch (error) {
     toast.error(error.message || '');

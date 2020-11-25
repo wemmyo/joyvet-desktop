@@ -145,6 +145,11 @@ export const createReceiptFn = (values: any, cb?: () => void) => async (
       customerId: values.customerId || null,
     });
 
+    await Customer.decrement('balance', {
+      by: values.amount,
+      where: { id: values.customerId },
+    });
+
     dispatch(createReceiptSuccess({}));
     toast.success('Receipt successfully created');
 

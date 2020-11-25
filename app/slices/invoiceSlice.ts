@@ -3,7 +3,6 @@ import { toast } from 'react-toastify';
 import Invoice from '../models/invoice';
 import Customer from '../models/customer';
 import Product from '../models/product';
-import InvoiceItem from '../models/invoiceItem';
 
 const initialState = {
   singleInvoice: {
@@ -135,18 +134,20 @@ export const createInvoiceFn = (
     });
     const prodArr: any = [];
     await Promise.all(
-      values.map(async (each: any) => {
-        const prod = await Product.findByPk(each.id);
-        if (prod.stock < each.quantity) {
-          throw new Error(`${prod.title} is out of stock`);
-        }
-        await Product.decrement('stock', {
-          by: each.quantity,
-          where: { id: each.id },
-        });
-        prod.invoiceItem = { quantity: each.quantity };
-        prodArr.push(prod);
-      })
+      await Promise.all(
+        values.map(async (each: any) => {
+          const prod = await Product.findByPk(each.id);
+          if (prod.stock < each.quantity) {
+            throw new Error(`${prod.title} is out of stock`);
+          }
+          await Product.decrement('stock', {
+            by: each.quantity,
+            where: { id: each.id },
+          });
+          prod.invoiceItem = { quantity: each.quantity };
+          prodArr.push(prod);
+        })
+      )
     );
     await invoice.addProducts(prodArr);
     // await Captain.bulkCreate([

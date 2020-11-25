@@ -32,3 +32,23 @@
   display: flex;
   align-items: center;
 }
+.headerSectionUser {
+  margin-left: auto;
+  width: max-content;
+  display: flex;
+  align-items: center;
+}
+.headerSectionUser__avatar {
+  background-color: antiquewhite;
+  height: 40px;
+  width: 40px;
+  border-radius: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 8px;
+  text-transform: uppercase;
+}
+.headerSectionUser__name {
+  text-transform: uppercase;
+}
