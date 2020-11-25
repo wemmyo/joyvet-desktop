@@ -4,6 +4,11 @@ import Purchase from '../models/purchase';
 import Supplier from '../models/supplier';
 import Product from '../models/product';
 
+const user =
+  localStorage.getItem('user') !== null
+    ? JSON.parse(localStorage.getItem('user') || '')
+    : '';
+
 const initialState = {
   singlePurchase: {
     loading: false,
@@ -132,6 +137,7 @@ export const createPurchaseFn = (
       invoiceNumber: meta.invoiceNumber,
       invoiceDate: meta.invoiceDate,
       amount: meta.amount,
+      postedBy: user.id,
     });
     const prodArr: any = [];
     await Promise.all(

@@ -3,6 +3,11 @@ import { toast } from 'react-toastify';
 import Payment from '../models/payment';
 import Supplier from '../models/supplier';
 
+const user =
+  localStorage.getItem('user') !== null
+    ? JSON.parse(localStorage.getItem('user') || '')
+    : '';
+
 const initialState = {
   singlePayment: {
     loading: false,
@@ -142,6 +147,7 @@ export const createPaymentFn = (values: any, cb: () => void) => async (
       amount: values.amount || null,
       note: values.note || null,
       supplierId: values.supplierId || null,
+      postedBy: user.id,
     });
 
     await Supplier.decrement('balance', {

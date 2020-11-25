@@ -4,6 +4,11 @@ import Invoice from '../models/invoice';
 import Customer from '../models/customer';
 import Product from '../models/product';
 
+const user =
+  localStorage.getItem('user') !== null
+    ? JSON.parse(localStorage.getItem('user') || '')
+    : '';
+
 const initialState = {
   singleInvoice: {
     loading: false,
@@ -131,6 +136,7 @@ export const createInvoiceFn = (
     const invoice = await customer.createInvoice({
       saleType: meta.saleType,
       amount: meta.amount,
+      postedBy: user.id,
     });
     const prodArr: any = [];
     await Promise.all(

@@ -2,6 +2,11 @@ import { createSlice } from '@reduxjs/toolkit';
 import { toast } from 'react-toastify';
 import Product from '../models/product';
 
+const user =
+  localStorage.getItem('user') !== null
+    ? JSON.parse(localStorage.getItem('user') || '')
+    : '';
+
 const initialState = {
   singleProduct: {
     loading: false,
@@ -141,6 +146,7 @@ export const createProductFn = (values: any, cb?: () => void) => async (
       stock: values.stock || null,
       unitPrice: values.unitPrice || null,
       productGroup: values.productGroup || null,
+      postedBy: user.id,
     });
 
     if (cb) {

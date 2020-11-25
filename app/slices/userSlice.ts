@@ -1,7 +1,7 @@
 import { createSlice } from '@reduxjs/toolkit';
 import { toast } from 'react-toastify';
 import bycrpt from 'bcryptjs';
-import jwt from 'jsonwebtoken';
+// import jwt from 'jsonwebtoken';
 import User from '../models/user';
 
 const initialState = {
