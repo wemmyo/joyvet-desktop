@@ -9,6 +9,7 @@ import { numberWithCommas } from '../../utils/helpers';
 export interface PrintedReceiptProps {
   // invoiceId:string|number;
   invoice: any;
+  getSingleInvoiceFn: (id: string | number) => void;
 }
 
 export interface PrintedReceiptState {}
@@ -18,8 +19,7 @@ class PrintedReceipt extends React.Component<
   PrintedReceiptState
 > {
   componentDidMount() {
-    const { getSingleInvoiceFn } = this.props;
-    getSingleInvoiceFn(1);
+    this.props.getSingleInvoiceFn(1);
   }
 
   renderItems = () => {
@@ -47,11 +47,11 @@ class PrintedReceipt extends React.Component<
 
   render() {
     const { data: invoiceRaw } = this.props.invoice;
-    const invoice = invoiceRaw ? JSON.parse(invoiceRaw) : {};
-    // console.log(invoice);
+    const invoice = JSON.parse(invoiceRaw);
+    // console.log(invoiceRaw);
 
-    if (!invoiceRaw) {
-      return <p>No data</p>;
+    if (!invoice) {
+      return <p>No Data</p>;
     }
 
     return (
