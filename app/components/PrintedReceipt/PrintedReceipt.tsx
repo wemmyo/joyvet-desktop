@@ -47,7 +47,7 @@ class PrintedReceipt extends React.Component<
 
   render() {
     const { data: invoiceRaw } = this.props.invoice;
-    const invoice = JSON.parse(invoiceRaw);
+    const invoice = invoiceRaw ? JSON.parse(invoiceRaw) : null;
     // console.log(invoiceRaw);
 
     if (!invoice) {

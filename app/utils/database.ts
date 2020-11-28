@@ -1,14 +1,3 @@
-// const mysql = require('mysql2');
-
-// export default mysql
-//   .createPool({
-//     host: 'localhost',
-//     user: 'root',
-//     database: 'node-complete',
-//     password: '',
-//   })
-//   .promise();
-
 const Sequelize = require('sequelize');
 
 export default new Sequelize('joyvetStaging', 'root', '', {
@@ -16,4 +5,9 @@ export default new Sequelize('joyvetStaging', 'root', '', {
   host: 'localhost',
 });
 
-// module.exports = sequelize;
+// export default new Sequelize({
+//   dialect: 'sqlite',
+//   storage: '/Users/wemmyo/Desktop/joyvetDB/database.sqlite',
+// });
+
+// /Users/wemmyo/Desktop/joyvetDB

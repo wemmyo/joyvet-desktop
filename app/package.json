@@ -16,7 +16,8 @@
   "license": "MIT",
   "dependencies": {
     "mysql2": "^2.2.5",
-    "sequelize": "^6.3.5"
+    "sequelize": "^6.3.5",
+    "sqlite3": "^5.0.0"
   },
   "devDependencies": {
     "@types/sequelize": "^4.28.9"
