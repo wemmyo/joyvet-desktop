@@ -1,18 +1,6 @@
 import * as React from 'react';
-
-// import { ComponentToPrint } from "../ComponentToPrint";
 import ReactToPrint from 'react-to-print';
 import PrintedReceipt from '../components/PrintedReceipt/PrintedReceipt';
-
-// class ComponentToPrint extends React.Component {
-//   render() {
-//     return (
-//       <div>
-//         <p>Printed Content</p>
-//       </div>
-//     );
-//   }
-// }
 
 export const FunctionalComponent = () => {
   const componentRef = React.useRef(null);
@@ -75,7 +63,7 @@ export const FunctionalComponent = () => {
     <div>
       <ReactToPrint
         content={reactToPrintContent}
-        documentTitle="AwesomeFileName"
+        documentTitle="Invoice"
         onAfterPrint={handleAfterPrint}
         onBeforeGetContent={handleOnBeforeGetContent}
         onBeforePrint={handleBeforePrint}

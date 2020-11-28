@@ -1,8 +1,15 @@
 import * as React from 'react';
 import { Table } from 'semantic-ui-react';
-import styles from './PrintedReceipt.css';
+import { connect } from 'react-redux';
 
-export interface PrintedReceiptProps {}
+import styles from './PrintedReceipt.css';
+import { getSingleInvoiceFn } from '../../slices/invoiceSlice';
+import { numberWithCommas } from '../../utils/helpers';
+
+export interface PrintedReceiptProps {
+  // invoiceId:string|number;
+  invoice: any;
+}
 
 export interface PrintedReceiptState {}
 
@@ -10,24 +17,63 @@ class PrintedReceipt extends React.Component<
   PrintedReceiptProps,
   PrintedReceiptState
 > {
+  componentDidMount() {
+    const { getSingleInvoiceFn } = this.props;
+    getSingleInvoiceFn(1);
+  }
+
+  renderItems = () => {
+    const { data: invoiceRaw } = this.props.invoice;
+    const invoice = invoiceRaw ? JSON.parse(invoiceRaw) : {};
+
+    if (invoiceRaw) {
+      const items = invoice.products.map((item: any) => {
+        return (
+          <Table.Row>
+            <Table.Cell>{item.title}</Table.Cell>
+            <Table.Cell>{item.invoiceItem.quantity}</Table.Cell>
+            <Table.Cell>{numberWithCommas(item.unitPrice)}</Table.Cell>
+            <Table.Cell>
+              {numberWithCommas(item.invoiceItem.quantity * item.unitPrice)}
+            </Table.Cell>
+          </Table.Row>
+        );
+      });
+      return items;
+    }
+  };
+
   // state = { :  }
+
   render() {
+    const { data: invoiceRaw } = this.props.invoice;
+    const invoice = invoiceRaw ? JSON.parse(invoiceRaw) : {};
+    // console.log(invoice);
+
+    if (!invoiceRaw) {
+      return <p>No data</p>;
+    }
+
     return (
       <div className={styles.receipt}>
         <div className={styles.receipt__companyInfo}>
           <h5>JOY VETERINARY</h5>
           <p>
             37, Iganmode Road, Sango Ota,
-            <br /> Ogun State
+            <br />
+            Ogun State
           </p>
           <p>
             <b>Sales Invoice!</b>
           </p>
           <hr />
         </div>
-        <p>Customer: VALUED CUSTOMER</p>
-        <p>Invoice#: 7284746</p>
-        <p>Transaction Date: 23-10-2020</p>
+        <p>Customer: {invoice.customer.fullName || 'VALUED CUSTOMER'}</p>
+        <p>Invoice#: {invoice.id}</p>
+        <p>
+          Transaction Date:{' '}
+          {new Date(invoice.createdAt).toLocaleDateString('en-gb')}
+        </p>
         <Table basic celled>
           <Table.Header>
             <Table.Row>
@@ -39,27 +85,16 @@ class PrintedReceipt extends React.Component<
           </Table.Header>
 
           <Table.Body>
-            <Table.Row>
-              <Table.Cell>ALLER AQUA 4.8mm</Table.Cell>
-              <Table.Cell>2.0</Table.Cell>
-              <Table.Cell>650.00</Table.Cell>
-              <Table.Cell>1,300.00</Table.Cell>
-            </Table.Row>
-            <Table.Row>
-              <Table.Cell>ALLER AQUA 4.8mm</Table.Cell>
-              <Table.Cell>2.0</Table.Cell>
-              <Table.Cell>650.00</Table.Cell>
-              <Table.Cell>1,300.00</Table.Cell>
-            </Table.Row>
+            {this.renderItems()}
             <Table.Row>
               <Table.Cell>Total</Table.Cell>
               <Table.Cell></Table.Cell>
               <Table.Cell></Table.Cell>
-              <Table.Cell>1,300.00</Table.Cell>
+              <Table.Cell>₦{numberWithCommas(invoice.amount)}</Table.Cell>
             </Table.Row>
           </Table.Body>
         </Table>
-        <p>Cashier: IYANU</p>
+        <p>Cashier: {invoice.user.fullName}</p>
         <p>
           <b>
             Please, Ensure you check all item(s) given to you with your invoice
@@ -71,4 +106,12 @@ class PrintedReceipt extends React.Component<
   }
 }
 
-export default PrintedReceipt;
+const mapStateToProps = ({ invoice }: { invoice: any }) => {
+  return {
+    invoice: invoice.singleInvoice,
+  };
+};
+
+export default connect(mapStateToProps, {
+  getSingleInvoiceFn,
+})(PrintedReceipt);

@@ -3,6 +3,7 @@ import { toast } from 'react-toastify';
 import Invoice from '../models/invoice';
 import Customer from '../models/customer';
 import Product from '../models/product';
+import User from '../models/user';
 
 const user =
   localStorage.getItem('user') !== null
@@ -94,10 +95,14 @@ export const getSingleInvoiceFn = (
     dispatch(getSingleInvoice());
 
     const getSingleInvoiceResponse = await Invoice.findByPk(id, {
+      // include: { all: true, nested: true },
       include: [
         { model: Customer },
         {
           model: Product,
+        },
+        {
+          model: User,
         },
       ],
     });
@@ -136,7 +141,7 @@ export const createInvoiceFn = (
     const invoice = await customer.createInvoice({
       saleType: meta.saleType,
       amount: meta.amount,
-      postedBy: user.id,
+      userId: user.id,
     });
     const prodArr: any = [];
     await Promise.all(

@@ -38,7 +38,9 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
               <div className={styles.headerSectionUser__avatar}>
                 {user.fullName.slice(0, 2)}
               </div>
-              <p className={styles.headerSectionUser__name}>{user.fullName}</p>
+              <p className={styles.headerSectionUser__name}>
+                {user.fullName || ''}
+              </p>
             </div>
             <div className={styles.headerSection}>
               <h2 className={styles.headerSection__title}>{screenTitle}</h2>

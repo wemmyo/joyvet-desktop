@@ -60,42 +60,45 @@ Supplier.hasMany(Purchase);
 Purchase.belongsToMany(Product, { through: PurchaseItem });
 Product.belongsToMany(Purchase, { through: PurchaseItem });
 
-User.hasOne(Invoice, {
+User.hasMany(Invoice);
+Invoice.belongsTo(User);
+
+User.hasMany(Payment, {
   foreignKey: 'postedBy',
 });
-User.hasOne(Payment, {
+User.hasMany(Receipt, {
   foreignKey: 'postedBy',
 });
-User.hasOne(Receipt, {
+User.hasMany(Purchase, {
   foreignKey: 'postedBy',
 });
-User.hasOne(Purchase, {
+User.hasMany(Product, {
   foreignKey: 'postedBy',
 });
-User.hasOne(Product, {
+User.hasMany(Supplier, {
   foreignKey: 'postedBy',
 });
-User.hasOne(Supplier, {
-  foreignKey: 'postedBy',
-});
-User.hasOne(Customer, {
+User.hasMany(Customer, {
   foreignKey: 'postedBy',
 });
 
 sequelize
   // .sync({ force: true })
   .sync()
-  .then(() => {
-    return bycrpt.hash('admin', 12);
-  })
-  .then((hashedPassword: string) => {
-    return User.create({
-      fullName: 'admin',
-      username: 'admin',
-      password: hashedPassword,
-      role: 'admin',
-    });
-  })
-  .catch((error: any) => {
-    console.log(error);
+  .then(async () => {
+    try {
+      const hashedPassword = await bycrpt.hash('admin', 12);
+
+      const admin = await User.findOne({ where: { role: 'admin' } });
+      if (!admin) {
+        await User.create({
+          fullName: 'admin',
+          username: 'admin',
+          password: hashedPassword,
+          role: 'admin',
+        });
+      }
+    } catch (err) {
+      console.log(err);
+    }
   });
