@@ -42,7 +42,6 @@ const EditUser: React.FC<EditUserProps> = ({ userId }) => {
       initialValues={{
         fullName: fullName || '',
         username: username || '',
-        password: '',
         role: role || '',
       }}
       // validationSchema={EditUserSchema}
@@ -74,13 +73,7 @@ const EditUser: React.FC<EditUserProps> = ({ userId }) => {
             type="text"
             component={TextInput}
           />
-          <Field
-            name="password"
-            placeholder="Password"
-            label="Password"
-            type="password"
-            component={TextInput}
-          />
+
           <div className="field">
             <label htmlFor="role">Role</label>
             <Field

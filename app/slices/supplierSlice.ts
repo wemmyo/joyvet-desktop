@@ -2,11 +2,6 @@ import { createSlice } from '@reduxjs/toolkit';
 import { toast } from 'react-toastify';
 import Supplier from '../models/supplier';
 
-const user =
-  localStorage.getItem('user') !== null
-    ? JSON.parse(localStorage.getItem('user') || '')
-    : '';
-
 const initialState = {
   singleSupplier: {
     loading: false,
@@ -148,6 +143,10 @@ export const createSupplierFn = (values: any, cb?: () => void) => async (
   try {
     dispatch(createSupplier());
     // const response = await Supplier.create(values);
+    const user =
+      localStorage.getItem('user') !== null
+        ? JSON.parse(localStorage.getItem('user') || '')
+        : '';
     await Supplier.create({
       fullName: values.fullName || null,
       address: values.address || null,

@@ -118,6 +118,7 @@ export const loginUserFn = (
 export const logoutFn = (cb: () => void) => async () => {
   localStorage.removeItem('user');
   cb();
+  // window.location.reload(false);
 };
 
 export const updateUserFn = (

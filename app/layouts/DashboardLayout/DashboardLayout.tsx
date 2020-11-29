@@ -16,8 +16,6 @@ export interface DashboardLayoutProps {
   headerContent?: any;
 }
 
-const user = JSON.parse(localStorage.getItem('user'));
-
 const DashboardLayout: React.FC<DashboardLayoutProps> = ({
   children,
   screenTitle,
@@ -27,6 +25,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
   const dispatch = useDispatch();
   const dashboardState = useSelector(selectDashboardState);
   const { sideContentisOpen } = dashboardState;
+  const user = JSON.parse(localStorage.getItem('user'));
 
   return (
     <div style={{ display: 'flex' }}>

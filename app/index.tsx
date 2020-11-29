@@ -60,25 +60,26 @@ Supplier.hasMany(Purchase);
 Purchase.belongsToMany(Product, { through: PurchaseItem });
 Product.belongsToMany(Purchase, { through: PurchaseItem });
 
-User.hasMany(Invoice);
-Invoice.belongsTo(User);
-
-User.hasMany(Payment, {
+// Assign every action to a user/staff
+Invoice.belongsTo(User, {
   foreignKey: 'postedBy',
 });
-User.hasMany(Receipt, {
+Payment.belongsTo(User, {
   foreignKey: 'postedBy',
 });
-User.hasMany(Purchase, {
+Receipt.belongsTo(User, {
   foreignKey: 'postedBy',
 });
-User.hasMany(Product, {
+Purchase.belongsTo(User, {
   foreignKey: 'postedBy',
 });
-User.hasMany(Supplier, {
+Product.belongsTo(User, {
   foreignKey: 'postedBy',
 });
-User.hasMany(Customer, {
+Supplier.belongsTo(User, {
+  foreignKey: 'postedBy',
+});
+Customer.belongsTo(User, {
   foreignKey: 'postedBy',
 });
 

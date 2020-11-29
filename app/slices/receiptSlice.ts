@@ -3,11 +3,6 @@ import { toast } from 'react-toastify';
 import Receipt from '../models/receipt';
 import Customer from '../models/customer';
 
-const user =
-  localStorage.getItem('user') !== null
-    ? JSON.parse(localStorage.getItem('user') || '')
-    : '';
-
 const initialState = {
   singleReceipt: {
     loading: false,
@@ -144,6 +139,10 @@ export const createReceiptFn = (values: any, cb?: () => void) => async (
   try {
     dispatch(createReceipt());
     // const response = await Receipt.create(values);
+    const user =
+      localStorage.getItem('user') !== null
+        ? JSON.parse(localStorage.getItem('user') || '')
+        : '';
     await Receipt.create({
       amount: values.amount || null,
       note: values.note || null,

@@ -2,11 +2,6 @@ import { createSlice } from '@reduxjs/toolkit';
 import { toast } from 'react-toastify';
 import Product from '../models/product';
 
-const user =
-  localStorage.getItem('user') !== null
-    ? JSON.parse(localStorage.getItem('user') || '')
-    : '';
-
 const initialState = {
   singleProduct: {
     loading: false,
@@ -141,6 +136,10 @@ export const createProductFn = (values: any, cb?: () => void) => async (
   try {
     dispatch(createProduct());
     // const response = await Product.create(values);
+    const user =
+      localStorage.getItem('user') !== null
+        ? JSON.parse(localStorage.getItem('user') || '')
+        : '';
     await Product.create({
       title: values.title || null,
       stock: values.stock || null,

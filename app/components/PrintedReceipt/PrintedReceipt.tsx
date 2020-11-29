@@ -29,7 +29,7 @@ class PrintedReceipt extends React.Component<
     if (invoiceRaw) {
       const items = invoice.products.map((item: any) => {
         return (
-          <Table.Row>
+          <Table.Row key={item.id}>
             <Table.Cell>{item.title}</Table.Cell>
             <Table.Cell>{item.invoiceItem.quantity}</Table.Cell>
             <Table.Cell>{numberWithCommas(item.unitPrice)}</Table.Cell>
@@ -47,12 +47,18 @@ class PrintedReceipt extends React.Component<
 
   render() {
     const { data: invoiceRaw } = this.props.invoice;
-    const invoice = invoiceRaw ? JSON.parse(invoiceRaw) : null;
-    // console.log(invoiceRaw);
-
-    if (!invoice) {
+    const invoice = invoiceRaw ? JSON.parse(invoiceRaw) : {};
+    console.log(invoice);
+    console.log(invoiceRaw);
+    if (!invoiceRaw || invoiceRaw === 'null') {
       return <p>No Data</p>;
     }
+
+    // return <p>No Data</p>;
+
+    // if (invoiceRaw === 'null') {
+    //   return <p>No Data</p>;
+    // }
 
     return (
       <div className={styles.receipt}>

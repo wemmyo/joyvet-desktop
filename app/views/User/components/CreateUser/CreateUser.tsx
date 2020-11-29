@@ -23,9 +23,8 @@ const CreateUser: React.FC<CreateUserProps> = ({ createUserFn }) => {
       }}
       validationSchema={CreateUserSchema}
       onSubmit={(values, actions) => {
-        createUserFn(values, () => {
-          actions.resetForm();
-        });
+        createUserFn(values);
+        actions.resetForm();
       }}
     >
       {({ handleSubmit }) => (

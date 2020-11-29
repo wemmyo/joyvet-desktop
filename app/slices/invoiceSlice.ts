@@ -5,11 +5,6 @@ import Customer from '../models/customer';
 import Product from '../models/product';
 import User from '../models/user';
 
-const user =
-  localStorage.getItem('user') !== null
-    ? JSON.parse(localStorage.getItem('user') || '')
-    : '';
-
 const initialState = {
   singleInvoice: {
     loading: false,
@@ -104,6 +99,7 @@ export const getSingleInvoiceFn = (
         {
           model: User,
         },
+        // 'postedBy',
       ],
     });
 
@@ -137,11 +133,16 @@ export const createInvoiceFn = (
 ) => async (dispatch: (arg0: { payload: any; type: string }) => void) => {
   try {
     dispatch(createInvoice());
+    const user =
+      localStorage.getItem('user') !== null
+        ? JSON.parse(localStorage.getItem('user') || '')
+        : '';
+
     const customer = await Customer.findByPk(meta.customerId);
     const invoice = await customer.createInvoice({
       saleType: meta.saleType,
       amount: meta.amount,
-      userId: user.id,
+      postedBy: user.id,
     });
     const prodArr: any = [];
     await Promise.all(
