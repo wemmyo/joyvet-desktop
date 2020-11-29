@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
+import { useReactToPrint } from 'react-to-print';
 import { Table, Grid, Button, Form, Segment } from 'semantic-ui-react';
 import { Field, Formik } from 'formik';
 import { useSelector, useDispatch } from 'react-redux';
@@ -12,20 +13,30 @@ import { getProductsFn, selectProductState } from '../../slices/productSlice';
 import { numberWithCommas } from '../../utils/helpers';
 import { createInvoiceFn } from '../../slices/invoiceSlice';
 import TextInput from '../../components/TextInput/TextInput';
+// import { FunctionalComponent } from '../Print';
+import TestReceipt from '../../components/PrintedReceipt/TestReceipt';
 
 const InvoiceScreen: React.FC = () => {
+  const componentRef = useRef();
+  const handlePrint = useReactToPrint({
+    content: () => componentRef.current,
+  });
+
   const [orders, setOrders] = useState([]);
 
   const dispatch = useDispatch();
 
   const customerState = useSelector(selectCustomerState);
   const productState = useSelector(selectProductState);
+  // const invoiceState = useSelector(selectInvoiceState);
 
   const { data: customersRaw } = customerState.customers;
   const { data: productsRaw } = productState.products;
+  // const { data: createdInvoiceRaw } = invoiceState.createInvoiceState;
 
   const customers = customersRaw ? JSON.parse(customersRaw) : [];
   const products = productsRaw ? JSON.parse(productsRaw) : [];
+  // const createdInvoice = createdInvoiceRaw ? JSON.parse(createdInvoiceRaw) : {};
 
   const fetchCustomers = () => {
     dispatch(getCustomersFn());
@@ -176,7 +187,7 @@ const InvoiceScreen: React.FC = () => {
                   // });
                 }}
               >
-                {({ handleSubmit, values }) => (
+                {({ handleSubmit, values, resetForm }) => (
                   <Form>
                     <div className="field">
                       <label htmlFor="customer">Customer</label>
@@ -244,19 +255,33 @@ const InvoiceScreen: React.FC = () => {
                     <Button
                       onClick={() => {
                         dispatch(
-                          createInvoiceFn(orders, {
-                            customerId: values.customerId,
-                            saleType: values.saleType,
-                            amount: sumOfOrders(),
-                          })
+                          createInvoiceFn(
+                            orders,
+                            {
+                              customerId: values.customerId,
+                              saleType: values.saleType,
+                              amount: sumOfOrders(),
+                            },
+                            () => {
+                              resetForm();
+                              setOrders([]);
+                              // handlePrint();
+                            }
+                          )
                         );
                       }}
                       type="button"
                       fluid
                       positive
                     >
-                      Save & Print
+                      Save
                     </Button>
+
+                    {/* <ComponentToPrint ref={componentRef} /> */}
+                    <div style={{ display: 'none' }}>
+                      <TestReceipt ref={componentRef} />
+                    </div>
+                    {/* <button onClick={handlePrint}>Print this out!</button> */}
                   </Form>
                 )}
               </Formik>

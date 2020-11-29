@@ -1,6 +1,20 @@
 import * as React from 'react';
+import { Button } from 'semantic-ui-react';
+
+// import { ComponentToPrint } from "../ComponentToPrint";
 import ReactToPrint from 'react-to-print';
 import PrintedReceipt from '../components/PrintedReceipt/PrintedReceipt';
+import TestReceipt from '../components/PrintedReceipt/TestReceipt';
+
+// class ComponentToPrint extends React.Component {
+//   render() {
+//     return (
+//       <div>
+//         <p>Printed Content</p>
+//       </div>
+//     );
+//   }
+// }
 
 export const FunctionalComponent = () => {
   const componentRef = React.useRef(null);
@@ -56,14 +70,18 @@ export const FunctionalComponent = () => {
     // return <a href="#" onClick={() => alert('This will not work')}>Print this out!</a>;
 
     // Good
-    return <button>Print</button>;
+    return (
+      <Button type="button" fluid positive>
+        Print
+      </Button>
+    );
   }, []);
 
   return (
     <div>
       <ReactToPrint
         content={reactToPrintContent}
-        documentTitle="Invoice"
+        documentTitle="AwesomeFileName"
         onAfterPrint={handleAfterPrint}
         onBeforeGetContent={handleOnBeforeGetContent}
         onBeforePrint={handleBeforePrint}
@@ -71,7 +89,10 @@ export const FunctionalComponent = () => {
         trigger={reactToPrintTrigger}
       />
       {loading && <p className="indicator">Loading...</p>}
-      <PrintedReceipt ref={componentRef} />
+      {/* <PrintedReceipt ref={componentRef} /> */}
+      <div style={{ display: 'none' }}>
+        <TestReceipt ref={componentRef} />
+      </div>
     </div>
   );
 };

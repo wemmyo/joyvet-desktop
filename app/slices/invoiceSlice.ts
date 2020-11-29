@@ -161,16 +161,18 @@ export const createInvoiceFn = (
         })
       )
     );
-    await invoice.addProducts(prodArr);
+    const createdInvoice = await invoice.addProducts(prodArr);
+    // console.log(createdInvoice);
+
     // await Captain.bulkCreate([
     //   { name: 'Jack Sparrow' },
     //   { name: 'Davy Jones' }
     // ], { updateOnDuplicate: ["name"] });
-
+    toast.success('Invoice created');
     if (cb) {
       cb();
     }
-    dispatch(createInvoiceSuccess({}));
+    dispatch(createInvoiceSuccess(JSON.stringify(createdInvoice)));
   } catch (error) {
     toast.error(error.message);
   }
