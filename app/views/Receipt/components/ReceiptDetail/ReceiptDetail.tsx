@@ -21,11 +21,15 @@ const ReceiptDetail: React.SFC<ReceiptDetailProps> = ({ receiptId }) => {
 
   const receiptState = useSelector(selectReceiptState);
 
-  const { data: singleReceiptRaw } = receiptState.singleReceipt;
+  const { data: singleReceiptRaw, loading } = receiptState.singleReceipt;
 
   const singleReceipt = singleReceiptRaw ? JSON.parse(singleReceiptRaw) : {};
 
   const { customer, amount, note, createdAt } = singleReceipt;
+
+  if (loading || !singleReceipt) {
+    return <p>Loading...</p>;
+  }
 
   return (
     <Table>

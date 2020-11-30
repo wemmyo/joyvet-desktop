@@ -21,11 +21,15 @@ const PaymentDetail: React.SFC<PaymentDetailProps> = ({ paymentId }) => {
 
   const paymentState = useSelector(selectPaymentState);
 
-  const { data: singlePaymentRaw } = paymentState.singlePayment;
+  const { data: singlePaymentRaw, loading } = paymentState.singlePayment;
 
   const singlePayment = singlePaymentRaw ? JSON.parse(singlePaymentRaw) : {};
 
   const { supplier, amount, note, createdAt } = singlePayment;
+
+  if (loading || !singlePayment) {
+    return <p>Loading...</p>;
+  }
 
   return (
     <Table>

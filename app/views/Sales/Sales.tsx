@@ -44,8 +44,6 @@ const SalesScreen: React.FC = () => {
     setSalesId('');
   };
 
-  // useEffect(fetchInvoices, []);
-
   useEffect(() => {
     fetchInvoices();
 
@@ -54,7 +52,7 @@ const SalesScreen: React.FC = () => {
     };
   }, []);
 
-  const openSingleSale = (id: any) => {
+  const openSingleSale = async (id: any) => {
     setSalesId(id);
     openSideContent(CONTENT_DETAIL);
   };

@@ -24,7 +24,7 @@ const SalesDetail: React.FC<SalesDetailProps> = ({ salesId }) => {
 
   const invoiceState = useSelector(selectInvoiceState);
 
-  const { data: salesRaw } = invoiceState.singleInvoice;
+  const { data: salesRaw, loading } = invoiceState.singleInvoice;
 
   const sales = salesRaw ? JSON.parse(salesRaw) : {};
 
@@ -44,6 +44,10 @@ const SalesDetail: React.FC<SalesDetailProps> = ({ salesId }) => {
     return orderList;
   };
 
+  if (loading || !sales) {
+    return <p>Loading...</p>;
+  }
+
   return (
     <>
       <Table striped>
@@ -54,7 +58,9 @@ const SalesDetail: React.FC<SalesDetailProps> = ({ salesId }) => {
           </Table.Row>
           <Table.Row>
             <Table.Cell>Customer</Table.Cell>
-            <Table.Cell>{sales.customer?.fullName}</Table.Cell>
+            <Table.Cell>
+              {sales.customer ? sales.customer.fullName : ''}
+            </Table.Cell>
           </Table.Row>
           <Table.Row>
             <Table.Cell>Type</Table.Cell>

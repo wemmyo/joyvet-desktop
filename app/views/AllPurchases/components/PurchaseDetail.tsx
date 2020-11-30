@@ -24,7 +24,7 @@ const SalesDetail: React.FC<SalesDetailProps> = ({ purchaseId }) => {
 
   const purchaseState = useSelector(selectPurchaseState);
 
-  const { data: purchaseRaw } = purchaseState.singlePurchase;
+  const { data: purchaseRaw, loading } = purchaseState.singlePurchase;
 
   const purchase = purchaseRaw ? JSON.parse(purchaseRaw) : {};
 
@@ -43,6 +43,10 @@ const SalesDetail: React.FC<SalesDetailProps> = ({ purchaseId }) => {
     });
     return orderList;
   };
+
+  if (loading || !purchase) {
+    return <p>Loading...</p>;
+  }
 
   return (
     <>
