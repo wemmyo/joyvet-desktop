@@ -83,7 +83,7 @@ export const updatePaymentFn = (
   values: any,
   id: string | number,
   cb?: () => void
-) => async (dispatch: (arg0: { payload: any; type: string }) => void) => {
+) => async () => {
   try {
     // dispatch(updatePayment());
     await Payment.update(values, {

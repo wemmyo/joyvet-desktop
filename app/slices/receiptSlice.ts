@@ -84,7 +84,7 @@ export const updateReceiptFn = (
   values: any,
   id: string | number,
   cb?: () => void
-) => async (dispatch: (arg0: { payload: any; type: string }) => void) => {
+) => async () => {
   try {
     // dispatch(updateReceipt());
     await Receipt.update(values, {

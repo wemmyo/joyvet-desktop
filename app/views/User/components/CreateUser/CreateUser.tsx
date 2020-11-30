@@ -5,14 +5,21 @@ import * as Yup from 'yup';
 import TextInput from '../../../../components/TextInput/TextInput';
 
 export interface CreateUserProps {
-  createUserFn: (values: any) => void;
+  createUserFn: (values: {
+    fullName: string;
+    username: string;
+    password: string;
+    role: string;
+  }) => void;
 }
 
 const CreateUserSchema = Yup.object().shape({
   fullName: Yup.string().required('Required'),
 });
 
-const CreateUser: React.FC<CreateUserProps> = ({ createUserFn }) => {
+const CreateUser: React.FC<CreateUserProps> = ({
+  createUserFn,
+}: CreateUserProps) => {
   return (
     <Formik
       initialValues={{

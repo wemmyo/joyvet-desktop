@@ -13,7 +13,9 @@ interface SalesDetailProps {
   purchaseId: string | number;
 }
 
-const SalesDetail: React.FC<SalesDetailProps> = ({ purchaseId }) => {
+const SalesDetail: React.FC<SalesDetailProps> = ({
+  purchaseId,
+}: SalesDetailProps) => {
   const dispatch = useDispatch();
 
   const fetchData = () => {

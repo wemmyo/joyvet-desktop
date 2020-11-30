@@ -9,7 +9,6 @@ import {
   createUserFn,
 } from '../../slices/userSlice';
 import CreateUser from './components/CreateUser/CreateUser';
-import { numberWithCommas } from '../../utils/helpers';
 import {
   openSideContentFn,
   closeSideContentFn,
@@ -85,7 +84,8 @@ const UserScreen: React.FC = () => {
   const renderSideContent = () => {
     if (sideContent === CONTENT_CREATE) {
       return <CreateUser createUserFn={handleNewUser} />;
-    } else if (sideContent === CONTENT_EDIT) {
+    }
+    if (sideContent === CONTENT_EDIT) {
       return <EditUser userId={userId} />;
     }
     return null;

@@ -14,7 +14,7 @@ export interface CreateCustomerProps {
 
 const CreateCustomer: React.FC<CreateCustomerProps> = ({
   createCustomerFn,
-}) => {
+}: CreateCustomerProps) => {
   return (
     <Formik
       initialValues={{

@@ -11,31 +11,7 @@ import {
 import { getProductsFn, selectProductState } from '../../slices/productSlice';
 import { numberWithCommas } from '../../utils/helpers';
 import { createPurchaseFn } from '../../slices/purchaseSlice';
-
-const TextInput = ({
-  field, // { name, value, onChange, onBlur }
-  form: { touched, errors }, // also values, setXXXX, handleXXXX, dirty, isValid, status, etc.
-  ...props
-}: {
-  [x: string]: any;
-  field: any;
-  form: any;
-  label: string;
-  placeholder: string;
-}) => {
-  // const { src, alt } = props;
-  // const { src, alt } = field;
-  return (
-    <Form.Input
-      error={
-        touched[field.name] && errors[field.name] ? errors[field.name] : false
-      }
-      label={props.label}
-    >
-      <input placeholder={props.placeholder} {...field} {...props} />
-    </Form.Input>
-  );
-};
+import TextInput from '../../components/TextInput/TextInput';
 
 const PurchaseScreen: React.FC = () => {
   const [orders, setOrders] = useState([]);
@@ -113,9 +89,9 @@ const PurchaseScreen: React.FC = () => {
 
   const renderOrders = () => {
     const serialNumber = 1;
-    const orderList = orders.map((order: any, index: number) => {
+    const orderList = orders.map((order: any) => {
       return (
-        <Table.Row key={index}>
+        <Table.Row key={order.orderId}>
           <Table.Cell>{serialNumber + 1}</Table.Cell>
           <Table.Cell>{order.title}</Table.Cell>
           <Table.Cell>{order.quantity}</Table.Cell>
@@ -124,7 +100,7 @@ const PurchaseScreen: React.FC = () => {
           <Table.Cell>
             <Button
               onClick={() => {
-                removeOrder(serialNumber);
+                removeOrder(order.orderId);
               }}
               negative
             >
@@ -190,6 +166,7 @@ const PurchaseScreen: React.FC = () => {
                     amount:
                       JSON.parse(values.product).unitPrice *
                       Number(values.quantity),
+                    orderId: new Date().getUTCMilliseconds(),
                   });
                   // actions.resetForm({
                   //   values: {

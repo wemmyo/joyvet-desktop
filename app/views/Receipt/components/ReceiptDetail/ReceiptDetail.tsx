@@ -10,7 +10,9 @@ export interface ReceiptDetailProps {
   receiptId: string | number;
 }
 
-const ReceiptDetail: React.SFC<ReceiptDetailProps> = ({ receiptId }) => {
+const ReceiptDetail: React.SFC<ReceiptDetailProps> = ({
+  receiptId,
+}: ReceiptDetailProps) => {
   const dispatch = useDispatch();
 
   const fetchData = () => {
@@ -39,7 +41,7 @@ const ReceiptDetail: React.SFC<ReceiptDetailProps> = ({ receiptId }) => {
           <Table.Cell>{customer ? customer.fullName : ''}</Table.Cell>
         </Table.Row>
         <Table.Row>
-          <Table.Cell>Customer's balance</Table.Cell>
+          <Table.Cell>Customer balance</Table.Cell>
           <Table.Cell>{customer ? customer.balance : 0.0}</Table.Cell>
         </Table.Row>
         <Table.Row>

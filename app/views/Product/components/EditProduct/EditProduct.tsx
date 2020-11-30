@@ -17,7 +17,9 @@ export interface EditProductProps {
   productId: string | number;
 }
 
-const EditProduct: React.FC<EditProductProps> = ({ productId }) => {
+const EditProduct: React.FC<EditProductProps> = ({
+  productId,
+}: EditProductProps) => {
   const dispatch = useDispatch();
 
   const fetchData = () => {

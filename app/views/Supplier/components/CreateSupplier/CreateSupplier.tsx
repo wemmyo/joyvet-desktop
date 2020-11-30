@@ -14,7 +14,7 @@ export interface CreateSupplierProps {
 
 const CreateSupplier: React.FC<CreateSupplierProps> = ({
   createSupplierFn,
-}) => {
+}: CreateSupplierProps) => {
   return (
     <Formik
       initialValues={{

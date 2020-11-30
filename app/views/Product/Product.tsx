@@ -82,7 +82,8 @@ const ProductsScreen: React.FC = () => {
   const renderSideContent = () => {
     if (sideContent === CONTENT_CREATE) {
       return <CreateProduct createProductFn={handleNewProduct} />;
-    } else if (sideContent === CONTENT_EDIT) {
+    }
+    if (sideContent === CONTENT_EDIT) {
       return <EditProduct productId={productId} />;
     }
     return null;

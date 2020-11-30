@@ -48,7 +48,12 @@ const CreatePayment: React.FC = () => {
 
   const showSupplierBalance = () => {
     if (singleSupplier.balance) {
-      return <Message>Outstanding balance: {singleSupplier.balance}</Message>;
+      return (
+        <Message>
+          Outstanding balance:
+          {singleSupplier.balance}
+        </Message>
+      );
     }
     return null;
   };

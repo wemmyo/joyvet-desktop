@@ -85,7 +85,8 @@ const SuppliersScreen: React.FC = () => {
   const renderSideContent = () => {
     if (sideContent === CONTENT_CREATE) {
       return <CreateSupplier createSupplierFn={handleNewSupplier} />;
-    } else if (sideContent === CONTENT_EDIT) {
+    }
+    if (sideContent === CONTENT_EDIT) {
       return <EditSupplier supplierId={supplierId} />;
     }
     return null;

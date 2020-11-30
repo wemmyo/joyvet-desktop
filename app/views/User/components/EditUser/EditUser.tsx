@@ -18,7 +18,7 @@ export interface EditUserProps {
   userId: string | number;
 }
 
-const EditUser: React.FC<EditUserProps> = ({ userId }) => {
+const EditUser: React.FC<EditUserProps> = ({ userId }: EditUserProps) => {
   const dispatch = useDispatch();
 
   const fetchData = () => {
@@ -45,7 +45,7 @@ const EditUser: React.FC<EditUserProps> = ({ userId }) => {
         role: role || '',
       }}
       // validationSchema={EditUserSchema}
-      onSubmit={(values, actions) => {
+      onSubmit={(values) => {
         //   submitForm(values);
         // console.log(values);
 

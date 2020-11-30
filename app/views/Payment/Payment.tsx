@@ -3,11 +3,7 @@ import { Table, Input, Button, Icon } from 'semantic-ui-react';
 import { useSelector, useDispatch } from 'react-redux';
 
 import DashboardLayout from '../../layouts/DashboardLayout/DashboardLayout';
-import {
-  selectPaymentState,
-  getPaymentsFn,
-  getSinglePaymentFn,
-} from '../../slices/paymentSlice';
+import { selectPaymentState, getPaymentsFn } from '../../slices/paymentSlice';
 import CreatePayment from './components/CreatePayment/CreatePayment';
 import { numberWithCommas } from '../../utils/helpers';
 import PaymentDetail from './components/PaymentDetail/PaymentDetail';
@@ -96,9 +92,11 @@ const PaymentsScreen: React.FC = () => {
   const renderSideContent = () => {
     if (sideContent === CONTENT_DETAIL) {
       return <PaymentDetail paymentId={paymentId} />;
-    } else if (sideContent === CONTENT_CREATE) {
+    }
+    if (sideContent === CONTENT_CREATE) {
       return <CreatePayment />;
-    } else if (sideContent === CONTENT_EDIT) {
+    }
+    if (sideContent === CONTENT_EDIT) {
       return <EditPayment paymentId={paymentId} />;
     }
     return null;

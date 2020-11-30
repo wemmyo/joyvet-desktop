@@ -81,7 +81,7 @@ export const updateCustomerFn = (
   values: any,
   id: string | number,
   cb?: () => void
-) => async (dispatch: (arg0: { payload: any; type: string }) => void) => {
+) => async () => {
   try {
     // dispatch(updateCustomer());
     await Customer.update(values, {

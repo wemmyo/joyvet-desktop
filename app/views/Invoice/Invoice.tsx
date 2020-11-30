@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { useReactToPrint } from 'react-to-print';
+// import { useReactToPrint } from 'react-to-print';
 import { Table, Grid, Button, Form, Segment } from 'semantic-ui-react';
 import { Field, Formik } from 'formik';
 import { useSelector, useDispatch } from 'react-redux';
@@ -14,13 +14,13 @@ import { numberWithCommas } from '../../utils/helpers';
 import { createInvoiceFn } from '../../slices/invoiceSlice';
 import TextInput from '../../components/TextInput/TextInput';
 // import { FunctionalComponent } from '../Print';
-import TestReceipt from '../../components/PrintedReceipt/TestReceipt';
+// import TestReceipt from '../../components/PrintedReceipt/TestReceipt';
 
 const InvoiceScreen: React.FC = () => {
   const componentRef = useRef();
-  const handlePrint = useReactToPrint({
-    content: () => componentRef.current,
-  });
+  // const handlePrint = useReactToPrint({
+  //   content: () => componentRef.current,
+  // });
 
   const [orders, setOrders] = useState([]);
 
@@ -104,7 +104,7 @@ const InvoiceScreen: React.FC = () => {
     const orderList = orders.map((order: any) => {
       serialNumber += 1;
       return (
-        <Table.Row key={serialNumber}>
+        <Table.Row key={order.orderId}>
           <Table.Cell>{serialNumber}</Table.Cell>
           <Table.Cell>{order.title}</Table.Cell>
           <Table.Cell>{order.quantity}</Table.Cell>
@@ -113,7 +113,7 @@ const InvoiceScreen: React.FC = () => {
           <Table.Cell>
             <Button
               onClick={() => {
-                removeOrder(serialNumber);
+                removeOrder(order.orderId);
               }}
               negative
             >
@@ -171,13 +171,14 @@ const InvoiceScreen: React.FC = () => {
                   quantity: '',
                 }}
                 // validationSchema={CreatePaymentSchema}
-                onSubmit={(values, actions) => {
+                onSubmit={(values) => {
                   addToOrders({
                     ...JSON.parse(values.product),
                     quantity: values.quantity,
                     amount:
                       JSON.parse(values.product).unitPrice *
                       Number(values.quantity),
+                    orderId: new Date().getUTCMilliseconds(),
                   });
                   // actions.resetForm({
                   //   values: {
@@ -253,6 +254,7 @@ const InvoiceScreen: React.FC = () => {
                       </Button>
                     </Segment>
                     <Button
+                      disabled={orders.length < 1}
                       onClick={() => {
                         dispatch(
                           createInvoiceFn(
@@ -277,11 +279,10 @@ const InvoiceScreen: React.FC = () => {
                       Save
                     </Button>
 
-                    {/* <ComponentToPrint ref={componentRef} /> */}
-                    <div style={{ display: 'none' }}>
+                    {/* <div style={{ display: 'none' }}>
                       <TestReceipt ref={componentRef} />
                     </div>
-                    {/* <button onClick={handlePrint}>Print this out!</button> */}
+                    <button onClick={handlePrint}>Print this out!</button> */}
                   </Form>
                 )}
               </Formik>

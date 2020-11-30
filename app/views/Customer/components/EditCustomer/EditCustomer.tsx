@@ -17,7 +17,9 @@ export interface EditCustomerProps {
   customerId: string | number;
 }
 
-const EditCustomer: React.FC<EditCustomerProps> = ({ customerId }) => {
+const EditCustomer: React.FC<EditCustomerProps> = ({
+  customerId,
+}: EditCustomerProps) => {
   const dispatch = useDispatch();
 
   const fetchData = () => {
@@ -45,7 +47,7 @@ const EditCustomer: React.FC<EditCustomerProps> = ({ customerId }) => {
         balance: balance || '',
       }}
       // validationSchema={EditCustomerSchema}
-      onSubmit={(values, actions) => {
+      onSubmit={(values) => {
         //   submitForm(values);
         // console.log(values);
 

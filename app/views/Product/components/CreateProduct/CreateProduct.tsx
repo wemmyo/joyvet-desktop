@@ -5,14 +5,20 @@ import * as Yup from 'yup';
 import TextInput from '../../../../components/TextInput/TextInput';
 
 export interface CreateProductProps {
-  createProductFn: (values: any) => void;
+  createProductFn: (values: {
+    title: string;
+    stock?: string;
+    unitPrice?: string | number;
+  }) => void;
 }
 
 const CreateProductSchema = Yup.object().shape({
   title: Yup.string().required('Required'),
 });
 
-const CreateProduct: React.FC<CreateProductProps> = ({ createProductFn }) => {
+const CreateProduct: React.FC<CreateProductProps> = ({
+  createProductFn,
+}: CreateProductProps) => {
   return (
     <Formik
       initialValues={{

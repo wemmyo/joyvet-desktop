@@ -17,14 +17,17 @@ export interface EditSupplierProps {
   supplierId: string | number;
 }
 
-const EditSupplier: React.FC<EditSupplierProps> = ({ supplierId }) => {
+const EditSupplier: React.FC<EditSupplierProps> = ({
+  supplierId,
+}: EditSupplierProps) => {
   const dispatch = useDispatch();
 
-  const fetchData = () => {
-    dispatch(getSingleSupplierFn(supplierId));
-  };
-
-  useEffect(fetchData, [supplierId]);
+  useEffect(() => {
+    const fetchData = () => {
+      dispatch(getSingleSupplierFn(supplierId));
+    };
+    fetchData();
+  }, [supplierId]);
 
   const supplierState = useSelector(selectSupplierState);
 
@@ -45,7 +48,7 @@ const EditSupplier: React.FC<EditSupplierProps> = ({ supplierId }) => {
         balance: balance || '',
       }}
       // validationSchema={EditSupplierSchema}
-      onSubmit={(values, actions) => {
+      onSubmit={(values) => {
         //   submitForm(values);
         // console.log(values);
 

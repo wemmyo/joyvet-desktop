@@ -10,7 +10,9 @@ export interface PaymentDetailProps {
   paymentId: string | number;
 }
 
-const PaymentDetail: React.SFC<PaymentDetailProps> = ({ paymentId }) => {
+const PaymentDetail: React.SFC<PaymentDetailProps> = ({
+  paymentId,
+}: PaymentDetailProps) => {
   const dispatch = useDispatch();
 
   const fetchData = () => {
@@ -39,7 +41,7 @@ const PaymentDetail: React.SFC<PaymentDetailProps> = ({ paymentId }) => {
           <Table.Cell>{supplier ? supplier.fullName : ''}</Table.Cell>
         </Table.Row>
         <Table.Row>
-          <Table.Cell>Supplier's balance</Table.Cell>
+          <Table.Cell>Supplier balance</Table.Cell>
           <Table.Cell>{supplier ? supplier.balance : 0.0}</Table.Cell>
         </Table.Row>
         <Table.Row>

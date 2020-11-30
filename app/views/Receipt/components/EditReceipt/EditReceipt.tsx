@@ -21,7 +21,9 @@ export interface EditReceiptProps {
   receiptId: string | number;
 }
 
-const EditReceipt: React.FC<EditReceiptProps> = ({ receiptId }) => {
+const EditReceipt: React.FC<EditReceiptProps> = ({
+  receiptId,
+}: EditReceiptProps) => {
   const dispatch = useDispatch();
 
   const fetchData = () => {
@@ -62,7 +64,7 @@ const EditReceipt: React.FC<EditReceiptProps> = ({ receiptId }) => {
         note: note || '',
       }}
       // validationSchema={EditReceiptSchema}
-      onSubmit={(values, actions) => {
+      onSubmit={(values) => {
         //   submitForm(values);
         // console.log(values);
 

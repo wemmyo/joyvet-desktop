@@ -3,11 +3,7 @@ import { Table, Input, Button, Icon } from 'semantic-ui-react';
 import { useSelector, useDispatch } from 'react-redux';
 import DashboardLayout from '../../layouts/DashboardLayout/DashboardLayout';
 
-import {
-  selectReceiptState,
-  getReceiptsFn,
-  createReceiptFn,
-} from '../../slices/receiptSlice';
+import { selectReceiptState, getReceiptsFn } from '../../slices/receiptSlice';
 import CreateReceipt from './components/CreateReceipt/CreateReceipt';
 import { numberWithCommas } from '../../utils/helpers';
 import {
@@ -55,14 +51,6 @@ const ReceiptsScreen: React.FC = () => {
     };
   }, []);
 
-  const handleNewReceipt = (values: any) => {
-    dispatch(
-      createReceiptFn(values, () => {
-        fetchReceipts();
-      })
-    );
-  };
-
   const viewSingleReceipt = (id: any) => {
     setReceiptId(id);
     openSideContent(CONTENT_DETAIL);
@@ -103,10 +91,12 @@ const ReceiptsScreen: React.FC = () => {
 
   const renderSideContent = () => {
     if (sideContent === CONTENT_CREATE) {
-      return <CreateReceipt createReceiptFn={handleNewReceipt} />;
-    } else if (sideContent === CONTENT_EDIT) {
+      return <CreateReceipt />;
+    }
+    if (sideContent === CONTENT_EDIT) {
       return <EditReceipt receiptId={receiptId} />;
-    } else if (sideContent === CONTENT_DETAIL) {
+    }
+    if (sideContent === CONTENT_DETAIL) {
       return <ReceiptDetail receiptId={receiptId} />;
     }
     return null;

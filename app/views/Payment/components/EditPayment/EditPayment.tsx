@@ -21,7 +21,9 @@ export interface EditPaymentProps {
   paymentId: string | number;
 }
 
-const EditPayment: React.FC<EditPaymentProps> = ({ paymentId }) => {
+const EditPayment: React.FC<EditPaymentProps> = ({
+  paymentId,
+}: EditPaymentProps) => {
   const dispatch = useDispatch();
 
   const fetchData = () => {
@@ -62,7 +64,7 @@ const EditPayment: React.FC<EditPaymentProps> = ({ paymentId }) => {
         note: note || '',
       }}
       // validationSchema={EditPaymentSchema}
-      onSubmit={(values, actions) => {
+      onSubmit={(values) => {
         //   submitForm(values);
         // console.log(values);
 

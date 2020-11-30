@@ -84,7 +84,8 @@ const CustomersScreen: React.FC = () => {
   const renderSideContent = () => {
     if (sideContent === CONTENT_CREATE) {
       return <CreateCustomer createCustomerFn={handleNewCustomer} />;
-    } else if (sideContent === CONTENT_EDIT) {
+    }
+    if (sideContent === CONTENT_EDIT) {
       return <EditCustomer customerId={customerId} />;
     }
     return null;
