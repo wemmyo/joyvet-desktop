@@ -9,5 +9,8 @@ export default sequelize.define('priceLevel', {
     allowNull: false,
     primaryKey: true,
   },
-  name: Sequelize.STRING,
+  price1: Sequelize.INTEGER,
+  price2: Sequelize.INTEGER,
+  price3: Sequelize.INTEGER,
+  price4: Sequelize.INTEGER,
 });

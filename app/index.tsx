@@ -34,19 +34,17 @@ document.addEventListener('DOMContentLoaded', () => {
   );
 });
 
-// Invoice.hasMany(Product);
-// Product.belongsTo(Invoice);
 Invoice.belongsToMany(Product, { through: InvoiceItem });
 Product.belongsToMany(Invoice, { through: InvoiceItem });
 
 Customer.hasMany(Invoice);
 Invoice.belongsTo(Customer);
 
-Customer.belongsTo(PriceLevel);
-PriceLevel.hasOne(Customer);
+Product.belongsTo(PriceLevel);
+PriceLevel.hasOne(Product);
 
-Product.belongsTo(ProductGroup);
-ProductGroup.hasOne(Product);
+// Product.belongsTo(ProductGroup);
+// ProductGroup.hasOne(Product);
 
 Receipt.belongsTo(Customer);
 Customer.hasMany(Receipt);

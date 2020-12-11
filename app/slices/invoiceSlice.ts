@@ -144,22 +144,22 @@ export const createInvoiceFn = (
       amount: meta.amount,
       postedBy: user.id,
     });
+
     const prodArr: any = [];
+
     await Promise.all(
-      await Promise.all(
-        values.map(async (each: any) => {
-          const prod = await Product.findByPk(each.id);
-          if (prod.stock < each.quantity) {
-            throw new Error(`${prod.title} is out of stock`);
-          }
-          await Product.decrement('stock', {
-            by: each.quantity,
-            where: { id: each.id },
-          });
-          prod.invoiceItem = { quantity: each.quantity };
-          prodArr.push(prod);
-        })
-      )
+      values.map(async (each: any) => {
+        const prod = await Product.findByPk(each.id);
+        if (prod.stock < each.quantity) {
+          throw new Error(`${prod.title} is out of stock`);
+        }
+        await Product.decrement('stock', {
+          by: each.quantity,
+          where: { id: each.id },
+        });
+        prod.invoiceItem = { quantity: each.quantity };
+        prodArr.push(prod);
+      })
     );
     const createdInvoice = await invoice.addProducts(prodArr);
     // console.log(createdInvoice);
