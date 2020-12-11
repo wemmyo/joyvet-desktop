@@ -34,13 +34,13 @@ const SideNav = () => {
         ]}
       /> */}
 
-      {/* <NavLink
+      <NavLink
         activeClassName={styles.sideNav__mainItemActive}
         className={styles.sideNav__mainItem}
         to={routes.OVERVIEW}
       >
         Overview
-      </NavLink> */}
+      </NavLink>
       <NavLink
         activeClassName={styles.sideNav__mainItemActive}
         className={styles.sideNav__mainItem}

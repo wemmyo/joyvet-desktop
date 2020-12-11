@@ -10,6 +10,7 @@ import {
   selectCustomerState,
   updateCustomerFn,
   getCustomersFn,
+  deleteCustomerFn,
 } from '../../../../slices/customerSlice';
 import { closeSideContentFn } from '../../../../slices/dashboardSlice';
 
@@ -36,6 +37,15 @@ const EditCustomer: React.FC<EditCustomerProps> = ({
   // console.log(customer);
 
   const { fullName, address, phoneNumber, balance } = customer;
+
+  const handleDeleteCustomer = () => {
+    dispatch(
+      deleteCustomerFn(customerId, () => {
+        dispatch(closeSideContentFn());
+        dispatch(getCustomersFn());
+      })
+    );
+  };
 
   return (
     <Formik
@@ -92,6 +102,15 @@ const EditCustomer: React.FC<EditCustomerProps> = ({
 
           <Button onClick={() => handleSubmit()} type="Submit" fluid primary>
             Update
+          </Button>
+          <Button
+            style={{ marginTop: '1rem' }}
+            onClick={handleDeleteCustomer}
+            type="button"
+            fluid
+            negative
+          >
+            Delete
           </Button>
         </Form>
       )}

@@ -13,7 +13,6 @@ import Product from './models/product';
 import Purchase from './models/purchase';
 import Receipt from './models/receipt';
 import Supplier from './models/supplier';
-// import User from './models/user';
 import PriceLevel from './models/priceLevel';
 import ProductGroup from './models/productGroup';
 import InvoiceItem from './models/invoiceItem';

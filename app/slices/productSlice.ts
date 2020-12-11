@@ -151,6 +151,8 @@ export const createProductFn = (values: any, cb?: () => void) => async (
     if (cb) {
       cb();
     }
+    toast.success('Successfully created');
+
     dispatch(createProductSuccess({}));
   } catch (error) {
     toast.error(error.message || '');

@@ -77,6 +77,27 @@ export const {
   createCustomerFailed,
 } = customerSlice.actions;
 
+export const deleteCustomerFn = (
+  id: string | number,
+  cb?: () => void
+) => async () => {
+  try {
+    // dispatch(updateCustomer());
+    await Customer.destroy({
+      where: {
+        id,
+      },
+    });
+    // dispatch(updateCustomerSuccess(JSON.stringify(updateCustomerResponse)));
+    toast.success('Successfully deleted');
+    if (cb) {
+      cb();
+    }
+  } catch (error) {
+    toast.error(error.message || '');
+  }
+};
+
 export const updateCustomerFn = (
   values: any,
   id: string | number,

@@ -34,7 +34,7 @@ import PrivateRoute from './PrivateRoute';
 export default function Routes() {
   return (
     <App>
-      <ToastContainer autoClose={10000} />
+      <ToastContainer autoClose={1000} />
       <Switch>
         <PrivateRoute path={routes.USER} component={UserScreen} />
         <PrivateRoute path={routes.SALES} component={SalesScreen} />

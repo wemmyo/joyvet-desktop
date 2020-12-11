@@ -36,15 +36,15 @@ const CreateProduct: React.FC<CreateProductProps> = ({
         <Form>
           <Field
             name="title"
-            placeholder="Title"
-            label="Title"
+            placeholder="Product Name"
+            label="Product Name"
             type="text"
             component={TextInput}
           />
           <Field
             name="stock"
-            placeholder="Number In Stock"
-            label="Number In Stock"
+            placeholder="Quantity"
+            label="Quantity"
             type="number"
             component={TextInput}
           />

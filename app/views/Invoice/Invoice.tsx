@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 // import { useReactToPrint } from 'react-to-print';
 import { Table, Grid, Button, Form, Segment } from 'semantic-ui-react';
 import { Field, Formik } from 'formik';
@@ -17,7 +17,8 @@ import TextInput from '../../components/TextInput/TextInput';
 // import TestReceipt from '../../components/PrintedReceipt/TestReceipt';
 
 const InvoiceScreen: React.FC = () => {
-  const componentRef = useRef();
+  // const componentRef = useRef();
+
   // const handlePrint = useReactToPrint({
   //   content: () => componentRef.current,
   // });
@@ -94,8 +95,10 @@ const InvoiceScreen: React.FC = () => {
     return orders.map(amount).reduce(sum);
   };
 
-  const removeOrder = (id: number) => {
-    const filteredOrders = orders.filter((item: any) => item.id !== id);
+  const removeOrder = (orderId: number) => {
+    const filteredOrders = orders.filter(
+      (item: any) => item.orderId !== orderId
+    );
     setOrders(filteredOrders);
   };
 

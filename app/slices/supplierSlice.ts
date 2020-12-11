@@ -85,6 +85,27 @@ export const {
   createSupplierFailed,
 } = supplierSlice.actions;
 
+export const deleteSupplierFn = (
+  id: string | number,
+  cb?: () => void
+) => async () => {
+  try {
+    // dispatch(updateCustomer());
+    await Supplier.destroy({
+      where: {
+        id,
+      },
+    });
+    // dispatch(updateCustomerSuccess(JSON.stringify(updateCustomerResponse)));
+    toast.success('Successfully deleted');
+    if (cb) {
+      cb();
+    }
+  } catch (error) {
+    toast.error(error.message || '');
+  }
+};
+
 export const updateSupplierFn = (
   values: any,
   id: string | number,

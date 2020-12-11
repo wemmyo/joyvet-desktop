@@ -10,6 +10,7 @@ import {
   selectSupplierState,
   updateSupplierFn,
   getSuppliersFn,
+  deleteSupplierFn,
 } from '../../../../slices/supplierSlice';
 import { closeSideContentFn } from '../../../../slices/dashboardSlice';
 
@@ -37,6 +38,15 @@ const EditSupplier: React.FC<EditSupplierProps> = ({
   // console.log(supplier);
 
   const { fullName, address, phoneNumber, balance } = supplier;
+
+  const handleDeleteSupplier = () => {
+    dispatch(
+      deleteSupplierFn(supplierId, () => {
+        dispatch(closeSideContentFn());
+        dispatch(getSuppliersFn());
+      })
+    );
+  };
 
   return (
     <Formik
@@ -93,6 +103,15 @@ const EditSupplier: React.FC<EditSupplierProps> = ({
 
           <Button onClick={() => handleSubmit()} type="Submit" fluid primary>
             Update
+          </Button>
+          <Button
+            style={{ marginTop: '1rem' }}
+            onClick={handleDeleteSupplier}
+            type="button"
+            fluid
+            negative
+          >
+            Delete
           </Button>
         </Form>
       )}

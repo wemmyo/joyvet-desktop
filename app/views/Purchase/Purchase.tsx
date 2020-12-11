@@ -82,8 +82,10 @@ const PurchaseScreen: React.FC = () => {
     return orders.map(amount).reduce(sum);
   };
 
-  const removeOrder = (id: number) => {
-    const filteredOrders = orders.filter((item: any) => item.id !== id);
+  const removeOrder = (orderId: number) => {
+    const filteredOrders = orders.filter(
+      (item: any) => item.orderId !== orderId
+    );
     setOrders(filteredOrders);
   };
 
