@@ -63,7 +63,7 @@ const SalesScreen: React.FC = () => {
         <Table.Row onClick={() => openSingleSale(each.id)} key={each.id}>
           <Table.Cell>{each.id}</Table.Cell>
           <Table.Cell>{each.saleType}</Table.Cell>
-          <Table.Cell>{numberWithCommas(each.amount)}</Table.Cell>
+          <Table.Cell>₦{numberWithCommas(each.amount)}</Table.Cell>
           <Table.Cell>
             {new Date(each.createdAt).toLocaleDateString('en-gb')}
           </Table.Cell>

@@ -39,7 +39,10 @@ const SalesDetail: React.FC<SalesDetailProps> = ({
           <Table.Cell>{serialNumber}</Table.Cell>
           <Table.Cell>{order.title}</Table.Cell>
           <Table.Cell>{order.invoiceItem.quantity}</Table.Cell>
-          <Table.Cell>{numberWithCommas(order.unitPrice)}</Table.Cell>
+          <Table.Cell>
+            ₦{numberWithCommas(order.invoiceItem.unitPrice)}
+          </Table.Cell>
+          <Table.Cell>₦{numberWithCommas(order.invoiceItem.amount)}</Table.Cell>
         </Table.Row>
       );
     });
@@ -76,7 +79,7 @@ const SalesDetail: React.FC<SalesDetailProps> = ({
           </Table.Row>
           <Table.Row>
             <Table.Cell>Amount</Table.Cell>
-            <Table.Cell>{numberWithCommas(sales.amount)}</Table.Cell>
+            <Table.Cell>₦{numberWithCommas(sales.amount)}</Table.Cell>
           </Table.Row>
         </Table.Body>
       </Table>
@@ -87,7 +90,8 @@ const SalesDetail: React.FC<SalesDetailProps> = ({
             <Table.HeaderCell>No</Table.HeaderCell>
             <Table.HeaderCell>Product</Table.HeaderCell>
             <Table.HeaderCell>Quantity</Table.HeaderCell>
-            <Table.HeaderCell>Rate</Table.HeaderCell>
+            <Table.HeaderCell>Unit Price</Table.HeaderCell>
+            <Table.HeaderCell>Amount</Table.HeaderCell>
           </Table.Row>
         </Table.Header>
 

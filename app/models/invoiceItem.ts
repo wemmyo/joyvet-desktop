@@ -10,4 +10,6 @@ export default sequelize.define('invoiceItem', {
     primaryKey: true,
   },
   quantity: { type: Sequelize.INTEGER, allowNull: false },
+  unitPrice: { type: Sequelize.INTEGER, allowNull: false },
+  amount: { type: Sequelize.INTEGER, allowNull: false },
 });

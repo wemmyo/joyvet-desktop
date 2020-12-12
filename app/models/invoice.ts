@@ -11,5 +11,4 @@ export default sequelize.define('invoice', {
   },
   saleType: { type: Sequelize.STRING, allowNull: false },
   amount: { type: Sequelize.INTEGER, allowNull: false },
-  unitPrice: { type: Sequelize.INTEGER, allowNull: false },
 });
