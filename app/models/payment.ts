@@ -10,5 +10,8 @@ export default sequelize.define('payment', {
     primaryKey: true,
   },
   amount: { type: Sequelize.INTEGER, allowNull: false },
+  paymentType: Sequelize.STRING,
+  paymentMethod: Sequelize.STRING,
+  bank: Sequelize.STRING,
   note: Sequelize.STRING,
 });

@@ -51,15 +51,15 @@ const ReceiptsScreen: React.FC = () => {
     };
   }, []);
 
-  const viewSingleReceipt = (id: any) => {
-    setReceiptId(id);
-    openSideContent(CONTENT_DETAIL);
-  };
+  // const viewSingleReceipt = (id: any) => {
+  //   setReceiptId(id);
+  //   openSideContent(CONTENT_DETAIL);
+  // };
 
-  const editSingleReceipt = (id: any) => {
-    setReceiptId(id);
-    openSideContent(CONTENT_EDIT);
-  };
+  // const editSingleReceipt = (id: any) => {
+  //   setReceiptId(id);
+  //   openSideContent(CONTENT_EDIT);
+  // };
 
   const renderRows = () => {
     const rows = receipts.map((each: any) => {
@@ -67,11 +67,13 @@ const ReceiptsScreen: React.FC = () => {
         <Table.Row key={each.id}>
           <Table.Cell>{each.id}</Table.Cell>
           <Table.Cell>{numberWithCommas(each.amount)}</Table.Cell>
+          <Table.Cell>{each.paymentType}</Table.Cell>
+          <Table.Cell>{each.paymentMethod}</Table.Cell>
+          <Table.Cell>{each.bank}</Table.Cell>
           <Table.Cell>
             {new Date(each.createdAt).toLocaleDateString('en-gb')}
           </Table.Cell>
-          <Table.Cell>{each.note}</Table.Cell>
-          <Table.Cell
+          {/* <Table.Cell
             style={{ cursor: 'pointer' }}
             onClick={() => viewSingleReceipt(each.id)}
           >
@@ -82,7 +84,7 @@ const ReceiptsScreen: React.FC = () => {
             onClick={() => editSingleReceipt(each.id)}
           >
             Edit
-          </Table.Cell>
+          </Table.Cell> */}
         </Table.Row>
       );
     });
@@ -137,10 +139,10 @@ const ReceiptsScreen: React.FC = () => {
           <Table.Row>
             <Table.HeaderCell>Receipt no</Table.HeaderCell>
             <Table.HeaderCell>Amount</Table.HeaderCell>
+            <Table.HeaderCell>Type</Table.HeaderCell>
+            <Table.HeaderCell>Payment Method</Table.HeaderCell>
+            <Table.HeaderCell>Bank</Table.HeaderCell>
             <Table.HeaderCell>Date</Table.HeaderCell>
-            <Table.HeaderCell>Note</Table.HeaderCell>
-            <Table.HeaderCell />
-            <Table.HeaderCell />
           </Table.Row>
         </Table.Header>
 

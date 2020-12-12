@@ -144,16 +144,26 @@ export const createReceiptFn = (values: any, cb?: () => void) => async (
         ? JSON.parse(localStorage.getItem('user') || '')
         : '';
     await Receipt.create({
-      amount: values.amount || null,
-      note: values.note || null,
       customerId: values.customerId || null,
+      amount: values.amount || null,
+      paymentType: values.paymentType || null,
+      paymentMethod: values.paymentMethod || null,
+      bank: values.bank || null,
+      note: values.note || null,
       postedBy: user.id,
     });
 
-    await Customer.decrement('balance', {
-      by: values.amount,
-      where: { id: values.customerId },
-    });
+    if (values.paymentType === 'debit') {
+      await Customer.decrement('balance', {
+        by: values.amount,
+        where: { id: values.customerId },
+      });
+    } else if (values.paymentType === 'credit') {
+      await Customer.increment('balance', {
+        by: values.amount,
+        where: { id: values.customerId },
+      });
+    }
 
     dispatch(createReceiptSuccess({}));
     toast.success('Receipt successfully created');

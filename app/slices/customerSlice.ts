@@ -21,6 +21,11 @@ const customerSlice = createSlice({
   name: 'customer',
   initialState,
   reducers: {
+    clearSingleCustomer: (state) => {
+      const { singleCustomer } = state;
+      singleCustomer.loading = false;
+      singleCustomer.data = '';
+    },
     getSingleCustomer: (state) => {
       const { singleCustomer } = state;
       singleCustomer.loading = true;
@@ -69,6 +74,7 @@ export const {
   getSingleCustomer,
   getSingleCustomerSuccess,
   getSingleCustomerFailed,
+  clearSingleCustomer,
   getCustomers,
   getCustomersSuccess,
   getCustomersFailed,
@@ -141,6 +147,12 @@ export const getSingleCustomerFn = (
   }
 };
 
+export const clearSingleCustomerFn = () => async (
+  dispatch: (arg0: { payload: any; type: string }) => void
+) => {
+  dispatch(clearSingleCustomer());
+};
+
 export const getCustomersFn = () => async (
   dispatch: (arg0: { payload: unknown; type: string }) => void
 ) => {
@@ -167,7 +179,7 @@ export const createCustomerFn = (values: any, cb?: () => void) => async (
       fullName: values.fullName || null,
       address: values.address || null,
       phoneNumber: values.phoneNumber || null,
-      balance: values.balance || null,
+      balance: values.balance || 0,
       postedBy: user.id,
     });
     dispatch(createCustomerSuccess(JSON.stringify(createCustomerResponse)));

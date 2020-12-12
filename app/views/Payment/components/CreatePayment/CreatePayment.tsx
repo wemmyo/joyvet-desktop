@@ -14,6 +14,7 @@ import {
   getPaymentsFn,
 } from '../../../../slices/paymentSlice';
 import TextInput from '../../../../components/TextInput/TextInput';
+import { numberWithCommas } from '../../../../utils/helpers';
 
 const CreatePayment: React.FC = () => {
   const dispatch = useDispatch();
@@ -50,9 +51,33 @@ const CreatePayment: React.FC = () => {
     if (singleSupplier.balance) {
       return (
         <Message>
-          Outstanding balance:
-          {singleSupplier.balance}
+          {`Balance:
+          ${numberWithCommas(singleSupplier.balance)}`}
         </Message>
+      );
+    }
+    return null;
+  };
+
+  const renderBanks = (paymentMethod: string) => {
+    if (paymentMethod === 'transfer') {
+      return (
+        <div className="field">
+          <label htmlFor="bank">Bank</label>
+          <Field
+            id="bank"
+            name="bank"
+            component="select"
+            className="ui dropdown"
+          >
+            <option value="" disabled hidden>
+              Select Bank
+            </option>
+            <option>GTB</option>
+            <option>FCMB</option>
+            <option>First Bank</option>
+          </Field>
+        </div>
       );
     }
     return null;
@@ -63,6 +88,9 @@ const CreatePayment: React.FC = () => {
       initialValues={{
         supplierId: '',
         amount: '',
+        paymentType: '',
+        paymentMethod: '',
+        bank: '',
         note: '',
       }}
       // validationSchema={CreatePaymentSchema}
@@ -76,7 +104,7 @@ const CreatePayment: React.FC = () => {
         );
       }}
     >
-      {({ handleSubmit, handleChange }) => (
+      {({ handleSubmit, handleChange, values }) => (
         <Form>
           <div className="field">
             <label htmlFor="supplierId">Supplier</label>
@@ -112,6 +140,37 @@ const CreatePayment: React.FC = () => {
             type="text"
             component={TextInput}
           />
+          <div className="field">
+            <label htmlFor="paymentType">Payment Type</label>
+            <Field
+              id="paymentType"
+              name="paymentType"
+              component="select"
+              className="ui dropdown"
+            >
+              <option value="" disabled hidden>
+                Select option
+              </option>
+              <option value="credit">Credit</option>
+              <option value="debit">Debit</option>
+            </Field>
+          </div>
+          <div className="field">
+            <label htmlFor="paymentMethod">Payment Method</label>
+            <Field
+              id="paymentMethod"
+              name="paymentMethod"
+              component="select"
+              className="ui dropdown"
+            >
+              <option value="" disabled hidden>
+                Select option
+              </option>
+              <option value="cash">Cash</option>
+              <option value="transfer">Transfer</option>
+            </Field>
+          </div>
+          {renderBanks(values.paymentMethod)}
           <Field
             name="note"
             placeholder="Note"

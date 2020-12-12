@@ -172,7 +172,7 @@ export const createSupplierFn = (values: any, cb?: () => void) => async (
       fullName: values.fullName || null,
       address: values.address || null,
       phoneNumber: values.phoneNumber || null,
-      balance: values.balance || null,
+      balance: values.balance || 0,
       postedBy: user.id,
     });
 

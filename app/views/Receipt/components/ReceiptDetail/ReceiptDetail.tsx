@@ -27,7 +27,15 @@ const ReceiptDetail: React.SFC<ReceiptDetailProps> = ({
 
   const singleReceipt = singleReceiptRaw ? JSON.parse(singleReceiptRaw) : {};
 
-  const { customer, amount, note, createdAt } = singleReceipt;
+  const {
+    customer,
+    amount,
+    note,
+    createdAt,
+    paymentMethod,
+    paymentType,
+    bank,
+  } = singleReceipt;
 
   if (loading || !singleReceipt) {
     return <p>Loading...</p>;
@@ -47,6 +55,18 @@ const ReceiptDetail: React.SFC<ReceiptDetailProps> = ({
         <Table.Row>
           <Table.Cell>Amount</Table.Cell>
           <Table.Cell>{amount || ''}</Table.Cell>
+        </Table.Row>
+        <Table.Row>
+          <Table.Cell>Payment Type</Table.Cell>
+          <Table.Cell>{paymentType || ''}</Table.Cell>
+        </Table.Row>
+        <Table.Row>
+          <Table.Cell>Payment Method</Table.Cell>
+          <Table.Cell>{paymentMethod || ''}</Table.Cell>
+        </Table.Row>
+        <Table.Row>
+          <Table.Cell>Bank</Table.Cell>
+          <Table.Cell>{bank || ''}</Table.Cell>
         </Table.Row>
         <Table.Row>
           <Table.Cell>Note</Table.Cell>

@@ -127,7 +127,7 @@ const CustomersScreen: React.FC = () => {
             <Table.HeaderCell>Full Name</Table.HeaderCell>
             <Table.HeaderCell>Address</Table.HeaderCell>
             <Table.HeaderCell>Phone Number</Table.HeaderCell>
-            <Table.HeaderCell>Outstanding Amount</Table.HeaderCell>
+            <Table.HeaderCell>Balance</Table.HeaderCell>
           </Table.Row>
         </Table.Header>
 

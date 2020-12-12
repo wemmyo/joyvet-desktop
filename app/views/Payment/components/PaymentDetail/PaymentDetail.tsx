@@ -27,7 +27,15 @@ const PaymentDetail: React.SFC<PaymentDetailProps> = ({
 
   const singlePayment = singlePaymentRaw ? JSON.parse(singlePaymentRaw) : {};
 
-  const { supplier, amount, note, createdAt } = singlePayment;
+  const {
+    supplier,
+    amount,
+    note,
+    createdAt,
+    paymentMethod,
+    paymentType,
+    bank,
+  } = singlePayment;
 
   if (loading || !singlePayment) {
     return <p>Loading...</p>;
@@ -47,6 +55,18 @@ const PaymentDetail: React.SFC<PaymentDetailProps> = ({
         <Table.Row>
           <Table.Cell>Amount</Table.Cell>
           <Table.Cell>{amount || ''}</Table.Cell>
+        </Table.Row>
+        <Table.Row>
+          <Table.Cell>Payment Type</Table.Cell>
+          <Table.Cell>{paymentType || ''}</Table.Cell>
+        </Table.Row>
+        <Table.Row>
+          <Table.Cell>Payment Method</Table.Cell>
+          <Table.Cell>{paymentMethod || ''}</Table.Cell>
+        </Table.Row>
+        <Table.Row>
+          <Table.Cell>Bank</Table.Cell>
+          <Table.Cell>{bank || ''}</Table.Cell>
         </Table.Row>
         <Table.Row>
           <Table.Cell>Note</Table.Cell>
