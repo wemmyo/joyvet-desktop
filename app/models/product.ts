@@ -11,7 +11,10 @@ export default sequelize.define('product', {
   },
   title: { type: Sequelize.STRING, allowNull: false },
   stock: Sequelize.INTEGER,
-  unitPrice: Sequelize.INTEGER,
+  price1: Sequelize.INTEGER,
+  price2: Sequelize.INTEGER,
+  price3: Sequelize.INTEGER,
+  price4: Sequelize.INTEGER,
 });
 
 // module.exports = Product;

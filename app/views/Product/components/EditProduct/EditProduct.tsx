@@ -35,7 +35,7 @@ const EditProduct: React.FC<EditProductProps> = ({
   const product = productRaw ? JSON.parse(productRaw) : {};
   // console.log(product);
 
-  const { title, stock, unitPrice } = product;
+  const { title, stock, price1, price2, price3, price4 } = product;
 
   return (
     <Formik
@@ -43,7 +43,10 @@ const EditProduct: React.FC<EditProductProps> = ({
       initialValues={{
         title: title || '',
         stock: stock || '',
-        unitPrice: unitPrice || '',
+        price1: price1 || '',
+        price2: price2 || '',
+        price3: price3 || '',
+        price4: price4 || '',
       }}
       // validationSchema={EditProductSchema}
       onSubmit={(values, actions) => {
@@ -75,9 +78,30 @@ const EditProduct: React.FC<EditProductProps> = ({
             component={TextInput}
           />
           <Field
-            name="unitPrice"
-            placeholder="Unit Price"
-            label="Unit Price"
+            name="price1"
+            placeholder="Price Level 1"
+            label="Price Level 1"
+            type="number"
+            component={TextInput}
+          />
+          <Field
+            name="price2"
+            placeholder="Price Level 2"
+            label="Price Level 2"
+            type="number"
+            component={TextInput}
+          />
+          <Field
+            name="price3"
+            placeholder="Price Level 3"
+            label="Price Level 3"
+            type="number"
+            component={TextInput}
+          />
+          <Field
+            name="price4"
+            placeholder="Price Level 4"
+            label="Price Level 4"
             type="number"
             component={TextInput}
           />

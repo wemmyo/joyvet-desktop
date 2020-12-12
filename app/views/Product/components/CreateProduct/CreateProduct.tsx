@@ -24,7 +24,10 @@ const CreateProduct: React.FC<CreateProductProps> = ({
       initialValues={{
         title: '',
         stock: '',
-        unitPrice: '',
+        price1: '',
+        price2: '',
+        price3: '',
+        price4: '',
       }}
       validationSchema={CreateProductSchema}
       onSubmit={(values, actions) => {
@@ -49,9 +52,30 @@ const CreateProduct: React.FC<CreateProductProps> = ({
             component={TextInput}
           />
           <Field
-            name="unitPrice"
-            placeholder="Unit Price"
-            label="Unit Price"
+            name="price1"
+            placeholder="Price Level 1"
+            label="Price Level 1"
+            type="number"
+            component={TextInput}
+          />
+          <Field
+            name="price2"
+            placeholder="Price Level 2"
+            label="Price Level 2"
+            type="number"
+            component={TextInput}
+          />
+          <Field
+            name="price3"
+            placeholder="Price Level 3"
+            label="Price Level 3"
+            type="number"
+            component={TextInput}
+          />
+          <Field
+            name="price4"
+            placeholder="Price Level 4"
+            label="Price Level 4"
             type="number"
             component={TextInput}
           />

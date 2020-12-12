@@ -143,8 +143,10 @@ export const createProductFn = (values: any, cb?: () => void) => async (
     await Product.create({
       title: values.title || null,
       stock: values.stock || null,
-      unitPrice: values.unitPrice || null,
-      productGroup: values.productGroup || null,
+      price1: values.price1 || null,
+      price2: values.price2 || null,
+      price3: values.price3 || null,
+      price4: values.price4 || null,
       postedBy: user.id,
     });
 

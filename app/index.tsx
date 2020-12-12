@@ -13,8 +13,8 @@ import Product from './models/product';
 import Purchase from './models/purchase';
 import Receipt from './models/receipt';
 import Supplier from './models/supplier';
-import PriceLevel from './models/priceLevel';
-import ProductGroup from './models/productGroup';
+// import PriceLevel from './models/priceLevel';
+// import ProductGroup from './models/productGroup';
 import InvoiceItem from './models/invoiceItem';
 import PurchaseItem from './models/purchaseItem';
 import User from './models/user';
@@ -40,11 +40,8 @@ Product.belongsToMany(Invoice, { through: InvoiceItem });
 Customer.hasMany(Invoice);
 Invoice.belongsTo(Customer);
 
-Product.belongsTo(PriceLevel);
-PriceLevel.hasOne(Product);
-
-// Product.belongsTo(ProductGroup);
-// ProductGroup.hasOne(Product);
+// Product.belongsTo(PriceLevel);
+// PriceLevel.hasOne(Product);
 
 Receipt.belongsTo(Customer);
 Customer.hasMany(Receipt);

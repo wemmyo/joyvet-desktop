@@ -62,7 +62,61 @@ const InvoiceScreen: React.FC = () => {
         </option>
       );
     });
-    return productList;
+
+    return (
+      <div className="field">
+        <label htmlFor="product">Product</label>
+        <Field
+          id="product"
+          name="product"
+          component="select"
+          className="ui dropdown"
+        >
+          <option value="" disabled hidden>
+            Select Product
+          </option>
+          {productList}
+        </Field>
+      </div>
+    );
+  };
+
+  const renderPrices = (value: any) => {
+    if (!value) {
+      return null;
+    }
+
+    const product = JSON.parse(value);
+    const productPrices = [
+      { label: 'Price Level 1', value: product.price1 },
+      { label: 'Price Level 2', value: product.price2 },
+      { label: 'Price Level 3', value: product.price3 },
+      { label: 'Price Level 4', value: product.price4 },
+    ];
+
+    const productPriceList = productPrices.map((price) => {
+      return (
+        <option key={price.label} value={price.value}>
+          {price.label}
+        </option>
+      );
+    });
+    return (
+      <div className="field">
+        <label htmlFor="unitPrice">Product</label>
+        <Field
+          id="unitPrice"
+          name="unitPrice"
+          component="select"
+          className="ui dropdown"
+        >
+          <option value="" disabled hidden>
+            Select Price
+          </option>
+          {productPriceList}
+        </Field>
+      </div>
+    );
   };
 
   const renderCustomers = () => {
@@ -105,6 +159,8 @@ const InvoiceScreen: React.FC = () => {
   const renderOrders = () => {
     let serialNumber = 0;
     const orderList = orders.map((order: any) => {
+      console.log(order);
+
       serialNumber += 1;
       return (
         <Table.Row key={order.orderId}>
@@ -141,7 +197,7 @@ const InvoiceScreen: React.FC = () => {
                   <Table.HeaderCell>No</Table.HeaderCell>
                   <Table.HeaderCell>Product</Table.HeaderCell>
                   <Table.HeaderCell>Quantity</Table.HeaderCell>
-                  <Table.HeaderCell>Rate</Table.HeaderCell>
+                  <Table.HeaderCell>Unit Price</Table.HeaderCell>
                   <Table.HeaderCell>Amount</Table.HeaderCell>
                   <Table.HeaderCell>Action</Table.HeaderCell>
                 </Table.Row>
@@ -171,6 +227,7 @@ const InvoiceScreen: React.FC = () => {
                   customerId: '',
                   saleType: '',
                   product: '',
+                  unitPrice: '',
                   quantity: '',
                 }}
                 // validationSchema={CreatePaymentSchema}
@@ -178,9 +235,8 @@ const InvoiceScreen: React.FC = () => {
                   addToOrders({
                     ...JSON.parse(values.product),
                     quantity: values.quantity,
-                    amount:
-                      JSON.parse(values.product).unitPrice *
-                      Number(values.quantity),
+                    amount: Number(values.unitPrice) * Number(values.quantity),
+                    unitPrice: values.unitPrice,
                     orderId: new Date().getUTCMilliseconds(),
                   });
                   // actions.resetForm({
@@ -224,21 +280,8 @@ const InvoiceScreen: React.FC = () => {
                       </Field>
                     </div>
                     <Segment raised>
-                      <div className="field">
-                        <label htmlFor="product">Item</label>
-                        <Field
-                          id="product"
-                          name="product"
-                          component="select"
-                          className="ui dropdown"
-                        >
-                          <option value="" disabled hidden>
-                            Select Item
-                          </option>
-                          {renderProducts()}
-                        </Field>
-                      </div>
-
+                      {renderProducts()}
+                      {renderPrices(values.product)}
                       <Field
                         name="quantity"
                         placeholder="Quantity"

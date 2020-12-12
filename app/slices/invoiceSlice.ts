@@ -142,6 +142,7 @@ export const createInvoiceFn = (
     const invoice = await customer.createInvoice({
       saleType: meta.saleType,
       amount: meta.amount,
+      unitPrice: values.unitPrice,
       postedBy: user.id,
     });
 
