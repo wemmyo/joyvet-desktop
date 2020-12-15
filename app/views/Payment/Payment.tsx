@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Table, Input, Button, Icon } from 'semantic-ui-react';
+import { Table, Button, Icon } from 'semantic-ui-react';
 import { useSelector, useDispatch } from 'react-redux';
 
 import DashboardLayout from '../../layouts/DashboardLayout/DashboardLayout';
@@ -106,25 +106,17 @@ const PaymentsScreen: React.FC = () => {
 
   const headerContent = () => {
     return (
-      <>
-        <Button icon labelPosition="left">
-          <Icon name="filter" />
-          Filter
-        </Button>
-        <Button
-          color="blue"
-          icon
-          labelPosition="left"
-          onClick={() => {
-            openSideContent(CONTENT_CREATE);
-          }}
-        >
-          <Icon inverted color="grey" name="add" />
-          Create
-        </Button>
-
-        <Input icon="search" placeholder="Search..." />
-      </>
+      <Button
+        color="blue"
+        icon
+        labelPosition="left"
+        onClick={() => {
+          openSideContent(CONTENT_CREATE);
+        }}
+      >
+        <Icon inverted color="grey" name="add" />
+        Create
+      </Button>
     );
   };
 

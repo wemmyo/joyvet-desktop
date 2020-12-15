@@ -1,3 +1,4 @@
+/* eslint-disable react/jsx-one-expression-per-line */
 import React, { useState, useEffect } from 'react';
 // import { useReactToPrint } from 'react-to-print';
 import { Table, Grid, Button, Form, Segment } from 'semantic-ui-react';

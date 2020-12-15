@@ -1,3 +1,4 @@
+/* eslint-disable react/jsx-one-expression-per-line */
 import React, { useEffect, useState } from 'react';
 import { Table, Form, Button } from 'semantic-ui-react';
 import { useSelector, useDispatch } from 'react-redux';
@@ -25,8 +26,8 @@ const SalesScreen: React.FC = () => {
   const [salesId, setSalesId] = useState('');
   const [saleType, setSaleType] = useState('');
   const [searchValue, setSearchValue] = useState('');
-  const [startDate, setStartDate] = useState(null);
-  const [endDate, setEndDate] = useState(null);
+  const [startDate, setStartDate] = useState('');
+  const [endDate, setEndDate] = useState('');
 
   const dispatch = useDispatch();
 
@@ -58,21 +59,20 @@ const SalesScreen: React.FC = () => {
   };
 
   const filterByType = () => {
-    if (!saleType) {
-      return null;
-    }
-    if (saleType === 'all') {
+    // if (!saleType) {
+    //   return null;
+    // }
+    if (saleType && saleType === 'all') {
       dispatch(getInvoicesFn());
-    } else {
+    } else if (saleType) {
       dispatch(filterInvoiceBySaleType(saleType));
     }
   };
 
   const searchForInvoice = () => {
-    if (!searchValue) {
-      return null;
+    if (searchValue) {
+      dispatch(filterInvoiceById(searchValue));
     }
-    dispatch(filterInvoiceById(searchValue));
   };
 
   useEffect(() => {
@@ -131,8 +131,8 @@ const SalesScreen: React.FC = () => {
   ];
 
   const resetFilters = () => {
-    setStartDate(null);
-    setEndDate(null);
+    setStartDate('');
+    setEndDate('');
     fetchInvoices();
   };
 
@@ -162,7 +162,7 @@ const SalesScreen: React.FC = () => {
             />
             <Form.Input
               label="Search"
-              placeholder="Search by invoice number"
+              placeholder="Invoice number"
               onChange={(e, { value }) => setSearchValue(value)}
               value={searchValue}
             />
