@@ -1,5 +1,7 @@
 import { createSlice } from '@reduxjs/toolkit';
 import { toast } from 'react-toastify';
+import { Op } from 'sequelize';
+import moment from 'moment';
 import Invoice from '../models/invoice';
 import Customer from '../models/customer';
 import Product from '../models/product';
@@ -81,6 +83,67 @@ export const {
   createInvoiceSuccess,
   createInvoiceFailed,
 } = invoiceSlice.actions;
+
+export const filterInvoiceById = (id: string | number) => async (
+  dispatch: (arg0: { payload: any; type: string }) => void
+) => {
+  try {
+    dispatch(getInvoices());
+    const invoices = await Invoice.findAll({
+      where: {
+        id,
+      },
+    });
+
+    dispatch(getInvoicesSuccess(JSON.stringify(invoices)));
+  } catch (error) {
+    toast.error(error.message || '');
+  }
+};
+
+export const filterInvoiceBySaleType = (saleType: string) => async (
+  dispatch: (arg0: { payload: any; type: string }) => void
+) => {
+  try {
+    dispatch(getInvoices());
+    const invoices = await Invoice.findAll({
+      where: {
+        saleType,
+      },
+    });
+
+    dispatch(getInvoicesSuccess(JSON.stringify(invoices)));
+  } catch (error) {
+    toast.error(error.message || '');
+  }
+};
+
+export const filterInvoiceByDateFn = (
+  startDate: Date | null,
+  endDate: Date | null
+) => async (dispatch: (arg0: { payload: any; type: string }) => void) => {
+  try {
+    dispatch(getInvoices());
+    // const invoices = await Invoice.findAll();
+    // 2020-12-08 23:00:00
+    // 'YYYY-MM-DD hh:mm:ss'
+
+    const invoices = await Invoice.findAll({
+      where: {
+        createdAt: {
+          [Op.between]: [
+            moment(startDate).format('YYYY-MM-DD hh:mm:ss'),
+            moment(endDate).format('YYYY-MM-DD hh:mm:ss'),
+          ],
+        },
+      },
+    });
+
+    dispatch(getInvoicesSuccess(JSON.stringify(invoices)));
+  } catch (error) {
+    toast.error(error.message || '');
+  }
+};
 
 export const getSingleInvoiceFn = (
   id: string | number,

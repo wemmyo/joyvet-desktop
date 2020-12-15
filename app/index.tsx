@@ -2,6 +2,8 @@ import React, { Fragment } from 'react';
 import { render } from 'react-dom';
 import { AppContainer as ReactHotAppContainer } from 'react-hot-loader';
 import bycrpt from 'bcryptjs';
+import fs from 'fs';
+import { remote } from 'electron';
 
 import { history, configuredStore } from './store';
 import './app.global.css';
@@ -19,6 +21,46 @@ import InvoiceItem from './models/invoiceItem';
 import PurchaseItem from './models/purchaseItem';
 import User from './models/user';
 
+/*
+  Check if .txt file with db path exists
+  if !exist, open dialog, select file path
+  Save file path to .txt
+  Run sequelize with saved file path
+*/
+
+const appDB = () => {
+  fs.readFile('message.txt', (err, data) => {
+    const body = [];
+    if (body.length < 1) {
+      return null;
+    }
+    body.push(data);
+    const parsedBody = Buffer.concat(body).toString();
+    return parsedBody;
+  });
+};
+
+if (!appDB) {
+  remote.dialog
+    .showOpenDialog({
+      properties: ['openFile', 'openDirectory'],
+    })
+    .then((result) => {
+      console.log(result.canceled);
+      console.log(result.filePaths);
+    })
+    .catch((err) => {
+      console.log(err);
+    });
+}
+
+// remote.dialog.showSaveDialogSync({
+//   title: 'Select folder',
+//   defaultPath: 'joyvet.db',
+// });
+
+// fs.writeFileSync('message.txt', 'DUMMY');
+
 const store = configuredStore();
 
 const AppContainer = process.env.PLAIN_HMR ? Fragment : ReactHotAppContainer;
@@ -26,6 +68,7 @@ const AppContainer = process.env.PLAIN_HMR ? Fragment : ReactHotAppContainer;
 document.addEventListener('DOMContentLoaded', () => {
   // eslint-disable-next-line global-require
   const Root = require('./views/Root').default;
+
   render(
     <AppContainer>
       <Root store={store} history={history} />

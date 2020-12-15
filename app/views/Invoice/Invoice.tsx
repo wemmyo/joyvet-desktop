@@ -274,9 +274,9 @@ const InvoiceScreen: React.FC = () => {
                         <option value="" disabled hidden>
                           Select Sale
                         </option>
-                        <option>Cash Sales</option>
-                        <option>Credit Sales</option>
-                        <option>Transfer</option>
+                        <option value="cash">Cash Sales</option>
+                        <option value="credit">Credit Sales</option>
+                        <option value="transfer">Transfer</option>
                       </Field>
                     </div>
                     <Segment raised>

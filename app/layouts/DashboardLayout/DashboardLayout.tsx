@@ -21,7 +21,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
   screenTitle,
   rightSidebar,
   headerContent,
-}) => {
+}: DashboardLayoutProps) => {
   const dispatch = useDispatch();
   const dashboardState = useSelector(selectDashboardState);
   const { sideContentisOpen } = dashboardState;

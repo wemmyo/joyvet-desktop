@@ -51,10 +51,10 @@ const ReceiptsScreen: React.FC = () => {
     };
   }, []);
 
-  // const viewSingleReceipt = (id: any) => {
-  //   setReceiptId(id);
-  //   openSideContent(CONTENT_DETAIL);
-  // };
+  const viewSingleReceipt = (id: any) => {
+    setReceiptId(id);
+    openSideContent(CONTENT_DETAIL);
+  };
 
   // const editSingleReceipt = (id: any) => {
   //   setReceiptId(id);
@@ -64,7 +64,7 @@ const ReceiptsScreen: React.FC = () => {
   const renderRows = () => {
     const rows = receipts.map((each: any) => {
       return (
-        <Table.Row key={each.id}>
+        <Table.Row key={each.id} onClick={() => viewSingleReceipt(each.id)}>
           <Table.Cell>{each.id}</Table.Cell>
           <Table.Cell>{numberWithCommas(each.amount)}</Table.Cell>
           <Table.Cell>{each.paymentType}</Table.Cell>
