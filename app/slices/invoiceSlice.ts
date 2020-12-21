@@ -94,55 +94,43 @@ export const {
 } = invoiceSlice.actions;
 
 export const filterInvoiceFn = (
-  startDate: Date | null,
-  endDate: Date | null,
+  startDate: Date | string,
+  endDate: Date | string,
   saleType: string
 ) => async (dispatch: (arg0: { payload: any; type: string }) => void) => {
   try {
-    console.log(
-      'startDate',
-      startDate,
-      'endDate',
-      endDate,
-      'saleType',
-      saleType
-    );
-
     dispatch(getInvoices());
     let invoices;
 
-    if (startDate && endDate && (!saleType || saleType === 'all')) {
-      // RAN FUNCTION 1
-      console.log('RAN FUNCTION 1');
+    if (startDate && endDate && saleType === 'all') {
+      // console.log('RAN FUNCTION 1');
 
       invoices = await Invoice.findAll({
         where: {
           createdAt: {
             [Op.between]: [
-              moment(startDate).format('YYYY-MM-DD hh:mm:ss'),
-              moment(endDate).format('YYYY-MM-DD hh:mm:ss'),
+              `${moment(startDate).format('YYYY-MM-DD')} 23:59:00`,
+              `${moment(endDate).format('YYYY-MM-DD')} 23:59:00`,
             ],
           },
         },
       });
     } else if (startDate && endDate && saleType !== 'all') {
-      // RAN FUNCTION 2
-      console.log('RAN FUNCTION 2');
+      // console.log('RAN FUNCTION 2');
 
       invoices = await Invoice.findAll({
         where: {
           saleType,
           createdAt: {
             [Op.between]: [
-              moment(startDate).format('YYYY-MM-DD hh:mm:ss'),
-              moment(endDate).format('YYYY-MM-DD hh:mm:ss'),
+              `${moment(startDate).format('YYYY-MM-DD')} 23:59:00`,
+              `${moment(endDate).format('YYYY-MM-DD')} 23:59:00`,
             ],
           },
         },
       });
     } else if (saleType !== 'all' && !startDate && !endDate) {
-      // RAN FUNCTION 3
-      console.log('RAN FUNCTION 3');
+      // console.log('RAN FUNCTION 3');
 
       invoices = await Invoice.findAll({
         where: {
@@ -150,8 +138,7 @@ export const filterInvoiceFn = (
         },
       });
     } else {
-      // RAN FUNCTION 4
-      console.log('RAN FUNCTION 4');
+      // console.log('RAN FUNCTION 4');
 
       invoices = await Invoice.findAll();
     }
@@ -170,51 +157,6 @@ export const filterInvoiceById = (id: string | number) => async (
     const invoices = await Invoice.findAll({
       where: {
         id,
-      },
-    });
-
-    dispatch(getInvoicesSuccess(JSON.stringify(invoices)));
-  } catch (error) {
-    toast.error(error.message || '');
-  }
-};
-
-export const filterInvoiceBySaleType = (saleType: string) => async (
-  dispatch: (arg0: { payload: any; type: string }) => void
-) => {
-  try {
-    // dispatch(getInvoices());
-    // const invoices = await Invoice.findAll({
-    //   where: {
-    //     saleType,
-    //   },
-    // });
-
-    // dispatch(getInvoicesSuccess(JSON.stringify(invoices)));
-    dispatch(filterByType(saleType));
-  } catch (error) {
-    toast.error(error.message || '');
-  }
-};
-
-export const filterInvoiceByDateFn = (
-  startDate: Date | null,
-  endDate: Date | null
-) => async (dispatch: (arg0: { payload: any; type: string }) => void) => {
-  try {
-    dispatch(getInvoices());
-    // const invoices = await Invoice.findAll();
-    // 2020-12-08 23:00:00
-    // 'YYYY-MM-DD hh:mm:ss'
-
-    const invoices = await Invoice.findAll({
-      where: {
-        createdAt: {
-          [Op.between]: [
-            moment(startDate).format('YYYY-MM-DD hh:mm:ss'),
-            moment(endDate).format('YYYY-MM-DD hh:mm:ss'),
-          ],
-        },
       },
     });
 

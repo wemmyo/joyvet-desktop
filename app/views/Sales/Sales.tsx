@@ -23,7 +23,7 @@ const CONTENT_DETAIL = 'detail';
 const SalesScreen: React.FC = () => {
   const [sideContent, setSideContent] = useState('');
   const [salesId, setSalesId] = useState('');
-  const [saleType, setSaleType] = useState('');
+  const [saleType, setSaleType] = useState('all');
   const [searchValue, setSearchValue] = useState('');
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
@@ -52,27 +52,23 @@ const SalesScreen: React.FC = () => {
   };
 
   const filterSales = () => {
-    if ((startDate && endDate) || saleType) {
-      dispatch(filterInvoiceFn(startDate, endDate, saleType));
-    }
+    dispatch(filterInvoiceFn(startDate, endDate, saleType));
   };
 
   const searchForInvoice = () => {
     if (searchValue) {
       dispatch(filterInvoiceById(searchValue));
+    } else if (searchValue.length === 0) {
+      fetchInvoices();
     }
   };
 
   useEffect(() => {
-    fetchInvoices();
+    filterSales();
 
     return () => {
       closeSideContent();
     };
-  }, []);
-
-  useEffect(() => {
-    filterSales();
   }, [startDate, endDate, saleType]);
 
   useEffect(() => {
@@ -117,7 +113,9 @@ const SalesScreen: React.FC = () => {
   const resetFilters = () => {
     setStartDate('');
     setEndDate('');
-    fetchInvoices();
+    setSaleType('all');
+    setSearchValue('');
+    // fetchInvoices();
   };
 
   const headerContent = () => {
