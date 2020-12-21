@@ -7,9 +7,8 @@ import DashboardLayout from '../../layouts/DashboardLayout/DashboardLayout';
 import {
   selectInvoiceState,
   getInvoicesFn,
-  filterInvoiceByDateFn,
-  filterInvoiceBySaleType,
   filterInvoiceById,
+  filterInvoiceFn,
   //   createInvoiceFn,
 } from '../../slices/invoiceSlice';
 import { numberWithCommas } from '../../utils/helpers';
@@ -52,20 +51,9 @@ const SalesScreen: React.FC = () => {
     setSalesId('');
   };
 
-  const filterByDate = () => {
-    if (startDate && endDate) {
-      dispatch(filterInvoiceByDateFn(startDate, endDate));
-    }
-  };
-
-  const filterByType = () => {
-    // if (!saleType) {
-    //   return null;
-    // }
-    if (saleType && saleType === 'all') {
-      dispatch(getInvoicesFn());
-    } else if (saleType) {
-      dispatch(filterInvoiceBySaleType(saleType));
+  const filterSales = () => {
+    if ((startDate && endDate) || saleType) {
+      dispatch(filterInvoiceFn(startDate, endDate, saleType));
     }
   };
 
@@ -84,12 +72,8 @@ const SalesScreen: React.FC = () => {
   }, []);
 
   useEffect(() => {
-    filterByDate();
-  }, [startDate, endDate]);
-
-  useEffect(() => {
-    filterByType();
-  }, [saleType]);
+    filterSales();
+  }, [startDate, endDate, saleType]);
 
   useEffect(() => {
     searchForInvoice();

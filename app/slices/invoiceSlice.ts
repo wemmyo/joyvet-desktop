@@ -40,6 +40,14 @@ const invoiceSlice = createSlice({
       singleInvoice.loading = false;
       singleInvoice.data = '';
     },
+    filterByType: (state, { payload }) => {
+      const { invoices } = state;
+      const parsedInvoice = JSON.parse(invoices.data);
+      const filteredInvoice = parsedInvoice.filter(
+        (invoice: any) => invoice.saleType === payload
+      );
+      invoices.data = JSON.stringify(filteredInvoice);
+    },
     getInvoices: (state) => {
       const { invoices } = state;
       invoices.loading = true;
@@ -82,7 +90,77 @@ export const {
   createInvoice,
   createInvoiceSuccess,
   createInvoiceFailed,
+  filterByType,
 } = invoiceSlice.actions;
+
+export const filterInvoiceFn = (
+  startDate: Date | null,
+  endDate: Date | null,
+  saleType: string
+) => async (dispatch: (arg0: { payload: any; type: string }) => void) => {
+  try {
+    console.log(
+      'startDate',
+      startDate,
+      'endDate',
+      endDate,
+      'saleType',
+      saleType
+    );
+
+    dispatch(getInvoices());
+    let invoices;
+
+    if (startDate && endDate && (!saleType || saleType === 'all')) {
+      // RAN FUNCTION 1
+      console.log('RAN FUNCTION 1');
+
+      invoices = await Invoice.findAll({
+        where: {
+          createdAt: {
+            [Op.between]: [
+              moment(startDate).format('YYYY-MM-DD hh:mm:ss'),
+              moment(endDate).format('YYYY-MM-DD hh:mm:ss'),
+            ],
+          },
+        },
+      });
+    } else if (startDate && endDate && saleType !== 'all') {
+      // RAN FUNCTION 2
+      console.log('RAN FUNCTION 2');
+
+      invoices = await Invoice.findAll({
+        where: {
+          saleType,
+          createdAt: {
+            [Op.between]: [
+              moment(startDate).format('YYYY-MM-DD hh:mm:ss'),
+              moment(endDate).format('YYYY-MM-DD hh:mm:ss'),
+            ],
+          },
+        },
+      });
+    } else if (saleType !== 'all' && !startDate && !endDate) {
+      // RAN FUNCTION 3
+      console.log('RAN FUNCTION 3');
+
+      invoices = await Invoice.findAll({
+        where: {
+          saleType,
+        },
+      });
+    } else {
+      // RAN FUNCTION 4
+      console.log('RAN FUNCTION 4');
+
+      invoices = await Invoice.findAll();
+    }
+
+    dispatch(getInvoicesSuccess(JSON.stringify(invoices)));
+  } catch (error) {
+    toast.error(error.message || '');
+  }
+};
 
 export const filterInvoiceById = (id: string | number) => async (
   dispatch: (arg0: { payload: any; type: string }) => void
@@ -105,14 +183,15 @@ export const filterInvoiceBySaleType = (saleType: string) => async (
   dispatch: (arg0: { payload: any; type: string }) => void
 ) => {
   try {
-    dispatch(getInvoices());
-    const invoices = await Invoice.findAll({
-      where: {
-        saleType,
-      },
-    });
+    // dispatch(getInvoices());
+    // const invoices = await Invoice.findAll({
+    //   where: {
+    //     saleType,
+    //   },
+    // });
 
-    dispatch(getInvoicesSuccess(JSON.stringify(invoices)));
+    // dispatch(getInvoicesSuccess(JSON.stringify(invoices)));
+    dispatch(filterByType(saleType));
   } catch (error) {
     toast.error(error.message || '');
   }
