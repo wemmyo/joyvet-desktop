@@ -1,7 +1,7 @@
 .sideNav {
   /* border: 2px solid pink; */
   height: 100vh;
-  width: 190px;
+  min-width: 190px;
   background-color: var(--gray30);
   padding: 70px 20px;
   position: sticky;

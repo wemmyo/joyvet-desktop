@@ -25,25 +25,31 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
   const dispatch = useDispatch();
   const dashboardState = useSelector(selectDashboardState);
   const { sideContentisOpen } = dashboardState;
-  const user = JSON.parse(localStorage.getItem('user'));
-
+  const user =
+    localStorage.getItem('user') !== null
+      ? JSON.parse(localStorage.getItem('user') || '')
+      : '';
   return (
     <div style={{ display: 'flex' }}>
       <Sidebar />
       <div style={{ display: 'flex', flex: 1 }}>
         <div className={styles.main}>
           <header>
-            <div className={styles.headerSectionUser}>
-              <div className={styles.headerSectionUser__avatar}>
-                {user.fullName.slice(0, 2)}
+            <div className={styles.headerSection1}>
+              <h2 className={styles.headerSection1__title}>{screenTitle}</h2>
+              <div className={styles.headerSection1__user}>
+                <div className={styles.headerSection1__avatar}>
+                  {user.fullName.slice(0, 2)}
+                </div>
+                <p className={styles.headerSection1__name}>
+                  {user.fullName || ''}
+                </p>
               </div>
-              <p className={styles.headerSectionUser__name}>
-                {user.fullName || ''}
-              </p>
             </div>
-            <div className={styles.headerSection}>
-              <h2 className={styles.headerSection__title}>{screenTitle}</h2>
-              <div className={styles.headerSection__right}>{headerContent}</div>
+            <div className={styles.headerSection2}>
+              <div className={styles.headerSection2__right}>
+                {headerContent}
+              </div>
             </div>
           </header>
           {children}

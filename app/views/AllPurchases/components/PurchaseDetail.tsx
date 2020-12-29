@@ -1,3 +1,4 @@
+/* eslint-disable react/jsx-one-expression-per-line */
 import React, { useEffect } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 // import { useParams } from 'react-router-dom';
@@ -39,7 +40,12 @@ const SalesDetail: React.FC<SalesDetailProps> = ({
           <Table.Cell>{serialNumber}</Table.Cell>
           <Table.Cell>{order.title}</Table.Cell>
           <Table.Cell>{order.purchaseItem.quantity}</Table.Cell>
-          <Table.Cell>{numberWithCommas(order.unitPrice)}</Table.Cell>
+          <Table.Cell>
+            ₦{numberWithCommas(order.purchaseItem.unitPrice)}
+          </Table.Cell>
+          <Table.Cell>
+            ₦{numberWithCommas(order.purchaseItem.amount)}
+          </Table.Cell>
         </Table.Row>
       );
     });
@@ -59,13 +65,8 @@ const SalesDetail: React.FC<SalesDetailProps> = ({
             <Table.Cell>{purchase.invoiceNumber}</Table.Cell>
           </Table.Row>
           <Table.Row>
-            <Table.Cell>Customer</Table.Cell>
+            <Table.Cell>Supplier</Table.Cell>
             <Table.Cell>{purchase.supplier?.fullName}</Table.Cell>
-          </Table.Row>
-          <Table.Row>
-            <Table.Cell>Type</Table.Cell>
-            <Table.Cell>Test</Table.Cell>
-            {/* <Table.Cell>{purchase.saleType}</Table.Cell> */}
           </Table.Row>
           <Table.Row>
             <Table.Cell>Amount</Table.Cell>
@@ -92,7 +93,8 @@ const SalesDetail: React.FC<SalesDetailProps> = ({
             <Table.HeaderCell>No</Table.HeaderCell>
             <Table.HeaderCell>Product</Table.HeaderCell>
             <Table.HeaderCell>Quantity</Table.HeaderCell>
-            <Table.HeaderCell>Rate</Table.HeaderCell>
+            <Table.HeaderCell>Unit Price</Table.HeaderCell>
+            <Table.HeaderCell>Amount</Table.HeaderCell>
           </Table.Row>
         </Table.Header>
 

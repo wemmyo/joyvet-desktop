@@ -15,32 +15,13 @@ const SideNav = () => {
   return (
     <section className={styles.sideNav}>
       <h4>Menu</h4>
-      {/* <NavItem
-        title="Customer Enquiry"
-        link="/overview"
-        links={[
-          {
-            title: 'Debtors list',
-            link: '/overview',
-          },
-          {
-            title: 'Customer history',
-            link: routes.CUSTOMERS,
-          },
-          {
-            title: 'Customer balance entry',
-            link: '/overview',
-          },
-        ]}
-      /> */}
-
-      <NavLink
+      {/* <NavLink
         activeClassName={styles.sideNav__mainItemActive}
         className={styles.sideNav__mainItem}
         to={routes.OVERVIEW}
       >
         Overview
-      </NavLink>
+      </NavLink> */}
       <NavLink
         activeClassName={styles.sideNav__mainItemActive}
         className={styles.sideNav__mainItem}

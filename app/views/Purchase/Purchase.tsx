@@ -1,3 +1,4 @@
+/* eslint-disable react/jsx-one-expression-per-line */
 import React, { useState, useEffect } from 'react';
 import { Table, Grid, Button, Form, Segment } from 'semantic-ui-react';
 import { Field, Formik } from 'formik';
@@ -90,11 +91,12 @@ const PurchaseScreen: React.FC = () => {
   };
 
   const renderOrders = () => {
-    const serialNumber = 1;
+    let serialNumber = 0;
     const orderList = orders.map((order: any) => {
+      serialNumber += 1;
       return (
         <Table.Row key={order.orderId}>
-          <Table.Cell>{serialNumber + 1}</Table.Cell>
+          <Table.Cell>{serialNumber}</Table.Cell>
           <Table.Cell>{order.title}</Table.Cell>
           <Table.Cell>{order.quantity}</Table.Cell>
           <Table.Cell>{numberWithCommas(order.unitPrice)}</Table.Cell>
@@ -157,6 +159,7 @@ const PurchaseScreen: React.FC = () => {
                   supplierId: '',
                   invoiceNumber: '',
                   invoiceDate: '',
+                  unitPrice: '',
                   product: '',
                   quantity: '',
                 }}
@@ -165,9 +168,8 @@ const PurchaseScreen: React.FC = () => {
                   addToOrders({
                     ...JSON.parse(values.product),
                     quantity: values.quantity,
-                    amount:
-                      JSON.parse(values.product).unitPrice *
-                      Number(values.quantity),
+                    amount: Number(values.unitPrice) * Number(values.quantity),
+                    unitPrice: values.unitPrice,
                     orderId: new Date().getUTCMilliseconds(),
                   });
                   // actions.resetForm({
@@ -178,7 +180,7 @@ const PurchaseScreen: React.FC = () => {
                   // });
                 }}
               >
-                {({ handleSubmit, values }) => (
+                {({ handleSubmit, values, resetForm }) => (
                   <Form>
                     <div className="field">
                       <label htmlFor="supplier">Supplier</label>
@@ -201,6 +203,7 @@ const PurchaseScreen: React.FC = () => {
                       type="number"
                       component={TextInput}
                     />
+
                     <Field
                       name="invoiceDate"
                       placeholder="Invoice Date"
@@ -223,6 +226,13 @@ const PurchaseScreen: React.FC = () => {
                           {renderProducts()}
                         </Field>
                       </div>
+                      <Field
+                        name="unitPrice"
+                        placeholder="Unit Price"
+                        label="Unit Price"
+                        type="number"
+                        component={TextInput}
+                      />
 
                       <Field
                         name="quantity"
@@ -244,12 +254,19 @@ const PurchaseScreen: React.FC = () => {
                     <Button
                       onClick={() => {
                         dispatch(
-                          createPurchaseFn(orders, {
-                            supplierId: values.supplierId,
-                            invoiceNumber: values.invoiceNumber,
-                            invoiceDate: values.invoiceDate,
-                            amount: sumOfOrders(),
-                          })
+                          createPurchaseFn(
+                            orders,
+                            {
+                              supplierId: values.supplierId,
+                              invoiceNumber: values.invoiceNumber,
+                              invoiceDate: values.invoiceDate,
+                              amount: sumOfOrders(),
+                            },
+                            () => {
+                              resetForm();
+                              setOrders([]);
+                            }
+                          )
                         );
                       }}
                       type="button"

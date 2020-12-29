@@ -1,6 +1,6 @@
 /* eslint-disable react/jsx-one-expression-per-line */
-import React, { useState, useEffect } from 'react';
-// import { useReactToPrint } from 'react-to-print';
+import React, { useState, useEffect, useRef } from 'react';
+import { useReactToPrint } from 'react-to-print';
 import { Table, Grid, Button, Form, Segment } from 'semantic-ui-react';
 import { Field, Formik } from 'formik';
 import { useSelector, useDispatch } from 'react-redux';
@@ -15,14 +15,14 @@ import { numberWithCommas } from '../../utils/helpers';
 import { createInvoiceFn } from '../../slices/invoiceSlice';
 import TextInput from '../../components/TextInput/TextInput';
 // import { FunctionalComponent } from '../Print';
-// import TestReceipt from '../../components/PrintedReceipt/TestReceipt';
+import ReceiptWrapper from '../../components/PrintedReceipt/ReceiptWrapper';
 
 const InvoiceScreen: React.FC = () => {
-  // const componentRef = useRef();
+  const componentRef = useRef();
 
-  // const handlePrint = useReactToPrint({
-  //   content: () => componentRef.current,
-  // });
+  const handlePrint = useReactToPrint({
+    content: () => componentRef.current,
+  });
 
   const [orders, setOrders] = useState([]);
 
@@ -89,16 +89,16 @@ const InvoiceScreen: React.FC = () => {
 
     const product = JSON.parse(value);
     const productPrices = [
-      { label: 'Price Level 1', value: product.price1 },
-      { label: 'Price Level 2', value: product.price2 },
-      { label: 'Price Level 3', value: product.price3 },
-      { label: 'Price Level 4', value: product.price4 },
+      { label: 'Level 1', value: product.price1 },
+      { label: 'Level 2', value: product.price2 },
+      { label: 'Level 3', value: product.price3 },
+      { label: 'Level 4', value: product.price4 },
     ];
 
     const productPriceList = productPrices.map((price) => {
       return (
         <option key={price.label} value={price.value}>
-          {price.label}
+          {`${price.label}: ₦${numberWithCommas(price.value)}`}
         </option>
       );
     });
@@ -160,8 +160,6 @@ const InvoiceScreen: React.FC = () => {
   const renderOrders = () => {
     let serialNumber = 0;
     const orderList = orders.map((order: any) => {
-      console.log(order);
-
       serialNumber += 1;
       return (
         <Table.Row key={order.orderId}>
@@ -314,7 +312,7 @@ const InvoiceScreen: React.FC = () => {
                             () => {
                               resetForm();
                               setOrders([]);
-                              // handlePrint();
+                              handlePrint();
                             }
                           )
                         );
@@ -327,9 +325,11 @@ const InvoiceScreen: React.FC = () => {
                     </Button>
 
                     {/* <div style={{ display: 'none' }}>
-                      <TestReceipt ref={componentRef} />
-                    </div>
-                    <button onClick={handlePrint}>Print this out!</button> */}
+                      <ReceiptWrapper ref={componentRef} />
+                    </div> */}
+                    {/* <button type="button" onClick={handlePrint}>
+                      Print this out!
+                    </button> */}
                   </Form>
                 )}
               </Formik>

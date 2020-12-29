@@ -12,12 +12,7 @@ export interface PrintedReceiptProps {
   getSingleInvoiceFn: (id: string | number) => void;
 }
 
-export interface PrintedReceiptState {}
-
-class PrintedReceipt extends React.Component<
-  PrintedReceiptProps,
-  PrintedReceiptState
-> {
+class PrintedReceipt extends React.Component<PrintedReceiptProps> {
   componentDidMount() {
     this.props.getSingleInvoiceFn(1);
   }

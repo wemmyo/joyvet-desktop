@@ -147,11 +147,16 @@ export const createPurchaseFn = (
           by: each.quantity,
           where: { id: each.id },
         });
-        prod.purchaseItem = { quantity: each.quantity };
+        prod.purchaseItem = {
+          quantity: each.quantity,
+          unitPrice: each.unitPrice,
+          amount: each.amount,
+        };
         prodArr.push(prod);
       })
     );
     await purchase.addProducts(prodArr);
+    toast.success('Purchase created');
     if (cb) {
       cb();
     }

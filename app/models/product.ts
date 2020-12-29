@@ -10,7 +10,7 @@ export default sequelize.define('product', {
     primaryKey: true,
   },
   title: { type: Sequelize.STRING, allowNull: false },
-  stock: Sequelize.INTEGER,
+  stock: { type: Sequelize.INTEGER, defaultValue: 0 },
   price1: Sequelize.INTEGER,
   price2: Sequelize.INTEGER,
   price3: Sequelize.INTEGER,

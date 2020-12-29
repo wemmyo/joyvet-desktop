@@ -23,7 +23,6 @@ const CreateProduct: React.FC<CreateProductProps> = ({
     <Formik
       initialValues={{
         title: '',
-        stock: '',
         price1: '',
         price2: '',
         price3: '',
@@ -42,13 +41,6 @@ const CreateProduct: React.FC<CreateProductProps> = ({
             placeholder="Product Name"
             label="Product Name"
             type="text"
-            component={TextInput}
-          />
-          <Field
-            name="stock"
-            placeholder="Quantity"
-            label="Quantity"
-            type="number"
             component={TextInput}
           />
           <Field
