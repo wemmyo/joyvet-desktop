@@ -13,10 +13,6 @@ export interface PrintedReceiptProps {
 }
 
 class PrintedReceipt extends React.Component<PrintedReceiptProps> {
-  componentDidMount() {
-    this.props.getSingleInvoiceFn(1);
-  }
-
   renderItems = () => {
     const { data: invoiceRaw } = this.props.invoice;
     const invoice = invoiceRaw ? JSON.parse(invoiceRaw) : {};
@@ -27,9 +23,11 @@ class PrintedReceipt extends React.Component<PrintedReceiptProps> {
           <Table.Row key={item.id}>
             <Table.Cell>{item.title}</Table.Cell>
             <Table.Cell>{item.invoiceItem.quantity}</Table.Cell>
-            <Table.Cell>{numberWithCommas(item.unitPrice)}</Table.Cell>
             <Table.Cell>
-              {numberWithCommas(item.invoiceItem.quantity * item.unitPrice)}
+              ₦{numberWithCommas(item.invoiceItem.unitPrice)}
+            </Table.Cell>
+            <Table.Cell>
+              ₦{numberWithCommas(item.invoiceItem.amount)}{' '}
             </Table.Cell>
           </Table.Row>
         );
@@ -43,8 +41,7 @@ class PrintedReceipt extends React.Component<PrintedReceiptProps> {
   render() {
     const { data: invoiceRaw } = this.props.invoice;
     const invoice = invoiceRaw ? JSON.parse(invoiceRaw) : {};
-    console.log(invoice);
-    console.log(invoiceRaw);
+
     if (!invoiceRaw || invoiceRaw === 'null') {
       return <p>No Data</p>;
     }
@@ -60,9 +57,11 @@ class PrintedReceipt extends React.Component<PrintedReceiptProps> {
         <div className={styles.receipt__companyInfo}>
           <h5>JOY VETERINARY</h5>
           <p>
-            37, Iganmode Road, Sango Ota,
+            342, Old Abeokuta Road
             <br />
-            Ogun State
+            Gengento bus stop, Agege
+            <br />
+            08095988235
           </p>
           <p>
             <b>Sales Invoice!</b>
@@ -113,6 +112,4 @@ const mapStateToProps = ({ invoice }: { invoice: any }) => {
   };
 };
 
-export default connect(mapStateToProps, {
-  getSingleInvoiceFn,
-})(PrintedReceipt);
+export default connect(mapStateToProps, {})(PrintedReceipt);

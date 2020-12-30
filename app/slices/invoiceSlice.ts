@@ -16,7 +16,7 @@ const initialState = {
     loading: false,
     data: '',
   },
-  createInvoiceState: {
+  createInvoice: {
     loading: false,
     data: '',
   },
@@ -39,6 +39,11 @@ const invoiceSlice = createSlice({
       const { singleInvoice } = state;
       singleInvoice.loading = false;
       singleInvoice.data = '';
+    },
+    clearCreateInvoice: (state) => {
+      const { createInvoice } = state;
+      createInvoice.loading = false;
+      createInvoice.data = '';
     },
     filterByType: (state, { payload }) => {
       const { invoices } = state;
@@ -63,19 +68,19 @@ const invoiceSlice = createSlice({
       invoices.data = '';
     },
     createInvoice: (state) => {
-      const { createInvoiceState } = state;
-      createInvoiceState.loading = true;
-      createInvoiceState.data = '';
+      const { createInvoice } = state;
+      createInvoice.loading = true;
+      createInvoice.data = '';
     },
     createInvoiceSuccess: (state, { payload }) => {
-      const { createInvoiceState } = state;
-      createInvoiceState.loading = false;
-      createInvoiceState.data = payload;
+      const { createInvoice } = state;
+      createInvoice.loading = false;
+      createInvoice.data = payload;
     },
     createInvoiceFailed: (state) => {
-      const { createInvoiceState } = state;
-      createInvoiceState.loading = false;
-      createInvoiceState.data = '';
+      const { createInvoice } = state;
+      createInvoice.loading = false;
+      createInvoice.data = '';
     },
   },
 });
@@ -91,6 +96,7 @@ export const {
   createInvoiceSuccess,
   createInvoiceFailed,
   filterByType,
+  clearCreateInvoice,
 } = invoiceSlice.actions;
 
 export const filterInvoiceFn = (
@@ -197,6 +203,12 @@ export const getSingleInvoiceFn = (
   }
 };
 
+export const clearCreateInvoiceFn = () => async (
+  dispatch: (arg0: { payload: unknown; type: string }) => void
+) => {
+  dispatch(clearCreateInvoice());
+};
+
 export const getInvoicesFn = () => async (
   dispatch: (arg0: { payload: any; type: string }) => void
 ) => {
@@ -234,9 +246,6 @@ export const createInvoiceFn = (
     await Promise.all(
       values.map(async (each: any) => {
         const prod = await Product.findByPk(each.id);
-        if (prod.stock < each.quantity) {
-          throw new Error(`${prod.title} is out of stock`);
-        }
         await Product.decrement('stock', {
           by: each.quantity,
           where: { id: each.id },
@@ -249,7 +258,7 @@ export const createInvoiceFn = (
         prodArr.push(prod);
       })
     );
-    const createdInvoice = await invoice.addProducts(prodArr);
+    await invoice.addProducts(prodArr);
     // console.log(createdInvoice);
 
     // await Captain.bulkCreate([
@@ -257,10 +266,10 @@ export const createInvoiceFn = (
     //   { name: 'Davy Jones' }
     // ], { updateOnDuplicate: ["name"] });
     toast.success('Invoice created');
+    dispatch(createInvoiceSuccess(JSON.stringify(invoice)));
     if (cb) {
       cb();
     }
-    dispatch(createInvoiceSuccess(JSON.stringify(createdInvoice)));
   } catch (error) {
     toast.error(error.message);
   }

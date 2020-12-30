@@ -1,14 +1,16 @@
 /* eslint-disable react/jsx-one-expression-per-line */
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 // import { useParams } from 'react-router-dom';
-import { Table } from 'semantic-ui-react';
+import { Table, Button } from 'semantic-ui-react';
+import { useReactToPrint } from 'react-to-print';
 
 import {
   getSingleInvoiceFn,
   selectInvoiceState,
 } from '../../../slices/invoiceSlice';
 import { numberWithCommas } from '../../../utils/helpers';
+import ComponentToPrint from '../../../components/PrintedReceipt/ReceiptWrapper';
 
 interface SalesDetailProps {
   salesId: string | number;
@@ -17,7 +19,37 @@ interface SalesDetailProps {
 const SalesDetail: React.FC<SalesDetailProps> = ({
   salesId,
 }: SalesDetailProps) => {
+  const componentRef = useRef();
   const dispatch = useDispatch();
+
+  const [printInvoice, setPrintInvoice] = useState(false);
+
+  const handlePrint = useReactToPrint({
+    content: () => componentRef.current,
+  });
+
+  const handlePrintFn = () => {
+    setPrintInvoice(true);
+  };
+
+  useEffect(() => {
+    setPrintInvoice(false);
+  }, [salesId]);
+
+  useEffect(() => {
+    if (printInvoice) {
+      handlePrint();
+    }
+  }, [printInvoice]);
+
+  // const handlePrintFn = () => {
+  //   dispatch(
+  //     getSingleInvoiceFn(salesId, () => {
+  //       setPrintInvoice(true);
+  //       handlePrint();
+  //     })
+  //   );
+  // };
 
   const fetchData = () => {
     dispatch(getSingleInvoiceFn(salesId));
@@ -48,6 +80,17 @@ const SalesDetail: React.FC<SalesDetailProps> = ({
       );
     });
     return orderList;
+  };
+
+  const renderInvoiceToPrint = () => {
+    if (printInvoice) {
+      return (
+        <div style={{ display: 'none' }}>
+          <ComponentToPrint ref={componentRef} />
+        </div>
+      );
+    }
+    return null;
   };
 
   if (loading || !sales) {
@@ -98,6 +141,10 @@ const SalesDetail: React.FC<SalesDetailProps> = ({
 
         <Table.Body>{renderOrders()}</Table.Body>
       </Table>
+      <Button type="button" onClick={handlePrintFn}>
+        Print
+      </Button>
+      {renderInvoiceToPrint()}
     </>
   );
 };

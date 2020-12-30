@@ -4,6 +4,7 @@ import { useReactToPrint } from 'react-to-print';
 import { Table, Grid, Button, Form, Segment } from 'semantic-ui-react';
 import { Field, Formik } from 'formik';
 import { useSelector, useDispatch } from 'react-redux';
+import { toast } from 'react-toastify';
 
 import DashboardLayout from '../../layouts/DashboardLayout/DashboardLayout';
 import {
@@ -12,33 +13,39 @@ import {
 } from '../../slices/customerSlice';
 import { getProductsFn, selectProductState } from '../../slices/productSlice';
 import { numberWithCommas } from '../../utils/helpers';
-import { createInvoiceFn } from '../../slices/invoiceSlice';
+import {
+  createInvoiceFn,
+  getSingleInvoiceFn,
+  selectInvoiceState,
+} from '../../slices/invoiceSlice';
 import TextInput from '../../components/TextInput/TextInput';
-// import { FunctionalComponent } from '../Print';
-import ReceiptWrapper from '../../components/PrintedReceipt/ReceiptWrapper';
+import ComponentToPrint from '../../components/PrintedReceipt/ReceiptWrapper';
 
 const InvoiceScreen: React.FC = () => {
   const componentRef = useRef();
+  const dispatch = useDispatch();
 
   const handlePrint = useReactToPrint({
     content: () => componentRef.current,
   });
 
   const [orders, setOrders] = useState([]);
-
-  const dispatch = useDispatch();
+  const [printInvoice, setPrintInvoice] = useState(false);
 
   const customerState = useSelector(selectCustomerState);
   const productState = useSelector(selectProductState);
+  const invoiceState = useSelector(selectInvoiceState);
   // const invoiceState = useSelector(selectInvoiceState);
 
   const { data: customersRaw } = customerState.customers;
   const { data: productsRaw } = productState.products;
+  const { data: invoiceRaw } = invoiceState.createInvoice;
   // const { data: createdInvoiceRaw } = invoiceState.createInvoiceState;
 
   const customers = customersRaw ? JSON.parse(customersRaw) : [];
   const products = productsRaw ? JSON.parse(productsRaw) : [];
-  // const createdInvoice = createdInvoiceRaw ? JSON.parse(createdInvoiceRaw) : {};
+  const createdInvoice = invoiceRaw ? JSON.parse(invoiceRaw) : {};
+  // console.log(createdInvoice);
 
   const fetchCustomers = () => {
     dispatch(getCustomersFn());
@@ -53,7 +60,19 @@ const InvoiceScreen: React.FC = () => {
     fetchProducts();
   };
 
-  useEffect(fetchData, []);
+  useEffect(() => {
+    fetchData();
+  }, []);
+
+  useEffect(() => {
+    if (invoiceRaw) {
+      dispatch(
+        getSingleInvoiceFn(createdInvoice.id, () => {
+          handlePrint();
+        })
+      );
+    }
+  }, [invoiceRaw]);
 
   const renderProducts = () => {
     const productList = products.map((product: any) => {
@@ -184,6 +203,17 @@ const InvoiceScreen: React.FC = () => {
     return orderList;
   };
 
+  const renderInvoiceToPrint = () => {
+    if (printInvoice) {
+      return (
+        <div style={{ display: 'none' }}>
+          <ComponentToPrint ref={componentRef} />
+        </div>
+      );
+    }
+    return null;
+  };
+
   return (
     <DashboardLayout screenTitle="Create Invoice">
       <Grid>
@@ -231,19 +261,22 @@ const InvoiceScreen: React.FC = () => {
                 }}
                 // validationSchema={CreatePaymentSchema}
                 onSubmit={(values) => {
-                  addToOrders({
-                    ...JSON.parse(values.product),
-                    quantity: values.quantity,
-                    amount: Number(values.unitPrice) * Number(values.quantity),
-                    unitPrice: values.unitPrice,
-                    orderId: new Date().getUTCMilliseconds(),
-                  });
-                  // actions.resetForm({
-                  //   values: {
-                  //     product: '',
-                  //     quantity: '',
-                  //   },
-                  // });
+                  const product = JSON.parse(values.product);
+
+                  if (product.stock < Number(values.quantity)) {
+                    toast.error(`${product.title}: Re-order level`, {
+                      autoClose: 5000,
+                    });
+                  } else {
+                    addToOrders({
+                      ...product,
+                      quantity: values.quantity,
+                      amount:
+                        Number(values.unitPrice) * Number(values.quantity),
+                      unitPrice: values.unitPrice,
+                      orderId: new Date().getUTCMilliseconds(),
+                    });
+                  }
                 }}
               >
                 {({ handleSubmit, values, resetForm }) => (
@@ -312,7 +345,8 @@ const InvoiceScreen: React.FC = () => {
                             () => {
                               resetForm();
                               setOrders([]);
-                              handlePrint();
+                              setPrintInvoice(true);
+                              // handlePrintFn();
                             }
                           )
                         );
@@ -323,13 +357,7 @@ const InvoiceScreen: React.FC = () => {
                     >
                       Save
                     </Button>
-
-                    {/* <div style={{ display: 'none' }}>
-                      <ReceiptWrapper ref={componentRef} />
-                    </div> */}
-                    {/* <button type="button" onClick={handlePrint}>
-                      Print this out!
-                    </button> */}
+                    {renderInvoiceToPrint()}
                   </Form>
                 )}
               </Formik>
