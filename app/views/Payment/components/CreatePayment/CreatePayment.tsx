@@ -135,8 +135,8 @@ const CreatePayment: React.FC = () => {
 
           <Field
             name="amount"
-            placeholder="Amount Paid"
-            label="Amount Paid"
+            placeholder="Amount"
+            label="Amount"
             type="text"
             component={TextInput}
           />
