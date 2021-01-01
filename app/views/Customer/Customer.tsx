@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Table, Button, Icon } from 'semantic-ui-react';
+import { Table, Button, Icon, Form } from 'semantic-ui-react';
 import { useSelector, useDispatch } from 'react-redux';
 
 import DashboardLayout from '../../layouts/DashboardLayout/DashboardLayout';
@@ -7,6 +7,7 @@ import {
   selectCustomerState,
   getCustomersFn,
   createCustomerFn,
+  searchCustomerFn,
 } from '../../slices/customerSlice';
 import CreateCustomer from './components/CreateCustomer/CreateCustomer';
 import { numberWithCommas } from '../../utils/helpers';
@@ -22,6 +23,7 @@ const CONTENT_EDIT = 'edit';
 const CustomersScreen: React.FC = () => {
   const [sideContent, setSideContent] = useState('');
   const [customerId, setCustomerId] = useState('');
+  const [searchValue, setSearchValue] = useState('');
 
   const dispatch = useDispatch();
 
@@ -91,19 +93,35 @@ const CustomersScreen: React.FC = () => {
     return null;
   };
 
+  const handleSearchChange = (e, { value }: { value: string }) => {
+    setSearchValue(value);
+    if (value.length > 0) {
+      dispatch(searchCustomerFn(value));
+    } else {
+      fetchCustomers();
+    }
+  };
+
   const headerContent = () => {
     return (
-      <Button
-        color="blue"
-        icon
-        labelPosition="left"
-        onClick={() => {
-          openSideContent(CONTENT_CREATE);
-        }}
-      >
-        <Icon inverted color="grey" name="add" />
-        Create
-      </Button>
+      <>
+        <Button
+          color="blue"
+          icon
+          labelPosition="left"
+          onClick={() => {
+            openSideContent(CONTENT_CREATE);
+          }}
+        >
+          <Icon inverted color="grey" name="add" />
+          Create
+        </Button>
+        <Form.Input
+          placeholder="Search Customer"
+          onChange={handleSearchChange}
+          value={searchValue}
+        />
+      </>
     );
   };
 

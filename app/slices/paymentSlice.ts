@@ -1,5 +1,6 @@
 import { createSlice } from '@reduxjs/toolkit';
 import { toast } from 'react-toastify';
+import { Op } from 'sequelize';
 import Payment from '../models/payment';
 import Supplier from '../models/supplier';
 
@@ -78,6 +79,23 @@ export const {
   createPaymentSuccess,
   createPaymentFailed,
 } = paymentSlice.actions;
+
+export const searchPaymentFn = (value: string) => async (
+  dispatch: (arg0: { payload: any; type: string }) => void
+) => {
+  try {
+    const payments = await Payment.findAll({
+      where: {
+        id: {
+          [Op.startsWith]: value,
+        },
+      },
+    });
+    dispatch(getPaymentsSuccess(JSON.stringify(payments)));
+  } catch (error) {
+    toast.error(error.message || '');
+  }
+};
 
 export const updatePaymentFn = (
   values: any,

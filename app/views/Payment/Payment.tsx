@@ -1,9 +1,13 @@
 import React, { useEffect, useState } from 'react';
-import { Table, Button, Icon } from 'semantic-ui-react';
+import { Table, Button, Icon, Form } from 'semantic-ui-react';
 import { useSelector, useDispatch } from 'react-redux';
 
 import DashboardLayout from '../../layouts/DashboardLayout/DashboardLayout';
-import { selectPaymentState, getPaymentsFn } from '../../slices/paymentSlice';
+import {
+  selectPaymentState,
+  getPaymentsFn,
+  searchPaymentFn,
+} from '../../slices/paymentSlice';
 import CreatePayment from './components/CreatePayment/CreatePayment';
 import { numberWithCommas } from '../../utils/helpers';
 import PaymentDetail from './components/PaymentDetail/PaymentDetail';
@@ -20,6 +24,7 @@ const CONTENT_EDIT = 'edit';
 const PaymentsScreen: React.FC = () => {
   const [sideContent, setSideContent] = useState('');
   const [paymentId, setPaymentId] = useState('');
+  const [searchValue, setSearchValue] = useState('');
 
   const dispatch = useDispatch();
   const paymentState = useSelector(selectPaymentState);
@@ -104,19 +109,35 @@ const PaymentsScreen: React.FC = () => {
     return null;
   };
 
+  const handleSearchChange = (e, { value }: { value: string }) => {
+    setSearchValue(value);
+    if (value.length > 0) {
+      dispatch(searchPaymentFn(value));
+    } else {
+      fetchPayments();
+    }
+  };
+
   const headerContent = () => {
     return (
-      <Button
-        color="blue"
-        icon
-        labelPosition="left"
-        onClick={() => {
-          openSideContent(CONTENT_CREATE);
-        }}
-      >
-        <Icon inverted color="grey" name="add" />
-        Create
-      </Button>
+      <>
+        <Button
+          color="blue"
+          icon
+          labelPosition="left"
+          onClick={() => {
+            openSideContent(CONTENT_CREATE);
+          }}
+        >
+          <Icon inverted color="grey" name="add" />
+          Create
+        </Button>
+        <Form.Input
+          placeholder="Search Payment"
+          onChange={handleSearchChange}
+          value={searchValue}
+        />
+      </>
     );
   };
 

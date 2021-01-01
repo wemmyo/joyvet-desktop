@@ -1,9 +1,13 @@
 import React, { useEffect, useState } from 'react';
-import { Table, Button, Icon } from 'semantic-ui-react';
+import { Table, Button, Icon, Form } from 'semantic-ui-react';
 import { useSelector, useDispatch } from 'react-redux';
 import DashboardLayout from '../../layouts/DashboardLayout/DashboardLayout';
 
-import { selectReceiptState, getReceiptsFn } from '../../slices/receiptSlice';
+import {
+  selectReceiptState,
+  getReceiptsFn,
+  searchReceiptFn,
+} from '../../slices/receiptSlice';
 import CreateReceipt from './components/CreateReceipt/CreateReceipt';
 import { numberWithCommas } from '../../utils/helpers';
 import {
@@ -20,6 +24,7 @@ const CONTENT_DETAIL = 'detail';
 const ReceiptsScreen: React.FC = () => {
   const [sideContent, setSideContent] = useState('');
   const [receiptId, setReceiptId] = useState('');
+  const [searchValue, setSearchValue] = useState('');
 
   const dispatch = useDispatch();
 
@@ -66,10 +71,10 @@ const ReceiptsScreen: React.FC = () => {
       return (
         <Table.Row key={each.id} onClick={() => viewSingleReceipt(each.id)}>
           <Table.Cell>{each.id}</Table.Cell>
+          <Table.Cell>{each.customer.fullName}</Table.Cell>
           <Table.Cell>{numberWithCommas(each.amount)}</Table.Cell>
           <Table.Cell>{each.paymentType}</Table.Cell>
           <Table.Cell>{each.paymentMethod}</Table.Cell>
-          <Table.Cell>{each.bank}</Table.Cell>
           <Table.Cell>
             {new Date(each.createdAt).toLocaleDateString('en-gb')}
           </Table.Cell>
@@ -104,19 +109,35 @@ const ReceiptsScreen: React.FC = () => {
     return null;
   };
 
+  const handleSearchChange = (e, { value }: { value: string }) => {
+    setSearchValue(value);
+    if (value.length > 0) {
+      dispatch(searchReceiptFn(value));
+    } else {
+      fetchReceipts();
+    }
+  };
+
   const headerContent = () => {
     return (
-      <Button
-        color="blue"
-        icon
-        labelPosition="left"
-        onClick={() => {
-          openSideContent(CONTENT_CREATE);
-        }}
-      >
-        <Icon inverted color="grey" name="add" />
-        Create
-      </Button>
+      <>
+        <Button
+          color="blue"
+          icon
+          labelPosition="left"
+          onClick={() => {
+            openSideContent(CONTENT_CREATE);
+          }}
+        >
+          <Icon inverted color="grey" name="add" />
+          Create
+        </Button>
+        <Form.Input
+          placeholder="Search Receipt No"
+          onChange={handleSearchChange}
+          value={searchValue}
+        />
+      </>
     );
   };
 
@@ -130,10 +151,10 @@ const ReceiptsScreen: React.FC = () => {
         <Table.Header>
           <Table.Row>
             <Table.HeaderCell>Receipt no</Table.HeaderCell>
+            <Table.HeaderCell>Customer</Table.HeaderCell>
             <Table.HeaderCell>Amount</Table.HeaderCell>
             <Table.HeaderCell>Type</Table.HeaderCell>
             <Table.HeaderCell>Payment Method</Table.HeaderCell>
-            <Table.HeaderCell>Bank</Table.HeaderCell>
             <Table.HeaderCell>Date</Table.HeaderCell>
           </Table.Row>
         </Table.Header>

@@ -1,5 +1,6 @@
 import { createSlice } from '@reduxjs/toolkit';
 import { toast } from 'react-toastify';
+import { Op } from 'sequelize';
 import Receipt from '../models/receipt';
 import Customer from '../models/customer';
 
@@ -80,6 +81,28 @@ export const {
   createReceiptFailed,
 } = receiptSlice.actions;
 
+export const searchReceiptFn = (value: string) => async (
+  dispatch: (arg0: { payload: any; type: string }) => void
+) => {
+  try {
+    const receipts = await Receipt.findAll({
+      where: {
+        id: {
+          [Op.startsWith]: value,
+        },
+      },
+      include: [
+        {
+          model: Customer,
+        },
+      ],
+    });
+    dispatch(getReceiptsSuccess(JSON.stringify(receipts)));
+  } catch (error) {
+    toast.error(error.message || '');
+  }
+};
+
 export const updateReceiptFn = (
   values: any,
   id: string | number,
@@ -126,7 +149,13 @@ export const getReceiptsFn = () => async (
 ) => {
   try {
     dispatch(getReceipts());
-    const receipts = await Receipt.findAll();
+    const receipts = await Receipt.findAll({
+      include: [
+        {
+          model: Customer,
+        },
+      ],
+    });
     dispatch(getReceiptsSuccess(JSON.stringify(receipts)));
   } catch (error) {
     toast.error(error.message || '');

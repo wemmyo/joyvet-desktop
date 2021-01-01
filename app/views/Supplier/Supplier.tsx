@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Table, Input, Button, Icon } from 'semantic-ui-react';
+import { Table, Form, Button, Icon } from 'semantic-ui-react';
 import { useSelector, useDispatch } from 'react-redux';
 
 import DashboardLayout from '../../layouts/DashboardLayout/DashboardLayout';
@@ -7,6 +7,7 @@ import {
   selectSupplierState,
   getSuppliersFn,
   createSupplierFn,
+  searchSupplierFn,
 } from '../../slices/supplierSlice';
 import CreateSupplier from './components/CreateSupplier/CreateSupplier';
 import { numberWithCommas } from '../../utils/helpers';
@@ -22,6 +23,7 @@ const CONTENT_EDIT = 'edit';
 const SuppliersScreen: React.FC = () => {
   const [sideContent, setSideContent] = useState('');
   const [supplierId, setSupplierId] = useState('');
+  const [searchValue, setSearchValue] = useState('');
 
   const dispatch = useDispatch();
 
@@ -92,19 +94,35 @@ const SuppliersScreen: React.FC = () => {
     return null;
   };
 
+  const handleSearchChange = (e, { value }: { value: string }) => {
+    setSearchValue(value);
+    if (value.length > 0) {
+      dispatch(searchSupplierFn(value));
+    } else {
+      fetchSuppliers();
+    }
+  };
+
   const headerContent = () => {
     return (
-      <Button
-        color="blue"
-        icon
-        labelPosition="left"
-        onClick={() => {
-          openSideContent(CONTENT_CREATE);
-        }}
-      >
-        <Icon inverted color="grey" name="add" />
-        Create
-      </Button>
+      <>
+        <Button
+          color="blue"
+          icon
+          labelPosition="left"
+          onClick={() => {
+            openSideContent(CONTENT_CREATE);
+          }}
+        >
+          <Icon inverted color="grey" name="add" />
+          Create
+        </Button>
+        <Form.Input
+          placeholder="Search Supplier"
+          onChange={handleSearchChange}
+          value={searchValue}
+        />
+      </>
     );
   };
 

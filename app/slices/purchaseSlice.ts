@@ -1,5 +1,6 @@
 import { createSlice } from '@reduxjs/toolkit';
 import { toast } from 'react-toastify';
+import { Op } from 'sequelize';
 import Purchase from '../models/purchase';
 import Supplier from '../models/supplier';
 import Product from '../models/product';
@@ -80,6 +81,28 @@ export const {
   createPurchaseFailed,
 } = purchaseSlice.actions;
 
+export const searchPurchaseFn = (value: string) => async (
+  dispatch: (arg0: { payload: any; type: string }) => void
+) => {
+  try {
+    const purchases = await Purchase.findAll({
+      where: {
+        invoiceNumber: {
+          [Op.startsWith]: value,
+        },
+      },
+      include: [
+        {
+          model: Supplier,
+        },
+      ],
+    });
+    dispatch(getPurchasesSuccess(JSON.stringify(purchases)));
+  } catch (error) {
+    toast.error(error.message || '');
+  }
+};
+
 export const getSinglePurchaseFn = (
   id: string | number,
   cb?: () => void
@@ -113,7 +136,13 @@ export const getPurchasesFn = () => async (
 ) => {
   try {
     dispatch(getPurchases());
-    const purchases = await Purchase.findAll();
+    const purchases = await Purchase.findAll({
+      include: [
+        {
+          model: Supplier,
+        },
+      ],
+    });
     dispatch(getPurchasesSuccess(JSON.stringify(purchases)));
   } catch (error) {
     toast.error(error.message || '');

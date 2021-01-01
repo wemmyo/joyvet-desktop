@@ -61,16 +61,18 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
               : styles.rightSidebar__close
           }`}
         >
-          <div style={{ marginBottom: '2rem' }}>
-            <Button
-              content="Close"
-              onClick={() => {
-                dispatch(closeSideContentFn());
-              }}
-            />
-          </div>
+          <div style={{ position: 'sticky', left: 0, top: 20 }}>
+            <div style={{ marginBottom: '2rem' }}>
+              <Button
+                content="Close"
+                onClick={() => {
+                  dispatch(closeSideContentFn());
+                }}
+              />
+            </div>
 
-          {rightSidebar}
+            {rightSidebar}
+          </div>
         </div>
       </div>
     </div>

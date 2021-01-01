@@ -1,5 +1,6 @@
 import { createSlice } from '@reduxjs/toolkit';
 import { toast } from 'react-toastify';
+import { Op } from 'sequelize';
 import Supplier from '../models/supplier';
 
 const initialState = {
@@ -84,6 +85,23 @@ export const {
   createSupplierSuccess,
   createSupplierFailed,
 } = supplierSlice.actions;
+
+export const searchSupplierFn = (value: string) => async (
+  dispatch: (arg0: { payload: any; type: string }) => void
+) => {
+  try {
+    const suppliers = await Supplier.findAll({
+      where: {
+        fullName: {
+          [Op.substring]: value,
+        },
+      },
+    });
+    dispatch(getSuppliersSuccess(JSON.stringify(suppliers)));
+  } catch (error) {
+    toast.error(error.message || '');
+  }
+};
 
 export const deleteSupplierFn = (
   id: string | number,

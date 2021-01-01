@@ -1,5 +1,6 @@
 import { createSlice } from '@reduxjs/toolkit';
 import { toast } from 'react-toastify';
+import { Op } from 'sequelize';
 import Customer from '../models/customer';
 
 const initialState = {
@@ -82,6 +83,23 @@ export const {
   createCustomerSuccess,
   createCustomerFailed,
 } = customerSlice.actions;
+
+export const searchCustomerFn = (value: string) => async (
+  dispatch: (arg0: { payload: any; type: string }) => void
+) => {
+  try {
+    const customers = await Customer.findAll({
+      where: {
+        fullName: {
+          [Op.substring]: value,
+        },
+      },
+    });
+    dispatch(getCustomersSuccess(JSON.stringify(customers)));
+  } catch (error) {
+    toast.error(error.message || '');
+  }
+};
 
 export const deleteCustomerFn = (
   id: string | number,

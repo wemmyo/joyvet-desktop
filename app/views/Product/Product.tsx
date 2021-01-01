@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Table, Button, Icon } from 'semantic-ui-react';
+import { Table, Button, Icon, Form } from 'semantic-ui-react';
 import { useSelector, useDispatch } from 'react-redux';
 
 import DashboardLayout from '../../layouts/DashboardLayout/DashboardLayout';
@@ -7,6 +7,7 @@ import {
   selectProductState,
   getProductsFn,
   createProductFn,
+  searchProductFn,
 } from '../../slices/productSlice';
 import CreateProduct from './components/CreateProduct/CreateProduct';
 import { numberWithCommas } from '../../utils/helpers';
@@ -22,6 +23,7 @@ const CONTENT_EDIT = 'edit';
 const ProductsScreen: React.FC = () => {
   const [sideContent, setSideContent] = useState('');
   const [productId, setProductId] = useState('');
+  const [searchValue, setSearchValue] = useState('');
 
   const dispatch = useDispatch();
   const productState = useSelector(selectProductState);
@@ -92,19 +94,35 @@ const ProductsScreen: React.FC = () => {
     return null;
   };
 
+  const handleSearchChange = (e, { value }: { value: string }) => {
+    setSearchValue(value);
+    if (value.length > 0) {
+      dispatch(searchProductFn(value));
+    } else {
+      fetchProducts();
+    }
+  };
+
   const headerContent = () => {
     return (
-      <Button
-        color="blue"
-        icon
-        labelPosition="left"
-        onClick={() => {
-          openSideContent(CONTENT_CREATE);
-        }}
-      >
-        <Icon inverted color="grey" name="add" />
-        Create
-      </Button>
+      <>
+        <Button
+          color="blue"
+          icon
+          labelPosition="left"
+          onClick={() => {
+            openSideContent(CONTENT_CREATE);
+          }}
+        >
+          <Icon inverted color="grey" name="add" />
+          Create
+        </Button>
+        <Form.Input
+          placeholder="Search Product"
+          onChange={handleSearchChange}
+          value={searchValue}
+        />
+      </>
     );
   };
 

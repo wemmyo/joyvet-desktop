@@ -162,7 +162,9 @@ export const filterInvoiceById = (id: string | number) => async (
     dispatch(getInvoices());
     const invoices = await Invoice.findAll({
       where: {
-        id,
+        id: {
+          [Op.startsWith]: id,
+        },
       },
     });
 

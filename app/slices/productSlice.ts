@@ -1,5 +1,6 @@
 import { createSlice } from '@reduxjs/toolkit';
 import { toast } from 'react-toastify';
+import { Op } from 'sequelize';
 import Product from '../models/product';
 
 const initialState = {
@@ -76,6 +77,23 @@ export const {
   createProductSuccess,
   createProductFailed,
 } = productSlice.actions;
+
+export const searchProductFn = (value: string) => async (
+  dispatch: (arg0: { payload: any; type: string }) => void
+) => {
+  try {
+    const products = await Product.findAll({
+      where: {
+        title: {
+          [Op.substring]: value,
+        },
+      },
+    });
+    dispatch(getProductsSuccess(JSON.stringify(products)));
+  } catch (error) {
+    toast.error(error.message || '');
+  }
+};
 
 export const updateProductFn = (
   values: any,
