@@ -10,5 +10,6 @@ export default {
   PURCHASE: '/purchase',
   ALL_PURCHASES: '/all-purchases',
   SALES: '/sales',
-  USER: '/use',
+  USER: '/user',
+  EXPENSE: '/expense',
 };

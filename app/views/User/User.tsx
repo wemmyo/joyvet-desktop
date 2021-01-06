@@ -93,25 +93,17 @@ const UserScreen: React.FC = () => {
 
   const headerContent = () => {
     return (
-      <>
-        <Button icon labelPosition="left">
-          <Icon name="filter" />
-          Filter
-        </Button>
-        <Button
-          color="blue"
-          icon
-          labelPosition="left"
-          onClick={() => {
-            openSideContent(CONTENT_CREATE);
-          }}
-        >
-          <Icon inverted color="grey" name="add" />
-          Create
-        </Button>
-
-        <Input icon="search" placeholder="Search..." />
-      </>
+      <Button
+        color="blue"
+        icon
+        labelPosition="left"
+        onClick={() => {
+          openSideContent(CONTENT_CREATE);
+        }}
+      >
+        <Icon inverted color="grey" name="add" />
+        Create
+      </Button>
     );
   };
 

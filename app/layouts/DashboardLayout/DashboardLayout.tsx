@@ -24,11 +24,14 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
 }: DashboardLayoutProps) => {
   const dispatch = useDispatch();
   const dashboardState = useSelector(selectDashboardState);
+
   const { sideContentisOpen } = dashboardState;
+
   const user =
     localStorage.getItem('user') !== null
       ? JSON.parse(localStorage.getItem('user') || '')
       : '';
+
   return (
     <div style={{ display: 'flex' }}>
       <Sidebar />

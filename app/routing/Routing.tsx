@@ -18,6 +18,7 @@ import PurchaseScreen from '../views/Purchase/Purchase';
 import AllPurchasesScreen from '../views/AllPurchases/AllPurchases';
 import SalesScreen from '../views/Sales/Sales';
 import UserScreen from '../views/User/User';
+import ExpenseScreen from '../views/Expense/Expense';
 import PrivateRoute from './PrivateRoute';
 
 // Lazily load routes and code split with webpacck
@@ -34,8 +35,9 @@ import PrivateRoute from './PrivateRoute';
 export default function Routes() {
   return (
     <App>
-      <ToastContainer autoClose={1000} />
+      <ToastContainer autoClose={2000} />
       <Switch>
+        <PrivateRoute path={routes.EXPENSE} component={ExpenseScreen} />
         <PrivateRoute path={routes.USER} component={UserScreen} />
         <PrivateRoute path={routes.SALES} component={SalesScreen} />
         <PrivateRoute

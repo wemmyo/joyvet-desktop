@@ -28,31 +28,31 @@ import User from './models/user';
   Run sequelize with saved file path
 */
 
-const appDB = () => {
-  fs.readFile('message.txt', (err, data) => {
-    const body = [];
-    if (body.length < 1) {
-      return null;
-    }
-    body.push(data);
-    const parsedBody = Buffer.concat(body).toString();
-    return parsedBody;
-  });
-};
+// const appDB = () => {
+//   fs.readFile('message.txt', (err, data) => {
+//     const body = [];
+//     if (body.length < 1) {
+//       return null;
+//     }
+//     body.push(data);
+//     const parsedBody = Buffer.concat(body).toString();
+//     return parsedBody;
+//   });
+// };
 
-if (!appDB) {
-  remote.dialog
-    .showOpenDialog({
-      properties: ['openFile', 'openDirectory'],
-    })
-    .then((result) => {
-      console.log(result.canceled);
-      console.log(result.filePaths);
-    })
-    .catch((err) => {
-      console.log(err);
-    });
-}
+// if (!appDB) {
+//   remote.dialog
+//     .showOpenDialog({
+//       properties: ['openFile', 'openDirectory'],
+//     })
+//     .then((result) => {
+//       console.log(result.canceled);
+//       console.log(result.filePaths);
+//     })
+//     .catch((err) => {
+//       console.log(err);
+//     });
+// }
 
 // remote.dialog.showSaveDialogSync({
 //   title: 'Select folder',
