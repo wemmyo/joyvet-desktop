@@ -2,8 +2,8 @@ import React, { Fragment } from 'react';
 import { render } from 'react-dom';
 import { AppContainer as ReactHotAppContainer } from 'react-hot-loader';
 import bycrpt from 'bcryptjs';
-import fs from 'fs';
-import { remote } from 'electron';
+// import fs from 'fs';
+// import { remote } from 'electron';
 
 import { history, configuredStore } from './store';
 import './app.global.css';
@@ -82,9 +82,6 @@ Product.belongsToMany(Invoice, { through: InvoiceItem });
 
 Customer.hasMany(Invoice);
 Invoice.belongsTo(Customer);
-
-// Product.belongsTo(PriceLevel);
-// PriceLevel.hasOne(Product);
 
 Receipt.belongsTo(Customer);
 Customer.hasMany(Receipt);

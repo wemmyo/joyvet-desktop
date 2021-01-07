@@ -125,6 +125,10 @@ const SalesDetail: React.FC<SalesDetailProps> = ({
             <Table.Cell>Amount</Table.Cell>
             <Table.Cell>₦{numberWithCommas(sales.amount)}</Table.Cell>
           </Table.Row>
+          <Table.Row>
+            <Table.Cell>Profit</Table.Cell>
+            <Table.Cell>₦{numberWithCommas(sales.profit)}</Table.Cell>
+          </Table.Row>
         </Table.Body>
       </Table>
 

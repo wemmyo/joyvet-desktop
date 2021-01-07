@@ -47,6 +47,14 @@ const InvoiceScreen: React.FC = () => {
   const createdInvoice = invoiceRaw ? JSON.parse(invoiceRaw) : {};
   // console.log(createdInvoice);
 
+  interface FormValues {
+    customerId: string;
+    saleType: string;
+    product: string;
+    unitPrice: string;
+    quantity: string;
+  }
+
   const fetchCustomers = () => {
     dispatch(getCustomersFn());
   };
@@ -150,10 +158,6 @@ const InvoiceScreen: React.FC = () => {
     return customerList;
   };
 
-  const amount = (item: any) => {
-    return item.amount;
-  };
-
   const sum = (prev: number, next: number) => {
     return prev + next;
   };
@@ -166,7 +170,18 @@ const InvoiceScreen: React.FC = () => {
     if (orders.length === 0) {
       return 0;
     }
-    return orders.map(amount).reduce(sum);
+    return orders
+      .map((item: any) => {
+        return item.amount;
+      })
+      .reduce(sum);
+  };
+  const sumOfProfits = () => {
+    return orders
+      .map((item: any) => {
+        return item.profit;
+      })
+      .reduce(sum);
   };
 
   const removeOrder = (orderId: number) => {
@@ -212,6 +227,54 @@ const InvoiceScreen: React.FC = () => {
       );
     }
     return null;
+  };
+
+  const addItemToOrder = (values: FormValues) => {
+    const product = JSON.parse(values.product);
+    const amount = Number(values.unitPrice) * Number(values.quantity);
+    const profit =
+      (Number(values.unitPrice) - Number(product.price4)) *
+      Number(values.quantity);
+
+    if (product.stock < Number(values.quantity)) {
+      toast.error(`${product.title}: Re-order level`, {
+        autoClose: 5000,
+      });
+    } else {
+      addToOrders({
+        ...product,
+        quantity: values.quantity,
+        amount,
+        unitPrice: values.unitPrice,
+        orderId: new Date().getUTCMilliseconds(),
+        profit,
+      });
+    }
+  };
+
+  const createInvoice = ({
+    values,
+    resetForm,
+  }: {
+    values: FormValues;
+    resetForm: () => void;
+  }) => {
+    dispatch(
+      createInvoiceFn(
+        orders,
+        {
+          customerId: values.customerId,
+          saleType: values.saleType,
+          amount: sumOfOrders(),
+          profit: sumOfProfits(),
+        },
+        () => {
+          resetForm();
+          setOrders([]);
+          setPrintInvoice(true);
+        }
+      )
+    );
   };
 
   return (
@@ -260,26 +323,9 @@ const InvoiceScreen: React.FC = () => {
                   quantity: '',
                 }}
                 // validationSchema={CreatePaymentSchema}
-                onSubmit={(values) => {
-                  const product = JSON.parse(values.product);
-
-                  if (product.stock < Number(values.quantity)) {
-                    toast.error(`${product.title}: Re-order level`, {
-                      autoClose: 5000,
-                    });
-                  } else {
-                    addToOrders({
-                      ...product,
-                      quantity: values.quantity,
-                      amount:
-                        Number(values.unitPrice) * Number(values.quantity),
-                      unitPrice: values.unitPrice,
-                      orderId: new Date().getUTCMilliseconds(),
-                    });
-                  }
-                }}
+                onSubmit={addItemToOrder}
               >
-                {({ handleSubmit, values, resetForm }) => (
+                {({ handleSubmit, values, resetForm, setFieldValue }) => (
                   <Form>
                     <div className="field">
                       <label htmlFor="customer">Customer</label>
@@ -333,24 +379,7 @@ const InvoiceScreen: React.FC = () => {
                     </Segment>
                     <Button
                       disabled={orders.length < 1}
-                      onClick={() => {
-                        dispatch(
-                          createInvoiceFn(
-                            orders,
-                            {
-                              customerId: values.customerId,
-                              saleType: values.saleType,
-                              amount: sumOfOrders(),
-                            },
-                            () => {
-                              resetForm();
-                              setOrders([]);
-                              setPrintInvoice(true);
-                              // handlePrintFn();
-                            }
-                          )
-                        );
-                      }}
+                      onClick={() => createInvoice({ values, resetForm })}
                       type="button"
                       fluid
                       positive

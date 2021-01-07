@@ -240,6 +240,7 @@ export const createInvoiceFn = (
     const invoice = await customer.createInvoice({
       saleType: meta.saleType,
       amount: meta.amount,
+      profit: meta.profit,
       postedBy: user.id,
     });
 
@@ -256,6 +257,7 @@ export const createInvoiceFn = (
           quantity: each.quantity,
           unitPrice: each.unitPrice,
           amount: each.amount,
+          profit: each.profit,
         };
         prodArr.push(prod);
       })
