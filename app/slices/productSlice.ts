@@ -136,12 +136,16 @@ export const getSingleProductFn = (
   }
 };
 
-export const getProductsFn = () => async (
+export const getProductsFn = (limit?: number) => async (
   dispatch: (arg0: { payload: any; type: string }) => void
 ) => {
+  let filters = {};
+  if (limit) {
+    filters = { limit };
+  }
   try {
     dispatch(getProducts());
-    const products = await Product.findAll();
+    const products = await Product.findAll(filters);
     dispatch(getProductsSuccess(JSON.stringify(products)));
   } catch (error) {
     toast.error(error.message || '');

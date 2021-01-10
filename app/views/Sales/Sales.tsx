@@ -72,7 +72,9 @@ const SalesScreen: React.FC = () => {
   }, [startDate, endDate, saleType]);
 
   useEffect(() => {
-    searchForInvoice();
+    if (searchValue.length > 0) {
+      searchForInvoice();
+    }
   }, [searchValue]);
 
   const openSingleSale = async (id: any) => {
