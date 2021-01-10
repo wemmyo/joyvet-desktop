@@ -11,10 +11,13 @@ export default sequelize.define('product', {
   },
   title: { type: Sequelize.STRING, allowNull: false },
   stock: { type: Sequelize.INTEGER, defaultValue: 0 },
-  price1: Sequelize.INTEGER,
-  price2: Sequelize.INTEGER,
-  price3: Sequelize.INTEGER,
-  price4: Sequelize.INTEGER,
+  sellPrice: Sequelize.INTEGER,
+  sellPrice2: Sequelize.INTEGER,
+  sellPrice3: Sequelize.INTEGER,
+  buyPrice: Sequelize.INTEGER,
+  reorderLevel: Sequelize.INTEGER,
+  productCode: Sequelize.STRING,
+  numberInPack: Sequelize.INTEGER,
 });
 
 // module.exports = Product;

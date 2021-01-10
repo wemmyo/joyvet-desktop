@@ -23,10 +23,10 @@ const CreateProduct: React.FC<CreateProductProps> = ({
     <Formik
       initialValues={{
         title: '',
-        price1: '',
-        price2: '',
-        price3: '',
-        price4: '',
+        sellPrice: '',
+        sellPrice2: '',
+        sellPrice3: '',
+        buyPrice: '',
       }}
       validationSchema={CreateProductSchema}
       onSubmit={(values, actions) => {
@@ -44,30 +44,30 @@ const CreateProduct: React.FC<CreateProductProps> = ({
             component={TextInput}
           />
           <Field
-            name="price1"
-            placeholder="Price Level 1"
-            label="Price Level 1"
+            name="buyPrice"
+            placeholder="Buy Price"
+            label="Buy Price"
             type="number"
             component={TextInput}
           />
           <Field
-            name="price2"
-            placeholder="Price Level 2"
-            label="Price Level 2"
+            name="sellPrice"
+            placeholder="Sell Price"
+            label="Sell Price"
             type="number"
             component={TextInput}
           />
           <Field
-            name="price3"
-            placeholder="Price Level 3"
-            label="Price Level 3"
+            name="sellPrice2"
+            placeholder="Sell Price 2"
+            label="Sell Price 2"
             type="number"
             component={TextInput}
           />
           <Field
-            name="price4"
-            placeholder="Price Level 4"
-            label="Price Level 4"
+            name="sellPrice3"
+            placeholder="Sell Price 3"
+            label="Sell Price 3"
             type="number"
             component={TextInput}
           />

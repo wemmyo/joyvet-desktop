@@ -74,10 +74,10 @@ const ProductsScreen: React.FC = () => {
         <Table.Row onClick={() => openSingleProduct(each.id)} key={each.id}>
           <Table.Cell>{each.title}</Table.Cell>
           <Table.Cell>{each.stock}</Table.Cell>
-          <Table.Cell>{numberWithCommas(each.price1)}</Table.Cell>
-          <Table.Cell>{numberWithCommas(each.price2)}</Table.Cell>
-          <Table.Cell>{numberWithCommas(each.price3)}</Table.Cell>
-          <Table.Cell>{numberWithCommas(each.price4)}</Table.Cell>
+          <Table.Cell>{numberWithCommas(each.buyPrice)}</Table.Cell>
+          <Table.Cell>{numberWithCommas(each.sellPrice)}</Table.Cell>
+          <Table.Cell>{numberWithCommas(each.sellPrice2)}</Table.Cell>
+          <Table.Cell>{numberWithCommas(each.sellPrice3)}</Table.Cell>
         </Table.Row>
       );
     });
@@ -137,10 +137,10 @@ const ProductsScreen: React.FC = () => {
           <Table.Row>
             <Table.HeaderCell>Title</Table.HeaderCell>
             <Table.HeaderCell>Quantity</Table.HeaderCell>
-            <Table.HeaderCell>Price 1</Table.HeaderCell>
-            <Table.HeaderCell>Price 2</Table.HeaderCell>
-            <Table.HeaderCell>Price 3</Table.HeaderCell>
-            <Table.HeaderCell>Price 4</Table.HeaderCell>
+            <Table.HeaderCell>Buy Price</Table.HeaderCell>
+            <Table.HeaderCell>Sell Price</Table.HeaderCell>
+            <Table.HeaderCell>Sell Price 2</Table.HeaderCell>
+            <Table.HeaderCell>Sell Price 3</Table.HeaderCell>
           </Table.Row>
         </Table.Header>
 

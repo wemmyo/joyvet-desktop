@@ -116,10 +116,10 @@ const InvoiceScreen: React.FC = () => {
 
     const product = JSON.parse(value);
     const productPrices = [
-      { label: 'Level 1', value: product.price1 },
-      { label: 'Level 2', value: product.price2 },
-      { label: 'Level 3', value: product.price3 },
-      { label: 'Level 4', value: product.price4 },
+      { label: 'Level 1', value: product.sellPrice },
+      { label: 'Level 2', value: product.sellPrice2 },
+      { label: 'Level 3', value: product.sellPrice3 },
+      { label: 'Level 4', value: product.buyPrice },
     ];
 
     const productPriceList = productPrices.map((price) => {
@@ -233,7 +233,7 @@ const InvoiceScreen: React.FC = () => {
     const product = JSON.parse(values.product);
     const amount = Number(values.unitPrice) * Number(values.quantity);
     const profit =
-      (Number(values.unitPrice) - Number(product.price4)) *
+      (Number(values.unitPrice) - Number(product.buyPrice)) *
       Number(values.quantity);
 
     if (product.stock < Number(values.quantity)) {

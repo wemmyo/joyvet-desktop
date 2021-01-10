@@ -160,10 +160,10 @@ export const createProductFn = (values: any, cb?: () => void) => async (
         : '';
     await Product.create({
       title: values.title || null,
-      price1: values.price1 || null,
-      price2: values.price2 || null,
-      price3: values.price3 || null,
-      price4: values.price4 || null,
+      sellPrice: values.sellPrice || null,
+      sellPrice2: values.sellPrice2 || null,
+      sellPrice3: values.sellPrice3 || null,
+      buyPrice: values.buyPrice || null,
       postedBy: user.id,
     });
 
