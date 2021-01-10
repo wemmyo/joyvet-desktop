@@ -41,6 +41,9 @@ const PurchaseScreen: React.FC = () => {
   };
 
   useEffect(fetchData, []);
+  useEffect(() => {
+    console.log(orders);
+  }, [orders]);
 
   const renderProducts = () => {
     const productList = products.map((product: any) => {
@@ -117,6 +120,47 @@ const PurchaseScreen: React.FC = () => {
     return orderList;
   };
 
+  const addItemToOrder = (values: any, { resetForm }) => {
+    addToOrders({
+      ...JSON.parse(values.product),
+      quantity: values.quantity,
+      amount: Number(values.unitPrice) * Number(values.quantity),
+      unitPrice: values.unitPrice,
+      newSellPrice: values.newSellPrice,
+      newSellPrice2: values.newSellPrice2,
+      newSellPrice3: values.newSellPrice3,
+      orderId: new Date().getUTCMilliseconds(),
+    });
+    resetForm({
+      values: {
+        ...values,
+        unitPrice: '',
+        product: '',
+        quantity: '',
+        newSellPrice: '',
+        newSellPrice2: '',
+        newSellPrice3: '',
+      },
+    });
+  };
+
+  const createPurchase = ({ values, resetForm }) => {
+    dispatch(
+      createPurchaseFn(
+        orders,
+        {
+          supplierId: values.supplierId,
+          invoiceNumber: values.invoiceNumber,
+          amount: sumOfOrders(),
+        },
+        () => {
+          resetForm();
+          setOrders([]);
+        }
+      )
+    );
+  };
+
   return (
     <DashboardLayout screenTitle="Create Purchase">
       <Grid>
@@ -158,27 +202,15 @@ const PurchaseScreen: React.FC = () => {
                 initialValues={{
                   supplierId: '',
                   invoiceNumber: '',
-                  invoiceDate: '',
                   unitPrice: '',
                   product: '',
                   quantity: '',
+                  newSellPrice: '',
+                  newSellPrice2: '',
+                  newSellPrice3: '',
                 }}
                 // validationSchema={CreatePaymentSchema}
-                onSubmit={(values) => {
-                  addToOrders({
-                    ...JSON.parse(values.product),
-                    quantity: values.quantity,
-                    amount: Number(values.unitPrice) * Number(values.quantity),
-                    unitPrice: values.unitPrice,
-                    orderId: new Date().getUTCMilliseconds(),
-                  });
-                  // actions.resetForm({
-                  //   values: {
-                  //     product: '',
-                  //     quantity: '',
-                  //   },
-                  // });
-                }}
+                onSubmit={addItemToOrder}
               >
                 {({ handleSubmit, values, resetForm }) => (
                   <Form>
@@ -201,14 +233,6 @@ const PurchaseScreen: React.FC = () => {
                       placeholder="Invoice Number"
                       label="Invoice Number"
                       type="number"
-                      component={TextInput}
-                    />
-
-                    <Field
-                      name="invoiceDate"
-                      placeholder="Invoice Date"
-                      label="Invoice Date"
-                      type="date"
                       component={TextInput}
                     />
                     <Segment raised>
@@ -241,6 +265,27 @@ const PurchaseScreen: React.FC = () => {
                         type="number"
                         component={TextInput}
                       />
+                      <Field
+                        name="newSellPrice"
+                        placeholder="Selling Price"
+                        label="Selling Price"
+                        type="number"
+                        component={TextInput}
+                      />
+                      <Field
+                        name="newSellPrice2"
+                        placeholder="Selling Price 2"
+                        label="Selling Price 2"
+                        type="number"
+                        component={TextInput}
+                      />
+                      <Field
+                        name="newSellPrice3"
+                        placeholder="Selling Price 3"
+                        label="Selling Price 3"
+                        type="number"
+                        component={TextInput}
+                      />
 
                       <Button
                         onClick={() => handleSubmit()}
@@ -252,23 +297,7 @@ const PurchaseScreen: React.FC = () => {
                       </Button>
                     </Segment>
                     <Button
-                      onClick={() => {
-                        dispatch(
-                          createPurchaseFn(
-                            orders,
-                            {
-                              supplierId: values.supplierId,
-                              invoiceNumber: values.invoiceNumber,
-                              invoiceDate: values.invoiceDate,
-                              amount: sumOfOrders(),
-                            },
-                            () => {
-                              resetForm();
-                              setOrders([]);
-                            }
-                          )
-                        );
-                      }}
+                      onClick={() => createPurchase({ values, resetForm })}
                       type="button"
                       fluid
                       positive

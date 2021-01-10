@@ -33,13 +33,32 @@ const CreateExpense: React.FC<CreateExpenseProps> = ({
     >
       {({ handleSubmit }) => (
         <Form>
-          <Field
-            name="type"
-            placeholder="Type"
-            label="Type"
-            type="text"
-            component={TextInput}
-          />
+          <div className="field">
+            <label htmlFor="type">Sale Type</label>
+            <Field
+              id="type"
+              name="type"
+              component="select"
+              className="ui dropdown"
+            >
+              <option value="" disabled hidden>
+                Select Type
+              </option>
+              <option>advertisement</option>
+              <option>diesel & fuel</option>
+              <option>miscellaneous</option>
+              <option>office</option>
+              <option>printing & stationary</option>
+              <option>rent</option>
+              <option>telephone</option>
+              <option>training</option>
+              <option>salary</option>
+              <option>staff bonus</option>
+              <option>vehicle maintenance</option>
+              <option>water & gas</option>
+              <option>others</option>
+            </Field>
+          </div>
           <Field
             name="amount"
             placeholder="Amount"

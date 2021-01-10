@@ -94,7 +94,7 @@ class PrintedReceipt extends React.Component<PrintedReceiptProps> {
             </Table.Row>
           </Table.Body>
         </Table>
-        <p>Cashier: {invoice.user.fullName}</p>
+        <p>Cashier: {invoice.postedBy}</p>
         <p>
           <b>
             Please, Ensure you check all item(s) given to you with your invoice

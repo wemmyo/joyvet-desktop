@@ -15,6 +15,7 @@ export default sequelize.define(
     address: Sequelize.STRING,
     phoneNumber: Sequelize.STRING,
     balance: Sequelize.DOUBLE,
+    postedBy: Sequelize.STRING,
   },
   {
     timestamps: false,

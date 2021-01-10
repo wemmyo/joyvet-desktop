@@ -229,7 +229,7 @@ const InvoiceScreen: React.FC = () => {
     return null;
   };
 
-  const addItemToOrder = (values: FormValues) => {
+  const addItemToOrder = (values: FormValues, { resetForm }) => {
     const product = JSON.parse(values.product);
     const amount = Number(values.unitPrice) * Number(values.quantity);
     const profit =
@@ -248,6 +248,14 @@ const InvoiceScreen: React.FC = () => {
         unitPrice: values.unitPrice,
         orderId: new Date().getUTCMilliseconds(),
         profit,
+      });
+      resetForm({
+        values: {
+          ...values,
+          quantity: '',
+          unitPrice: '',
+          product: '',
+        },
       });
     }
   };
@@ -325,7 +333,7 @@ const InvoiceScreen: React.FC = () => {
                 // validationSchema={CreatePaymentSchema}
                 onSubmit={addItemToOrder}
               >
-                {({ handleSubmit, values, resetForm, setFieldValue }) => (
+                {({ handleSubmit, values, resetForm }) => (
                   <Form>
                     <div className="field">
                       <label htmlFor="customer">Customer</label>

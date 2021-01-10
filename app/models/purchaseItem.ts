@@ -12,4 +12,12 @@ export default sequelize.define('purchaseItem', {
   quantity: { type: Sequelize.INTEGER, allowNull: false },
   unitPrice: { type: Sequelize.INTEGER, allowNull: false },
   amount: { type: Sequelize.INTEGER, allowNull: false },
+  sellPrice: Sequelize.INTEGER,
+  sellPrice2: Sequelize.INTEGER,
+  sellPrice3: Sequelize.INTEGER,
+  oldBuyPrice: Sequelize.INTEGER,
+  oldSellPrice: Sequelize.INTEGER,
+  oldSellPrice2: Sequelize.INTEGER,
+  oldSellPrice3: Sequelize.INTEGER,
+  oldStockLevel: Sequelize.INTEGER,
 });

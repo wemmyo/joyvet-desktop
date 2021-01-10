@@ -191,7 +191,7 @@ export const createSupplierFn = (values: any, cb?: () => void) => async (
       address: values.address || null,
       phoneNumber: values.phoneNumber || null,
       balance: values.balance || 0,
-      postedBy: user.id,
+      postedBy: user.fullName,
     });
 
     dispatch(createSupplierSuccess({}));

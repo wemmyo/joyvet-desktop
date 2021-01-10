@@ -170,7 +170,7 @@ export const createProductFn = (values: any, cb?: () => void) => async (
       sellPrice2: values.sellPrice2 || null,
       sellPrice3: values.sellPrice3 || null,
       buyPrice: values.buyPrice || null,
-      postedBy: user.id,
+      postedBy: user.fullName,
     });
 
     if (cb) {

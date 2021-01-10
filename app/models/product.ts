@@ -18,6 +18,7 @@ export default sequelize.define('product', {
   reorderLevel: Sequelize.INTEGER,
   productCode: Sequelize.STRING,
   numberInPack: Sequelize.INTEGER,
+  postedBy: Sequelize.STRING,
 });
 
 // module.exports = Product;

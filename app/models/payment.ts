@@ -14,4 +14,5 @@ export default sequelize.define('payment', {
   paymentMethod: Sequelize.STRING,
   bank: Sequelize.STRING,
   note: Sequelize.STRING,
+  postedBy: Sequelize.STRING,
 });

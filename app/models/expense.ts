@@ -13,4 +13,5 @@ export default sequelize.define('expense', {
   amount: Sequelize.INTEGER,
   type: Sequelize.STRING,
   note: Sequelize.STRING,
+  postedBy: Sequelize.STRING,
 });

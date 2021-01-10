@@ -142,6 +142,7 @@ export const getPurchasesFn = () => async (
           model: Supplier,
         },
       ],
+      order: [['createdAt', 'DESC']],
     });
     dispatch(getPurchasesSuccess(JSON.stringify(purchases)));
   } catch (error) {
@@ -160,13 +161,11 @@ export const createPurchaseFn = (
       localStorage.getItem('user') !== null
         ? JSON.parse(localStorage.getItem('user') || '')
         : '';
-
     const supplier = await Supplier.findByPk(meta.supplierId);
     const purchase = await supplier.createPurchase({
       invoiceNumber: meta.invoiceNumber,
-      invoiceDate: meta.invoiceDate,
       amount: meta.amount,
-      postedBy: user.id,
+      postedBy: user.fullName,
     });
     const prodArr: any = [];
     await Promise.all(
@@ -176,10 +175,31 @@ export const createPurchaseFn = (
           by: each.quantity,
           where: { id: each.id },
         });
+        await Product.update(
+          {
+            buyPrice: each.unitPrice,
+            sellPrice: each.newSellPrice,
+            sellPrice2: each.newSellPrice2,
+            sellPrice3: each.newSellPrice3,
+          },
+          {
+            where: {
+              id: each.id,
+            },
+          }
+        );
         prod.purchaseItem = {
           quantity: each.quantity,
           unitPrice: each.unitPrice,
           amount: each.amount,
+          sellPrice: each.newSellPrice,
+          sellPrice2: each.newSellPrice2,
+          sellPrice3: each.newSellPrice3,
+          oldBuyPrice: each.buyPrice,
+          oldSellPrice: each.sellPrice,
+          oldSellPrice2: each.sellPrice2,
+          oldSellPrice3: each.sellPrice3,
+          oldStockLevel: each.stock,
         };
         prodArr.push(prod);
       })

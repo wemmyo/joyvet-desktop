@@ -8,9 +8,12 @@ import { useReactToPrint } from 'react-to-print';
 import {
   getSingleInvoiceFn,
   selectInvoiceState,
+  deleteInvoiceFn,
+  getInvoicesFn,
 } from '../../../slices/invoiceSlice';
 import { numberWithCommas } from '../../../utils/helpers';
 import ComponentToPrint from '../../../components/PrintedReceipt/ReceiptWrapper';
+import { closeSideContentFn } from '../../../slices/dashboardSlice';
 
 interface SalesDetailProps {
   salesId: string | number;
@@ -62,6 +65,15 @@ const SalesDetail: React.FC<SalesDetailProps> = ({
   const { data: salesRaw, loading } = invoiceState.singleInvoice;
 
   const sales = salesRaw ? JSON.parse(salesRaw) : {};
+
+  const handleDeleteCustomer = () => {
+    dispatch(
+      deleteInvoiceFn(salesId, () => {
+        dispatch(closeSideContentFn());
+        dispatch(getInvoicesFn());
+      })
+    );
+  };
 
   const renderOrders = () => {
     let serialNumber = 0;
@@ -147,6 +159,14 @@ const SalesDetail: React.FC<SalesDetailProps> = ({
       </Table>
       <Button type="button" onClick={handlePrintFn}>
         Print
+      </Button>
+      <Button
+        style={{ marginTop: '1rem' }}
+        onClick={handleDeleteCustomer}
+        type="button"
+        negative
+      >
+        Delete
       </Button>
       {renderInvoiceToPrint()}
     </>

@@ -50,29 +50,6 @@ Supplier.hasMany(Purchase);
 Purchase.belongsToMany(Product, { through: PurchaseItem });
 Product.belongsToMany(Purchase, { through: PurchaseItem });
 
-// Assign every action to a user/staff
-Invoice.belongsTo(User, {
-  foreignKey: 'postedBy',
-});
-Payment.belongsTo(User, {
-  foreignKey: 'postedBy',
-});
-Receipt.belongsTo(User, {
-  foreignKey: 'postedBy',
-});
-Purchase.belongsTo(User, {
-  foreignKey: 'postedBy',
-});
-Product.belongsTo(User, {
-  foreignKey: 'postedBy',
-});
-Supplier.belongsTo(User, {
-  foreignKey: 'postedBy',
-});
-Customer.belongsTo(User, {
-  foreignKey: 'postedBy',
-});
-
 const sequelizeSync = async () => {
   try {
     await sequelize.sync();

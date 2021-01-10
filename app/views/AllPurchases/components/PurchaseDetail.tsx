@@ -73,12 +73,6 @@ const SalesDetail: React.FC<SalesDetailProps> = ({
             <Table.Cell>{numberWithCommas(purchase.amount)}</Table.Cell>
           </Table.Row>
           <Table.Row>
-            <Table.Cell>Invoice Date</Table.Cell>
-            <Table.Cell>
-              {new Date(purchase.invoiceDate).toLocaleDateString('en-gb')}
-            </Table.Cell>
-          </Table.Row>
-          <Table.Row>
             <Table.Cell>Date Posted</Table.Cell>
             <Table.Cell>
               {new Date(purchase.createdAt).toLocaleDateString('en-gb')}

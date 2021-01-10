@@ -5,7 +5,6 @@ import moment from 'moment';
 import Invoice from '../models/invoice';
 import Customer from '../models/customer';
 import Product from '../models/product';
-import User from '../models/user';
 
 const initialState = {
   singleInvoice: {
@@ -173,6 +172,39 @@ export const filterInvoiceById = (id: string | number) => async (
     toast.error(error.message || '');
   }
 };
+export const deleteInvoiceFn = (id: string | number, cb?: () => void) => async (
+  dispatch: (arg0: { payload: any; type: string }) => void
+) => {
+  try {
+    // dispatch(getInvoices());
+    const invoice = await Invoice.findByPk(id, {
+      include: [
+        {
+          model: Product,
+        },
+      ],
+    });
+
+    await Promise.all(
+      invoice.products.map(async (each: any) => {
+        await Product.increment('stock', {
+          by: each.invoiceItem.quantity,
+          where: { id: each.id },
+        });
+      })
+    );
+    invoice.destroy();
+
+    toast.success('Invoice deleted');
+
+    // dispatch(getInvoicesSuccess(JSON.stringify(invoices)));
+    if (cb) {
+      cb();
+    }
+  } catch (error) {
+    toast.error(error.message || '');
+  }
+};
 
 export const getSingleInvoiceFn = (
   id: string | number,
@@ -188,10 +220,6 @@ export const getSingleInvoiceFn = (
         {
           model: Product,
         },
-        {
-          model: User,
-        },
-        // 'postedBy',
       ],
     });
 
@@ -216,7 +244,7 @@ export const getInvoicesFn = () => async (
 ) => {
   try {
     dispatch(getInvoices());
-    const invoices = await Invoice.findAll();
+    const invoices = await Invoice.findAll({ order: [['id', 'DESC']] });
 
     dispatch(getInvoicesSuccess(JSON.stringify(invoices)));
   } catch (error) {
@@ -241,7 +269,7 @@ export const createInvoiceFn = (
       saleType: meta.saleType,
       amount: meta.amount,
       profit: meta.profit,
-      postedBy: user.id,
+      postedBy: user.fullName,
     });
 
     const prodArr: any = [];

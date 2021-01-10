@@ -10,6 +10,6 @@ export default sequelize.define('purchase', {
     primaryKey: true,
   },
   invoiceNumber: Sequelize.STRING,
-  invoiceDate: Sequelize.DATE,
   amount: { type: Sequelize.INTEGER, allowNull: false },
+  postedBy: Sequelize.STRING,
 });

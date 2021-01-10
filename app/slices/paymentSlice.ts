@@ -167,7 +167,7 @@ export const createPaymentFn = (values: any, cb: () => void) => async (
       paymentMethod: values.paymentMethod || null,
       bank: values.bank || null,
       note: values.note || null,
-      postedBy: user.id,
+      postedBy: user.fullName,
     });
 
     if (values.paymentType === 'debit') {
