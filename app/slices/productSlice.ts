@@ -136,16 +136,18 @@ export const getSingleProductFn = (
   }
 };
 
-export const getProductsFn = (limit?: number) => async (
+export const getProductsFn = () => async (
   dispatch: (arg0: { payload: any; type: string }) => void
 ) => {
-  let filters = {};
-  if (limit) {
-    filters = { limit };
-  }
+  // let filters = {
+  //   order: [['title', 'DESC']],
+  // };
+  // if (limit) {
+  //   filters = {  };
+  // }
   try {
     dispatch(getProducts());
-    const products = await Product.findAll(filters);
+    const products = await Product.findAll({ order: [['title', 'ASC']] });
     dispatch(getProductsSuccess(JSON.stringify(products)));
   } catch (error) {
     toast.error(error.message || '');

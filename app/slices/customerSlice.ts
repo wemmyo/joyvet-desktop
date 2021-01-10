@@ -176,7 +176,7 @@ export const getCustomersFn = () => async (
 ) => {
   try {
     dispatch(getCustomers());
-    const customers = await Customer.findAll();
+    const customers = await Customer.findAll({ order: [['fullName', 'ASC']] });
     dispatch(getCustomersSuccess(JSON.stringify(customers)));
   } catch (error) {
     toast.error(error.message || '');

@@ -169,7 +169,7 @@ export const getSuppliersFn = () => async (
 ) => {
   try {
     dispatch(getSuppliers());
-    const suppliers = await Supplier.findAll();
+    const suppliers = await Supplier.findAll({ order: [['fullName', 'ASC']] });
     dispatch(getSuppliersSuccess(JSON.stringify(suppliers)));
   } catch (error) {
     toast.error(error.message || '');
