@@ -136,18 +136,24 @@ export const getSingleProductFn = (
   }
 };
 
-export const getProductsFn = () => async (
+export const getProductsFn = (filter?: 'inStock') => async (
   dispatch: (arg0: { payload: any; type: string }) => void
 ) => {
-  // let filters = {
-  //   order: [['title', 'DESC']],
-  // };
-  // if (limit) {
-  //   filters = {  };
-  // }
+  let filters = {};
+  if (filter === 'inStock') {
+    filters = {
+      where: {
+        stock: { [Op.gt]: 0 },
+      },
+    };
+  }
+
   try {
     dispatch(getProducts());
-    const products = await Product.findAll({ order: [['title', 'ASC']] });
+    const products = await Product.findAll({
+      ...filters,
+      order: [['title', 'ASC']],
+    });
     dispatch(getProductsSuccess(JSON.stringify(products)));
   } catch (error) {
     toast.error(error.message || '');

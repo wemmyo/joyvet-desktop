@@ -156,6 +156,21 @@ const SalesScreen: React.FC = () => {
     );
   };
 
+  const sum = (prev: number, next: number) => {
+    return prev + next;
+  };
+
+  const sumOfAmount = () => {
+    if (invoices.length === 0) {
+      return 0;
+    }
+    return invoices
+      .map((item: any) => {
+        return item.amount;
+      })
+      .reduce(sum);
+  };
+
   return (
     <DashboardLayout
       screenTitle="Sales"
@@ -173,6 +188,17 @@ const SalesScreen: React.FC = () => {
         </Table.Header>
 
         <Table.Body>{renderRows()}</Table.Body>
+
+        <Table.Footer>
+          <Table.Row>
+            <Table.HeaderCell />
+            <Table.HeaderCell />
+            <Table.HeaderCell style={{ fontWeight: 'bold' }}>
+              Total: ₦{numberWithCommas(sumOfAmount())}
+            </Table.HeaderCell>
+            <Table.HeaderCell />
+          </Table.Row>
+        </Table.Footer>
       </Table>
     </DashboardLayout>
   );

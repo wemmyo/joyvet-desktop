@@ -60,7 +60,7 @@ const InvoiceScreen: React.FC = () => {
   };
 
   const fetchProducts = () => {
-    dispatch(getProductsFn());
+    dispatch(getProductsFn('inStock'));
   };
 
   const fetchData = () => {
@@ -176,6 +176,7 @@ const InvoiceScreen: React.FC = () => {
       })
       .reduce(sum);
   };
+
   const sumOfProfits = () => {
     return orders
       .map((item: any) => {
@@ -239,6 +240,13 @@ const InvoiceScreen: React.FC = () => {
     if (product.stock < Number(values.quantity)) {
       toast.error(`${product.title}: Re-order level`, {
         autoClose: 5000,
+      });
+      resetForm({
+        values: {
+          ...values,
+          quantity: '',
+          unitPrice: '',
+        },
       });
     } else {
       addToOrders({

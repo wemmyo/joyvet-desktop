@@ -17,3 +17,6 @@
 * {
   color: var(--black);
 }
+tr {
+  cursor: pointer;
+}

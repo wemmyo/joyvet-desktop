@@ -68,6 +68,21 @@ const ProductsScreen: React.FC = () => {
     openSideContent(CONTENT_EDIT);
   };
 
+  const sum = (prev: number, next: number) => {
+    return prev + next;
+  };
+
+  const sumOfStockValue = () => {
+    if (products.length === 0) {
+      return 0;
+    }
+    return products
+      .map((item: any) => {
+        return item.stock * item.buyPrice;
+      })
+      .reduce(sum);
+  };
+
   const renderRows = () => {
     const rows = products.map((each: any) => {
       return (
@@ -78,6 +93,9 @@ const ProductsScreen: React.FC = () => {
           <Table.Cell>{numberWithCommas(each.sellPrice)}</Table.Cell>
           <Table.Cell>{numberWithCommas(each.sellPrice2)}</Table.Cell>
           <Table.Cell>{numberWithCommas(each.sellPrice3)}</Table.Cell>
+          <Table.Cell>
+            {numberWithCommas(each.stock * each.buyPrice)}
+          </Table.Cell>
         </Table.Row>
       );
     });
@@ -141,10 +159,25 @@ const ProductsScreen: React.FC = () => {
             <Table.HeaderCell>Sell Price</Table.HeaderCell>
             <Table.HeaderCell>Sell Price 2</Table.HeaderCell>
             <Table.HeaderCell>Sell Price 3</Table.HeaderCell>
+            <Table.HeaderCell>Stock Value</Table.HeaderCell>
           </Table.Row>
         </Table.Header>
 
         <Table.Body>{renderRows()}</Table.Body>
+
+        <Table.Footer>
+          <Table.Row>
+            <Table.HeaderCell />
+            <Table.HeaderCell />
+            <Table.HeaderCell />
+            <Table.HeaderCell />
+            <Table.HeaderCell />
+            <Table.HeaderCell />
+            <Table.HeaderCell style={{ fontWeight: 'bold' }}>
+              Total: ₦{numberWithCommas(sumOfStockValue())}
+            </Table.HeaderCell>
+          </Table.Row>
+        </Table.Footer>
       </Table>
     </DashboardLayout>
   );
