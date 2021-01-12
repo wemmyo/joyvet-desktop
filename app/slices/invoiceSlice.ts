@@ -114,8 +114,8 @@ export const filterInvoiceFn = (
         where: {
           createdAt: {
             [Op.between]: [
-              `${moment(startDate).format('YYYY-MM-DD')} 23:59:00`,
-              `${moment(endDate).format('YYYY-MM-DD')} 23:59:00`,
+              `${moment(startDate).format('YYYY-MM-DD')} 00:00:00`,
+              `${moment(endDate).format('YYYY-MM-DD')} 00:00:00`,
             ],
           },
         },
@@ -129,8 +129,8 @@ export const filterInvoiceFn = (
           saleType,
           createdAt: {
             [Op.between]: [
-              `${moment(startDate).format('YYYY-MM-DD')} 23:59:00`,
-              `${moment(endDate).format('YYYY-MM-DD')} 23:59:00`,
+              `${moment(startDate).format('YYYY-MM-DD')} 00:00:00`,
+              `${moment(endDate).format('YYYY-MM-DD')} 00:00:00`,
             ],
           },
         },

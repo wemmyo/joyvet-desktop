@@ -18,6 +18,8 @@ import {
 } from '../../slices/dashboardSlice';
 import SalesDetail from './components/SalesDetail';
 
+const START_DATE = `${moment().format('YYYY-MM-DD')}`;
+const END_DATE = `${moment().add(1, 'days').format('YYYY-MM-DD')}`;
 const CONTENT_DETAIL = 'detail';
 
 const SalesScreen: React.FC = () => {
@@ -25,12 +27,8 @@ const SalesScreen: React.FC = () => {
   const [salesId, setSalesId] = useState('');
   const [saleType, setSaleType] = useState('all');
   const [searchValue, setSearchValue] = useState('');
-  // const [startDate, setStartDate] = useState('');
-  // const [endDate, setEndDate] = useState('');
-  const [startDate, setStartDate] = useState(
-    `${moment().subtract(1, 'days').format('YYYY-MM-DD')}`
-  );
-  const [endDate, setEndDate] = useState(`${moment().format('YYYY-MM-DD')}`);
+  const [startDate, setStartDate] = useState(START_DATE);
+  const [endDate, setEndDate] = useState(END_DATE);
 
   const dispatch = useDispatch();
 
@@ -117,8 +115,8 @@ const SalesScreen: React.FC = () => {
   ];
 
   const resetFilters = () => {
-    setStartDate('');
-    setEndDate('');
+    setStartDate(START_DATE);
+    setEndDate(END_DATE);
     setSaleType('all');
     setSearchValue('');
     fetchInvoices();
