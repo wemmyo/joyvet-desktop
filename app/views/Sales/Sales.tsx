@@ -2,7 +2,7 @@
 import React, { useEffect, useState } from 'react';
 import { Table, Form, Button } from 'semantic-ui-react';
 import { useSelector, useDispatch } from 'react-redux';
-
+import moment from 'moment';
 import DashboardLayout from '../../layouts/DashboardLayout/DashboardLayout';
 import {
   selectInvoiceState,
@@ -25,8 +25,12 @@ const SalesScreen: React.FC = () => {
   const [salesId, setSalesId] = useState('');
   const [saleType, setSaleType] = useState('all');
   const [searchValue, setSearchValue] = useState('');
-  const [startDate, setStartDate] = useState('');
-  const [endDate, setEndDate] = useState('');
+  // const [startDate, setStartDate] = useState('');
+  // const [endDate, setEndDate] = useState('');
+  const [startDate, setStartDate] = useState(
+    `${moment().subtract(1, 'days').format('YYYY-MM-DD')}`
+  );
+  const [endDate, setEndDate] = useState(`${moment().format('YYYY-MM-DD')}`);
 
   const dispatch = useDispatch();
 
@@ -117,7 +121,7 @@ const SalesScreen: React.FC = () => {
     setEndDate('');
     setSaleType('all');
     setSearchValue('');
-    // fetchInvoices();
+    fetchInvoices();
   };
 
   const headerContent = () => {

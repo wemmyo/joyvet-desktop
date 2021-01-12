@@ -170,17 +170,10 @@ export const createPaymentFn = (values: any, cb: () => void) => async (
       postedBy: user.fullName,
     });
 
-    if (values.paymentType === 'debit') {
-      await Supplier.decrement('balance', {
-        by: values.amount,
-        where: { id: values.supplierId },
-      });
-    } else if (values.paymentType === 'credit') {
-      await Supplier.increment('balance', {
-        by: values.amount,
-        where: { id: values.supplierId },
-      });
-    }
+    await Supplier.decrement('balance', {
+      by: values.amount,
+      where: { id: values.supplierId },
+    });
 
     toast.success('Payment successfully created');
 

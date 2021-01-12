@@ -88,7 +88,6 @@ const CreatePayment: React.FC = () => {
       initialValues={{
         supplierId: '',
         amount: '',
-        paymentType: '',
         paymentMethod: '',
         bank: '',
         note: '',
@@ -140,21 +139,7 @@ const CreatePayment: React.FC = () => {
             type="text"
             component={TextInput}
           />
-          <div className="field">
-            <label htmlFor="paymentType">Payment Type</label>
-            <Field
-              id="paymentType"
-              name="paymentType"
-              component="select"
-              className="ui dropdown"
-            >
-              <option value="" disabled hidden>
-                Select option
-              </option>
-              <option value="credit">Credit</option>
-              <option value="debit">Debit</option>
-            </Field>
-          </div>
+
           <div className="field">
             <label htmlFor="paymentMethod">Payment Method</label>
             <Field

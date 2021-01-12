@@ -72,24 +72,11 @@ const PaymentsScreen: React.FC = () => {
         <Table.Row key={each.id} onClick={() => viewPaymentReceipt(each.id)}>
           <Table.Cell>{each.id}</Table.Cell>
           <Table.Cell>{numberWithCommas(each.amount)}</Table.Cell>
-          <Table.Cell>{each.paymentType}</Table.Cell>
           <Table.Cell>{each.paymentMethod}</Table.Cell>
           <Table.Cell>{each.bank}</Table.Cell>
           <Table.Cell>
             {new Date(each.createdAt).toLocaleDateString('en-gb')}
           </Table.Cell>
-          {/* <Table.Cell
-            style={{ cursor: 'pointer' }}
-            onClick={() => viewPaymentReceipt(each.id)}
-          >
-            View
-          </Table.Cell>
-          <Table.Cell
-            style={{ cursor: 'pointer', color: 'red' }}
-            onClick={() => editPaymentReceipt(each.id)}
-          >
-            Edit
-          </Table.Cell> */}
         </Table.Row>
       );
     });
@@ -152,7 +139,6 @@ const PaymentsScreen: React.FC = () => {
           <Table.Row>
             <Table.HeaderCell>Payment no</Table.HeaderCell>
             <Table.HeaderCell>Amount</Table.HeaderCell>
-            <Table.HeaderCell>Type</Table.HeaderCell>
             <Table.HeaderCell>Payment Method</Table.HeaderCell>
             <Table.HeaderCell>Bank</Table.HeaderCell>
             <Table.HeaderCell>Date</Table.HeaderCell>

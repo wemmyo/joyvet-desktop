@@ -119,6 +119,7 @@ export const filterInvoiceFn = (
             ],
           },
         },
+        order: [['createdAt', 'DESC']],
       });
     } else if (startDate && endDate && saleType !== 'all') {
       // console.log('RAN FUNCTION 2');
@@ -133,6 +134,7 @@ export const filterInvoiceFn = (
             ],
           },
         },
+        order: [['createdAt', 'DESC']],
       });
     } else if (saleType !== 'all' && !startDate && !endDate) {
       // console.log('RAN FUNCTION 3');
@@ -141,11 +143,12 @@ export const filterInvoiceFn = (
         where: {
           saleType,
         },
+        order: [['createdAt', 'DESC']],
       });
     } else {
       // console.log('RAN FUNCTION 4');
 
-      invoices = await Invoice.findAll();
+      invoices = await Invoice.findAll({ order: [['createdAt', 'DESC']] });
     }
 
     dispatch(getInvoicesSuccess(JSON.stringify(invoices)));
@@ -165,6 +168,7 @@ export const filterInvoiceById = (id: string | number) => async (
           [Op.startsWith]: id,
         },
       },
+      order: [['createdAt', 'DESC']],
     });
 
     dispatch(getInvoicesSuccess(JSON.stringify(invoices)));
@@ -244,7 +248,7 @@ export const getInvoicesFn = () => async (
 ) => {
   try {
     dispatch(getInvoices());
-    const invoices = await Invoice.findAll({ order: [['id', 'DESC']] });
+    const invoices = await Invoice.findAll({ order: [['createdAt', 'DESC']] });
 
     dispatch(getInvoicesSuccess(JSON.stringify(invoices)));
   } catch (error) {

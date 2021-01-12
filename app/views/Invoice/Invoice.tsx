@@ -82,7 +82,17 @@ const InvoiceScreen: React.FC = () => {
     }
   }, [invoiceRaw]);
 
-  const renderProducts = () => {
+  const renderProducts = ({
+    handleChange,
+    setFieldValue,
+  }: {
+    handleChange: (e: React.ChangeEvent<any>) => void;
+    setFieldValue: (
+      field: string,
+      value: any,
+      shouldValidate?: boolean
+    ) => void;
+  }) => {
     const productList = products.map((product: any) => {
       return (
         <option key={product.id} value={JSON.stringify(product)}>
@@ -99,6 +109,10 @@ const InvoiceScreen: React.FC = () => {
           name="product"
           component="select"
           className="ui dropdown"
+          onChange={(e) => {
+            handleChange(e);
+            setFieldValue('unitPrice', '');
+          }}
         >
           <option value="" disabled hidden>
             Select Product
@@ -246,6 +260,7 @@ const InvoiceScreen: React.FC = () => {
           ...values,
           quantity: '',
           unitPrice: '',
+          product: '',
         },
       });
     } else {
@@ -330,7 +345,6 @@ const InvoiceScreen: React.FC = () => {
           <Grid.Column width={5}>
             <Segment>
               <Formik
-                // enableReinitialize
                 initialValues={{
                   customerId: '',
                   saleType: '',
@@ -341,7 +355,13 @@ const InvoiceScreen: React.FC = () => {
                 // validationSchema={CreatePaymentSchema}
                 onSubmit={addItemToOrder}
               >
-                {({ handleSubmit, values, resetForm }) => (
+                {({
+                  handleSubmit,
+                  handleChange,
+                  values,
+                  resetForm,
+                  setFieldValue,
+                }) => (
                   <Form>
                     <div className="field">
                       <label htmlFor="customer">Customer</label>
@@ -374,7 +394,10 @@ const InvoiceScreen: React.FC = () => {
                       </Field>
                     </div>
                     <Segment raised>
-                      {renderProducts()}
+                      {renderProducts({
+                        handleChange,
+                        setFieldValue,
+                      })}
                       {renderPrices(values.product)}
                       <Field
                         name="quantity"

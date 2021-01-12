@@ -5,6 +5,7 @@ import {
   getSinglePaymentFn,
   selectPaymentState,
 } from '../../../../slices/paymentSlice';
+import { numberWithCommas } from '../../../../utils/helpers';
 
 export interface PaymentDetailProps {
   paymentId: string | number;
@@ -33,7 +34,6 @@ const PaymentDetail: React.SFC<PaymentDetailProps> = ({
     note,
     createdAt,
     paymentMethod,
-    paymentType,
     bank,
   } = singlePayment;
 
@@ -50,15 +50,13 @@ const PaymentDetail: React.SFC<PaymentDetailProps> = ({
         </Table.Row>
         <Table.Row>
           <Table.Cell>Supplier balance</Table.Cell>
-          <Table.Cell>{supplier ? supplier.balance : 0.0}</Table.Cell>
+          <Table.Cell>
+            {supplier ? numberWithCommas(supplier.balance) : 0.0}
+          </Table.Cell>
         </Table.Row>
         <Table.Row>
           <Table.Cell>Amount</Table.Cell>
-          <Table.Cell>{amount || ''}</Table.Cell>
-        </Table.Row>
-        <Table.Row>
-          <Table.Cell>Payment Type</Table.Cell>
-          <Table.Cell>{paymentType || ''}</Table.Cell>
+          <Table.Cell>{numberWithCommas(amount) || ''}</Table.Cell>
         </Table.Row>
         <Table.Row>
           <Table.Cell>Payment Method</Table.Cell>

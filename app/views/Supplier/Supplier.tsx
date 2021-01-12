@@ -8,6 +8,7 @@ import {
   getSuppliersFn,
   createSupplierFn,
   searchSupplierFn,
+  clearSingleSupplierFn,
 } from '../../slices/supplierSlice';
 import CreateSupplier from './components/CreateSupplier/CreateSupplier';
 import { numberWithCommas } from '../../utils/helpers';
@@ -53,6 +54,7 @@ const SuppliersScreen: React.FC = () => {
 
     return () => {
       closeSideContent();
+      dispatch(clearSingleSupplierFn());
     };
   }, []);
 

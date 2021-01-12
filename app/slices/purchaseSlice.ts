@@ -205,6 +205,10 @@ export const createPurchaseFn = (
       })
     );
     await purchase.addProducts(prodArr);
+    await Supplier.increment('balance', {
+      by: meta.amount,
+      where: { id: meta.supplierId },
+    });
     toast.success('Purchase created');
     if (cb) {
       cb();

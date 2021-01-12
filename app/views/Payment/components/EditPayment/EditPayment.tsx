@@ -3,7 +3,6 @@ import { Button, Form } from 'semantic-ui-react';
 import { Field, Formik } from 'formik';
 import { useSelector, useDispatch } from 'react-redux';
 
-// import * as Yup from 'yup';
 import TextInput from '../../../../components/TextInput/TextInput';
 import {
   getSinglePaymentFn,
@@ -65,9 +64,6 @@ const EditPayment: React.FC<EditPaymentProps> = ({
       }}
       // validationSchema={EditPaymentSchema}
       onSubmit={(values) => {
-        //   submitForm(values);
-        // console.log(values);
-
         dispatch(
           updatePaymentFn(values, paymentId, () => {
             dispatch(closeSideContentFn());
@@ -93,13 +89,6 @@ const EditPayment: React.FC<EditPaymentProps> = ({
             </Field>
           </div>
 
-          <Field
-            name="amount"
-            placeholder="Amount Paid"
-            label="Amount Paid"
-            type="text"
-            component={TextInput}
-          />
           <Field
             name="note"
             placeholder="Note"
