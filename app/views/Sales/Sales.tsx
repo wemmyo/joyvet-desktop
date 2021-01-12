@@ -88,6 +88,7 @@ const SalesScreen: React.FC = () => {
     const rows = invoices.map((each: any) => {
       return (
         <Table.Row onClick={() => openSingleSale(each.id)} key={each.id}>
+          <Table.Cell>{each.customer.fullName}</Table.Cell>
           <Table.Cell>{each.id}</Table.Cell>
           <Table.Cell>{each.saleType}</Table.Cell>
           <Table.Cell>₦{numberWithCommas(each.amount)}</Table.Cell>
@@ -182,6 +183,7 @@ const SalesScreen: React.FC = () => {
       <Table celled striped>
         <Table.Header>
           <Table.Row>
+            <Table.HeaderCell>Customer</Table.HeaderCell>
             <Table.HeaderCell>Invoice Number</Table.HeaderCell>
             <Table.HeaderCell>Type</Table.HeaderCell>
             <Table.HeaderCell>Amount</Table.HeaderCell>
@@ -193,6 +195,7 @@ const SalesScreen: React.FC = () => {
 
         <Table.Footer>
           <Table.Row>
+            <Table.HeaderCell />
             <Table.HeaderCell />
             <Table.HeaderCell />
             <Table.HeaderCell style={{ fontWeight: 'bold' }}>

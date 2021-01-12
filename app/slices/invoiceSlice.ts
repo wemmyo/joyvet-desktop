@@ -120,6 +120,11 @@ export const filterInvoiceFn = (
           },
         },
         order: [['createdAt', 'DESC']],
+        include: [
+          {
+            model: Customer,
+          },
+        ],
       });
     } else if (startDate && endDate && saleType !== 'all') {
       // console.log('RAN FUNCTION 2');
@@ -135,6 +140,11 @@ export const filterInvoiceFn = (
           },
         },
         order: [['createdAt', 'DESC']],
+        include: [
+          {
+            model: Customer,
+          },
+        ],
       });
     } else if (saleType !== 'all' && !startDate && !endDate) {
       // console.log('RAN FUNCTION 3');
@@ -144,11 +154,23 @@ export const filterInvoiceFn = (
           saleType,
         },
         order: [['createdAt', 'DESC']],
+        include: [
+          {
+            model: Customer,
+          },
+        ],
       });
     } else {
       // console.log('RAN FUNCTION 4');
 
-      invoices = await Invoice.findAll({ order: [['createdAt', 'DESC']] });
+      invoices = await Invoice.findAll({
+        order: [['createdAt', 'DESC']],
+        include: [
+          {
+            model: Customer,
+          },
+        ],
+      });
     }
 
     dispatch(getInvoicesSuccess(JSON.stringify(invoices)));
@@ -169,6 +191,11 @@ export const filterInvoiceById = (id: string | number) => async (
         },
       },
       order: [['createdAt', 'DESC']],
+      include: [
+        {
+          model: Customer,
+        },
+      ],
     });
 
     dispatch(getInvoicesSuccess(JSON.stringify(invoices)));
@@ -248,7 +275,14 @@ export const getInvoicesFn = () => async (
 ) => {
   try {
     dispatch(getInvoices());
-    const invoices = await Invoice.findAll({ order: [['createdAt', 'DESC']] });
+    const invoices = await Invoice.findAll({
+      order: [['createdAt', 'DESC']],
+      include: [
+        {
+          model: Customer,
+        },
+      ],
+    });
 
     dispatch(getInvoicesSuccess(JSON.stringify(invoices)));
   } catch (error) {
@@ -269,6 +303,7 @@ export const createInvoiceFn = (
         : '';
 
     const customer = await Customer.findByPk(meta.customerId);
+
     const invoice = await customer.createInvoice({
       saleType: meta.saleType,
       amount: meta.amount,
@@ -295,12 +330,13 @@ export const createInvoiceFn = (
       })
     );
     await invoice.addProducts(prodArr);
-    // console.log(createdInvoice);
+    if (meta.saleType === 'credit') {
+      await Customer.increment('balance', {
+        by: meta.amount,
+        where: { id: meta.customerId },
+      });
+    }
 
-    // await Captain.bulkCreate([
-    //   { name: 'Jack Sparrow' },
-    //   { name: 'Davy Jones' }
-    // ], { updateOnDuplicate: ["name"] });
     toast.success('Invoice created');
     dispatch(createInvoiceSuccess(JSON.stringify(invoice)));
     if (cb) {
