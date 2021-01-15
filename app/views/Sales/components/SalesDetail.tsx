@@ -5,6 +5,7 @@ import { useSelector, useDispatch } from 'react-redux';
 import { Table, Button } from 'semantic-ui-react';
 import { useReactToPrint } from 'react-to-print';
 import { Link } from 'react-router-dom';
+import moment from 'moment';
 
 import {
   getSingleInvoiceFn,
@@ -123,8 +124,12 @@ const SalesDetail: React.FC<SalesDetailProps> = ({
           <Table.Row>
             <Table.Cell>Date</Table.Cell>
             <Table.Cell>
-              {new Date(sales.createdAt).toLocaleDateString('en-gb')}
+              {moment(sales.createdAt).format('DD/MM/YYYY')}
             </Table.Cell>
+          </Table.Row>
+          <Table.Row>
+            <Table.Cell>Time</Table.Cell>
+            <Table.Cell>{moment(sales.createdAt).format('h:mm a')}</Table.Cell>
           </Table.Row>
           <Table.Row>
             <Table.Cell>Amount</Table.Cell>
@@ -133,6 +138,10 @@ const SalesDetail: React.FC<SalesDetailProps> = ({
           <Table.Row>
             <Table.Cell>Profit</Table.Cell>
             <Table.Cell>₦{numberWithCommas(sales.profit)}</Table.Cell>
+          </Table.Row>
+          <Table.Row>
+            <Table.Cell>Posted By</Table.Cell>
+            <Table.Cell>{sales.postedBy}</Table.Cell>
           </Table.Row>
         </Table.Body>
       </Table>

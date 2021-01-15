@@ -160,6 +160,24 @@ export const getSingleUserFn = (id: string | number, cb?: () => void) => async (
   }
 };
 
+export const deleteUserFn = (
+  userId: string | number,
+  cb?: () => void
+) => async (dispatch: (arg0: { payload: any; type: string }) => void) => {
+  try {
+    // dispatch(getUsers());
+    const user = await User.findByPk(userId);
+    user.destroy();
+    toast.success('User successfully deleted');
+
+    if (cb) {
+      cb();
+    }
+  } catch (error) {
+    toast.error(error.message || '');
+  }
+};
+
 export const getUsersFn = () => async (
   dispatch: (arg0: { payload: any; type: string }) => void
 ) => {

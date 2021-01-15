@@ -10,6 +10,7 @@ import {
   selectUserState,
   updateUserFn,
   getUsersFn,
+  deleteUserFn,
 } from '../../../../slices/userSlice';
 
 import { closeSideContentFn } from '../../../../slices/dashboardSlice';
@@ -33,6 +34,15 @@ const EditUser: React.FC<EditUserProps> = ({ userId }: EditUserProps) => {
 
   const user = userRaw ? JSON.parse(userRaw) : {};
   // console.log(user);
+
+  const deleteUser = () => {
+    dispatch(
+      deleteUserFn(userId, () => {
+        dispatch(getUsersFn());
+        dispatch(closeSideContentFn());
+      })
+    );
+  };
 
   const { fullName, username, role } = user;
 
@@ -93,6 +103,15 @@ const EditUser: React.FC<EditUserProps> = ({ userId }: EditUserProps) => {
           </div>
           <Button onClick={() => handleSubmit()} type="Submit" fluid primary>
             Update
+          </Button>
+          <Button
+            style={{ marginTop: '1rem' }}
+            onClick={deleteUser}
+            type="Submit"
+            fluid
+            negative
+          >
+            Delete
           </Button>
         </Form>
       )}
