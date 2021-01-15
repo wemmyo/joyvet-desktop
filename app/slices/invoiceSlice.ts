@@ -331,21 +331,48 @@ export const deleteInvoiceItemFn = ({
   }
 };
 
-export const addInvoiceItemFn = () => async (
-  dispatch: (arg0: { payload: any; type: string }) => void
-) => {
+export const addInvoiceItemFn = ({
+  invoiceId,
+  productId,
+  quantity,
+  amount,
+  unitPrice,
+  profit,
+  cb,
+}: {
+  invoiceId: string | number;
+  productId: string | number;
+  quantity: number;
+  amount: number;
+  unitPrice: number;
+  profit: number;
+  cb: () => void;
+}) => async (dispatch: (arg0: { payload: any; type: string }) => void) => {
   try {
-    dispatch(getInvoices());
-    const invoices = await Invoice.findAll({
-      order: [['createdAt', 'DESC']],
-      include: [
-        {
-          model: Customer,
-        },
-      ],
+    const invoice = await Invoice.findByPk(invoiceId);
+    const product = await Product.findByPk(productId);
+
+    product.invoiceItem = {
+      quantity,
+      unitPrice,
+      amount,
+      profit,
+    };
+
+    await invoice.addProduct(product);
+
+    await product.decrement({
+      stock: quantity,
     });
 
-    dispatch(getInvoicesSuccess(JSON.stringify(invoices)));
+    invoice.increment({
+      amount,
+      profit,
+    });
+
+    if (cb) {
+      cb();
+    }
   } catch (error) {
     toast.error(error.message || '');
   }

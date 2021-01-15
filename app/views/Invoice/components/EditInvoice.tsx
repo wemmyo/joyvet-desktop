@@ -1,11 +1,12 @@
 /* eslint-disable react/jsx-one-expression-per-line */
 import React, { useState, useEffect, useRef } from 'react';
-import { useReactToPrint } from 'react-to-print';
 import { Table, Grid, Button, Form, Segment } from 'semantic-ui-react';
 import { Field, Formik } from 'formik';
 import { useSelector, useDispatch } from 'react-redux';
 import { toast } from 'react-toastify';
 import { withRouter } from 'react-router-dom';
+import moment from 'moment';
+import { useReactToPrint } from 'react-to-print';
 
 import DashboardLayout from '../../../layouts/DashboardLayout/DashboardLayout';
 import {
@@ -18,10 +19,10 @@ import {
 } from '../../../slices/productSlice';
 import { numberWithCommas } from '../../../utils/helpers';
 import {
-  createInvoiceFn,
   getSingleInvoiceFn,
   selectInvoiceState,
   deleteInvoiceItemFn,
+  addInvoiceItemFn,
 } from '../../../slices/invoiceSlice';
 import TextInput from '../../../components/TextInput/TextInput';
 import ComponentToPrint from '../../../components/PrintedReceipt/ReceiptWrapper';
@@ -32,12 +33,11 @@ const EditInvoiceScreen: React.FC = ({ match }: any) => {
   const componentRef = useRef();
   const dispatch = useDispatch();
 
+  const [printInvoice, setPrintInvoice] = useState(false);
+
   const handlePrint = useReactToPrint({
     content: () => componentRef.current,
   });
-
-  //   const [orders, setOrders] = useState([]);
-  const [printInvoice, setPrintInvoice] = useState(false);
 
   const customerState = useSelector(selectCustomerState);
   const productState = useSelector(selectProductState);
@@ -46,13 +46,11 @@ const EditInvoiceScreen: React.FC = ({ match }: any) => {
 
   const { data: customersRaw } = customerState.customers;
   const { data: productsRaw } = productState.products;
-  const { data: invoiceRaw } = invoiceState.createInvoice;
   const { data: singleInvoiceRaw } = invoiceState.singleInvoice;
   // const { data: createdInvoiceRaw } = invoiceState.createInvoiceState;
 
   const customers = customersRaw ? JSON.parse(customersRaw) : [];
   const products = productsRaw ? JSON.parse(productsRaw) : [];
-  const createdInvoice = invoiceRaw ? JSON.parse(invoiceRaw) : {};
   const singleInvoice = singleInvoiceRaw ? JSON.parse(singleInvoiceRaw) : {};
   // console.log(createdInvoice);
 
@@ -79,45 +77,22 @@ const EditInvoiceScreen: React.FC = ({ match }: any) => {
   const fetchData = () => {
     fetchCustomers();
     fetchProducts();
-    // fetchSingleInvoice();
+    fetchSingleInvoice();
   };
 
-  useEffect(() => {
-    fetchSingleInvoice();
-  }, []);
+  const handlePrintFn = () => {
+    setPrintInvoice(true);
+  };
 
   useEffect(() => {
     fetchData();
   }, []);
 
-  //   useEffect(() => {
-  //     if (!singleInvoiceRaw) {
-  //       setOrders([]);
-  //     }
-  //     const matchKeyArr = [];
-  //     const retrievedOrders = singleInvoice.products.map((item: any) => {
-  //       return matchKeyArr.push({
-  //         ...item,
-  //         quantity: item.invoiceItem.quantity,
-  //         amount: item.invoiceItem.amount,
-  //         unitPrice: item.invoiceItem.unitPrice,
-  //         orderId: item.invoiceItem.id,
-  //         profit: item.invoiceItem.profit,
-  //       });
-  //     });
-  //     console.log(matchKeyArr);
-  //     setOrders(matchKeyArr);
-  //   }, []);
-
-  //   useEffect(() => {
-  //     if (invoiceRaw) {
-  //       dispatch(
-  //         getSingleInvoiceFn(createdInvoice.id, () => {
-  //           handlePrint();
-  //         })
-  //       );
-  //     }
-  //   }, [invoiceRaw]);
+  useEffect(() => {
+    if (printInvoice) {
+      handlePrint();
+    }
+  }, [printInvoice]);
 
   const renderProducts = ({
     handleChange,
@@ -209,33 +184,6 @@ const EditInvoiceScreen: React.FC = ({ match }: any) => {
     return customerList;
   };
 
-  const sum = (prev: number, next: number) => {
-    return prev + next;
-  };
-
-  const addToOrders = (value: any) => {
-    // setOrders([...orders, value]);
-  };
-
-  //   const sumOfOrders = () => {
-  //     if (orders.length === 0) {
-  //       return 0;
-  //     }
-  //     return orders
-  //       .map((item: any) => {
-  //         return item.amount;
-  //       })
-  //       .reduce(sum);
-  //   };
-
-  //   const sumOfProfits = () => {
-  //     return orders
-  //       .map((item: any) => {
-  //         return item.profit;
-  //       })
-  //       .reduce(sum);
-  //   };
-
   const removeOrder = ({
     productId,
     invoiceItemId,
@@ -243,10 +191,6 @@ const EditInvoiceScreen: React.FC = ({ match }: any) => {
     productId: string | number;
     invoiceItemId: string | number;
   }) => {
-    // const filteredOrders = orders.filter(
-    //   (item: any) => item.orderId !== orderId
-    // );
-    // setOrders(filteredOrders);
     dispatch(
       deleteInvoiceItemFn({
         productId,
@@ -296,17 +240,6 @@ const EditInvoiceScreen: React.FC = ({ match }: any) => {
     return orderList;
   };
 
-  const renderInvoiceToPrint = () => {
-    if (printInvoice) {
-      return (
-        <div style={{ display: 'none' }}>
-          <ComponentToPrint ref={componentRef} />
-        </div>
-      );
-    }
-    return null;
-  };
-
   const addItemToOrder = (values: FormValues, { resetForm }) => {
     const product = JSON.parse(values.product);
     const amount = Number(values.unitPrice) * Number(values.quantity);
@@ -327,14 +260,18 @@ const EditInvoiceScreen: React.FC = ({ match }: any) => {
         },
       });
     } else {
-      addToOrders({
-        ...product,
-        quantity: values.quantity,
-        amount,
-        unitPrice: values.unitPrice,
-        orderId: new Date().getUTCMilliseconds(),
-        profit,
-      });
+      dispatch(
+        addInvoiceItemFn({
+          invoiceId,
+          productId: product.id,
+          quantity: Number(values.quantity),
+          amount,
+          unitPrice: Number(values.unitPrice),
+          profit,
+          cb: () => fetchSingleInvoice(),
+        })
+      );
+
       resetForm({
         values: {
           ...values,
@@ -346,30 +283,26 @@ const EditInvoiceScreen: React.FC = ({ match }: any) => {
     }
   };
 
-  //   const createInvoice = ({
-  //     values,
-  //     resetForm,
-  //   }: {
-  //     values: FormValues;
-  //     resetForm: () => void;
-  //   }) => {
-  //     dispatch(
-  //       createInvoiceFn(
-  //         orders,
-  //         {
-  //           customerId: values.customerId,
-  //           saleType: values.saleType,
-  //           amount: sumOfOrders(),
-  //           profit: sumOfProfits(),
-  //         },
-  //         () => {
-  //           resetForm();
-  //           setOrders([]);
-  //           setPrintInvoice(true);
-  //         }
-  //       )
-  //     );
-  //   };
+  const renderInvoiceToPrint = () => {
+    if (printInvoice) {
+      return (
+        <div style={{ display: 'none' }}>
+          <ComponentToPrint ref={componentRef} />
+        </div>
+      );
+    }
+    return null;
+  };
+
+  const disabledAdditem = () => {
+    const invoiceDate = moment(singleInvoice.createdAt).format('DD/MM/YYYY');
+    const todaysDate = moment().format('DD/MM/YYYY');
+
+    if (invoiceDate === todaysDate) {
+      return false;
+    }
+    return true;
+  };
 
   return (
     <DashboardLayout screenTitle={`Edit Invoice ${invoiceId}`}>
@@ -418,13 +351,7 @@ const EditInvoiceScreen: React.FC = ({ match }: any) => {
                 // validationSchema={CreatePaymentSchema}
                 onSubmit={addItemToOrder}
               >
-                {({
-                  handleSubmit,
-                  handleChange,
-                  values,
-                  resetForm,
-                  setFieldValue,
-                }) => (
+                {({ handleSubmit, handleChange, values, setFieldValue }) => (
                   <Form>
                     <div className="field">
                       <label htmlFor="customer">Customer</label>
@@ -433,6 +360,7 @@ const EditInvoiceScreen: React.FC = ({ match }: any) => {
                         name="customerId"
                         component="select"
                         className="ui dropdown"
+                        disabled
                       >
                         <option value="" disabled hidden>
                           Select Customer
@@ -447,6 +375,7 @@ const EditInvoiceScreen: React.FC = ({ match }: any) => {
                         name="saleType"
                         component="select"
                         className="ui dropdown"
+                        disabled
                       >
                         <option value="" disabled hidden>
                           Select Sale
@@ -475,18 +404,18 @@ const EditInvoiceScreen: React.FC = ({ match }: any) => {
                         type="Submit"
                         fluid
                         primary
+                        disabled={disabledAdditem()}
                       >
                         Add Item
                       </Button>
                     </Segment>
                     <Button
-                      //   disabled={orders.length < 1}
-                      //   onClick={() => createInvoice({ values, resetForm })}
+                      onClick={handlePrintFn}
                       type="button"
                       fluid
                       positive
                     >
-                      Save
+                      Print
                     </Button>
                     {renderInvoiceToPrint()}
                   </Form>
