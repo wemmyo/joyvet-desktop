@@ -5,6 +5,7 @@ import moment from 'moment';
 import Invoice from '../models/invoice';
 import Customer from '../models/customer';
 import Product from '../models/product';
+import InvoiceItem from '../models/invoiceItem';
 
 const initialState = {
   singleInvoice: {
@@ -271,6 +272,66 @@ export const clearCreateInvoiceFn = () => async (
 };
 
 export const getInvoicesFn = () => async (
+  dispatch: (arg0: { payload: any; type: string }) => void
+) => {
+  try {
+    dispatch(getInvoices());
+    const invoices = await Invoice.findAll({
+      order: [['createdAt', 'DESC']],
+      include: [
+        {
+          model: Customer,
+        },
+      ],
+    });
+
+    dispatch(getInvoicesSuccess(JSON.stringify(invoices)));
+  } catch (error) {
+    toast.error(error.message || '');
+  }
+};
+
+export const deleteInvoiceItemFn = ({
+  productId,
+  invoiceId,
+  invoiceItemId,
+  cb,
+}: {
+  productId: string | number;
+  invoiceId: string | number;
+  invoiceItemId: string | number;
+  cb?: () => void;
+}) => async (dispatch: (arg0: { payload: any; type: string }) => void) => {
+  try {
+    const product = await Product.findByPk(productId);
+    const invoice = await Invoice.findByPk(invoiceId);
+    const invoiceItem = await InvoiceItem.findByPk(invoiceItemId);
+
+    // update stock
+    product.increment({
+      stock: invoiceItem.quantity,
+    });
+
+    // update total amount
+    // update total profit
+    invoice.decrement({
+      amount: invoiceItem.amount,
+      profit: invoiceItem.profit,
+    });
+
+    await invoiceItem.destroy();
+
+    toast.success('Successfully removed item');
+
+    if (cb) {
+      cb();
+    }
+  } catch (error) {
+    toast.error(error.message || '');
+  }
+};
+
+export const addInvoiceItemFn = () => async (
   dispatch: (arg0: { payload: any; type: string }) => void
 ) => {
   try {

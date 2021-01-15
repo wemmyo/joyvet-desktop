@@ -4,6 +4,7 @@ import { useSelector, useDispatch } from 'react-redux';
 // import { useParams } from 'react-router-dom';
 import { Table, Button } from 'semantic-ui-react';
 import { useReactToPrint } from 'react-to-print';
+import { Link } from 'react-router-dom';
 
 import {
   getSingleInvoiceFn,
@@ -14,6 +15,7 @@ import {
 import { numberWithCommas } from '../../../utils/helpers';
 import ComponentToPrint from '../../../components/PrintedReceipt/ReceiptWrapper';
 import { closeSideContentFn } from '../../../slices/dashboardSlice';
+import routes from '../../../routing/routes';
 
 interface SalesDetailProps {
   salesId: string | number;
@@ -44,15 +46,6 @@ const SalesDetail: React.FC<SalesDetailProps> = ({
       handlePrint();
     }
   }, [printInvoice]);
-
-  // const handlePrintFn = () => {
-  //   dispatch(
-  //     getSingleInvoiceFn(salesId, () => {
-  //       setPrintInvoice(true);
-  //       handlePrint();
-  //     })
-  //   );
-  // };
 
   const fetchData = () => {
     dispatch(getSingleInvoiceFn(salesId));
@@ -168,6 +161,9 @@ const SalesDetail: React.FC<SalesDetailProps> = ({
       >
         Delete
       </Button>
+      <Link style={{ marginTop: '1rem' }} to={`${routes.INVOICE}/${salesId}`}>
+        Edit
+      </Link>
       {renderInvoiceToPrint()}
     </>
   );
