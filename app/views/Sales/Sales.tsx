@@ -11,7 +11,7 @@ import {
   filterInvoiceFn,
   //   createInvoiceFn,
 } from '../../slices/invoiceSlice';
-import { numberWithCommas } from '../../utils/helpers';
+import { numberWithCommas, isAdmin } from '../../utils/helpers';
 import {
   openSideContentFn,
   closeSideContentFn,
@@ -92,6 +92,9 @@ const SalesScreen: React.FC = () => {
           <Table.Cell>{each.id}</Table.Cell>
           <Table.Cell>{each.saleType}</Table.Cell>
           <Table.Cell>₦{numberWithCommas(each.amount)}</Table.Cell>
+          {isAdmin() ? (
+            <Table.Cell>₦{numberWithCommas(each.profit)}</Table.Cell>
+          ) : null}
           <Table.Cell>
             {new Date(each.createdAt).toLocaleDateString('en-gb')}
           </Table.Cell>
@@ -173,6 +176,16 @@ const SalesScreen: React.FC = () => {
       })
       .reduce(sum);
   };
+  const sumOfProfit = () => {
+    if (invoices.length === 0) {
+      return 0;
+    }
+    return invoices
+      .map((item: any) => {
+        return item.profit;
+      })
+      .reduce(sum);
+  };
 
   return (
     <DashboardLayout
@@ -187,6 +200,7 @@ const SalesScreen: React.FC = () => {
             <Table.HeaderCell>Invoice Number</Table.HeaderCell>
             <Table.HeaderCell>Type</Table.HeaderCell>
             <Table.HeaderCell>Amount</Table.HeaderCell>
+            {isAdmin() ? <Table.HeaderCell>Profit</Table.HeaderCell> : null}
             <Table.HeaderCell>Date</Table.HeaderCell>
           </Table.Row>
         </Table.Header>
@@ -201,6 +215,11 @@ const SalesScreen: React.FC = () => {
             <Table.HeaderCell style={{ fontWeight: 'bold' }}>
               Total: ₦{numberWithCommas(sumOfAmount())}
             </Table.HeaderCell>
+            {isAdmin() ? (
+              <Table.HeaderCell style={{ fontWeight: 'bold' }}>
+                Total: ₦{numberWithCommas(sumOfProfit())}
+              </Table.HeaderCell>
+            ) : null}
             <Table.HeaderCell />
           </Table.Row>
         </Table.Footer>

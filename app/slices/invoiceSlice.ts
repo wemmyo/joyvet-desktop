@@ -418,7 +418,7 @@ export const createInvoiceFn = (
       })
     );
     await invoice.addProducts(prodArr);
-    if (meta.saleType === 'credit') {
+    if (meta.saleType === 'credit' || meta.saleType === 'transfer') {
       await Customer.increment('balance', {
         by: meta.amount,
         where: { id: meta.customerId },

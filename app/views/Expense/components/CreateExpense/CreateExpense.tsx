@@ -45,7 +45,7 @@ const CreateExpense: React.FC<CreateExpenseProps> = ({
                 Select Type
               </option>
               <option>advertisement</option>
-              <option>bank charges % cto</option>
+              <option>bank charges & cto</option>
               <option>diesel & fuel</option>
               <option>generator maintenance</option>
               <option>miscellaneous</option>

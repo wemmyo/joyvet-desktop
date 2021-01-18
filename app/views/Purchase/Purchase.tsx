@@ -161,6 +161,13 @@ const PurchaseScreen: React.FC = () => {
     );
   };
 
+  const onProductChange = ({ handleChange, setFieldValue, e }) => {
+    handleChange(e);
+    setFieldValue('newSellPrice', JSON.parse(e.target.value).sellPrice);
+    setFieldValue('newSellPrice2', JSON.parse(e.target.value).sellPrice2);
+    setFieldValue('newSellPrice3', JSON.parse(e.target.value).sellPrice3);
+  };
+
   return (
     <DashboardLayout screenTitle="Create Purchase">
       <Grid>
@@ -212,7 +219,13 @@ const PurchaseScreen: React.FC = () => {
                 // validationSchema={CreatePaymentSchema}
                 onSubmit={addItemToOrder}
               >
-                {({ handleSubmit, values, resetForm }) => (
+                {({
+                  handleSubmit,
+                  values,
+                  resetForm,
+                  setFieldValue,
+                  handleChange,
+                }) => (
                   <Form>
                     <div className="field">
                       <label htmlFor="supplier">Supplier</label>
@@ -243,6 +256,13 @@ const PurchaseScreen: React.FC = () => {
                           name="product"
                           component="select"
                           className="ui dropdown"
+                          onChange={(e) =>
+                            onProductChange({
+                              handleChange,
+                              setFieldValue,
+                              e,
+                            })
+                          }
                         >
                           <option value="" disabled hidden>
                             Select Item
