@@ -61,11 +61,6 @@ const ReceiptsScreen: React.FC = () => {
     openSideContent(CONTENT_DETAIL);
   };
 
-  // const editSingleReceipt = (id: any) => {
-  //   setReceiptId(id);
-  //   openSideContent(CONTENT_EDIT);
-  // };
-
   const renderRows = () => {
     const rows = receipts.map((each: any) => {
       return (
@@ -73,23 +68,10 @@ const ReceiptsScreen: React.FC = () => {
           <Table.Cell>{each.id}</Table.Cell>
           <Table.Cell>{each.customer.fullName}</Table.Cell>
           <Table.Cell>{numberWithCommas(each.amount)}</Table.Cell>
-          <Table.Cell>{each.paymentType}</Table.Cell>
           <Table.Cell>{each.paymentMethod}</Table.Cell>
           <Table.Cell>
             {new Date(each.createdAt).toLocaleDateString('en-gb')}
           </Table.Cell>
-          {/* <Table.Cell
-            style={{ cursor: 'pointer' }}
-            onClick={() => viewSingleReceipt(each.id)}
-          >
-            View
-          </Table.Cell>
-          <Table.Cell
-            style={{ cursor: 'pointer', color: 'red' }}
-            onClick={() => editSingleReceipt(each.id)}
-          >
-            Edit
-          </Table.Cell> */}
         </Table.Row>
       );
     });
@@ -153,7 +135,6 @@ const ReceiptsScreen: React.FC = () => {
             <Table.HeaderCell>Receipt no</Table.HeaderCell>
             <Table.HeaderCell>Customer</Table.HeaderCell>
             <Table.HeaderCell>Amount</Table.HeaderCell>
-            <Table.HeaderCell>Type</Table.HeaderCell>
             <Table.HeaderCell>Payment Method</Table.HeaderCell>
             <Table.HeaderCell>Date</Table.HeaderCell>
           </Table.Row>

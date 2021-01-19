@@ -56,10 +56,7 @@ const ReceiptDetail: React.SFC<ReceiptDetailProps> = ({
           <Table.Cell>Amount</Table.Cell>
           <Table.Cell>{amount || ''}</Table.Cell>
         </Table.Row>
-        <Table.Row>
-          <Table.Cell>Payment Type</Table.Cell>
-          <Table.Cell>{paymentType || ''}</Table.Cell>
-        </Table.Row>
+
         <Table.Row>
           <Table.Cell>Payment Method</Table.Cell>
           <Table.Cell>{paymentMethod || ''}</Table.Cell>

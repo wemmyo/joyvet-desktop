@@ -88,7 +88,7 @@ const SalesScreen: React.FC = () => {
     const rows = invoices.map((each: any) => {
       return (
         <Table.Row onClick={() => openSingleSale(each.id)} key={each.id}>
-          <Table.Cell>{each.customer.fullName}</Table.Cell>
+          <Table.Cell>{each.customer?.fullName}</Table.Cell>
           <Table.Cell>{each.id}</Table.Cell>
           <Table.Cell>{each.saleType}</Table.Cell>
           <Table.Cell>₦{numberWithCommas(each.amount)}</Table.Cell>
