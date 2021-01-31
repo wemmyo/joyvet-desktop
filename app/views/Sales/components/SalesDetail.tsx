@@ -159,7 +159,7 @@ const SalesDetail: React.FC<SalesDetailProps> = ({
 
         <Table.Body>{renderOrders()}</Table.Body>
       </Table>
-      <Button type="button" onClick={handlePrintFn}>
+      <Button color="green" type="button" onClick={handlePrintFn}>
         Print
       </Button>
       <Button
@@ -170,9 +170,9 @@ const SalesDetail: React.FC<SalesDetailProps> = ({
       >
         Delete
       </Button>
-      <Link style={{ marginTop: '1rem' }} to={`${routes.INVOICE}/${salesId}`}>
+      <Button color="yellow" as={Link} to={`${routes.INVOICE}/${salesId}`}>
         Edit
-      </Link>
+      </Button>
       {renderInvoiceToPrint()}
     </>
   );

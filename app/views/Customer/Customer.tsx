@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Table, Button, Icon, Form } from 'semantic-ui-react';
+import { Table, Button, Icon, Form, Loader } from 'semantic-ui-react';
 import { useSelector, useDispatch } from 'react-redux';
 
 import DashboardLayout from '../../layouts/DashboardLayout/DashboardLayout';
@@ -10,7 +10,7 @@ import {
   searchCustomerFn,
 } from '../../slices/customerSlice';
 import CreateCustomer from './components/CreateCustomer/CreateCustomer';
-import { numberWithCommas } from '../../utils/helpers';
+import { numberWithCommas, isAdmin } from '../../utils/helpers';
 import {
   openSideContentFn,
   closeSideContentFn,
@@ -29,7 +29,10 @@ const CustomersScreen: React.FC = () => {
 
   const customerState = useSelector(selectCustomerState);
 
-  const { data: customersRaw } = customerState.customers;
+  const {
+    data: customersRaw,
+    loading: customersLoading,
+  } = customerState.customers;
 
   const customers = customersRaw ? JSON.parse(customersRaw) : [];
 
@@ -72,7 +75,11 @@ const CustomersScreen: React.FC = () => {
   const renderRows = () => {
     const rows = customers.map((each: any) => {
       return (
-        <Table.Row onClick={() => openSingleCustomer(each.id)} key={each.id}>
+        <Table.Row
+          key={each.id}
+          // eslint-disable-next-line react/jsx-props-no-spreading
+          {...(isAdmin() && { onClick: () => openSingleCustomer(each.id) })}
+        >
           <Table.Cell>{each.fullName}</Table.Cell>
           <Table.Cell>{each.address}</Table.Cell>
           <Table.Cell>{each.phoneNumber}</Table.Cell>
@@ -100,6 +107,21 @@ const CustomersScreen: React.FC = () => {
     } else {
       fetchCustomers();
     }
+  };
+
+  const sum = (prev: number, next: number) => {
+    return prev + next;
+  };
+
+  const sumOfBalances = () => {
+    if (customers.length === 0) {
+      return 0;
+    }
+    return customers
+      .map((item: any) => {
+        return item.balance;
+      })
+      .reduce(sum);
   };
 
   const headerContent = () => {
@@ -131,18 +153,35 @@ const CustomersScreen: React.FC = () => {
       rightSidebar={renderSideContent()}
       headerContent={headerContent()}
     >
-      <Table celled striped>
-        <Table.Header>
-          <Table.Row>
-            <Table.HeaderCell>Full Name</Table.HeaderCell>
-            <Table.HeaderCell>Address</Table.HeaderCell>
-            <Table.HeaderCell>Phone Number</Table.HeaderCell>
-            <Table.HeaderCell>Balance</Table.HeaderCell>
-          </Table.Row>
-        </Table.Header>
+      {customersLoading ? (
+        <Loader active inline="centered" />
+      ) : (
+        <Table celled striped>
+          <Table.Header>
+            <Table.Row>
+              <Table.HeaderCell>Full Name</Table.HeaderCell>
+              <Table.HeaderCell>Address</Table.HeaderCell>
+              <Table.HeaderCell>Phone Number</Table.HeaderCell>
+              <Table.HeaderCell>Balance</Table.HeaderCell>
+            </Table.Row>
+          </Table.Header>
 
-        <Table.Body>{renderRows()}</Table.Body>
-      </Table>
+          <Table.Body>{renderRows()}</Table.Body>
+
+          {isAdmin ? (
+            <Table.Footer>
+              <Table.Row>
+                <Table.HeaderCell />
+                <Table.HeaderCell />
+                <Table.HeaderCell />
+                <Table.HeaderCell style={{ fontWeight: 'bold' }}>
+                  Total: ₦{numberWithCommas(sumOfBalances())}
+                </Table.HeaderCell>
+              </Table.Row>
+            </Table.Footer>
+          ) : null}
+        </Table>
+      )}
     </DashboardLayout>
   );
 };

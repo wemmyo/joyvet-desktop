@@ -21,6 +21,9 @@ import UserScreen from '../views/User/User';
 import ExpenseScreen from '../views/Expense/Expense';
 import PrivateRoute from './PrivateRoute';
 import EditInvoiceScreen from '../views/Invoice/components/EditInvoice';
+import CustomerHistory from '../views/CustomerHistory/CustomerHistory';
+import SupplierHistory from '../views/SupplierHistory/SupplierHistory';
+import ProductHistory from '../views/ProductHistory/ProductHistory';
 
 // Lazily load routes and code split with webpacck
 // const LazyCounterPage = React.lazy(() =>
@@ -38,6 +41,18 @@ export default function Routes() {
     <App>
       <ToastContainer autoClose={2000} />
       <Switch>
+        <PrivateRoute
+          path={`${routes.PRODUCT}/:id`}
+          component={ProductHistory}
+        />
+        <PrivateRoute
+          path={`${routes.SUPPLIER}/:id`}
+          component={SupplierHistory}
+        />
+        <PrivateRoute
+          path={`${routes.CUSTOMER}/:id`}
+          component={CustomerHistory}
+        />
         <PrivateRoute
           path={`${routes.INVOICE}/:id`}
           component={EditInvoiceScreen}

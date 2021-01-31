@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Table, Button, Icon, Form } from 'semantic-ui-react';
+import { Table, Button, Icon, Form, Loader } from 'semantic-ui-react';
 import { useSelector, useDispatch } from 'react-redux';
 import DashboardLayout from '../../layouts/DashboardLayout/DashboardLayout';
 
@@ -30,7 +30,7 @@ const ReceiptsScreen: React.FC = () => {
 
   const receiptState = useSelector(selectReceiptState);
 
-  const { data: receiptsRaw } = receiptState.receipts;
+  const { data: receiptsRaw, loading: receiptsLoading } = receiptState.receipts;
   const receipts = receiptsRaw ? JSON.parse(receiptsRaw) : [];
 
   const fetchReceipts = () => {
@@ -129,19 +129,23 @@ const ReceiptsScreen: React.FC = () => {
       rightSidebar={renderSideContent()}
       headerContent={headerContent()}
     >
-      <Table celled striped>
-        <Table.Header>
-          <Table.Row>
-            <Table.HeaderCell>Receipt no</Table.HeaderCell>
-            <Table.HeaderCell>Customer</Table.HeaderCell>
-            <Table.HeaderCell>Amount</Table.HeaderCell>
-            <Table.HeaderCell>Payment Method</Table.HeaderCell>
-            <Table.HeaderCell>Date</Table.HeaderCell>
-          </Table.Row>
-        </Table.Header>
+      {receiptsLoading ? (
+        <Loader active inline="centered" />
+      ) : (
+        <Table celled striped>
+          <Table.Header>
+            <Table.Row>
+              <Table.HeaderCell>Receipt no</Table.HeaderCell>
+              <Table.HeaderCell>Customer</Table.HeaderCell>
+              <Table.HeaderCell>Amount</Table.HeaderCell>
+              <Table.HeaderCell>Payment Method</Table.HeaderCell>
+              <Table.HeaderCell>Date</Table.HeaderCell>
+            </Table.Row>
+          </Table.Header>
 
-        <Table.Body>{renderRows()}</Table.Body>
-      </Table>
+          <Table.Body>{renderRows()}</Table.Body>
+        </Table>
+      )}
     </DashboardLayout>
   );
 };

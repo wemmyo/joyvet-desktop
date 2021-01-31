@@ -3,7 +3,6 @@ import { Table } from 'semantic-ui-react';
 import { connect } from 'react-redux';
 
 import styles from './PrintedReceipt.css';
-import { getSingleInvoiceFn } from '../../slices/invoiceSlice';
 import { numberWithCommas } from '../../utils/helpers';
 
 export interface PrintedReceiptProps {
@@ -46,12 +45,6 @@ class PrintedReceipt extends React.Component<PrintedReceiptProps> {
       return <p>No Data</p>;
     }
 
-    // return <p>No Data</p>;
-
-    // if (invoiceRaw === 'null') {
-    //   return <p>No Data</p>;
-    // }
-
     return (
       <div className={styles.receipt}>
         <div className={styles.receipt__companyInfo}>
@@ -88,8 +81,8 @@ class PrintedReceipt extends React.Component<PrintedReceiptProps> {
             {this.renderItems()}
             <Table.Row>
               <Table.Cell>Total</Table.Cell>
-              <Table.Cell></Table.Cell>
-              <Table.Cell></Table.Cell>
+              <Table.Cell />
+              <Table.Cell />
               <Table.Cell>₦{numberWithCommas(invoice.amount)}</Table.Cell>
             </Table.Row>
           </Table.Body>

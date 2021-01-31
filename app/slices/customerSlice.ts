@@ -2,6 +2,8 @@ import { createSlice } from '@reduxjs/toolkit';
 import { toast } from 'react-toastify';
 import { Op } from 'sequelize';
 import Customer from '../models/customer';
+import Invoice from '../models/invoice';
+import Receipt from '../models/receipt';
 
 const initialState = {
   singleCustomer: {
@@ -13,6 +15,14 @@ const initialState = {
     data: '',
   },
   createCustomerState: {
+    loading: false,
+    data: '',
+  },
+  receipts: {
+    loading: false,
+    data: '',
+  },
+  invoices: {
     loading: false,
     data: '',
   },
@@ -68,6 +78,34 @@ const customerSlice = createSlice({
       const { createCustomerState } = state;
       createCustomerState.loading = false;
     },
+    getReceipts: (state) => {
+      const { receipts } = state;
+      receipts.loading = true;
+      receipts.data = '';
+    },
+    getReceiptsSuccess: (state, { payload }) => {
+      const { receipts } = state;
+      receipts.loading = false;
+      receipts.data = payload;
+    },
+    getReceiptsFailed: (state) => {
+      const { receipts } = state;
+      receipts.loading = false;
+    },
+    getInvoices: (state) => {
+      const { invoices } = state;
+      invoices.loading = true;
+      invoices.data = '';
+    },
+    getInvoicesSuccess: (state, { payload }) => {
+      const { invoices } = state;
+      invoices.loading = false;
+      invoices.data = payload;
+    },
+    getInvoicesFailed: (state) => {
+      const { invoices } = state;
+      invoices.loading = false;
+    },
   },
 });
 
@@ -82,7 +120,50 @@ export const {
   createCustomer,
   createCustomerSuccess,
   createCustomerFailed,
+  getReceipts,
+  getReceiptsSuccess,
+  getReceiptsFailed,
+  getInvoices,
+  getInvoicesSuccess,
+  getInvoicesFailed,
 } = customerSlice.actions;
+
+export const getCustomerReceiptsFn = (customerId: string | number) => async (
+  dispatch: (arg0: { payload: any; type: string }) => void
+) => {
+  dispatch(getReceipts());
+  try {
+    const receipts = await Receipt.findAll({
+      where: {
+        customerId,
+      },
+    });
+    dispatch(getReceiptsSuccess(JSON.stringify(receipts)));
+    console.log(receipts);
+  } catch (error) {
+    dispatch(getReceiptsFailed());
+    toast.error(error.message || '');
+  }
+};
+
+export const getCustomerInvoicesFn = (customerId: string) => async (
+  dispatch: (arg0: { payload: any; type: string }) => void
+) => {
+  dispatch(getInvoices());
+  try {
+    const invoices = await Invoice.findAll({
+      where: {
+        customerId,
+      },
+    });
+    dispatch(getInvoicesSuccess(JSON.stringify(invoices)));
+    console.log(invoices);
+  } catch (error) {
+    dispatch(getInvoicesFailed());
+
+    toast.error(error.message || '');
+  }
+};
 
 export const searchCustomerFn = (value: string) => async (
   dispatch: (arg0: { payload: any; type: string }) => void

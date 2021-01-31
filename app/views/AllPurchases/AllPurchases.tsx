@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Table, Form } from 'semantic-ui-react';
+import { Table, Form, Loader } from 'semantic-ui-react';
 import { useSelector, useDispatch } from 'react-redux';
 
 import DashboardLayout from '../../layouts/DashboardLayout/DashboardLayout';
@@ -27,7 +27,10 @@ const AllPurchasesScreen: React.FC = () => {
 
   const purchaseState = useSelector(selectPurchaseState);
 
-  const { data: purchasesRaw } = purchaseState.purchases;
+  const {
+    data: purchasesRaw,
+    loading: purchasesLoading,
+  } = purchaseState.purchases;
 
   const purchases = purchasesRaw ? JSON.parse(purchasesRaw) : [];
 
@@ -109,18 +112,22 @@ const AllPurchasesScreen: React.FC = () => {
       rightSidebar={renderSideContent()}
       headerContent={headerContent()}
     >
-      <Table celled striped>
-        <Table.Header>
-          <Table.Row>
-            <Table.HeaderCell>Invoice Number</Table.HeaderCell>
-            <Table.HeaderCell>Supplier</Table.HeaderCell>
-            <Table.HeaderCell>Amount</Table.HeaderCell>
-            <Table.HeaderCell>Date</Table.HeaderCell>
-          </Table.Row>
-        </Table.Header>
+      {purchasesLoading ? (
+        <Loader active inline="centered" />
+      ) : (
+        <Table celled striped>
+          <Table.Header>
+            <Table.Row>
+              <Table.HeaderCell>Invoice Number</Table.HeaderCell>
+              <Table.HeaderCell>Supplier</Table.HeaderCell>
+              <Table.HeaderCell>Amount</Table.HeaderCell>
+              <Table.HeaderCell>Date</Table.HeaderCell>
+            </Table.Row>
+          </Table.Header>
 
-        <Table.Body>{renderRows()}</Table.Body>
-      </Table>
+          <Table.Body>{renderRows()}</Table.Body>
+        </Table>
+      )}
     </DashboardLayout>
   );
 };

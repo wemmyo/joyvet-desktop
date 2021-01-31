@@ -2,6 +2,7 @@ import React, { useEffect } from 'react';
 import { Button, Form } from 'semantic-ui-react';
 import { Field, Formik } from 'formik';
 import { useSelector, useDispatch } from 'react-redux';
+import { Link } from 'react-router-dom';
 
 // import * as Yup from 'yup';
 import TextInput from '../../../../components/TextInput/TextInput';
@@ -13,6 +14,7 @@ import {
   deleteCustomerFn,
 } from '../../../../slices/customerSlice';
 import { closeSideContentFn } from '../../../../slices/dashboardSlice';
+import routes from '../../../../routing/routes';
 
 export interface EditCustomerProps {
   customerId: string | number;
@@ -112,6 +114,7 @@ const EditCustomer: React.FC<EditCustomerProps> = ({
           >
             Delete
           </Button>
+          <Link to={`${routes.CUSTOMER}/${customerId}`}>History</Link>
         </Form>
       )}
     </Formik>

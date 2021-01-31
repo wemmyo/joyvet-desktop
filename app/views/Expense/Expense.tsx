@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Table, Button, Icon, Form } from 'semantic-ui-react';
+import { Table, Button, Icon, Form, Loader } from 'semantic-ui-react';
 import { useSelector, useDispatch } from 'react-redux';
 
 import DashboardLayout from '../../layouts/DashboardLayout/DashboardLayout';
@@ -29,7 +29,7 @@ const ExpensesScreen: React.FC = () => {
 
   const expenseState = useSelector(selectExpenseState);
 
-  const { data: expensesRaw } = expenseState.expenses;
+  const { data: expensesRaw, loading: expensesLoading } = expenseState.expenses;
 
   const expenses = expensesRaw ? JSON.parse(expensesRaw) : [];
 
@@ -133,18 +133,22 @@ const ExpensesScreen: React.FC = () => {
       rightSidebar={renderSideContent()}
       headerContent={headerContent()}
     >
-      <Table celled striped>
-        <Table.Header>
-          <Table.Row>
-            <Table.HeaderCell>Type</Table.HeaderCell>
-            <Table.HeaderCell>Amount</Table.HeaderCell>
-            <Table.HeaderCell>Date</Table.HeaderCell>
-            <Table.HeaderCell>Note</Table.HeaderCell>
-          </Table.Row>
-        </Table.Header>
+      {expensesLoading ? (
+        <Loader active inline="centered" />
+      ) : (
+        <Table celled striped>
+          <Table.Header>
+            <Table.Row>
+              <Table.HeaderCell>Type</Table.HeaderCell>
+              <Table.HeaderCell>Amount</Table.HeaderCell>
+              <Table.HeaderCell>Date</Table.HeaderCell>
+              <Table.HeaderCell>Note</Table.HeaderCell>
+            </Table.Row>
+          </Table.Header>
 
-        <Table.Body>{renderRows()}</Table.Body>
-      </Table>
+          <Table.Body>{renderRows()}</Table.Body>
+        </Table>
+      )}
     </DashboardLayout>
   );
 };

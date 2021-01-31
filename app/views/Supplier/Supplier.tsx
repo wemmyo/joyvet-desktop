@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Table, Form, Button, Icon } from 'semantic-ui-react';
+import { Table, Form, Button, Icon, Loader } from 'semantic-ui-react';
 import { useSelector, useDispatch } from 'react-redux';
 
 import DashboardLayout from '../../layouts/DashboardLayout/DashboardLayout';
@@ -11,7 +11,7 @@ import {
   clearSingleSupplierFn,
 } from '../../slices/supplierSlice';
 import CreateSupplier from './components/CreateSupplier/CreateSupplier';
-import { numberWithCommas } from '../../utils/helpers';
+import { numberWithCommas, isAdmin } from '../../utils/helpers';
 import {
   openSideContentFn,
   closeSideContentFn,
@@ -30,7 +30,10 @@ const SuppliersScreen: React.FC = () => {
 
   const supplierState = useSelector(selectSupplierState);
 
-  const { data: suppliersRaw } = supplierState.suppliers;
+  const {
+    data: suppliersRaw,
+    loading: suppliersLoading,
+  } = supplierState.suppliers;
 
   const suppliers = suppliersRaw ? JSON.parse(suppliersRaw) : [];
 
@@ -75,7 +78,11 @@ const SuppliersScreen: React.FC = () => {
   const renderRows = () => {
     const rows = suppliers.map((each: any) => {
       return (
-        <Table.Row onClick={() => openSingleSupplier(each.id)} key={each.id}>
+        <Table.Row
+          key={each.id}
+          // eslint-disable-next-line react/jsx-props-no-spreading
+          {...(isAdmin() && { onClick: () => openSingleSupplier(each.id) })}
+        >
           <Table.Cell>{each.fullName}</Table.Cell>
           <Table.Cell>{each.address}</Table.Cell>
           <Table.Cell>{each.phoneNumber}</Table.Cell>
@@ -103,6 +110,21 @@ const SuppliersScreen: React.FC = () => {
     } else {
       fetchSuppliers();
     }
+  };
+
+  const sum = (prev: number, next: number) => {
+    return prev + next;
+  };
+
+  const sumOfBalances = () => {
+    if (suppliers.length === 0) {
+      return 0;
+    }
+    return suppliers
+      .map((item: any) => {
+        return item.balance;
+      })
+      .reduce(sum);
   };
 
   const headerContent = () => {
@@ -134,18 +156,35 @@ const SuppliersScreen: React.FC = () => {
       rightSidebar={renderSideContent()}
       headerContent={headerContent()}
     >
-      <Table celled striped>
-        <Table.Header>
-          <Table.Row>
-            <Table.HeaderCell>Full Name</Table.HeaderCell>
-            <Table.HeaderCell>Address</Table.HeaderCell>
-            <Table.HeaderCell>Phone Number</Table.HeaderCell>
-            <Table.HeaderCell>Balance</Table.HeaderCell>
-          </Table.Row>
-        </Table.Header>
+      {suppliersLoading ? (
+        <Loader active inline="centered" />
+      ) : (
+        <Table celled striped>
+          <Table.Header>
+            <Table.Row>
+              <Table.HeaderCell>Full Name</Table.HeaderCell>
+              <Table.HeaderCell>Address</Table.HeaderCell>
+              <Table.HeaderCell>Phone Number</Table.HeaderCell>
+              <Table.HeaderCell>Balance</Table.HeaderCell>
+            </Table.Row>
+          </Table.Header>
 
-        <Table.Body>{renderRows()}</Table.Body>
-      </Table>
+          <Table.Body>{renderRows()}</Table.Body>
+
+          {isAdmin ? (
+            <Table.Footer>
+              <Table.Row>
+                <Table.HeaderCell />
+                <Table.HeaderCell />
+                <Table.HeaderCell />
+                <Table.HeaderCell style={{ fontWeight: 'bold' }}>
+                  Total: ₦{numberWithCommas(sumOfBalances())}
+                </Table.HeaderCell>
+              </Table.Row>
+            </Table.Footer>
+          ) : null}
+        </Table>
+      )}
     </DashboardLayout>
   );
 };
