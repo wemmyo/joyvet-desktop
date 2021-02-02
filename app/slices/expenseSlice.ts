@@ -1,6 +1,7 @@
 import { createSlice } from '@reduxjs/toolkit';
 import { toast } from 'react-toastify';
 import { Op } from 'sequelize';
+import moment from 'moment';
 import Expense from '../models/expense';
 
 const initialState = {
@@ -169,12 +170,65 @@ export const clearSingleExpenseFn = () => async (
   dispatch(clearSingleExpense());
 };
 
+export const filterExpensesFn = ({
+  startDate,
+  endDate,
+  expenseType,
+}: {
+  startDate: Date;
+  endDate: Date;
+  expenseType: string;
+}) => async (dispatch: (arg0: { payload: unknown; type: string }) => void) => {
+  try {
+    dispatch(getExpenses());
+
+    if (expenseType && expenseType !== 'all') {
+      const expenses = await Expense.findAll({
+        where: {
+          date: {
+            [Op.between]: [
+              `${moment(startDate).format('YYYY-MM-DD')} 00:00:00`,
+              `${moment(endDate).format('YYYY-MM-DD')} 23:00:00`,
+            ],
+          },
+          type: expenseType,
+        },
+      });
+      dispatch(getExpensesSuccess(JSON.stringify(expenses)));
+    } else {
+      const expenses = await Expense.findAll({
+        where: {
+          date: {
+            [Op.between]: [
+              `${moment(startDate).format('YYYY-MM-DD')} 00:00:00`,
+              `${moment(endDate).format('YYYY-MM-DD')} 23:00:00`,
+            ],
+          },
+        },
+      });
+      dispatch(getExpensesSuccess(JSON.stringify(expenses)));
+    }
+  } catch (error) {
+    toast.error(error.message || '');
+  }
+};
+
 export const getExpensesFn = () => async (
   dispatch: (arg0: { payload: unknown; type: string }) => void
 ) => {
   try {
+    // `${moment().format('YYYY-MM-DD')}`
     dispatch(getExpenses());
-    const expenses = await Expense.findAll();
+    const expenses = await Expense.findAll({
+      where: {
+        createdAt: {
+          [Op.between]: [
+            `${moment().format('YYYY-MM-DD')} 00:00:00`,
+            `${moment().format('YYYY-MM-DD')} 23:00:00`,
+          ],
+        },
+      },
+    });
     dispatch(getExpensesSuccess(JSON.stringify(expenses)));
   } catch (error) {
     toast.error(error.message || '');

@@ -47,8 +47,3 @@
   justify-content: space-between;
   margin: 20px 0;
 }
-.headerSection2__right {
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-}

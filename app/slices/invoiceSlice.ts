@@ -116,7 +116,7 @@ export const filterInvoiceFn = (
           createdAt: {
             [Op.between]: [
               `${moment(startDate).format('YYYY-MM-DD')} 00:00:00`,
-              `${moment(endDate).format('YYYY-MM-DD')} 00:00:00`,
+              `${moment(endDate).format('YYYY-MM-DD')} 23:00:00`,
             ],
           },
         },
@@ -136,7 +136,7 @@ export const filterInvoiceFn = (
           createdAt: {
             [Op.between]: [
               `${moment(startDate).format('YYYY-MM-DD')} 00:00:00`,
-              `${moment(endDate).format('YYYY-MM-DD')} 00:00:00`,
+              `${moment(endDate).format('YYYY-MM-DD')} 23:00:00`,
             ],
           },
         },

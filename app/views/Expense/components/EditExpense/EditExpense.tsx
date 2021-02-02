@@ -2,6 +2,7 @@ import React, { useEffect } from 'react';
 import { Button, Form } from 'semantic-ui-react';
 import { Field, Formik } from 'formik';
 import { useSelector, useDispatch } from 'react-redux';
+import moment from 'moment';
 
 // import * as Yup from 'yup';
 import TextInput from '../../../../components/TextInput/TextInput';
@@ -53,7 +54,7 @@ const EditExpense: React.FC<EditExpenseProps> = ({
       initialValues={{
         type: type || '',
         amount: amount || '',
-        date: date || '',
+        date: moment(date).format('YYYY-MM-DD') || '',
         note: note || '',
       }}
       // validationSchema={EditExpenseSchema}

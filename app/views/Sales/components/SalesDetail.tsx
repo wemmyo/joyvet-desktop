@@ -13,7 +13,7 @@ import {
   deleteInvoiceFn,
   getInvoicesFn,
 } from '../../../slices/invoiceSlice';
-import { numberWithCommas } from '../../../utils/helpers';
+import { numberWithCommas, isAdmin } from '../../../utils/helpers';
 import ComponentToPrint from '../../../components/PrintedReceipt/ReceiptWrapper';
 import { closeSideContentFn } from '../../../slices/dashboardSlice';
 import routes from '../../../routing/routes';
@@ -162,17 +162,20 @@ const SalesDetail: React.FC<SalesDetailProps> = ({
       <Button color="green" type="button" onClick={handlePrintFn}>
         Print
       </Button>
-      <Button
-        style={{ marginTop: '1rem' }}
-        onClick={handleDeleteCustomer}
-        type="button"
-        negative
-      >
-        Delete
-      </Button>
+
       <Button color="yellow" as={Link} to={`${routes.INVOICE}/${salesId}`}>
         Edit
       </Button>
+      {isAdmin() ? (
+        <Button
+          style={{ marginTop: '1rem' }}
+          onClick={handleDeleteCustomer}
+          type="button"
+          negative
+        >
+          Delete
+        </Button>
+      ) : null}
       {renderInvoiceToPrint()}
     </>
   );

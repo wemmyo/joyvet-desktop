@@ -1,12 +1,13 @@
 import React, { useEffect } from 'react';
 import { Tab } from 'semantic-ui-react';
-import { useDispatch } from 'react-redux';
+import { useSelector, useDispatch } from 'react-redux';
 import { withRouter } from 'react-router';
 
 import DashboardLayout from '../../layouts/DashboardLayout/DashboardLayout';
 import {
   getCustomerInvoicesFn,
   getCustomerReceiptsFn,
+  selectCustomerState,
 } from '../../slices/customerSlice';
 import CustomerHistoryInvoices from './components/Invoices/Invoices';
 import CustomerHistoryReceipts from './components/Receipts/Receipts';
@@ -14,13 +15,23 @@ import CustomerHistoryReceipts from './components/Receipts/Receipts';
 // export interface CustomerHistoryProps {}
 
 const CustomerHistory: React.SFC = ({ match }: any) => {
-  const dispatch = useDispatch();
   const customerId = match.params.id;
+
+  const dispatch = useDispatch();
+  const customerState = useSelector(selectCustomerState);
+
+  const { data: receiptsRaw } = customerState.receipts;
+  const { data: invoicesRaw } = customerState.invoices;
+
+  const receipts = receiptsRaw ? JSON.parse(receiptsRaw) : [];
+  const invoices = invoicesRaw ? JSON.parse(invoicesRaw) : [];
+
+  console.log(receipts);
 
   useEffect(() => {
     dispatch(getCustomerInvoicesFn(customerId));
     dispatch(getCustomerReceiptsFn(customerId));
-  });
+  }, []);
 
   const panes = [
     {
@@ -34,7 +45,7 @@ const CustomerHistory: React.SFC = ({ match }: any) => {
       render: function ReceiptsTab() {
         return (
           <Tab.Pane>
-            <CustomerHistoryReceipts />
+            <CustomerHistoryReceipts data={receipts} />
           </Tab.Pane>
         );
       },
@@ -44,7 +55,7 @@ const CustomerHistory: React.SFC = ({ match }: any) => {
       render: function InvoicesTab() {
         return (
           <Tab.Pane>
-            <CustomerHistoryInvoices />
+            <CustomerHistoryInvoices data={invoices} />
           </Tab.Pane>
         );
       },
@@ -53,7 +64,7 @@ const CustomerHistory: React.SFC = ({ match }: any) => {
 
   return (
     <DashboardLayout screenTitle="Customer History">
-      <Tab panes={panes} />
+      {/* <Tab panes={panes} /> */}
     </DashboardLayout>
   );
 };

@@ -7,7 +7,8 @@ import {
   selectExpenseState,
   getExpensesFn,
   createExpenseFn,
-  searchExpenseFn,
+  // searchExpenseFn,
+  filterExpensesFn,
 } from '../../slices/expenseSlice';
 import CreateExpense from './components/CreateExpense/CreateExpense';
 import { numberWithCommas } from '../../utils/helpers';
@@ -23,7 +24,10 @@ const CONTENT_EDIT = 'edit';
 const ExpensesScreen: React.FC = () => {
   const [sideContent, setSideContent] = useState('');
   const [expenseId, setExpenseId] = useState('');
-  const [searchValue, setSearchValue] = useState('');
+  // const [searchValue, setSearchValue] = useState('');
+  const [startDate, setStartDate] = useState(new Date());
+  const [endDate, setEndDate] = useState(new Date());
+  const [expenseType, setExpenseType] = useState('');
 
   const dispatch = useDispatch();
 
@@ -95,18 +99,66 @@ const ExpensesScreen: React.FC = () => {
     return null;
   };
 
-  const handleSearchChange = (e, { value }: { value: string }) => {
-    setSearchValue(value);
-    if (value.length > 0) {
-      dispatch(searchExpenseFn(value));
-    } else {
-      fetchExpenses();
-    }
+  // const handleSearchChange = (e, { value }: { value: string }) => {
+  //   setSearchValue(value);
+  //   if (value.length > 0) {
+  //     dispatch(searchExpenseFn(value));
+  //   } else {
+  //     fetchExpenses();
+  //   }
+  // };
+
+  const sum = (prev: number, next: number) => {
+    return prev + next;
   };
+
+  const sumOfAmounts = () => {
+    if (expenses.length === 0) {
+      return 0;
+    }
+    return expenses
+      .map((item: any) => {
+        return item.amount;
+      })
+      .reduce(sum);
+  };
+
+  // const headerContent = () => {
+  //   return (
+  //     <>
+  //       <Button
+  //         color="blue"
+  //         icon
+  //         labelPosition="left"
+  //         onClick={() => {
+  //           openSideContent(CONTENT_CREATE);
+  //         }}
+  //       >
+  //         <Icon inverted color="grey" name="add" />
+  //         Create
+  //       </Button>
+  //       <Form.Input
+  //         placeholder="Search Expense"
+  //         onChange={handleSearchChange}
+  //         value={searchValue}
+  //       />
+  //     </>
+  //   );
+  // };
+
+  const filterExpenses = () => {
+    dispatch(filterExpensesFn({ startDate, endDate, expenseType }));
+  };
+
+  const options = [
+    { key: 1, text: 'All', value: 'all' },
+    { key: 2, text: 'Advertisement', value: 'advertisement' },
+    { key: 3, text: 'Rent', value: 'rent' },
+  ];
 
   const headerContent = () => {
     return (
-      <>
+      <div style={{ display: 'flex', alignItems: 'flex-end' }}>
         <Button
           color="blue"
           icon
@@ -118,12 +170,39 @@ const ExpensesScreen: React.FC = () => {
           <Icon inverted color="grey" name="add" />
           Create
         </Button>
-        <Form.Input
-          placeholder="Search Expense"
-          onChange={handleSearchChange}
-          value={searchValue}
-        />
-      </>
+
+        <Form>
+          <Form.Group style={{ marginBottom: 0 }}>
+            <Form.Input
+              label="Start Date"
+              type="date"
+              onChange={(e, { value }) => setStartDate(value)}
+              value={startDate}
+            />
+            <Form.Input
+              label="End Date"
+              type="date"
+              onChange={(e, { value }) => setEndDate(value)}
+              value={endDate}
+            />
+            <Form.Select
+              label="Type"
+              options={options}
+              placeholder="Choose type"
+              onChange={(e, { value }) => setExpenseType(value)}
+              value={expenseType}
+            />
+          </Form.Group>
+        </Form>
+        <div>
+          <Button type="button" onClick={filterExpenses}>
+            Filter
+          </Button>
+          <Button onClick={fetchExpenses} type="button">
+            Reset
+          </Button>
+        </div>
+      </div>
     );
   };
 
@@ -147,6 +226,17 @@ const ExpensesScreen: React.FC = () => {
           </Table.Header>
 
           <Table.Body>{renderRows()}</Table.Body>
+
+          <Table.Footer>
+            <Table.Row>
+              <Table.HeaderCell />
+              <Table.HeaderCell style={{ fontWeight: 'bold' }}>
+                Total: ₦{numberWithCommas(sumOfAmounts())}
+              </Table.HeaderCell>
+              <Table.HeaderCell />
+              <Table.HeaderCell />
+            </Table.Row>
+          </Table.Footer>
         </Table>
       )}
     </DashboardLayout>

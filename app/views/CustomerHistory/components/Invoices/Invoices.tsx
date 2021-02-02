@@ -1,6 +1,8 @@
 import * as React from 'react';
 
-export interface CustomerHistoryInvoicesProps {}
+export interface CustomerHistoryInvoicesProps {
+  data: any[];
+}
 
 const CustomerHistoryInvoices: React.SFC<CustomerHistoryInvoicesProps> = () => {
   return (

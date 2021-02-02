@@ -6,6 +6,7 @@ import styles from './SideNav.css';
 // import NavItem from './components/NavItem/NavItem';
 import routes from '../../../routing/routes';
 import { logoutFn } from '../../../slices/userSlice';
+import { isAdmin } from '../../../utils/helpers';
 // export interface SideNavProps {}
 
 const SideNav = () => {
@@ -93,13 +94,15 @@ const SideNav = () => {
       >
         Expenditure
       </NavLink>
-      <NavLink
-        activeClassName={styles.sideNav__mainItemActive}
-        className={styles.sideNav__mainItem}
-        to={routes.USER}
-      >
-        Users
-      </NavLink>
+      {isAdmin() ? (
+        <NavLink
+          activeClassName={styles.sideNav__mainItemActive}
+          className={styles.sideNav__mainItem}
+          to={routes.USER}
+        >
+          Users
+        </NavLink>
+      ) : null}
 
       <div
         // type="div"

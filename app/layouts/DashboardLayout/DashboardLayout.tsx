@@ -49,11 +49,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
                 </p>
               </div>
             </div>
-            <div className={styles.headerSection2}>
-              <div className={styles.headerSection2__right}>
-                {headerContent}
-              </div>
-            </div>
+            <div className={styles.headerSection2}>{headerContent}</div>
           </header>
           {children}
         </div>
