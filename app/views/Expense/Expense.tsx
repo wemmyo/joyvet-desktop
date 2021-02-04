@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Table, Button, Icon, Form, Loader } from 'semantic-ui-react';
 import { useSelector, useDispatch } from 'react-redux';
+import moment from 'moment';
 
 import DashboardLayout from '../../layouts/DashboardLayout/DashboardLayout';
 import {
@@ -20,13 +21,14 @@ import EditExpense from './components/EditExpense/EditExpense';
 
 const CONTENT_CREATE = 'create';
 const CONTENT_EDIT = 'edit';
+const TODAYS_DATE = `${moment().format('YYYY-MM-DD')}`;
 
 const ExpensesScreen: React.FC = () => {
   const [sideContent, setSideContent] = useState('');
   const [expenseId, setExpenseId] = useState('');
   // const [searchValue, setSearchValue] = useState('');
-  const [startDate, setStartDate] = useState(new Date());
-  const [endDate, setEndDate] = useState(new Date());
+  const [startDate, setStartDate] = useState(TODAYS_DATE);
+  const [endDate, setEndDate] = useState(TODAYS_DATE);
   const [expenseType, setExpenseType] = useState('');
 
   const dispatch = useDispatch();
@@ -158,7 +160,14 @@ const ExpensesScreen: React.FC = () => {
 
   const headerContent = () => {
     return (
-      <div style={{ display: 'flex', alignItems: 'flex-end' }}>
+      <div
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          flex: 1,
+        }}
+      >
         <Button
           color="blue"
           icon
@@ -170,37 +179,38 @@ const ExpensesScreen: React.FC = () => {
           <Icon inverted color="grey" name="add" />
           Create
         </Button>
-
-        <Form>
-          <Form.Group style={{ marginBottom: 0 }}>
-            <Form.Input
-              label="Start Date"
-              type="date"
-              onChange={(e, { value }) => setStartDate(value)}
-              value={startDate}
-            />
-            <Form.Input
-              label="End Date"
-              type="date"
-              onChange={(e, { value }) => setEndDate(value)}
-              value={endDate}
-            />
-            <Form.Select
-              label="Type"
-              options={options}
-              placeholder="Choose type"
-              onChange={(e, { value }) => setExpenseType(value)}
-              value={expenseType}
-            />
-          </Form.Group>
-        </Form>
-        <div>
-          <Button type="button" onClick={filterExpenses}>
-            Filter
-          </Button>
-          <Button onClick={fetchExpenses} type="button">
-            Reset
-          </Button>
+        <div style={{ display: 'flex', alignItems: 'flex-end' }}>
+          <Form>
+            <Form.Group style={{ marginBottom: 0 }}>
+              <Form.Input
+                label="Start Date"
+                type="date"
+                onChange={(e, { value }) => setStartDate(value)}
+                value={startDate}
+              />
+              <Form.Input
+                label="End Date"
+                type="date"
+                onChange={(e, { value }) => setEndDate(value)}
+                value={endDate}
+              />
+              <Form.Select
+                label="Type"
+                options={options}
+                placeholder="Choose type"
+                onChange={(e, { value }) => setExpenseType(value)}
+                value={expenseType}
+              />
+            </Form.Group>
+          </Form>
+          <div style={{ marginLeft: '1rem' }}>
+            <Button type="button" onClick={filterExpenses} primary>
+              Filter
+            </Button>
+            <Button onClick={fetchExpenses} type="button">
+              Reset
+            </Button>
+          </div>
         </div>
       </div>
     );

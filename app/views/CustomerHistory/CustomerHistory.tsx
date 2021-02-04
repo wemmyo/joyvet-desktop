@@ -26,20 +26,18 @@ const CustomerHistory: React.SFC = ({ match }: any) => {
   const receipts = receiptsRaw ? JSON.parse(receiptsRaw) : [];
   const invoices = invoicesRaw ? JSON.parse(invoicesRaw) : [];
 
-  console.log(receipts);
-
   useEffect(() => {
     dispatch(getCustomerInvoicesFn(customerId));
     dispatch(getCustomerReceiptsFn(customerId));
   }, []);
 
   const panes = [
-    {
-      menuItem: 'All',
-      render: function AllTab() {
-        return <Tab.Pane>Tab 1 Content</Tab.Pane>;
-      },
-    },
+    // {
+    //   menuItem: 'All',
+    //   render: function AllTab() {
+    //     return <Tab.Pane>Tab 1 Content</Tab.Pane>;
+    //   },
+    // },
     {
       menuItem: 'Receipts',
       render: function ReceiptsTab() {
@@ -64,7 +62,7 @@ const CustomerHistory: React.SFC = ({ match }: any) => {
 
   return (
     <DashboardLayout screenTitle="Customer History">
-      {/* <Tab panes={panes} /> */}
+      <Tab panes={panes} />
     </DashboardLayout>
   );
 };

@@ -12,7 +12,7 @@ import {
   selectCustomerState,
 } from '../../slices/customerSlice';
 import { getProductsFn, selectProductState } from '../../slices/productSlice';
-import { numberWithCommas } from '../../utils/helpers';
+import { numberWithCommas, sum } from '../../utils/helpers';
 import {
   createInvoiceFn,
   getSingleInvoiceFn,
@@ -169,10 +169,6 @@ const InvoiceScreen: React.FC = () => {
       );
     });
     return customerList;
-  };
-
-  const sum = (prev: number, next: number) => {
-    return prev + next;
   };
 
   const addToOrders = (value: any) => {

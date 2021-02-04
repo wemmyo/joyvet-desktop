@@ -100,19 +100,14 @@ const EditSupplier: React.FC<EditSupplierProps> = ({
             type="number"
             component={TextInput}
           />
-
-          <Button onClick={() => handleSubmit()} type="Submit" fluid primary>
-            Update
-          </Button>
-          <Button
-            style={{ marginTop: '1rem' }}
-            onClick={handleDeleteSupplier}
-            type="button"
-            fluid
-            negative
-          >
-            Delete
-          </Button>
+          <div style={{ marginTop: '1rem' }}>
+            <Button onClick={() => handleSubmit()} type="Submit" positive>
+              Update
+            </Button>
+            <Button onClick={handleDeleteSupplier} type="button" negative>
+              Delete
+            </Button>
+          </div>
         </Form>
       )}
     </Formik>

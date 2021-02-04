@@ -137,9 +137,9 @@ export const getCustomerReceiptsFn = (customerId: string | number) => async (
       where: {
         customerId,
       },
+      order: [['createdAt', 'DESC']],
     });
     dispatch(getReceiptsSuccess(JSON.stringify(receipts)));
-    console.log(receipts);
   } catch (error) {
     dispatch(getReceiptsFailed());
     toast.error(error.message || '');
@@ -155,9 +155,9 @@ export const getCustomerInvoicesFn = (customerId: string) => async (
       where: {
         customerId,
       },
+      order: [['createdAt', 'DESC']],
     });
     dispatch(getInvoicesSuccess(JSON.stringify(invoices)));
-    console.log(invoices);
   } catch (error) {
     dispatch(getInvoicesFailed());
 

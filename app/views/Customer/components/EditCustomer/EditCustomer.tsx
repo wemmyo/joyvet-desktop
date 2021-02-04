@@ -72,50 +72,49 @@ const EditCustomer: React.FC<EditCustomerProps> = ({
       }}
     >
       {({ handleSubmit }) => (
-        <Form>
-          <Field
-            name="fullName"
-            placeholder="Full Name"
-            label="Full Name"
-            type="text"
-            component={TextInput}
-          />
-          <Field
-            name="address"
-            placeholder="Address"
-            label="Address"
-            type="text"
-            component={TextInput}
-          />
-          <Field
-            name="phoneNumber"
-            placeholder="Phone Number"
-            label="Phone Number"
-            type="tel"
-            component={TextInput}
-          />
-          <Field
-            name="balance"
-            placeholder="Balance"
-            label="Balance"
-            type="number"
-            component={TextInput}
-          />
-
-          <Button onClick={() => handleSubmit()} type="Submit" fluid primary>
-            Update
-          </Button>
-          <Button
-            style={{ marginTop: '1rem' }}
-            onClick={handleDeleteCustomer}
-            type="button"
-            fluid
-            negative
-          >
-            Delete
-          </Button>
-          <Link to={`${routes.CUSTOMER}/${customerId}`}>History</Link>
-        </Form>
+        <>
+          <Form>
+            <Field
+              name="fullName"
+              placeholder="Full Name"
+              label="Full Name"
+              type="text"
+              component={TextInput}
+            />
+            <Field
+              name="address"
+              placeholder="Address"
+              label="Address"
+              type="text"
+              component={TextInput}
+            />
+            <Field
+              name="phoneNumber"
+              placeholder="Phone Number"
+              label="Phone Number"
+              type="tel"
+              component={TextInput}
+            />
+            <Field
+              name="balance"
+              placeholder="Balance"
+              label="Balance"
+              type="number"
+              component={TextInput}
+            />
+          </Form>
+          <div style={{ marginTop: '1rem' }}>
+            <Button onClick={() => handleSubmit()} type="Submit" positive>
+              Update
+            </Button>
+            <Button onClick={handleDeleteCustomer} type="button" negative>
+              Delete
+            </Button>
+            <Button as={Link} to={`${routes.CUSTOMER}/${customerId}`}>
+              History
+            </Button>
+          </div>
+        </>
       )}
     </Formik>
   );

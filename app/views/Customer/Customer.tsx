@@ -10,7 +10,7 @@ import {
   searchCustomerFn,
 } from '../../slices/customerSlice';
 import CreateCustomer from './components/CreateCustomer/CreateCustomer';
-import { numberWithCommas, isAdmin } from '../../utils/helpers';
+import { numberWithCommas, isAdmin, sum } from '../../utils/helpers';
 import {
   openSideContentFn,
   closeSideContentFn,
@@ -109,10 +109,6 @@ const CustomersScreen: React.FC = () => {
     }
   };
 
-  const sum = (prev: number, next: number) => {
-    return prev + next;
-  };
-
   const sumOfBalances = () => {
     if (customers.length === 0) {
       return 0;
@@ -168,7 +164,7 @@ const CustomersScreen: React.FC = () => {
 
           <Table.Body>{renderRows()}</Table.Body>
 
-          {isAdmin ? (
+          {isAdmin() ? (
             <Table.Footer>
               <Table.Row>
                 <Table.HeaderCell />

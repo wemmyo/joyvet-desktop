@@ -11,7 +11,7 @@ import {
   clearSingleSupplierFn,
 } from '../../slices/supplierSlice';
 import CreateSupplier from './components/CreateSupplier/CreateSupplier';
-import { numberWithCommas, isAdmin } from '../../utils/helpers';
+import { numberWithCommas, isAdmin, sum } from '../../utils/helpers';
 import {
   openSideContentFn,
   closeSideContentFn,
@@ -112,10 +112,6 @@ const SuppliersScreen: React.FC = () => {
     }
   };
 
-  const sum = (prev: number, next: number) => {
-    return prev + next;
-  };
-
   const sumOfBalances = () => {
     if (suppliers.length === 0) {
       return 0;
@@ -171,7 +167,7 @@ const SuppliersScreen: React.FC = () => {
 
           <Table.Body>{renderRows()}</Table.Body>
 
-          {isAdmin ? (
+          {isAdmin() ? (
             <Table.Footer>
               <Table.Row>
                 <Table.HeaderCell />

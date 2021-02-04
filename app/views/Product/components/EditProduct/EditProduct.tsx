@@ -106,7 +106,7 @@ const EditProduct: React.FC<EditProductProps> = ({
             component={TextInput}
           />
 
-          <Button onClick={() => handleSubmit()} type="Submit" fluid primary>
+          <Button onClick={() => handleSubmit()} type="Submit" fluid positive>
             Update
           </Button>
         </Form>

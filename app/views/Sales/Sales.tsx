@@ -18,8 +18,7 @@ import {
 } from '../../slices/dashboardSlice';
 import SalesDetail from './components/SalesDetail';
 
-const START_DATE = `${moment().format('YYYY-MM-DD')}`;
-const END_DATE = `${moment().add(1, 'days').format('YYYY-MM-DD')}`;
+const TODAYS_DATE = `${moment().format('YYYY-MM-DD')}`;
 const CONTENT_DETAIL = 'detail';
 
 const SalesScreen: React.FC = () => {
@@ -27,8 +26,8 @@ const SalesScreen: React.FC = () => {
   const [salesId, setSalesId] = useState('');
   const [saleType, setSaleType] = useState('all');
   const [searchValue, setSearchValue] = useState('');
-  const [startDate, setStartDate] = useState(START_DATE);
-  const [endDate, setEndDate] = useState(END_DATE);
+  const [startDate, setStartDate] = useState(TODAYS_DATE);
+  const [endDate, setEndDate] = useState(TODAYS_DATE);
 
   const dispatch = useDispatch();
 
@@ -119,8 +118,8 @@ const SalesScreen: React.FC = () => {
   ];
 
   const resetFilters = () => {
-    setStartDate(START_DATE);
-    setEndDate(END_DATE);
+    setStartDate(TODAYS_DATE);
+    setEndDate(TODAYS_DATE);
     setSaleType('all');
     setSearchValue('');
     fetchInvoices();
@@ -137,11 +136,13 @@ const SalesScreen: React.FC = () => {
               label="Start Date"
               type="date"
               onChange={(e, { value }) => setStartDate(value)}
+              value={startDate}
             />
             <Form.Input
               label="End Date"
               type="date"
               onChange={(e, { value }) => setEndDate(value)}
+              value={endDate}
             />
             <Form.Select
               label="Type"

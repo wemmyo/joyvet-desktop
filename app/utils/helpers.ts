@@ -15,3 +15,7 @@ export const isAdmin = () => {
   }
   return false;
 };
+
+export const sum = (prev: number, next: number) => {
+  return prev + next;
+};
