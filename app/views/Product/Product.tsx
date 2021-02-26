@@ -88,7 +88,8 @@ const ProductsScreen: React.FC = () => {
       return (
         <Table.Row
           // eslint-disable-next-line react/jsx-props-no-spreading
-          {...(isAdmin() && { onClick: () => openSingleProduct(each.id) })}
+          // {...(isAdmin() && { onClick: () => openSingleProduct(each.id) })}
+          onClick={() => openSingleProduct(each.id)}
           key={each.id}
         >
           <Table.Cell>{each.title}</Table.Cell>

@@ -1,5 +1,6 @@
-import React, { useEffect } from 'react';
-import { Tab } from 'semantic-ui-react';
+import React, { useEffect, useState } from 'react';
+import { Form, Button, Tab } from 'semantic-ui-react';
+import moment from 'moment';
 import { useSelector, useDispatch } from 'react-redux';
 import { withRouter } from 'react-router';
 
@@ -14,7 +15,12 @@ import CustomerHistoryReceipts from './components/Receipts/Receipts';
 
 // export interface CustomerHistoryProps {}
 
+const TODAYS_DATE = `${moment().format('YYYY-MM-DD')}`;
+
 const CustomerHistory: React.SFC = ({ match }: any) => {
+  const [startDate, setStartDate] = useState(TODAYS_DATE);
+  const [endDate, setEndDate] = useState(TODAYS_DATE);
+
   const customerId = match.params.id;
 
   const dispatch = useDispatch();
@@ -27,9 +33,14 @@ const CustomerHistory: React.SFC = ({ match }: any) => {
   const invoices = invoicesRaw ? JSON.parse(invoicesRaw) : [];
 
   useEffect(() => {
-    dispatch(getCustomerInvoicesFn(customerId));
-    dispatch(getCustomerReceiptsFn(customerId));
-  }, []);
+    dispatch(getCustomerInvoicesFn(customerId, startDate, endDate));
+    dispatch(getCustomerReceiptsFn(customerId, startDate, endDate));
+  }, [startDate, endDate]);
+
+  const resetFilters = () => {
+    setStartDate(TODAYS_DATE);
+    setEndDate(TODAYS_DATE);
+  };
 
   const panes = [
     // {
@@ -62,6 +73,35 @@ const CustomerHistory: React.SFC = ({ match }: any) => {
 
   return (
     <DashboardLayout screenTitle="Customer History">
+      <div
+        style={{
+          display: 'flex',
+          justifyContent: 'flex-start',
+          alignItems: 'center',
+        }}
+      >
+        <Form>
+          <Form.Group
+          // widths="equal"
+          >
+            <Form.Input
+              label="Start Date"
+              type="date"
+              onChange={(e, { value }) => setStartDate(value)}
+              value={startDate}
+            />
+            <Form.Input
+              label="End Date"
+              type="date"
+              onChange={(e, { value }) => setEndDate(value)}
+              value={endDate}
+            />
+          </Form.Group>
+        </Form>
+        <Button style={{ marginLeft: 10 }} onClick={resetFilters}>
+          Reset
+        </Button>
+      </div>
       <Tab panes={panes} />
     </DashboardLayout>
   );

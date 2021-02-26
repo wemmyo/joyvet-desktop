@@ -1,6 +1,7 @@
 import { createSlice } from '@reduxjs/toolkit';
 import { toast } from 'react-toastify';
 import { Op } from 'sequelize';
+import moment from 'moment';
 import Customer from '../models/customer';
 import Invoice from '../models/invoice';
 import Receipt from '../models/receipt';
@@ -128,14 +129,22 @@ export const {
   getInvoicesFailed,
 } = customerSlice.actions;
 
-export const getCustomerReceiptsFn = (customerId: string | number) => async (
-  dispatch: (arg0: { payload: any; type: string }) => void
-) => {
+export const getCustomerReceiptsFn = (
+  customerId: string | number,
+  startDate?: Date | string,
+  endDate?: Date | string
+) => async (dispatch: (arg0: { payload: any; type: string }) => void) => {
   dispatch(getReceipts());
   try {
     const receipts = await Receipt.findAll({
       where: {
         customerId,
+        createdAt: {
+          [Op.between]: [
+            `${moment(startDate).format('YYYY-MM-DD')} 00:00:00`,
+            `${moment(endDate).format('YYYY-MM-DD')} 23:00:00`,
+          ],
+        },
       },
       order: [['createdAt', 'DESC']],
     });
@@ -146,14 +155,22 @@ export const getCustomerReceiptsFn = (customerId: string | number) => async (
   }
 };
 
-export const getCustomerInvoicesFn = (customerId: string) => async (
-  dispatch: (arg0: { payload: any; type: string }) => void
-) => {
+export const getCustomerInvoicesFn = (
+  customerId: string,
+  startDate: Date | string,
+  endDate: Date | string
+) => async (dispatch: (arg0: { payload: any; type: string }) => void) => {
   dispatch(getInvoices());
   try {
     const invoices = await Invoice.findAll({
       where: {
         customerId,
+        createdAt: {
+          [Op.between]: [
+            `${moment(startDate).format('YYYY-MM-DD')} 00:00:00`,
+            `${moment(endDate).format('YYYY-MM-DD')} 23:00:00`,
+          ],
+        },
       },
       order: [['createdAt', 'DESC']],
     });
