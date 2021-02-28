@@ -40,11 +40,7 @@ const invoiceSlice = createSlice({
       singleInvoice.loading = false;
       singleInvoice.data = '';
     },
-    clearCreateInvoice: (state) => {
-      const { createInvoice } = state;
-      createInvoice.loading = false;
-      createInvoice.data = '';
-    },
+
     filterByType: (state, { payload }) => {
       const { invoices } = state;
       const parsedInvoice = JSON.parse(invoices.data);
@@ -78,6 +74,11 @@ const invoiceSlice = createSlice({
       createInvoice.data = payload;
     },
     createInvoiceFailed: (state) => {
+      const { createInvoice } = state;
+      createInvoice.loading = false;
+      createInvoice.data = '';
+    },
+    clearCreateInvoice: (state) => {
       const { createInvoice } = state;
       createInvoice.loading = false;
       createInvoice.data = '';

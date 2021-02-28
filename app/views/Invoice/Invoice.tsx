@@ -108,7 +108,7 @@ const InvoiceScreen: React.FC = () => {
           name="product"
           component="select"
           className="ui dropdown"
-          onChange={(e) => {
+          onChange={(e: React.ChangeEvent<any>) => {
             handleChange(e);
             setFieldValue('unitPrice', '');
           }}
@@ -241,12 +241,12 @@ const InvoiceScreen: React.FC = () => {
 
   const addItemToOrder = (values: FormValues, { resetForm }) => {
     const product = JSON.parse(values.product);
-    const amount = Number(values.unitPrice) * Number(values.quantity);
-    const profit =
-      (Number(values.unitPrice) - Number(product.buyPrice)) *
-      Number(values.quantity);
+    const unitPrice: number = parseFloat(values.unitPrice);
+    const quantity: number = parseFloat(values.quantity);
+    const amount: number = unitPrice * quantity;
+    const profit: number = (unitPrice - product.buyPrice) * quantity;
 
-    if (product.stock < Number(values.quantity)) {
+    if (product.stock < quantity) {
       toast.error(`${product.title}: Re-order level`, {
         autoClose: 5000,
       });
@@ -261,9 +261,9 @@ const InvoiceScreen: React.FC = () => {
     } else {
       addToOrders({
         ...product,
-        quantity: values.quantity,
+        quantity,
         amount,
-        unitPrice: values.unitPrice,
+        unitPrice,
         orderId: new Date().getUTCMilliseconds(),
         profit,
       });
