@@ -81,9 +81,7 @@ const CustomerHistory: React.SFC = ({ match }: any) => {
         }}
       >
         <Form>
-          <Form.Group
-          // widths="equal"
-          >
+          <Form.Group>
             <Form.Input
               label="Start Date"
               type="date"

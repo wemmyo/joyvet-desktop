@@ -2,6 +2,7 @@ import React, { useEffect } from 'react';
 import { Button, Form } from 'semantic-ui-react';
 import { Field, Formik } from 'formik';
 import { useSelector, useDispatch } from 'react-redux';
+import { Link } from 'react-router-dom';
 
 // import * as Yup from 'yup';
 import TextInput from '../../../../components/TextInput/TextInput';
@@ -13,6 +14,7 @@ import {
   deleteSupplierFn,
 } from '../../../../slices/supplierSlice';
 import { closeSideContentFn } from '../../../../slices/dashboardSlice';
+import routes from '../../../../routing/routes';
 
 export interface EditSupplierProps {
   supplierId: string | number;
@@ -106,6 +108,9 @@ const EditSupplier: React.FC<EditSupplierProps> = ({
             </Button>
             <Button onClick={handleDeleteSupplier} type="button" negative>
               Delete
+            </Button>
+            <Button as={Link} to={`${routes.SUPPLIER}/${supplierId}`}>
+              History
             </Button>
           </div>
         </Form>

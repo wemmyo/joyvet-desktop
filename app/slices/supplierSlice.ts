@@ -1,7 +1,10 @@
 import { createSlice } from '@reduxjs/toolkit';
 import { toast } from 'react-toastify';
 import { Op } from 'sequelize';
+import moment from 'moment';
 import Supplier from '../models/supplier';
+import Payment from '../models/payment';
+import Purchase from '../models/purchase';
 
 const initialState = {
   singleSupplier: {
@@ -13,6 +16,14 @@ const initialState = {
     data: '',
   },
   createSupplierState: {
+    loading: false,
+    data: '',
+  },
+  payments: {
+    loading: false,
+    data: '',
+  },
+  purchases: {
     loading: false,
     data: '',
   },
@@ -70,6 +81,34 @@ const supplierSlice = createSlice({
       createSupplierState.loading = false;
       createSupplierState.data = '';
     },
+    getPayments: (state) => {
+      const { payments } = state;
+      payments.loading = true;
+      payments.data = '';
+    },
+    getPaymentsSuccess: (state, { payload }) => {
+      const { payments } = state;
+      payments.loading = false;
+      payments.data = payload;
+    },
+    getPaymentsFailed: (state) => {
+      const { payments } = state;
+      payments.loading = false;
+    },
+    getPurchases: (state) => {
+      const { purchases } = state;
+      purchases.loading = true;
+      purchases.data = '';
+    },
+    getPurchasesSuccess: (state, { payload }) => {
+      const { purchases } = state;
+      purchases.loading = false;
+      purchases.data = payload;
+    },
+    getPurchasesFailed: (state) => {
+      const { purchases } = state;
+      purchases.loading = false;
+    },
   },
 });
 
@@ -84,7 +123,66 @@ export const {
   createSupplier,
   createSupplierSuccess,
   createSupplierFailed,
+  getPayments,
+  getPaymentsSuccess,
+  getPaymentsFailed,
+  getPurchases,
+  getPurchasesSuccess,
+  getPurchasesFailed,
 } = supplierSlice.actions;
+
+export const getSupplierPaymentsFn = (
+  supplierId: string | number,
+  startDate?: Date | string,
+  endDate?: Date | string
+) => async (dispatch: (arg0: { payload: any; type: string }) => void) => {
+  dispatch(getPayments());
+  try {
+    const payments = await Payment.findAll({
+      where: {
+        supplierId,
+        createdAt: {
+          [Op.between]: [
+            `${moment(startDate).format('YYYY-MM-DD')} 00:00:00`,
+            `${moment(endDate).format('YYYY-MM-DD')} 23:00:00`,
+          ],
+        },
+      },
+      order: [['createdAt', 'DESC']],
+    });
+    dispatch(getPaymentsSuccess(JSON.stringify(payments)));
+  } catch (error) {
+    dispatch(getPaymentsFailed());
+    toast.error(error.message || '');
+  }
+};
+
+export const getSupplierPurchasesFn = (
+  supplierId: string,
+  startDate: Date | string,
+  endDate: Date | string
+) => async (dispatch: (arg0: { payload: any; type: string }) => void) => {
+  dispatch(getPurchases());
+  try {
+    const purchases = await Purchase.findAll({
+      where: {
+        supplierId,
+        createdAt: {
+          [Op.between]: [
+            `${moment(startDate).format('YYYY-MM-DD')} 00:00:00`,
+            `${moment(endDate).format('YYYY-MM-DD')} 23:00:00`,
+          ],
+        },
+      },
+      order: [['createdAt', 'DESC']],
+    });
+    dispatch(getPurchasesSuccess(JSON.stringify(purchases)));
+  } catch (error) {
+    dispatch(getPurchasesFailed());
+
+    toast.error(error.message || '');
+  }
+};
 
 export const searchSupplierFn = (value: string) => async (
   dispatch: (arg0: { payload: any; type: string }) => void
