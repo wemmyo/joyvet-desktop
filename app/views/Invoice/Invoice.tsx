@@ -259,22 +259,33 @@ const InvoiceScreen: React.FC = () => {
         },
       });
     } else {
-      addToOrders({
-        ...product,
-        quantity,
-        amount,
-        unitPrice,
-        orderId: new Date().getUTCMilliseconds(),
-        profit,
-      });
-      resetForm({
-        values: {
-          ...values,
-          quantity: '',
-          unitPrice: '',
-          product: '',
-        },
-      });
+      const productInOrder = orders.find((order) => order.id === product.id);
+      if (productInOrder) {
+        const indexOfProductInOrder = orders.indexOf(productInOrder);
+        const updatedItem = productInOrder;
+        updatedItem.unitPrice = unitPrice;
+        updatedItem.quantity += quantity;
+        const newOrders = [...orders];
+        newOrders[indexOfProductInOrder] = updatedItem;
+        setOrders(newOrders);
+      } else {
+        addToOrders({
+          ...product,
+          quantity,
+          amount,
+          unitPrice,
+          orderId: new Date().getUTCMilliseconds(),
+          profit,
+        });
+        resetForm({
+          values: {
+            ...values,
+            quantity: '',
+            unitPrice: '',
+            product: '',
+          },
+        });
+      }
     }
   };
 
