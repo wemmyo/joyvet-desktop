@@ -239,6 +239,17 @@ const InvoiceScreen: React.FC = () => {
     return null;
   };
 
+  const resetAddItemForm = (resetForm, values) => {
+    resetForm({
+      values: {
+        ...values,
+        quantity: '',
+        unitPrice: '',
+        product: '',
+      },
+    });
+  };
+
   const addItemToOrder = (values: FormValues, { resetForm }) => {
     const product = JSON.parse(values.product);
     const unitPrice: number = parseFloat(values.unitPrice);
@@ -250,14 +261,7 @@ const InvoiceScreen: React.FC = () => {
       toast.error(`${product.title}: Re-order level`, {
         autoClose: 5000,
       });
-      resetForm({
-        values: {
-          ...values,
-          quantity: '',
-          unitPrice: '',
-          product: '',
-        },
-      });
+      resetAddItemForm(resetForm, values);
     } else {
       const productInOrder = orders.find((order) => order.id === product.id);
       if (productInOrder) {
@@ -268,6 +272,7 @@ const InvoiceScreen: React.FC = () => {
         const newOrders = [...orders];
         newOrders[indexOfProductInOrder] = updatedItem;
         setOrders(newOrders);
+        resetAddItemForm(resetForm, values);
       } else {
         addToOrders({
           ...product,
@@ -277,14 +282,7 @@ const InvoiceScreen: React.FC = () => {
           orderId: new Date().getUTCMilliseconds(),
           profit,
         });
-        resetForm({
-          values: {
-            ...values,
-            quantity: '',
-            unitPrice: '',
-            product: '',
-          },
-        });
+        resetAddItemForm(resetForm, values);
       }
     }
   };
