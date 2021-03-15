@@ -6,6 +6,7 @@ import Invoice from '../models/invoice';
 import Customer from '../models/customer';
 import Product from '../models/product';
 import InvoiceItem from '../models/invoiceItem';
+import { createInvoiceValidation } from '../sliceValidation/index';
 
 const initialState = {
   singleInvoice: {
@@ -385,6 +386,7 @@ export const createInvoiceFn = (
   cb?: () => void
 ) => async (dispatch: (arg0: { payload: any; type: string }) => void) => {
   try {
+    createInvoiceValidation(values, meta);
     dispatch(createInvoice());
     const user =
       localStorage.getItem('user') !== null
