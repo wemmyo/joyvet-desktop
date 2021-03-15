@@ -15,6 +15,7 @@ import {
 } from '../../../../slices/customerSlice';
 import { closeSideContentFn } from '../../../../slices/dashboardSlice';
 import routes from '../../../../routing/routes';
+import { isAdmin } from '../../../../utils/helpers';
 
 export interface EditCustomerProps {
   customerId: string | number;
@@ -38,7 +39,7 @@ const EditCustomer: React.FC<EditCustomerProps> = ({
   const customer = customerRaw ? JSON.parse(customerRaw) : {};
   // console.log(customer);
 
-  const { fullName, address, phoneNumber, balance } = customer;
+  const { fullName, address, phoneNumber, balance, maxPriceLevel } = customer;
 
   const handleDeleteCustomer = () => {
     dispatch(
@@ -57,6 +58,7 @@ const EditCustomer: React.FC<EditCustomerProps> = ({
         address: address || '',
         phoneNumber: phoneNumber || '',
         balance: balance || '',
+        maxPriceLevel: maxPriceLevel || '',
       }}
       // validationSchema={EditCustomerSchema}
       onSubmit={(values) => {
@@ -101,15 +103,26 @@ const EditCustomer: React.FC<EditCustomerProps> = ({
               label="Balance"
               type="number"
               component={TextInput}
+              disabled={!isAdmin()}
+            />
+            <Field
+              name="maxPriceLevel"
+              placeholder="Max Price Level"
+              label="Max Price Level"
+              type="number"
+              component={TextInput}
+              disabled={!isAdmin()}
             />
           </Form>
           <div style={{ marginTop: '1rem' }}>
             <Button onClick={() => handleSubmit()} type="Submit" positive>
               Update
             </Button>
-            <Button onClick={handleDeleteCustomer} type="button" negative>
-              Delete
-            </Button>
+            {isAdmin() ? (
+              <Button onClick={handleDeleteCustomer} type="button" negative>
+                Delete
+              </Button>
+            ) : null}
             <Button as={Link} to={`${routes.CUSTOMER}/${customerId}`}>
               History
             </Button>

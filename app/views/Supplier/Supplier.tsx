@@ -1,3 +1,4 @@
+/* eslint-disable react/jsx-one-expression-per-line */
 import React, { useEffect, useState } from 'react';
 import { Table, Form, Button, Icon, Loader } from 'semantic-ui-react';
 import { useSelector, useDispatch } from 'react-redux';
@@ -81,7 +82,8 @@ const SuppliersScreen: React.FC = () => {
         <Table.Row
           key={each.id}
           // eslint-disable-next-line react/jsx-props-no-spreading
-          {...(isAdmin() && { onClick: () => openSingleSupplier(each.id) })}
+          // {...(isAdmin() && { onClick: () => openSingleSupplier(each.id) })}
+          onClick={() => openSingleSupplier(each.id)}
         >
           <Table.Cell>{each.fullName}</Table.Cell>
           <Table.Cell>{each.address}</Table.Cell>

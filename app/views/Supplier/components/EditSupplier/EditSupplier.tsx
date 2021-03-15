@@ -15,6 +15,7 @@ import {
 } from '../../../../slices/supplierSlice';
 import { closeSideContentFn } from '../../../../slices/dashboardSlice';
 import routes from '../../../../routing/routes';
+import { isAdmin } from '../../../../utils/helpers';
 
 export interface EditSupplierProps {
   supplierId: string | number;
@@ -101,14 +102,17 @@ const EditSupplier: React.FC<EditSupplierProps> = ({
             label="Balance"
             type="number"
             component={TextInput}
+            disabled={!isAdmin()}
           />
           <div style={{ marginTop: '1rem' }}>
             <Button onClick={() => handleSubmit()} type="Submit" positive>
               Update
             </Button>
-            <Button onClick={handleDeleteSupplier} type="button" negative>
-              Delete
-            </Button>
+            {isAdmin() ? (
+              <Button onClick={handleDeleteSupplier} type="button" negative>
+                Delete
+              </Button>
+            ) : null}
             <Button as={Link} to={`${routes.SUPPLIER}/${supplierId}`}>
               History
             </Button>

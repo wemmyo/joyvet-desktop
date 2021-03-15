@@ -1,7 +1,12 @@
 import React, { useEffect, useState } from 'react';
-import { Table, Input, Button, Icon } from 'semantic-ui-react';
+import { Table, Button, Icon } from 'semantic-ui-react';
 import { useSelector, useDispatch } from 'react-redux';
+import { toast } from 'react-toastify';
 
+// const { Sequelize, DataTypes } = require('sequelize');
+
+import { DataTypes } from 'sequelize';
+import sequelize from '../../utils/database';
 import DashboardLayout from '../../layouts/DashboardLayout/DashboardLayout';
 import {
   selectUserState,
@@ -15,8 +20,18 @@ import {
 } from '../../slices/dashboardSlice';
 import EditUser from './components/EditUser/EditUser';
 
+// const sequelize = new Sequelize('sqlite::memory:');
+const queryInterface = sequelize.getQueryInterface();
+
 const CONTENT_CREATE = 'create';
 const CONTENT_EDIT = 'edit';
+
+const addCustomerMaxPriceLevel = async () => {
+  await queryInterface.addColumn('customers', 'maxPriceLevel', {
+    type: DataTypes.INTEGER,
+  });
+  toast.success('Database Successfully updated');
+};
 
 const UserScreen: React.FC = () => {
   const [sideContent, setSideContent] = useState('');
@@ -125,6 +140,11 @@ const UserScreen: React.FC = () => {
 
         <Table.Body>{renderRows()}</Table.Body>
       </Table>
+
+      <div style={{ border: '1px dashed red', marginTop: 30, padding: '2rem' }}>
+        <h4>Temporary Patch</h4>
+        <Button onClick={addCustomerMaxPriceLevel}>Add MaxPriceLevel</Button>
+      </div>
     </DashboardLayout>
   );
 };

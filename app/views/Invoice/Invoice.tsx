@@ -10,6 +10,7 @@ import DashboardLayout from '../../layouts/DashboardLayout/DashboardLayout';
 import {
   getCustomersFn,
   selectCustomerState,
+  getSingleCustomerFn,
 } from '../../slices/customerSlice';
 import { getProductsFn, selectProductState } from '../../slices/productSlice';
 import { numberWithCommas, sum } from '../../utils/helpers';
@@ -37,11 +38,13 @@ const InvoiceScreen: React.FC = () => {
   const invoiceState = useSelector(selectInvoiceState);
   // const invoiceState = useSelector(selectInvoiceState);
 
+  const { data: singleCustomerRaw } = customerState.singleCustomer;
   const { data: customersRaw } = customerState.customers;
   const { data: productsRaw } = productState.products;
   const { data: invoiceRaw } = invoiceState.createInvoice;
   // const { data: createdInvoiceRaw } = invoiceState.createInvoiceState;
 
+  const singleCustomer = singleCustomerRaw ? JSON.parse(singleCustomerRaw) : {};
   const customers = customersRaw ? JSON.parse(customersRaw) : [];
   const products = productsRaw ? JSON.parse(productsRaw) : [];
   const createdInvoice = invoiceRaw ? JSON.parse(invoiceRaw) : {};
@@ -128,20 +131,34 @@ const InvoiceScreen: React.FC = () => {
     }
 
     const product = JSON.parse(value);
+
     const productPrices = [
-      { label: 'Level 1', value: product.sellPrice },
-      { label: 'Level 2', value: product.sellPrice2 },
-      { label: 'Level 3', value: product.sellPrice3 },
-      { label: 'Level 4', value: product.buyPrice },
+      { label: 'Level 1', value: product.sellPrice, priceLevel: 1 },
+      { label: 'Level 2', value: product.sellPrice2, priceLevel: 2 },
+      { label: 'Level 3', value: product.sellPrice3, priceLevel: 3 },
+      { label: 'Level 4', value: product.buyPrice, priceLevel: 4 },
     ];
 
-    const productPriceList = productPrices.map((price) => {
+    let filteredPriceLevel = [];
+
+    if (singleCustomer.maxPriceLevel) {
+      const fPrice = productPrices.filter(
+        (price) => singleCustomer.maxPriceLevel >= price.priceLevel
+      );
+      filteredPriceLevel = fPrice;
+    } else {
+      const dPrice = productPrices.filter((price) => price.priceLevel <= 2);
+      filteredPriceLevel = dPrice;
+    }
+
+    const productPriceList = filteredPriceLevel.map((price) => {
       return (
         <option key={price.label} value={price.value}>
           {`${price.label}: ₦${numberWithCommas(price.value)}`}
         </option>
       );
     });
+
     return (
       <div className="field">
         <label htmlFor="unitPrice">Product</label>
@@ -374,6 +391,11 @@ const InvoiceScreen: React.FC = () => {
                         name="customerId"
                         component="select"
                         className="ui dropdown"
+                        onChange={(e) => {
+                          handleChange(e);
+                          dispatch(getSingleCustomerFn(e.target.value));
+                          console.log(e.target.value);
+                        }}
                       >
                         <option value="" disabled hidden>
                           Select Customer

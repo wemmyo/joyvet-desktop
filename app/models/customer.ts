@@ -16,6 +16,7 @@ export default sequelize.define(
     phoneNumber: Sequelize.STRING,
     balance: Sequelize.DOUBLE,
     postedBy: Sequelize.STRING,
+    maxPriceLevel: Sequelize.INTEGER,
   },
   {
     timestamps: false,

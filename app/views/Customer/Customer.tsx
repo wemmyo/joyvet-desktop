@@ -1,3 +1,4 @@
+/* eslint-disable react/jsx-one-expression-per-line */
 import React, { useEffect, useState } from 'react';
 import { Table, Button, Icon, Form, Loader } from 'semantic-ui-react';
 import { useSelector, useDispatch } from 'react-redux';
@@ -78,7 +79,8 @@ const CustomersScreen: React.FC = () => {
         <Table.Row
           key={each.id}
           // eslint-disable-next-line react/jsx-props-no-spreading
-          {...(isAdmin() && { onClick: () => openSingleCustomer(each.id) })}
+          // {...(isAdmin() && { onClick: () => openSingleCustomer(each.id) })}
+          onClick={() => openSingleCustomer(each.id)}
         >
           <Table.Cell>{each.fullName}</Table.Cell>
           <Table.Cell>{each.address}</Table.Cell>
