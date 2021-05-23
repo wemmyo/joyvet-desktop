@@ -206,39 +206,6 @@ export const filterInvoiceById = (id: string | number) => async (
     toast.error(error.message || '');
   }
 };
-export const deleteInvoiceFn = (id: string | number, cb?: () => void) => async (
-  dispatch: (arg0: { payload: any; type: string }) => void
-) => {
-  try {
-    // dispatch(getInvoices());
-    const invoice = await Invoice.findByPk(id, {
-      include: [
-        {
-          model: Product,
-        },
-      ],
-    });
-
-    await Promise.all(
-      invoice.products.map(async (each: any) => {
-        await Product.increment('stock', {
-          by: each.invoiceItem.quantity,
-          where: { id: each.id },
-        });
-      })
-    );
-    invoice.destroy();
-
-    toast.success('Invoice deleted');
-
-    // dispatch(getInvoicesSuccess(JSON.stringify(invoices)));
-    if (cb) {
-      cb();
-    }
-  } catch (error) {
-    toast.error(error.message || '');
-  }
-};
 
 export const getSingleInvoiceFn = (
   id: string | number,
@@ -293,6 +260,47 @@ export const getInvoicesFn = () => async (
   }
 };
 
+export const deleteInvoiceFn = (id: string | number, cb?: () => void) => async (
+  dispatch: (arg0: { payload: any; type: string }) => void
+) => {
+  try {
+    // dispatch(getInvoices());
+    const invoice = await Invoice.findByPk(id, {
+      include: [
+        {
+          model: Product,
+        },
+      ],
+    });
+
+    await Promise.all(
+      invoice.products.map(async (each: any) => {
+        await Product.increment('stock', {
+          by: each.invoiceItem.quantity,
+          where: { id: each.id },
+        });
+      })
+    );
+
+    // update customer balance
+    const customer = await Customer.findByPk(invoice.customerId);
+    customer.decrement({
+      balance: invoice.amount,
+    });
+
+    invoice.destroy();
+
+    toast.success('Invoice deleted');
+
+    // dispatch(getInvoicesSuccess(JSON.stringify(invoices)));
+    if (cb) {
+      cb();
+    }
+  } catch (error) {
+    toast.error(error.message || '');
+  }
+};
+
 export const deleteInvoiceItemFn = ({
   productId,
   invoiceId,
@@ -308,6 +316,7 @@ export const deleteInvoiceItemFn = ({
     const product = await Product.findByPk(productId);
     const invoice = await Invoice.findByPk(invoiceId);
     const invoiceItem = await InvoiceItem.findByPk(invoiceItemId);
+    const customer = await Customer.findByPk(invoice.customerId);
 
     // update stock
     product.increment({
@@ -319,6 +328,11 @@ export const deleteInvoiceItemFn = ({
     invoice.decrement({
       amount: invoiceItem.amount,
       profit: invoiceItem.profit,
+    });
+
+    // update customer balance
+    customer.decrement({
+      balance: invoiceItem.amount,
     });
 
     await invoiceItem.destroy();
