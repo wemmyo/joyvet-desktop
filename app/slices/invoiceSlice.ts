@@ -284,9 +284,12 @@ export const deleteInvoiceFn = (id: string | number, cb?: () => void) => async (
 
     // update customer balance
     const customer = await Customer.findByPk(invoice.customerId);
-    customer.decrement({
-      balance: invoice.amount,
-    });
+
+    if (invoice.saleType === 'credit' || invoice.saleType === 'transfer') {
+      await customer.decrement({
+        balance: invoice.amount,
+      });
+    }
 
     invoice.destroy();
 
@@ -319,23 +322,35 @@ export const deleteInvoiceItemFn = ({
     const customer = await Customer.findByPk(invoice.customerId);
 
     // update stock
-    product.increment({
+    const updateStock = product.increment({
       stock: invoiceItem.quantity,
     });
 
     // update total amount
     // update total profit
-    invoice.decrement({
+    const updateAmount = invoice.decrement({
       amount: invoiceItem.amount,
       profit: invoiceItem.profit,
     });
 
     // update customer balance
-    customer.decrement({
-      balance: invoiceItem.amount,
-    });
+    const updateBalance = async () => {
+      if (invoice.saleType === 'credit' || invoice.saleType === 'transfer') {
+        await customer.decrement({
+          balance: invoiceItem.amount,
+        });
+      }
+    };
 
-    await invoiceItem.destroy();
+    // delete invoice
+    const deleteInvoice = invoiceItem.destroy();
+
+    await Promise.all([
+      updateStock,
+      updateAmount,
+      updateBalance(),
+      deleteInvoice,
+    ]);
 
     toast.success('Successfully removed item');
 
@@ -367,6 +382,7 @@ export const addInvoiceItemFn = ({
   try {
     const invoice = await Invoice.findByPk(invoiceId);
     const product = await Product.findByPk(productId);
+    const customer = await Customer.findByPk(invoice.customerId);
 
     product.invoiceItem = {
       quantity,
@@ -375,16 +391,34 @@ export const addInvoiceItemFn = ({
       profit,
     };
 
-    await invoice.addProduct(product);
+    const addProductToInvoice = invoice.addProduct(product);
 
-    await product.decrement({
+    const decreaseStock = product.decrement({
       stock: quantity,
     });
 
-    invoice.increment({
+    const updateInvoice = invoice.increment({
       amount,
       profit,
     });
+
+    const updateCustomerBalance = async () => {
+      if (invoice.saleType === 'credit' || invoice.saleType === 'transfer') {
+        // await Customer.increment({
+        //   balance: amount,
+        // });
+        await customer.increment({
+          balance: amount,
+        });
+      }
+    };
+
+    await Promise.all([
+      addProductToInvoice,
+      decreaseStock,
+      updateInvoice,
+      updateCustomerBalance(),
+    ]);
 
     if (cb) {
       cb();
