@@ -150,6 +150,29 @@ export const getPaymentsFn = () => async (
   }
 };
 
+export const deletePaymentFn = (id: string | number, cb: () => void) => async (
+  dispatch: (arg0: { payload: any; type: string }) => void
+) => {
+  try {
+    const payment = await Payment.findByPk(id);
+    const supplier = await Supplier.findByPk(payment.supplierId);
+
+    // update suppliers balance
+    const updateBalance = await supplier.increment({
+      balance: payment.amount,
+    });
+
+    const deletePayment = await payment.destroy();
+
+    await Promise.all([updateBalance, deletePayment]);
+
+    cb();
+    toast.success('Payment successfully deleted');
+  } catch (error) {
+    toast.error(error.message || '');
+  }
+};
+
 export const createPaymentFn = (values: any, cb: () => void) => async (
   dispatch: (arg0: { payload: any; type: string }) => void
 ) => {

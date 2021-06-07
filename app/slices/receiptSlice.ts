@@ -162,6 +162,29 @@ export const getReceiptsFn = () => async (
   }
 };
 
+export const deleteReceiptFn = (id: string | number, cb: () => void) => async (
+  dispatch: (arg0: { payload: any; type: string }) => void
+) => {
+  try {
+    const receipt = await Receipt.findByPk(id);
+    const customer = await Customer.findByPk(receipt.customerId);
+
+    // update customers balance
+    const updateBalance = await customer.increment({
+      balance: receipt.amount,
+    });
+
+    const deleteReceipt = await receipt.destroy();
+
+    await Promise.all([updateBalance, deleteReceipt]);
+
+    cb();
+    toast.success('Receipt successfully deleted');
+  } catch (error) {
+    toast.error(error.message || '');
+  }
+};
+
 export const createReceiptFn = (values: any, cb?: () => void) => async (
   dispatch: (arg0: { payload: any; type: string }) => void
 ) => {
