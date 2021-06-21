@@ -41,9 +41,6 @@ const PurchaseScreen: React.FC = () => {
   };
 
   useEffect(fetchData, []);
-  useEffect(() => {
-    console.log(orders);
-  }, [orders]);
 
   const renderProducts = () => {
     const productList = products.map((product: any) => {
@@ -256,13 +253,13 @@ const PurchaseScreen: React.FC = () => {
                           name="product"
                           component="select"
                           className="ui dropdown"
-                          onChange={(e) =>
+                          onChange={(e) => {
                             onProductChange({
                               handleChange,
                               setFieldValue,
                               e,
-                            })
-                          }
+                            });
+                          }}
                         >
                           <option value="" disabled hidden>
                             Select Item

@@ -3,6 +3,7 @@ import { toast } from 'react-toastify';
 import { Op } from 'sequelize';
 import Receipt from '../models/receipt';
 import Customer from '../models/customer';
+import sequelize from '../utils/database';
 
 const initialState = {
   singleReceipt: {
@@ -166,20 +167,25 @@ export const deleteReceiptFn = (id: string | number, cb: () => void) => async (
   dispatch: (arg0: { payload: any; type: string }) => void
 ) => {
   try {
-    const receipt = await Receipt.findByPk(id);
-    const customer = await Customer.findByPk(receipt.customerId);
+    await sequelize.transaction(async (t) => {
+      const receipt = await Receipt.findByPk(id);
 
-    // update customers balance
-    const updateBalance = await customer.increment({
-      balance: receipt.amount,
+      // update customers balance
+      const updateBalance = await Customer.increment('balance', {
+        by: receipt.amount,
+        where: {
+          id: receipt.customerId,
+        },
+        transaction: t,
+      });
+
+      const deleteReceipt = await receipt.destroy({ transaction: t });
+
+      await Promise.all([updateBalance, deleteReceipt]);
+
+      cb();
+      toast.success('Receipt successfully deleted');
     });
-
-    const deleteReceipt = await receipt.destroy();
-
-    await Promise.all([updateBalance, deleteReceipt]);
-
-    cb();
-    toast.success('Receipt successfully deleted');
   } catch (error) {
     toast.error(error.message || '');
   }
@@ -189,32 +195,37 @@ export const createReceiptFn = (values: any, cb?: () => void) => async (
   dispatch: (arg0: { payload: any; type: string }) => void
 ) => {
   try {
-    dispatch(createReceipt());
-    // const response = await Receipt.create(values);
-    const user =
-      localStorage.getItem('user') !== null
-        ? JSON.parse(localStorage.getItem('user') || '')
-        : '';
-    await Receipt.create({
-      customerId: values.customerId || null,
-      amount: values.amount || null,
-      paymentMethod: values.paymentMethod || null,
-      bank: values.bank || null,
-      note: values.note || null,
-      postedBy: user.fullName,
+    await sequelize.transaction(async (t) => {
+      dispatch(createReceipt());
+      const user =
+        localStorage.getItem('user') !== null
+          ? JSON.parse(localStorage.getItem('user') || '')
+          : '';
+      await Receipt.create(
+        {
+          customerId: values.customerId || null,
+          amount: values.amount || null,
+          paymentMethod: values.paymentMethod || null,
+          bank: values.bank || null,
+          note: values.note || null,
+          postedBy: user.fullName,
+        },
+        { transaction: t }
+      );
+
+      await Customer.decrement('balance', {
+        by: values.amount,
+        where: { id: values.customerId },
+        transaction: t,
+      });
+
+      dispatch(createReceiptSuccess({}));
+      toast.success('Receipt successfully created');
+
+      if (cb) {
+        cb();
+      }
     });
-
-    await Customer.decrement('balance', {
-      by: values.amount,
-      where: { id: values.customerId },
-    });
-
-    dispatch(createReceiptSuccess({}));
-    toast.success('Receipt successfully created');
-
-    if (cb) {
-      cb();
-    }
   } catch (error) {
     toast.error(error.message || '');
   }

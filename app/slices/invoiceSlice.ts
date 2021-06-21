@@ -7,6 +7,7 @@ import Customer from '../models/customer';
 import Product from '../models/product';
 import InvoiceItem from '../models/invoiceItem';
 import { createInvoiceValidation } from '../sliceValidation/index';
+import sequelize from '../utils/database';
 
 const initialState = {
   singleInvoice: {
@@ -264,41 +265,46 @@ export const deleteInvoiceFn = (id: string | number, cb?: () => void) => async (
   dispatch: (arg0: { payload: any; type: string }) => void
 ) => {
   try {
-    // dispatch(getInvoices());
-    const invoice = await Invoice.findByPk(id, {
-      include: [
-        {
-          model: Product,
-        },
-      ],
-    });
-
-    await Promise.all(
-      invoice.products.map(async (each: any) => {
-        await Product.increment('stock', {
-          by: each.invoiceItem.quantity,
-          where: { id: each.id },
-        });
-      })
-    );
-
-    // update customer balance
-    const customer = await Customer.findByPk(invoice.customerId);
-
-    if (invoice.saleType === 'credit' || invoice.saleType === 'transfer') {
-      await customer.decrement({
-        balance: invoice.amount,
+    await sequelize.transaction(async (t) => {
+      const invoice = await Invoice.findByPk(id, {
+        include: [
+          {
+            model: Product,
+          },
+        ],
       });
-    }
 
-    invoice.destroy();
+      await Promise.all(
+        invoice.products.map(async (each: any) => {
+          await Product.increment('stock', {
+            by: each.invoiceItem.quantity,
+            where: { id: each.id },
+            transaction: t,
+          });
+        })
+      );
 
-    toast.success('Invoice deleted');
+      // update customer balance
 
-    // dispatch(getInvoicesSuccess(JSON.stringify(invoices)));
-    if (cb) {
-      cb();
-    }
+      if (invoice.saleType === 'credit' || invoice.saleType === 'transfer') {
+        await Customer.decrement('balance', {
+          by: invoice.amount,
+          where: {
+            id: invoice.customerId,
+          },
+          transaction: t,
+        });
+      }
+
+      await invoice.destroy({ transaction: t });
+
+      toast.success('Invoice deleted');
+
+      // dispatch(getInvoicesSuccess(JSON.stringify(invoices)));
+      if (cb) {
+        cb();
+      }
+    });
   } catch (error) {
     toast.error(error.message || '');
   }
@@ -316,47 +322,59 @@ export const deleteInvoiceItemFn = ({
   cb?: () => void;
 }) => async (dispatch: (arg0: { payload: any; type: string }) => void) => {
   try {
-    const product = await Product.findByPk(productId);
     const invoice = await Invoice.findByPk(invoiceId);
     const invoiceItem = await InvoiceItem.findByPk(invoiceItemId);
-    const customer = await Customer.findByPk(invoice.customerId);
 
-    // update stock
-    const updateStock = product.increment({
-      stock: invoiceItem.quantity,
-    });
+    // transaction
+    await sequelize.transaction(async (t) => {
+      // update stock
+      const updateStock = Product.increment('stock', {
+        by: invoiceItem.quantity,
+        where: {
+          id: productId,
+        },
+        transaction: t,
+      });
 
-    // update total amount
-    // update total profit
-    const updateAmount = invoice.decrement({
-      amount: invoiceItem.amount,
-      profit: invoiceItem.profit,
-    });
+      // update total amount
+      // update total profit
+      const updateAmount = invoice.decrement(
+        {
+          amount: invoiceItem.amount,
+          profit: invoiceItem.profit,
+        },
+        { transaction: t }
+      );
 
-    // update customer balance
-    const updateBalance = async () => {
-      if (invoice.saleType === 'credit' || invoice.saleType === 'transfer') {
-        await customer.decrement({
-          balance: invoiceItem.amount,
-        });
+      // update customer balance
+      const updateBalance = async () => {
+        if (invoice.saleType === 'credit' || invoice.saleType === 'transfer') {
+          await Customer.decrement('balance', {
+            by: invoiceItem.amount,
+            where: {
+              id: invoice.customerId,
+            },
+            transaction: t,
+          });
+        }
+      };
+
+      // delete invoice
+      const deleteInvoice = invoiceItem.destroy({ transaction: t });
+
+      await Promise.all([
+        updateStock,
+        updateAmount,
+        updateBalance(),
+        deleteInvoice,
+      ]);
+
+      toast.success('Successfully removed item');
+
+      if (cb) {
+        cb();
       }
-    };
-
-    // delete invoice
-    const deleteInvoice = invoiceItem.destroy();
-
-    await Promise.all([
-      updateStock,
-      updateAmount,
-      updateBalance(),
-      deleteInvoice,
-    ]);
-
-    toast.success('Successfully removed item');
-
-    if (cb) {
-      cb();
-    }
+    });
   } catch (error) {
     toast.error(error.message || '');
   }
@@ -391,38 +409,49 @@ export const addInvoiceItemFn = ({
       profit,
     };
 
-    const addProductToInvoice = invoice.addProduct(product);
+    // transaction
+    await sequelize.transaction(async (t) => {
+      const addProductToInvoice = invoice.addProduct(product, {
+        transaction: t,
+      });
 
-    const decreaseStock = product.decrement({
-      stock: quantity,
-    });
+      const decreaseStock = product.decrement(
+        {
+          stock: quantity,
+        },
+        { transaction: t }
+      );
 
-    const updateInvoice = invoice.increment({
-      amount,
-      profit,
-    });
+      const updateInvoice = invoice.increment(
+        {
+          amount,
+          profit,
+        },
+        { transaction: t }
+      );
 
-    const updateCustomerBalance = async () => {
-      if (invoice.saleType === 'credit' || invoice.saleType === 'transfer') {
-        // await Customer.increment({
-        //   balance: amount,
-        // });
-        await customer.increment({
-          balance: amount,
-        });
+      const updateCustomerBalance = async () => {
+        if (invoice.saleType === 'credit' || invoice.saleType === 'transfer') {
+          await customer.increment(
+            {
+              balance: amount,
+            },
+            { transaction: t }
+          );
+        }
+      };
+
+      await Promise.all([
+        addProductToInvoice,
+        decreaseStock,
+        updateInvoice,
+        updateCustomerBalance(),
+      ]);
+
+      if (cb) {
+        cb();
       }
-    };
-
-    await Promise.all([
-      addProductToInvoice,
-      decreaseStock,
-      updateInvoice,
-      updateCustomerBalance(),
-    ]);
-
-    if (cb) {
-      cb();
-    }
+    });
   } catch (error) {
     toast.error(error.message || '');
   }
@@ -441,46 +470,54 @@ export const createInvoiceFn = (
         ? JSON.parse(localStorage.getItem('user') || '')
         : '';
 
-    const customer = await Customer.findByPk(meta.customerId);
+    // transaction
+    await sequelize.transaction(async (t) => {
+      const customer = await Customer.findByPk(meta.customerId);
 
-    const invoice = await customer.createInvoice({
-      saleType: meta.saleType,
-      amount: meta.amount,
-      profit: meta.profit,
-      postedBy: user.fullName,
-    });
+      const invoice = await customer.createInvoice(
+        {
+          saleType: meta.saleType,
+          amount: meta.amount,
+          profit: meta.profit,
+          postedBy: user.fullName,
+        },
+        { transaction: t }
+      );
 
-    const prodArr: any = [];
+      const prodArr: any = [];
 
-    await Promise.all(
-      values.map(async (each: any) => {
-        const prod = await Product.findByPk(each.id);
-        await Product.decrement('stock', {
-          by: each.quantity,
-          where: { id: each.id },
+      await Promise.all(
+        values.map(async (each: any) => {
+          const prod = await Product.findByPk(each.id);
+          await Product.decrement('stock', {
+            by: each.quantity,
+            where: { id: each.id },
+            transaction: t,
+          });
+          prod.invoiceItem = {
+            quantity: each.quantity,
+            unitPrice: each.unitPrice,
+            amount: each.amount,
+            profit: each.profit,
+          };
+          prodArr.push(prod);
+        })
+      );
+      await invoice.addProducts(prodArr, { transaction: t });
+      if (meta.saleType === 'credit' || meta.saleType === 'transfer') {
+        await Customer.increment('balance', {
+          by: meta.amount,
+          where: { id: meta.customerId },
+          transaction: t,
         });
-        prod.invoiceItem = {
-          quantity: each.quantity,
-          unitPrice: each.unitPrice,
-          amount: each.amount,
-          profit: each.profit,
-        };
-        prodArr.push(prod);
-      })
-    );
-    await invoice.addProducts(prodArr);
-    if (meta.saleType === 'credit' || meta.saleType === 'transfer') {
-      await Customer.increment('balance', {
-        by: meta.amount,
-        where: { id: meta.customerId },
-      });
-    }
+      }
 
-    toast.success('Invoice created');
-    dispatch(createInvoiceSuccess(JSON.stringify(invoice)));
-    if (cb) {
-      cb();
-    }
+      toast.success('Invoice created');
+      dispatch(createInvoiceSuccess(JSON.stringify(invoice)));
+      if (cb) {
+        cb();
+      }
+    });
   } catch (error) {
     toast.error(error.message);
   }

@@ -3,6 +3,7 @@ import { toast } from 'react-toastify';
 import { Op } from 'sequelize';
 import Payment from '../models/payment';
 import Supplier from '../models/supplier';
+import sequelize from '../utils/database';
 
 const initialState = {
   singlePayment: {
@@ -154,20 +155,21 @@ export const deletePaymentFn = (id: string | number, cb: () => void) => async (
   dispatch: (arg0: { payload: any; type: string }) => void
 ) => {
   try {
-    const payment = await Payment.findByPk(id);
-    const supplier = await Supplier.findByPk(payment.supplierId);
+    await sequelize.transaction(async (t) => {
+      const payment = await Payment.findByPk(id);
 
-    // update suppliers balance
-    const updateBalance = await supplier.increment({
-      balance: payment.amount,
+      const updateBalance = await Supplier.increment('balance', {
+        by: payment.amount,
+        where: { id: payment.supplierId },
+        transaction: t,
+      });
+
+      const deletePayment = await payment.destroy({ transaction: t });
+
+      await Promise.all([updateBalance, deletePayment]);
+      cb();
+      toast.success('Payment successfully deleted');
     });
-
-    const deletePayment = await payment.destroy();
-
-    await Promise.all([updateBalance, deletePayment]);
-
-    cb();
-    toast.success('Payment successfully deleted');
   } catch (error) {
     toast.error(error.message || '');
   }
@@ -177,31 +179,37 @@ export const createPaymentFn = (values: any, cb: () => void) => async (
   dispatch: (arg0: { payload: any; type: string }) => void
 ) => {
   try {
-    dispatch(createPayment());
-    const user =
-      localStorage.getItem('user') !== null
-        ? JSON.parse(localStorage.getItem('user') || '')
-        : '';
-    // const response = await Payment.create(values);
-    await Payment.create({
-      supplierId: values.supplierId || null,
-      amount: values.amount || null,
-      paymentType: values.paymentType || null,
-      paymentMethod: values.paymentMethod || null,
-      bank: values.bank || null,
-      note: values.note || null,
-      postedBy: user.fullName,
+    await sequelize.transaction(async (t) => {
+      dispatch(createPayment());
+      const user =
+        localStorage.getItem('user') !== null
+          ? JSON.parse(localStorage.getItem('user') || '')
+          : '';
+      // const response = await Payment.create(values);
+      await Payment.create(
+        {
+          supplierId: values.supplierId || null,
+          amount: values.amount || null,
+          paymentType: values.paymentType || null,
+          paymentMethod: values.paymentMethod || null,
+          bank: values.bank || null,
+          note: values.note || null,
+          postedBy: user.fullName,
+        },
+        { transaction: t }
+      );
+
+      await Supplier.decrement('balance', {
+        by: values.amount,
+        where: { id: values.supplierId },
+        transaction: t,
+      });
+
+      toast.success('Payment successfully created');
+
+      cb();
+      dispatch(createPaymentSuccess({}));
     });
-
-    await Supplier.decrement('balance', {
-      by: values.amount,
-      where: { id: values.supplierId },
-    });
-
-    toast.success('Payment successfully created');
-
-    cb();
-    dispatch(createPaymentSuccess({}));
   } catch (error) {
     toast.error(error.message || '');
   }

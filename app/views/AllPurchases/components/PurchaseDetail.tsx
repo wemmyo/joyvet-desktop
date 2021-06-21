@@ -2,13 +2,16 @@
 import React, { useEffect } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 // import { useParams } from 'react-router-dom';
-import { Table } from 'semantic-ui-react';
+import { Table, Button } from 'semantic-ui-react';
 
 import {
   getSinglePurchaseFn,
   selectPurchaseState,
+  deletePurchaseFn,
+  getPurchasesFn,
 } from '../../../slices/purchaseSlice';
 import { numberWithCommas } from '../../../utils/helpers';
+import { closeSideContentFn } from '../../../slices/dashboardSlice';
 
 interface SalesDetailProps {
   purchaseId: string | number;
@@ -24,6 +27,15 @@ const SalesDetail: React.FC<SalesDetailProps> = ({
   };
 
   useEffect(fetchData, [purchaseId]);
+
+  const handleDelete = () => {
+    dispatch(
+      deletePurchaseFn(purchaseId, () => {
+        dispatch(getPurchasesFn());
+        dispatch(closeSideContentFn());
+      })
+    );
+  };
 
   const purchaseState = useSelector(selectPurchaseState);
 
@@ -94,6 +106,9 @@ const SalesDetail: React.FC<SalesDetailProps> = ({
 
         <Table.Body>{renderOrders()}</Table.Body>
       </Table>
+      <Button onClick={() => handleDelete()} type="Submit" negative>
+        Delete
+      </Button>
     </>
   );
 };
