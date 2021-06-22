@@ -182,6 +182,7 @@ export const createPurchaseFn = (
           await Product.increment('stock', {
             by: each.quantity,
             where: { id: each.id },
+            transaction: t,
           });
           await Product.update(
             {
