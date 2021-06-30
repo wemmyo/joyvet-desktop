@@ -167,9 +167,9 @@ export const deletePaymentFn = (id: string | number, cb: () => void) => async (
       const deletePayment = await payment.destroy({ transaction: t });
 
       await Promise.all([updateBalance, deletePayment]);
-      cb();
-      toast.success('Payment successfully deleted');
     });
+    toast.success('Payment successfully deleted');
+    cb();
   } catch (error) {
     toast.error(error.message || '');
   }
@@ -206,10 +206,9 @@ export const createPaymentFn = (values: any, cb: () => void) => async (
       });
 
       toast.success('Payment successfully created');
-
-      cb();
-      dispatch(createPaymentSuccess({}));
     });
+    cb();
+    dispatch(createPaymentSuccess({}));
   } catch (error) {
     toast.error(error.message || '');
   }

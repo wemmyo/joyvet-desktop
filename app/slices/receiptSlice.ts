@@ -218,14 +218,13 @@ export const createReceiptFn = (values: any, cb?: () => void) => async (
         where: { id: values.customerId },
         transaction: t,
       });
-
-      dispatch(createReceiptSuccess({}));
-      toast.success('Receipt successfully created');
-
-      if (cb) {
-        cb();
-      }
     });
+    dispatch(createReceiptSuccess({}));
+    toast.success('Receipt successfully created');
+
+    if (cb) {
+      cb();
+    }
   } catch (error) {
     toast.error(error.message || '');
   }

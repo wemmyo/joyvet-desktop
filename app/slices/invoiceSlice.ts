@@ -298,13 +298,13 @@ export const deleteInvoiceFn = (id: string | number, cb?: () => void) => async (
 
       await invoice.destroy({ transaction: t });
 
-      toast.success('Invoice deleted');
-
       // dispatch(getInvoicesSuccess(JSON.stringify(invoices)));
-      if (cb) {
-        cb();
-      }
     });
+    toast.success('Invoice deleted');
+
+    if (cb) {
+      cb();
+    }
   } catch (error) {
     toast.error(error.message || '');
   }
@@ -368,13 +368,12 @@ export const deleteInvoiceItemFn = ({
         updateBalance(),
         deleteInvoice,
       ]);
-
-      toast.success('Successfully removed item');
-
-      if (cb) {
-        cb();
-      }
     });
+    toast.success('Successfully removed item');
+
+    if (cb) {
+      cb();
+    }
   } catch (error) {
     toast.error(error.message || '');
   }
@@ -447,11 +446,10 @@ export const addInvoiceItemFn = ({
         updateInvoice,
         updateCustomerBalance(),
       ]);
-
-      if (cb) {
-        cb();
-      }
     });
+    if (cb) {
+      cb();
+    }
   } catch (error) {
     toast.error(error.message || '');
   }
@@ -511,13 +509,12 @@ export const createInvoiceFn = (
           transaction: t,
         });
       }
-
-      toast.success('Invoice created');
       dispatch(createInvoiceSuccess(JSON.stringify(invoice)));
-      if (cb) {
-        cb();
-      }
     });
+    toast.success('Invoice created');
+    if (cb) {
+      cb();
+    }
   } catch (error) {
     toast.error(error.message);
   }

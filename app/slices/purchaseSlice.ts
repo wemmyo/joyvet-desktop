@@ -220,12 +220,13 @@ export const createPurchaseFn = (
         where: { id: meta.supplierId },
         transaction: t,
       });
-      toast.success('Purchase created');
-      if (cb) {
-        cb();
-      }
-      dispatch(createPurchaseSuccess({}));
     });
+    dispatch(createPurchaseSuccess({}));
+    toast.success('Purchase created');
+
+    if (cb) {
+      cb();
+    }
   } catch (error) {
     toast.error(error.message || '');
   }
@@ -265,15 +266,20 @@ export const deletePurchaseFn = (
         })
       );
 
+      await Supplier.decrement('balance', {
+        by: purchase.amount,
+        where: { id: purchase.supplierId },
+        transaction: t,
+      });
+
       await purchase.destroy({ transaction: t });
 
-      toast.success('Purchase deleted');
-
       // dispatch(getPurchasesSuccess(JSON.stringify(invoices)));
-      if (cb) {
-        cb();
-      }
     });
+    toast.success('Purchase deleted');
+    if (cb) {
+      cb();
+    }
   } catch (error) {
     console.log(error);
 
