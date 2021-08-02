@@ -66,7 +66,7 @@ const ReceiptsScreen: React.FC = () => {
       return (
         <Table.Row key={each.id} onClick={() => viewSingleReceipt(each.id)}>
           <Table.Cell>{each.id}</Table.Cell>
-          <Table.Cell>{each.customer.fullName}</Table.Cell>
+          <Table.Cell>{each.customer?.fullName}</Table.Cell>
           <Table.Cell>{numberWithCommas(each.amount)}</Table.Cell>
           <Table.Cell>{each.paymentMethod}</Table.Cell>
           <Table.Cell>
