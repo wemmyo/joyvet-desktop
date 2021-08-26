@@ -2,6 +2,7 @@ import React, { useEffect } from 'react';
 import { Button, Form } from 'semantic-ui-react';
 import { Field, Formik } from 'formik';
 import { useSelector, useDispatch } from 'react-redux';
+import { Link } from 'react-router-dom';
 
 // import * as Yup from 'yup';
 import TextInput from '../../../../components/TextInput/TextInput';
@@ -12,6 +13,7 @@ import {
   getProductsFn,
 } from '../../../../slices/productSlice';
 import { closeSideContentFn } from '../../../../slices/dashboardSlice';
+import routes from '../../../../routing/routes';
 
 export interface EditProductProps {
   productId: string | number;
@@ -108,6 +110,14 @@ const EditProduct: React.FC<EditProductProps> = ({
 
           <Button onClick={() => handleSubmit()} type="Submit" fluid positive>
             Update
+          </Button>
+          <Button
+            style={{ marginTop: '1rem' }}
+            fluid
+            as={Link}
+            to={`${routes.PRODUCT}/${productId}`}
+          >
+            History
           </Button>
         </Form>
       )}

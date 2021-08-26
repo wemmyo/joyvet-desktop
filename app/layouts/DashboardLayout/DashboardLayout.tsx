@@ -35,7 +35,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
   return (
     <div style={{ display: 'flex' }}>
       <Sidebar />
-      <div style={{ display: 'flex', flex: 1 }}>
+      <div style={{ display: 'flex', flex: 1, overflowX: 'scroll' }}>
         <div className={styles.main}>
           <header>
             <div className={styles.headerSection1}>

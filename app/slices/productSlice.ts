@@ -1,7 +1,10 @@
 import { createSlice } from '@reduxjs/toolkit';
 import { toast } from 'react-toastify';
 import { Op } from 'sequelize';
+import moment from 'moment';
 import Product from '../models/product';
+import InvoiceItem from '../models/invoiceItem';
+import PurchaseItem from '../models/purchaseItem';
 
 const initialState = {
   singleProduct: {
@@ -13,6 +16,14 @@ const initialState = {
     data: '',
   },
   createProductState: {
+    loading: false,
+    data: '',
+  },
+  purchases: {
+    loading: false,
+    data: '',
+  },
+  invoices: {
     loading: false,
     data: '',
   },
@@ -63,6 +74,34 @@ const productSlice = createSlice({
       const { createProductState } = state;
       createProductState.loading = false;
     },
+    getPurchases: (state) => {
+      const { purchases } = state;
+      purchases.loading = true;
+      purchases.data = '';
+    },
+    getPurchasesSuccess: (state, { payload }) => {
+      const { purchases } = state;
+      purchases.loading = false;
+      purchases.data = payload;
+    },
+    getPurchasesFailed: (state) => {
+      const { purchases } = state;
+      purchases.loading = false;
+    },
+    getInvoices: (state) => {
+      const { invoices } = state;
+      invoices.loading = true;
+      invoices.data = '';
+    },
+    getInvoicesSuccess: (state, { payload }) => {
+      const { invoices } = state;
+      invoices.loading = false;
+      invoices.data = payload;
+    },
+    getInvoicesFailed: (state) => {
+      const { invoices } = state;
+      invoices.loading = false;
+    },
   },
 });
 
@@ -76,7 +115,66 @@ export const {
   createProduct,
   createProductSuccess,
   createProductFailed,
+  getPurchases,
+  getPurchasesSuccess,
+  getPurchasesFailed,
+  getInvoices,
+  getInvoicesSuccess,
+  getInvoicesFailed,
 } = productSlice.actions;
+
+export const getProductPurchasesFn = (
+  productId: string | number,
+  startDate?: Date | string,
+  endDate?: Date | string
+) => async (dispatch: (arg0: { payload: any; type: string }) => void) => {
+  dispatch(getPurchases());
+  try {
+    const receipts = await PurchaseItem.findAll({
+      where: {
+        productId,
+        createdAt: {
+          [Op.between]: [
+            `${moment(startDate).format('YYYY-MM-DD')} 00:00:00`,
+            `${moment(endDate).format('YYYY-MM-DD')} 23:00:00`,
+          ],
+        },
+      },
+      order: [['createdAt', 'DESC']],
+    });
+    dispatch(getPurchasesSuccess(JSON.stringify(receipts)));
+  } catch (error) {
+    dispatch(getPurchasesFailed());
+    toast.error(error.message || '');
+  }
+};
+
+export const getProductInvoicesFn = (
+  productId: string,
+  startDate: Date | string,
+  endDate: Date | string
+) => async (dispatch: (arg0: { payload: any; type: string }) => void) => {
+  dispatch(getInvoices());
+  try {
+    const invoices = await InvoiceItem.findAll({
+      where: {
+        productId,
+        createdAt: {
+          [Op.between]: [
+            `${moment(startDate).format('YYYY-MM-DD')} 00:00:00`,
+            `${moment(endDate).format('YYYY-MM-DD')} 23:00:00`,
+          ],
+        },
+      },
+      order: [['createdAt', 'DESC']],
+    });
+    dispatch(getInvoicesSuccess(JSON.stringify(invoices)));
+  } catch (error) {
+    dispatch(getInvoicesFailed());
+
+    toast.error(error.message || '');
+  }
+};
 
 export const searchProductFn = (value: string) => async (
   dispatch: (arg0: { payload: any; type: string }) => void
