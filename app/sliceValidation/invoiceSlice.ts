@@ -88,6 +88,8 @@ export const createInvoiceValidation = (values, meta) => {
       throw new Error('Each quantity validation failed');
     } else if (!each.amount) {
       throw new Error('Each amount validation failed');
+    } else if (each.quantity * each.unitPrice !== each.amount) {
+      throw new Error("Product of quantity and unit price doesn't add up");
     }
   });
 };

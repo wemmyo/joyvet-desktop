@@ -284,8 +284,11 @@ const InvoiceScreen: React.FC = () => {
       if (productInOrder) {
         const indexOfProductInOrder = orders.indexOf(productInOrder);
         const updatedItem = productInOrder;
-        updatedItem.unitPrice = unitPrice;
-        updatedItem.quantity += quantity;
+        const newUnitPrice = unitPrice;
+        const newQuantity = updatedItem.quantity + quantity;
+        updatedItem.unitPrice = newUnitPrice;
+        updatedItem.quantity = newQuantity;
+        updatedItem.amount = newUnitPrice * newQuantity;
         const newOrders = [...orders];
         newOrders[indexOfProductInOrder] = updatedItem;
         setOrders(newOrders);
