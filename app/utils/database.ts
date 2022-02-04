@@ -54,31 +54,17 @@ const checkForTestDB = () => {
   return testDatabasePath;
 };
 
-let database: any;
-
-const production = {
-  dialect: 'sqlite',
-  storage: checkForDB(),
-};
-
-switch (process.env.NODE_ENV) {
-  case 'production':
-    database = new Sequelize({
-      dialect: production.dialect,
+const database = (() => {
+  if (process.env.NODE_ENV === 'development') {
+    return new Sequelize({
+      dialect: 'sqlite',
       storage: checkForTestDB(),
     });
-    break;
-  // case 'development':
-  //   database = new Sequelize({
-  //     dialect: production.dialect,
-  //     storage: checkForTestDB(),
-  //   });
-  //   break;
-  default:
-    database = new Sequelize({
-      dialect: production.dialect,
-      storage: checkForDB(),
-    });
-}
+  }
+  return new Sequelize({
+    dialect: 'sqlite',
+    storage: checkForDB(),
+  });
+})();
 
 export default database;
