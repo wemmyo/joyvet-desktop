@@ -6,9 +6,7 @@ import moment from 'moment';
 import DashboardLayout from '../../layouts/DashboardLayout/DashboardLayout';
 import {
   selectExpenseState,
-  getExpensesFn,
   createExpenseFn,
-  // searchExpenseFn,
   filterExpensesFn,
 } from '../../slices/expenseSlice';
 import CreateExpense from './components/CreateExpense/CreateExpense';
@@ -38,10 +36,6 @@ const ExpensesScreen: React.FC = () => {
 
   const expenses = expensesRaw ? JSON.parse(expensesRaw) : [];
 
-  const fetchExpenses = () => {
-    dispatch(getExpensesFn());
-  };
-
   const openSideContent = (content: string) => {
     dispatch(openSideContentFn());
     setSideContent(content);
@@ -54,7 +48,7 @@ const ExpensesScreen: React.FC = () => {
   };
 
   useEffect(() => {
-    fetchExpenses();
+    filterExpenses();
 
     return () => {
       closeSideContent();
@@ -64,7 +58,7 @@ const ExpensesScreen: React.FC = () => {
   const handleNewExpense = (values: any) => {
     dispatch(
       createExpenseFn(values, () => {
-        fetchExpenses();
+        filterExpenses();
       })
     );
   };
@@ -201,7 +195,17 @@ const ExpensesScreen: React.FC = () => {
             <Button type="button" onClick={filterExpenses} primary>
               Filter
             </Button>
-            <Button onClick={fetchExpenses} type="button">
+            <Button
+              onClick={() =>
+                dispatch(
+                  filterExpensesFn({
+                    startDate: TODAYS_DATE,
+                    endDate: TODAYS_DATE,
+                  })
+                )
+              }
+              type="button"
+            >
               Reset
             </Button>
           </div>

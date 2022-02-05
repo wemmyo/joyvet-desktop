@@ -192,28 +192,6 @@ export const filterExpensesFn = ({ startDate, endDate }) => async (
   }
 };
 
-export const getExpensesFn = () => async (
-  dispatch: (arg0: { payload: unknown; type: string }) => void
-) => {
-  try {
-    // `${moment().format('YYYY-MM-DD')}`
-    dispatch(getExpenses());
-    const expenses = await Expense.findAll({
-      where: {
-        createdAt: {
-          [Op.between]: [
-            `${moment().format('YYYY-MM-DD')} 00:00:00`,
-            `${moment().format('YYYY-MM-DD')} 23:00:00`,
-          ],
-        },
-      },
-    });
-    dispatch(getExpensesSuccess(JSON.stringify(expenses)));
-  } catch (error) {
-    toast.error(error.message || '');
-  }
-};
-
 export const createExpenseFn = (values: any, cb?: () => void) => async (
   dispatch: (arg0: { payload: unknown; type: string }) => void
 ) => {
