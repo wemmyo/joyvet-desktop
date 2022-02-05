@@ -76,19 +76,52 @@ const ExpensesScreen: React.FC = () => {
   };
 
   const renderRows = () => {
-    const rows = expenses.map((each: any) => {
-      return (
-        <Table.Row onClick={() => openSingleExpense(each.id)} key={each.id}>
-          <Table.Cell>{each.type}</Table.Cell>
-          <Table.Cell>{numberWithCommas(each.amount)}</Table.Cell>
-          <Table.Cell>
-            {new Date(each.date).toLocaleDateString('en-gb')}
-          </Table.Cell>
-          <Table.Cell>{each.note}</Table.Cell>
-        </Table.Row>
-      );
-    });
-    return rows;
+    const groupedObject = groupBy(expenses, 'type');
+
+    const allSections = Object.entries(groupedObject).map(
+      ([title, itemArray]) => {
+        const itemSum = sumOfAmounts(itemArray);
+        const itemSection = itemArray.map((each) => {
+          return (
+            <Table.Row onClick={() => openSingleExpense(each.id)} key={each.id}>
+              <Table.Cell>{each.type}</Table.Cell>
+              <Table.Cell>{numberWithCommas(each.amount)}</Table.Cell>
+              <Table.Cell>
+                {new Date(each.date).toLocaleDateString('en-gb')}
+              </Table.Cell>
+              <Table.Cell>{each.note}</Table.Cell>
+            </Table.Row>
+          );
+        });
+        return (
+          <>
+            <Table.Header>
+              <Table.Row>
+                <Table.HeaderCell>{title.toUpperCase()}</Table.HeaderCell>
+                <Table.HeaderCell>Amount</Table.HeaderCell>
+                <Table.HeaderCell>Date</Table.HeaderCell>
+                <Table.HeaderCell>Note</Table.HeaderCell>
+              </Table.Row>
+            </Table.Header>
+
+            <Table.Body>
+              {itemSection}
+
+              <Table.Row>
+                <Table.Cell />
+                <Table.Cell>
+                  <strong>₦{numberWithCommas(itemSum)}</strong>
+                </Table.Cell>
+                <Table.Cell />
+                <Table.Cell />
+              </Table.Row>
+            </Table.Body>
+          </>
+        );
+      }
+    );
+
+    return allSections;
   };
 
   const renderSideContent = () => {
@@ -101,52 +134,27 @@ const ExpensesScreen: React.FC = () => {
     return null;
   };
 
-  // const handleSearchChange = (e, { value }: { value: string }) => {
-  //   setSearchValue(value);
-  //   if (value.length > 0) {
-  //     dispatch(searchExpenseFn(value));
-  //   } else {
-  //     fetchExpenses();
-  //   }
-  // };
-
   const sum = (prev: number, next: number) => {
     return prev + next;
   };
 
-  const sumOfAmounts = () => {
-    if (expenses.length === 0) {
+  const sumOfAmounts = (values) => {
+    if (values.length === 0) {
       return 0;
     }
-    return expenses
+    return values
       .map((item: any) => {
         return item.amount;
       })
       .reduce(sum);
   };
 
-  // const headerContent = () => {
-  //   return (
-  //     <>
-  //       <Button
-  //         color="blue"
-  //         icon
-  //         labelPosition="left"
-  //         onClick={() => {
-  //           openSideContent(CONTENT_CREATE);
-  //         }}
-  //       >
-  //         <Icon inverted color="grey" name="add" />
-  //         Create
-  //       </Button>
-  //       <Form.Input
-  //         placeholder="Search Expense"
-  //         onChange={handleSearchChange}
-  //         value={searchValue}
-  //       />
-  //     </>
-  //   );
-  // };
+  const groupBy = (xs, key) => {
+    return xs.reduce(function (rv, x) {
+      (rv[x[key]] = rv[x[key]] || []).push(x);
+      return rv;
+    }, {});
+  };
 
   const filterExpenses = () => {
     dispatch(filterExpensesFn({ startDate, endDate, expenseType }));
@@ -225,29 +233,24 @@ const ExpensesScreen: React.FC = () => {
       {expensesLoading ? (
         <Loader active inline="centered" />
       ) : (
-        <Table celled striped>
-          <Table.Header>
-            <Table.Row>
-              <Table.HeaderCell>Type</Table.HeaderCell>
-              <Table.HeaderCell>Amount</Table.HeaderCell>
-              <Table.HeaderCell>Date</Table.HeaderCell>
-              <Table.HeaderCell>Note</Table.HeaderCell>
-            </Table.Row>
-          </Table.Header>
-
-          <Table.Body>{renderRows()}</Table.Body>
-
-          <Table.Footer>
-            <Table.Row>
-              <Table.HeaderCell />
-              <Table.HeaderCell style={{ fontWeight: 'bold' }}>
-                Total: ₦{numberWithCommas(sumOfAmounts())}
-              </Table.HeaderCell>
-              <Table.HeaderCell />
-              <Table.HeaderCell />
-            </Table.Row>
-          </Table.Footer>
-        </Table>
+        <>
+          <h1>Total: ₦{numberWithCommas(sumOfAmounts(expenses))}</h1>
+          <Table celled>
+            {renderRows()}
+            <Table.Footer>
+              <Table.Row>
+                <Table.HeaderCell />
+                <Table.HeaderCell>
+                  <strong>
+                    Total: ₦{numberWithCommas(sumOfAmounts(expenses))}
+                  </strong>
+                </Table.HeaderCell>
+                <Table.HeaderCell />
+                <Table.HeaderCell />
+              </Table.Row>
+            </Table.Footer>
+          </Table>{' '}
+        </>
       )}
     </DashboardLayout>
   );
