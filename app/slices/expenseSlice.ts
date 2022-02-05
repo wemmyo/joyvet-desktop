@@ -170,44 +170,23 @@ export const clearSingleExpenseFn = () => async (
   dispatch(clearSingleExpense());
 };
 
-export const filterExpensesFn = ({
-  startDate,
-  endDate,
-  expenseType,
-}: {
-  startDate: Date;
-  endDate: Date;
-  expenseType: string;
-}) => async (dispatch: (arg0: { payload: unknown; type: string }) => void) => {
+export const filterExpensesFn = ({ startDate, endDate }) => async (
+  dispatch: (arg0: { payload: unknown; type: string }) => void
+) => {
   try {
     dispatch(getExpenses());
 
-    if (expenseType && expenseType !== 'all') {
-      const expenses = await Expense.findAll({
-        where: {
-          date: {
-            [Op.between]: [
-              `${moment(startDate).format('YYYY-MM-DD')} 00:00:00`,
-              `${moment(endDate).format('YYYY-MM-DD')} 23:00:00`,
-            ],
-          },
-          type: expenseType,
+    const expenses = await Expense.findAll({
+      where: {
+        date: {
+          [Op.between]: [
+            `${moment(startDate).format('YYYY-MM-DD')} 00:00:00`,
+            `${moment(endDate).format('YYYY-MM-DD')} 23:00:00`,
+          ],
         },
-      });
-      dispatch(getExpensesSuccess(JSON.stringify(expenses)));
-    } else {
-      const expenses = await Expense.findAll({
-        where: {
-          date: {
-            [Op.between]: [
-              `${moment(startDate).format('YYYY-MM-DD')} 00:00:00`,
-              `${moment(endDate).format('YYYY-MM-DD')} 23:00:00`,
-            ],
-          },
-        },
-      });
-      dispatch(getExpensesSuccess(JSON.stringify(expenses)));
-    }
+      },
+    });
+    dispatch(getExpensesSuccess(JSON.stringify(expenses)));
   } catch (error) {
     toast.error(error.message || '');
   }

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { Fragment, useEffect, useState } from 'react';
 import { Table, Button, Icon, Form, Loader } from 'semantic-ui-react';
 import { useSelector, useDispatch } from 'react-redux';
 import moment from 'moment';
@@ -29,7 +29,6 @@ const ExpensesScreen: React.FC = () => {
   // const [searchValue, setSearchValue] = useState('');
   const [startDate, setStartDate] = useState(TODAYS_DATE);
   const [endDate, setEndDate] = useState(TODAYS_DATE);
-  const [expenseType, setExpenseType] = useState('');
 
   const dispatch = useDispatch();
 
@@ -94,7 +93,7 @@ const ExpensesScreen: React.FC = () => {
           );
         });
         return (
-          <>
+          <Fragment key={title}>
             <Table.Header>
               <Table.Row>
                 <Table.HeaderCell>{title.toUpperCase()}</Table.HeaderCell>
@@ -116,7 +115,7 @@ const ExpensesScreen: React.FC = () => {
                 <Table.Cell />
               </Table.Row>
             </Table.Body>
-          </>
+          </Fragment>
         );
       }
     );
@@ -157,14 +156,8 @@ const ExpensesScreen: React.FC = () => {
   };
 
   const filterExpenses = () => {
-    dispatch(filterExpensesFn({ startDate, endDate, expenseType }));
+    dispatch(filterExpensesFn({ startDate, endDate }));
   };
-
-  const options = [
-    { key: 1, text: 'All', value: 'all' },
-    { key: 2, text: 'Advertisement', value: 'advertisement' },
-    { key: 3, text: 'Rent', value: 'rent' },
-  ];
 
   const headerContent = () => {
     return (
@@ -201,13 +194,6 @@ const ExpensesScreen: React.FC = () => {
                 type="date"
                 onChange={(e, { value }) => setEndDate(value)}
                 value={endDate}
-              />
-              <Form.Select
-                label="Type"
-                options={options}
-                placeholder="Choose type"
-                onChange={(e, { value }) => setExpenseType(value)}
-                value={expenseType}
               />
             </Form.Group>
           </Form>
@@ -249,7 +235,7 @@ const ExpensesScreen: React.FC = () => {
                 <Table.HeaderCell />
               </Table.Row>
             </Table.Footer>
-          </Table>{' '}
+          </Table>
         </>
       )}
     </DashboardLayout>
