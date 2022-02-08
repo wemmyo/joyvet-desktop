@@ -3,7 +3,6 @@ import { Button, Form } from 'semantic-ui-react';
 import { Field, Formik } from 'formik';
 import { useSelector, useDispatch } from 'react-redux';
 
-// import * as Yup from 'yup';
 import TextInput from '../../../../components/TextInput/TextInput';
 import {
   getSingleUserFn,
@@ -26,14 +25,13 @@ const EditUser: React.FC<EditUserProps> = ({ userId }: EditUserProps) => {
     dispatch(getSingleUserFn(userId));
   };
 
-  useEffect(fetchData, [userId]);
+  useEffect(fetchData, [dispatch, userId]);
 
   const userState = useSelector(selectUserState);
 
   const { data: userRaw } = userState.singleUser;
 
   const user = userRaw ? JSON.parse(userRaw) : {};
-  // console.log(user);
 
   const deleteUser = () => {
     dispatch(
@@ -54,11 +52,7 @@ const EditUser: React.FC<EditUserProps> = ({ userId }: EditUserProps) => {
         username: username || '',
         role: role || '',
       }}
-      // validationSchema={EditUserSchema}
       onSubmit={(values) => {
-        //   submitForm(values);
-        // console.log(values);
-
         dispatch(
           updateUserFn(values, userId, () => {
             dispatch(closeSideContentFn());
@@ -119,7 +113,3 @@ const EditUser: React.FC<EditUserProps> = ({ userId }: EditUserProps) => {
   );
 };
 export default EditUser;
-
-// const EditUserSchema = Yup.object().shape({
-//   title: Yup.string().required('Required'),
-// });

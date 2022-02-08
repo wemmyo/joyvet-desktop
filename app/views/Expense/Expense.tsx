@@ -36,6 +36,32 @@ const ExpensesScreen: React.FC = () => {
 
   const expenses = expensesRaw ? JSON.parse(expensesRaw) : [];
 
+  const filterExpenses = () => {
+    dispatch(filterExpensesFn({ startDate, endDate }));
+  };
+
+  const sum = (prev: number, next: number) => {
+    return prev + next;
+  };
+
+  const sumOfAmounts = (values) => {
+    if (values.length === 0) {
+      return 0;
+    }
+    return values
+      .map((item: any) => {
+        return item.amount;
+      })
+      .reduce(sum);
+  };
+
+  const groupBy = (xs, key) => {
+    return xs.reduce((rv, x) => {
+      (rv[x[key]] = rv[x[key]] || []).push(x);
+      return rv;
+    }, {});
+  };
+
   const openSideContent = (content: string) => {
     dispatch(openSideContentFn());
     setSideContent(content);
@@ -125,32 +151,6 @@ const ExpensesScreen: React.FC = () => {
       return <EditExpense expenseId={expenseId} />;
     }
     return null;
-  };
-
-  const sum = (prev: number, next: number) => {
-    return prev + next;
-  };
-
-  const sumOfAmounts = (values) => {
-    if (values.length === 0) {
-      return 0;
-    }
-    return values
-      .map((item: any) => {
-        return item.amount;
-      })
-      .reduce(sum);
-  };
-
-  const groupBy = (xs, key) => {
-    return xs.reduce(function (rv, x) {
-      (rv[x[key]] = rv[x[key]] || []).push(x);
-      return rv;
-    }, {});
-  };
-
-  const filterExpenses = () => {
-    dispatch(filterExpensesFn({ startDate, endDate }));
   };
 
   const headerContent = () => {

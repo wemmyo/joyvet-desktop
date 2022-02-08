@@ -26,7 +26,7 @@ class PrintedReceipt extends React.Component<PrintedReceiptProps> {
               ₦{numberWithCommas(item.invoiceItem.unitPrice)}
             </Table.Cell>
             <Table.Cell>
-              ₦{numberWithCommas(item.invoiceItem.amount)}{' '}
+              ₦{numberWithCommas(item.invoiceItem.amount)}
             </Table.Cell>
           </Table.Row>
         );
@@ -61,8 +61,14 @@ class PrintedReceipt extends React.Component<PrintedReceiptProps> {
           </p>
           <hr />
         </div>
-        <p>Customer: {invoice.customer.fullName || 'VALUED CUSTOMER'}</p>
-        <p>Invoice#: {invoice.id}</p>
+        <p>
+          Customer:
+          {invoice.customer.fullName || 'VALUED CUSTOMER'}
+        </p>
+        <p>
+          Invoice#:
+          {invoice.id}
+        </p>
         <p>
           Transaction Date:{' '}
           {new Date(invoice.createdAt).toLocaleDateString('en-gb')}
@@ -87,7 +93,10 @@ class PrintedReceipt extends React.Component<PrintedReceiptProps> {
             </Table.Row>
           </Table.Body>
         </Table>
-        <p>Cashier: {invoice.postedBy}</p>
+        <p>
+          Cashier:
+          {invoice.postedBy}
+        </p>
         <p>
           <b>
             Please, Ensure you check all item(s) given to you with your invoice
