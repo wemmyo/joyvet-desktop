@@ -7,7 +7,6 @@ import routes from './routes';
 import App from '../views/App';
 // import HomePage from './views/HomePage';
 import LoginScreen from '../views/Login/Login';
-import OverviewScreen from '../views/Overview/Overview';
 import CustomersScreen from '../views/Customer/Customer';
 import InvoiceScreen from '../views/Invoice/Invoice';
 import ProductScreen from '../views/Product/Product';
@@ -71,7 +70,6 @@ export default function Routes() {
         <PrivateRoute path={routes.PRODUCT} component={ProductScreen} />
         <PrivateRoute path={routes.INVOICE} component={InvoiceScreen} />
         <PrivateRoute path={routes.CUSTOMER} component={CustomersScreen} />
-        <PrivateRoute path={routes.OVERVIEW} component={OverviewScreen} />
         <Route exact path={routes.LOGIN} component={LoginScreen} />
       </Switch>
     </App>
