@@ -13,8 +13,6 @@ import {
 import CustomerHistoryInvoices from './components/Invoices/Invoices';
 import CustomerHistoryReceipts from './components/Receipts/Receipts';
 
-// export interface CustomerHistoryProps {}
-
 const TODAYS_DATE = `${moment().format('YYYY-MM-DD')}`;
 
 const CustomerHistory: React.FC = ({ match }: any) => {
