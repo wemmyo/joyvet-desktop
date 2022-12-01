@@ -1,6 +1,8 @@
-import React, { Fragment, useEffect, useState } from 'react';
+/* eslint-disable react/jsx-one-expression-per-line */
+import React, { Fragment, useEffect, useState, useRef } from 'react';
 import { Table, Button, Icon, Form, Loader } from 'semantic-ui-react';
 import { useSelector, useDispatch } from 'react-redux';
+import { useReactToPrint } from 'react-to-print';
 import moment from 'moment';
 
 import DashboardLayout from '../../layouts/DashboardLayout/DashboardLayout';
@@ -31,6 +33,12 @@ const ExpensesScreen: React.FC = () => {
   const dispatch = useDispatch();
 
   const expenseState = useSelector(selectExpenseState);
+
+  const componentRef = useRef(null);
+
+  const handlePrint = useReactToPrint({
+    content: () => componentRef.current,
+  });
 
   const { data: expensesRaw, loading: expensesLoading } = expenseState.expenses;
 
@@ -174,6 +182,7 @@ const ExpensesScreen: React.FC = () => {
           <Icon inverted color="grey" name="add" />
           Create
         </Button>
+        <Button onClick={handlePrint} icon="print" />
         <div style={{ display: 'flex', alignItems: 'flex-end' }}>
           <Form>
             <Form.Group style={{ marginBottom: 0 }}>
@@ -196,14 +205,14 @@ const ExpensesScreen: React.FC = () => {
               Filter
             </Button>
             <Button
-              onClick={() =>
+              onClick={() => {
                 dispatch(
                   filterExpensesFn({
                     startDate: TODAYS_DATE,
                     endDate: TODAYS_DATE,
                   })
-                )
-              }
+                );
+              }}
               type="button"
             >
               Reset
@@ -215,15 +224,12 @@ const ExpensesScreen: React.FC = () => {
   };
 
   return (
-    <DashboardLayout
-      screenTitle="Expenses"
-      rightSidebar={renderSideContent()}
-      headerContent={headerContent()}
-    >
+    <DashboardLayout screenTitle="Expenses" rightSidebar={renderSideContent()}>
       {expensesLoading ? (
         <Loader active inline="centered" />
       ) : (
-        <>
+        <div ref={componentRef}>
+          {headerContent()}
           <h1>Total: ₦{numberWithCommas(sumOfAmounts(expenses))}</h1>
           <Table celled>
             {renderRows()}
@@ -240,7 +246,7 @@ const ExpensesScreen: React.FC = () => {
               </Table.Row>
             </Table.Footer>
           </Table>
-        </>
+        </div>
       )}
     </DashboardLayout>
   );

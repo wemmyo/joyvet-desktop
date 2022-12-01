@@ -23,7 +23,7 @@ import TextInput from '../../components/TextInput/TextInput';
 import ComponentToPrint from '../../components/PrintedReceipt/ReceiptWrapper';
 
 const InvoiceScreen: React.FC = () => {
-  const componentRef = useRef();
+  const componentRef = useRef(null);
   const dispatch = useDispatch();
 
   const handlePrint = useReactToPrint({

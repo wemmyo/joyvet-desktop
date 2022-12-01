@@ -1,6 +1,8 @@
-import React, { useEffect, useState } from 'react';
+/* eslint-disable react/jsx-one-expression-per-line */
+import React, { useEffect, useState, useRef } from 'react';
 import { Table, Button, Icon, Form, Loader } from 'semantic-ui-react';
 import { useSelector, useDispatch } from 'react-redux';
+import { useReactToPrint } from 'react-to-print';
 
 import DashboardLayout from '../../layouts/DashboardLayout/DashboardLayout';
 import {
@@ -10,7 +12,7 @@ import {
   searchProductFn,
 } from '../../slices/productSlice';
 import CreateProduct from './components/CreateProduct/CreateProduct';
-import { numberWithCommas, isAdmin } from '../../utils/helpers';
+import { numberWithCommas } from '../../utils/helpers';
 import {
   openSideContentFn,
   closeSideContentFn,
@@ -27,6 +29,12 @@ const ProductsScreen: React.FC = () => {
 
   const dispatch = useDispatch();
   const productState = useSelector(selectProductState);
+
+  const componentRef = useRef(null);
+
+  const handlePrint = useReactToPrint({
+    content: () => componentRef.current,
+  });
 
   const { data: productsRaw, loading: productsLoading } = productState.products;
 
@@ -86,12 +94,7 @@ const ProductsScreen: React.FC = () => {
   const renderRows = () => {
     const rows = products.map((each: any) => {
       return (
-        <Table.Row
-          // eslint-disable-next-line react/jsx-props-no-spreading
-          // {...(isAdmin() && { onClick: () => openSingleProduct(each.id) })}
-          onClick={() => openSingleProduct(each.id)}
-          key={each.id}
-        >
+        <Table.Row onClick={() => openSingleProduct(each.id)} key={each.id}>
           <Table.Cell>{each.title}</Table.Cell>
           <Table.Cell>{each.stock}</Table.Cell>
           <Table.Cell>{numberWithCommas(each.buyPrice)}</Table.Cell>
@@ -140,6 +143,7 @@ const ProductsScreen: React.FC = () => {
           <Icon inverted color="grey" name="add" />
           Create
         </Button>
+        <Button onClick={handlePrint} icon="print" />
         <Form.Input
           placeholder="Search Product"
           onChange={handleSearchChange}
@@ -158,35 +162,37 @@ const ProductsScreen: React.FC = () => {
       {productsLoading ? (
         <Loader active inline="centered" />
       ) : (
-        <Table celled striped>
-          <Table.Header>
-            <Table.Row>
-              <Table.HeaderCell>Title</Table.HeaderCell>
-              <Table.HeaderCell>Quantity</Table.HeaderCell>
-              <Table.HeaderCell>Buy Price</Table.HeaderCell>
-              <Table.HeaderCell>Sell Price</Table.HeaderCell>
-              <Table.HeaderCell>Sell Price 2</Table.HeaderCell>
-              <Table.HeaderCell>Sell Price 3</Table.HeaderCell>
-              <Table.HeaderCell>Stock Value</Table.HeaderCell>
-            </Table.Row>
-          </Table.Header>
+        <div ref={componentRef}>
+          <Table celled striped>
+            <Table.Header>
+              <Table.Row>
+                <Table.HeaderCell>Title</Table.HeaderCell>
+                <Table.HeaderCell>Quantity</Table.HeaderCell>
+                <Table.HeaderCell>Buy Price</Table.HeaderCell>
+                <Table.HeaderCell>Sell Price</Table.HeaderCell>
+                <Table.HeaderCell>Sell Price 2</Table.HeaderCell>
+                <Table.HeaderCell>Sell Price 3</Table.HeaderCell>
+                <Table.HeaderCell>Stock Value</Table.HeaderCell>
+              </Table.Row>
+            </Table.Header>
 
-          <Table.Body>{renderRows()}</Table.Body>
+            <Table.Body>{renderRows()}</Table.Body>
 
-          <Table.Footer>
-            <Table.Row>
-              <Table.HeaderCell />
-              <Table.HeaderCell />
-              <Table.HeaderCell />
-              <Table.HeaderCell />
-              <Table.HeaderCell />
-              <Table.HeaderCell />
-              <Table.HeaderCell style={{ fontWeight: 'bold' }}>
-                Total: ₦{numberWithCommas(sumOfStockValue())}
-              </Table.HeaderCell>
-            </Table.Row>
-          </Table.Footer>
-        </Table>
+            <Table.Footer>
+              <Table.Row>
+                <Table.HeaderCell />
+                <Table.HeaderCell />
+                <Table.HeaderCell />
+                <Table.HeaderCell />
+                <Table.HeaderCell />
+                <Table.HeaderCell />
+                <Table.HeaderCell style={{ fontWeight: 'bold' }}>
+                  Total: ₦{numberWithCommas(sumOfStockValue())}
+                </Table.HeaderCell>
+              </Table.Row>
+            </Table.Footer>
+          </Table>
+        </div>
       )}
     </DashboardLayout>
   );
