@@ -14,6 +14,7 @@ import {
 } from '../../../../slices/productSlice';
 import { closeSideContentFn } from '../../../../slices/dashboardSlice';
 import routes from '../../../../routing/routes';
+import { isAdmin } from '../../../../utils/helpers';
 
 export interface EditProductProps {
   productId: string | number;
@@ -78,6 +79,7 @@ const EditProduct: React.FC<EditProductProps> = ({
             label="Number In Stock"
             type="number"
             component={TextInput}
+            disabled={!isAdmin()}
           />
           <Field
             name="buyPrice"
