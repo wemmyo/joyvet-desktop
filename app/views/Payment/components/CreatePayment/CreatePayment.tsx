@@ -76,6 +76,8 @@ const CreatePayment: React.FC = () => {
             <option>GTB</option>
             <option>FCMB</option>
             <option>First Bank</option>
+            <option>UBA</option>
+            <option>Zenith</option>
           </Field>
         </div>
       );
