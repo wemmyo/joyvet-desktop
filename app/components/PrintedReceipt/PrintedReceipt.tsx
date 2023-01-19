@@ -1,3 +1,6 @@
+/* eslint-disable consistent-return */
+/* eslint-disable react/jsx-one-expression-per-line */
+/* eslint-disable react/destructuring-assignment */
 import * as React from 'react';
 import { Table } from 'semantic-ui-react';
 import { connect } from 'react-redux';
@@ -50,11 +53,11 @@ class PrintedReceipt extends React.Component<PrintedReceiptProps> {
         <div className={styles.receipt__companyInfo}>
           <h5>JOY VETERINARY</h5>
           <p>
-            342, Old Abeokuta Road
+            37, Iganmode Road
             <br />
-            Gengento bus stop, Agege
+            Ota, Ogun State
             <br />
-            08095988235
+            08095988354, 08095988693
           </p>
           <p>
             <b>Sales Invoice!</b>
