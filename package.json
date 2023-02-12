@@ -29,12 +29,7 @@
     "start": "cross-env NODE_ENV=production electron ./app/main.prod.js",
     "start-main-debug": "yarn start-main-dev --inspect=5858 --remote-debugging-port=9223",
     "start-main-dev": "cross-env START_HOT=1 NODE_ENV=development electron -r ./internals/scripts/BabelRegister ./app/main.dev.ts",
-    "start-renderer-dev": "cross-env NODE_ENV=development webpack-dev-server --config configs/webpack.config.renderer.dev.babel.js",
-    "test": "cross-env BABEL_DISABLE_CACHE=1 jest",
-    "test-all": "yarn lint && yarn tsc && yarn build && yarn test",
-    "test-e2e": "node -r @babel/register ./internals/scripts/CheckBuildsExist.js && cross-env NODE_ENV=test testcafe electron:./app ./test/e2e/HomePage.e2e.ts",
-    "test-e2e-live": "node -r @babel/register ./internals/scripts/CheckBuildsExist.js && cross-env NODE_ENV=test testcafe --live electron:./app ./test/e2e/HomePage.e2e.ts",
-    "test-watch": "yarn test --watch"
+    "start-renderer-dev": "cross-env NODE_ENV=development webpack-dev-server --config configs/webpack.config.renderer.dev.babel.js"
   },
   "lint-staged": {
     "*.{js,jsx,ts,tsx}": [
@@ -166,7 +161,6 @@
     ]
   },
   "devDependencies": {
-    "@amilajack/testcafe-browser-provider-electron": "^0.0.15-alpha.1",
     "@babel/core": "^7.10.5",
     "@babel/plugin-proposal-class-properties": "^7.10.4",
     "@babel/plugin-proposal-decorators": "^7.10.5",
@@ -240,7 +234,6 @@
     "eslint-plugin-promise": "^4.2.1",
     "eslint-plugin-react": "^7.20.3",
     "eslint-plugin-react-hooks": "^4.0.8",
-    "eslint-plugin-testcafe": "^0.2.1",
     "file-loader": "^6.0.0",
     "husky": "^4.2.5",
     "identity-obj-proxy": "^3.0.0",
@@ -259,9 +252,6 @@
     "stylelint-config-prettier": "^8.0.2",
     "stylelint-config-standard": "^20.0.0",
     "terser-webpack-plugin": "^3.0.7",
-    "testcafe": "^1.8.8",
-    "testcafe-browser-provider-electron": "^0.0.15",
-    "testcafe-react-selectors": "^4.0.0",
     "typescript": "^3.9.7",
     "typings-for-css-modules-loader": "^1.7.0",
     "url-loader": "^4.1.0",
@@ -324,11 +314,6 @@
     "extends": [
       "stylelint-config-standard",
       "stylelint-config-prettier"
-    ]
-  },
-  "renovate": {
-    "extends": [
-      "bliss"
     ]
   },
   "husky": {
