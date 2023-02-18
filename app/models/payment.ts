@@ -2,6 +2,16 @@ import sequelize from '../utils/database';
 
 const Sequelize = require('sequelize');
 
+// create expense interface
+export interface Expense {
+  id: number;
+  date: Date;
+  amount: number;
+  type: string;
+  note: string;
+  postedBy: string;
+}
+
 export default sequelize.define('payment', {
   id: {
     type: Sequelize.INTEGER,

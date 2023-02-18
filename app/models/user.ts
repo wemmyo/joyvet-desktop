@@ -2,6 +2,15 @@ import sequelize from '../utils/database';
 
 const Sequelize = require('sequelize');
 
+// create user interface
+export interface User {
+  id: number;
+  fullName: string;
+  username: string;
+  password: string;
+  role: string;
+}
+
 export default sequelize.define('user', {
   id: {
     type: Sequelize.INTEGER,

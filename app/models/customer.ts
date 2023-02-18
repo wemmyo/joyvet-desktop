@@ -2,6 +2,17 @@ import sequelize from '../utils/database';
 
 const Sequelize = require('sequelize');
 
+// create customer interface
+export interface Customer {
+  id: number;
+  fullName: string;
+  address: string;
+  phoneNumber: string;
+  balance: number;
+  postedBy: string;
+  maxPriceLevel: number;
+}
+
 export default sequelize.define(
   'customer',
   {

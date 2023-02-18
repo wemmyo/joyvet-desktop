@@ -2,6 +2,22 @@ import sequelize from '../utils/database';
 
 const Sequelize = require('sequelize');
 
+// create purchaseItem interface
+export interface PurchaseItem {
+  id: number;
+  quantity: number;
+  unitPrice: number;
+  amount: number;
+  sellPrice: number;
+  sellPrice2: number;
+  sellPrice3: number;
+  oldBuyPrice: number;
+  oldSellPrice: number;
+  oldSellPrice2: number;
+  oldSellPrice3: number;
+  oldStockLevel: number;
+}
+
 export default sequelize.define('purchaseItem', {
   id: {
     type: Sequelize.INTEGER,

@@ -2,6 +2,17 @@ import sequelize from '../utils/database';
 
 const Sequelize = require('sequelize');
 
+// create receipt interface
+export interface Receipt {
+  id: number;
+  amount: number;
+  paymentType: string;
+  paymentMethod: string;
+  bank: string;
+  note: string;
+  postedBy: string;
+}
+
 export default sequelize.define('receipt', {
   id: {
     type: Sequelize.INTEGER,

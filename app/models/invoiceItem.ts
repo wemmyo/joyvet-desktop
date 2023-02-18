@@ -2,6 +2,15 @@ import sequelize from '../utils/database';
 
 const Sequelize = require('sequelize');
 
+// create invoiceItem interface
+export interface InvoiceItem {
+  id: number;
+  quantity: number;
+  unitPrice: number;
+  amount: number;
+  profit: number;
+}
+
 export default sequelize.define('invoiceItem', {
   id: {
     type: Sequelize.INTEGER,
