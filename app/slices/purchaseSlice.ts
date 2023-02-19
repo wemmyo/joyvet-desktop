@@ -1,6 +1,7 @@
 import { createSlice } from '@reduxjs/toolkit';
 import { toast } from 'react-toastify';
 import { Op } from 'sequelize';
+import { z } from 'zod';
 import Purchase from '../models/purchase';
 import Supplier from '../models/supplier';
 import Product from '../models/product';
@@ -85,7 +86,13 @@ export const {
 export const searchPurchaseFn = (value: string) => async (
   dispatch: (arg0: { payload: any; type: string }) => void
 ) => {
+  // use zod to validate input
+  const searchPurchaseSchema = z.object({
+    value: z.string().min(1),
+  });
+
   try {
+    searchPurchaseSchema.parse({ value });
     const purchases = await Purchase.findAll({
       where: {
         invoiceNumber: {
@@ -108,8 +115,14 @@ export const getSinglePurchaseFn = (
   id: string | number,
   cb?: () => void
 ) => async (dispatch: (arg0: { payload: any; type: string }) => void) => {
+  // use zod to validate input
+  const getSinglePurchaseSchema = z.object({
+    id: z.number(),
+  });
+
   try {
     dispatch(getSinglePurchase());
+    getSinglePurchaseSchema.parse({ id });
 
     const getSinglePurchaseResponse = await Purchase.findByPk(id, {
       include: [
@@ -126,7 +139,6 @@ export const getSinglePurchaseFn = (
     if (cb) {
       cb();
     }
-    console.log(getSinglePurchaseResponse);
   } catch (error) {
     toast.error(error.message || '');
   }
@@ -156,7 +168,18 @@ export const createPurchaseFn = (
   meta?: any,
   cb?: () => void
 ) => async (dispatch: (arg0: { payload: any; type: string }) => void) => {
+  // use zod to validate input
+  const createPurchaseSchema = z.object({
+    values: z.array(z.any()),
+    meta: z.object({
+      supplierId: z.number(),
+      invoiceNumber: z.string().min(1),
+      amount: z.number(),
+    }),
+  });
+
   try {
+    createPurchaseSchema.parse({ values, meta });
     await sequelize.transaction(async (t) => {
       dispatch(createPurchase());
       const user =
@@ -236,7 +259,12 @@ export const deletePurchaseFn = (
   id: string | number,
   cb?: () => void
 ) => async (dispatch: (arg0: { payload: any; type: string }) => void) => {
+  // use zod to validate input
+  const deletePurchaseSchema = z.object({
+    id: z.number(),
+  });
   try {
+    deletePurchaseSchema.parse({ id });
     await sequelize.transaction(async (t) => {
       const purchase = await Purchase.findByPk(id, {
         include: [
@@ -281,8 +309,6 @@ export const deletePurchaseFn = (
       cb();
     }
   } catch (error) {
-    console.log(error);
-
     toast.error(error.message || '');
   }
 };

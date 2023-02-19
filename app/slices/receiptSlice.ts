@@ -1,6 +1,7 @@
 import { createSlice } from '@reduxjs/toolkit';
 import { toast } from 'react-toastify';
 import { Op } from 'sequelize';
+import { z } from 'zod';
 import Receipt from '../models/receipt';
 import Customer from '../models/customer';
 import sequelize from '../utils/database';
@@ -85,7 +86,12 @@ export const {
 export const searchReceiptFn = (value: string) => async (
   dispatch: (arg0: { payload: any; type: string }) => void
 ) => {
+  // use zod to validate input
+  const SearchReceiptSchema = z.object({
+    value: z.string().min(1),
+  });
   try {
+    SearchReceiptSchema.parse({ value });
     const receipts = await Receipt.findAll({
       where: {
         id: {
@@ -109,7 +115,15 @@ export const updateReceiptFn = (
   id: string | number,
   cb?: () => void
 ) => async () => {
+  // use zod to validate input
+  const UpdateReceiptSchema = z.object({
+    amount: z.number().min(1),
+    customerId: z.number(),
+    id: z.number(),
+  });
+
   try {
+    UpdateReceiptSchema.parse(values);
     // dispatch(updateReceipt());
     await Receipt.update(values, {
       where: {
@@ -130,8 +144,14 @@ export const getSingleReceiptFn = (
   id: string | number,
   cb?: () => void
 ) => async (dispatch: (arg0: { payload: any; type: string }) => void) => {
+  // use zod to validate input
+  const GetSingleReceiptSchema = z.object({
+    id: z.number(),
+  });
+
   try {
     dispatch(getSingleReceipt());
+    GetSingleReceiptSchema.parse({ id });
     const getSingleReceiptResponse = await Receipt.findByPk(id, {
       include: Customer,
     });
@@ -166,7 +186,12 @@ export const getReceiptsFn = () => async (
 export const deleteReceiptFn = (id: string | number, cb: () => void) => async (
   dispatch: (arg0: { payload: any; type: string }) => void
 ) => {
+  // use zod to validate input
+  const DeleteReceiptSchema = z.object({
+    id: z.number(),
+  });
   try {
+    DeleteReceiptSchema.parse({ id });
     await sequelize.transaction(async (t) => {
       const receipt = await Receipt.findByPk(id);
 
@@ -194,7 +219,14 @@ export const deleteReceiptFn = (id: string | number, cb: () => void) => async (
 export const createReceiptFn = (values: any, cb?: () => void) => async (
   dispatch: (arg0: { payload: any; type: string }) => void
 ) => {
+  // use zod to validate input
+  const CreateReceiptSchema = z.object({
+    amount: z.number().min(1),
+    customerId: z.number(),
+    paymentMethod: z.string().min(1),
+  });
   try {
+    CreateReceiptSchema.parse(values);
     await sequelize.transaction(async (t) => {
       dispatch(createReceipt());
       const user =

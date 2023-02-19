@@ -1,6 +1,7 @@
 import { createSlice } from '@reduxjs/toolkit';
 import { toast } from 'react-toastify';
 import bycrpt from 'bcryptjs';
+import { z } from 'zod';
 // import jwt from 'jsonwebtoken';
 import User from '../models/user';
 
@@ -83,8 +84,15 @@ export const loginUserFn = (
   values: { username: string; password: string },
   cb?: () => void
 ) => async () => {
+  // use zod to validate input
+  const LoginSchema = z.object({
+    username: z.string().min(3).max(255),
+    password: z.string().min(3).max(255),
+  });
+
   let loadedUser;
   try {
+    LoginSchema.parse(values);
     // dispatch(updateUser());
     const user = await User.findOne({
       where: {
@@ -126,7 +134,16 @@ export const updateUserFn = (
   id: string | number,
   cb?: () => void
 ) => async () => {
+  // use zod to validate input
+  const UpdateUserSchema = z.object({
+    fullName: z.string().min(3).max(255),
+    username: z.string().min(3).max(255),
+    email: z.string().min(3).max(255),
+    password: z.string().min(3).max(255),
+  });
+
   try {
+    UpdateUserSchema.parse(values);
     // dispatch(updateUser());
     await User.update(values, {
       where: {
@@ -146,7 +163,13 @@ export const updateUserFn = (
 export const getSingleUserFn = (id: string | number, cb?: () => void) => async (
   dispatch: (arg0: { payload: any; type: string }) => void
 ) => {
+  // use zod to validate input
+  const GetSingleUserSchema = z.object({
+    id: z.string().min(3).max(255),
+  });
+
   try {
+    GetSingleUserSchema.parse({ id });
     dispatch(getSingleUser());
 
     const getSingleUserResponse = await User.findByPk(id);
@@ -164,7 +187,13 @@ export const deleteUserFn = (
   userId: string | number,
   cb?: () => void
 ) => async (dispatch: (arg0: { payload: any; type: string }) => void) => {
+  // use zod to validate input
+  const DeleteUserSchema = z.object({
+    id: z.string().min(3).max(255),
+  });
+
   try {
+    DeleteUserSchema.parse({ id: userId });
     // dispatch(getUsers());
     const user = await User.findByPk(userId);
     user.destroy();
@@ -193,8 +222,17 @@ export const getUsersFn = () => async (
 export const createUserFn = (values: any, cb?: () => void) => async (
   dispatch: (arg0: { payload: any; type: string }) => void
 ) => {
+  // use zod to validate input
+  const CreateUserSchema = z.object({
+    fullName: z.string().min(3).max(255),
+    username: z.string().min(3).max(255),
+    password: z.string().min(3).max(255),
+    role: z.string().min(3).max(255),
+  });
+
   try {
     dispatch(createUser());
+    CreateUserSchema.parse(values);
     // const response = await User.create(values);
     const hashedPassword = await bycrpt.hash(values.password, 12);
     await User.create({

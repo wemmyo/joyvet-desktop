@@ -1,6 +1,7 @@
 import { createSlice } from '@reduxjs/toolkit';
 import { toast } from 'react-toastify';
 import { Op } from 'sequelize';
+import { z } from 'zod';
 import moment from 'moment';
 import Product from '../models/product';
 import InvoiceItem from '../models/invoiceItem';
@@ -128,8 +129,16 @@ export const getProductPurchasesFn = (
   startDate?: Date | string,
   endDate?: Date | string
 ) => async (dispatch: (arg0: { payload: any; type: string }) => void) => {
+  // use zod to validate input
+  const schema = z.object({
+    productId: z.number(),
+    startDate: z.date().optional(),
+    endDate: z.date().optional(),
+  });
+
   dispatch(getPurchases());
   try {
+    schema.parse({ productId, startDate, endDate });
     const receipts = await PurchaseItem.findAll({
       where: {
         productId,
@@ -154,8 +163,15 @@ export const getProductInvoicesFn = (
   startDate: Date | string,
   endDate: Date | string
 ) => async (dispatch: (arg0: { payload: any; type: string }) => void) => {
+  // use zod to validate input
+  const schema = z.object({
+    productId: z.number(),
+    startDate: z.date(),
+    endDate: z.date(),
+  });
   dispatch(getInvoices());
   try {
+    schema.parse({ productId, startDate, endDate });
     const invoices = await InvoiceItem.findAll({
       where: {
         productId,
@@ -179,7 +195,12 @@ export const getProductInvoicesFn = (
 export const searchProductFn = (value: string) => async (
   dispatch: (arg0: { payload: any; type: string }) => void
 ) => {
+  // use zod to validate input
+  const schema = z.object({
+    value: z.string().min(1),
+  });
   try {
+    schema.parse({ value });
     const products = await Product.findAll({
       where: {
         title: {
@@ -198,7 +219,19 @@ export const updateProductFn = (
   id: string | number,
   cb?: () => void
 ) => async () => {
+  // use zod to validate input
+  const schema = z.object({
+    values: z.object({
+      title: z.string().min(1),
+      description: z.string().min(1),
+      price: z.number(),
+      quantity: z.number(),
+      category: z.string().min(1),
+    }),
+    id: z.number(),
+  });
   try {
+    schema.parse({ values, id });
     // dispatch(updateProduct());
     await Product.update(values, {
       where: {
@@ -219,8 +252,14 @@ export const getSingleProductFn = (
   id: string | number,
   cb?: () => void
 ) => async (dispatch: (arg0: { payload: any; type: string }) => void) => {
+  // use zod to validate input
+  const schema = z.object({
+    id: z.number(),
+  });
+
   try {
     dispatch(getSingleProduct());
+    schema.parse({ id });
 
     const getSingleProductResponse = await Product.findByPk(id);
 
@@ -261,7 +300,18 @@ export const getProductsFn = (filter?: 'inStock') => async (
 export const createProductFn = (values: any, cb?: () => void) => async (
   dispatch: (arg0: { payload: any; type: string }) => void
 ) => {
+  // use zod to validate input
+  const schema = z.object({
+    values: z.object({
+      title: z.string().min(1),
+      sellPrice: z.number(),
+      sellPrice2: z.number(),
+      sellPrice3: z.number(),
+      buyPrice: z.number(),
+    }),
+  });
   try {
+    schema.parse({ values });
     dispatch(createProduct());
     // const response = await Product.create(values);
     const user =

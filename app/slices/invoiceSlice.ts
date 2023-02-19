@@ -2,6 +2,8 @@ import { createSlice } from '@reduxjs/toolkit';
 import { toast } from 'react-toastify';
 import { Op } from 'sequelize';
 import moment from 'moment';
+import { z } from 'zod';
+
 import Invoice from '../models/invoice';
 import Customer from '../models/customer';
 import Product from '../models/product';
@@ -107,8 +109,16 @@ export const filterInvoiceFn = (
   endDate: Date | string,
   saleType: string
 ) => async (dispatch: (arg0: { payload: any; type: string }) => void) => {
+  // use zod to validate input
+  const filterInvoiceSchema = z.object({
+    startDate: z.string().min(1),
+    endDate: z.string().min(1),
+    saleType: z.string().min(1),
+  });
+
   try {
     dispatch(getInvoices());
+    filterInvoiceSchema.parse({ startDate, endDate, saleType });
     let invoices;
 
     if (startDate && endDate && saleType === 'all') {
@@ -186,8 +196,13 @@ export const filterInvoiceFn = (
 export const filterInvoiceById = (id: string | number) => async (
   dispatch: (arg0: { payload: any; type: string }) => void
 ) => {
+  // use zod to validate input
+  const filterInvoiceByIdSchema = z.object({
+    id: z.number(),
+  });
   try {
     dispatch(getInvoices());
+    filterInvoiceByIdSchema.parse({ id });
     const invoices = await Invoice.findAll({
       where: {
         id: {
@@ -212,8 +227,13 @@ export const getSingleInvoiceFn = (
   id: string | number,
   cb?: () => void
 ) => async (dispatch: (arg0: { payload: any; type: string }) => void) => {
+  // use zod to validate input
+  const getSingleInvoiceSchema = z.object({
+    id: z.number(),
+  });
   try {
     dispatch(getSingleInvoice());
+    getSingleInvoiceSchema.parse({ id });
 
     const getSingleInvoiceResponse = await Invoice.findByPk(id, {
       // include: { all: true, nested: true },
@@ -229,7 +249,6 @@ export const getSingleInvoiceFn = (
     if (cb) {
       cb();
     }
-    console.log(getSingleInvoiceResponse);
   } catch (error) {
     toast.error(error.message || '');
   }
@@ -264,7 +283,13 @@ export const getInvoicesFn = () => async (
 export const deleteInvoiceFn = (id: string | number, cb?: () => void) => async (
   dispatch: (arg0: { payload: any; type: string }) => void
 ) => {
+  // use zod to validate input
+  const deleteInvoiceSchema = z.object({
+    id: z.number(),
+  });
   try {
+    deleteInvoiceSchema.parse({ id });
+
     await sequelize.transaction(async (t) => {
       const invoice = await Invoice.findByPk(id, {
         include: [
@@ -321,7 +346,15 @@ export const deleteInvoiceItemFn = ({
   invoiceItemId: string | number;
   cb?: () => void;
 }) => async (dispatch: (arg0: { payload: any; type: string }) => void) => {
+  // use zod to validate input
+  const deleteInvoiceItemSchema = z.object({
+    productId: z.number(),
+    invoiceId: z.number(),
+    invoiceItemid: z.number(),
+  });
+
   try {
+    deleteInvoiceItemSchema.parse({ productId, invoiceId, invoiceItemId });
     const invoice = await Invoice.findByPk(invoiceId);
     const invoiceItem = await InvoiceItem.findByPk(invoiceItemId);
 
@@ -396,7 +429,25 @@ export const addInvoiceItemFn = ({
   profit: number;
   cb: () => void;
 }) => async (dispatch: (arg0: { payload: any; type: string }) => void) => {
+  // use zod to validate input
+  const addInvoiceItemSchema = z.object({
+    invoiceId: z.number(),
+    productId: z.number(),
+    quantity: z.number(),
+    amount: z.number(),
+    unitPrice: z.number(),
+    profit: z.number(),
+  });
+
   try {
+    addInvoiceItemSchema.parse({
+      invoiceId,
+      productId,
+      quantity,
+      amount,
+      unitPrice,
+      profit,
+    });
     const invoice = await Invoice.findByPk(invoiceId);
     const product = await Product.findByPk(productId);
     const customer = await Customer.findByPk(invoice.customerId);
@@ -460,8 +511,25 @@ export const createInvoiceFn = (
   meta?: any,
   cb?: () => void
 ) => async (dispatch: (arg0: { payload: any; type: string }) => void) => {
+  // use zod to validate input
+  const createInvoiceSchema = z.object({
+    values: z.array(
+      z.object({
+        id: z.number(),
+        quantity: z.number(),
+      })
+    ),
+    meta: z.object({
+      customerId: z.number(),
+      saleType: z.string().min(1),
+      amount: z.number(),
+      profit: z.number(),
+    }),
+  });
   try {
+    createInvoiceSchema.parse({ values, meta });
     createInvoiceValidation(values, meta);
+
     dispatch(createInvoice());
     const user =
       localStorage.getItem('user') !== null

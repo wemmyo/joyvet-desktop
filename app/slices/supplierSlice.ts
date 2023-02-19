@@ -2,6 +2,7 @@ import { createSlice } from '@reduxjs/toolkit';
 import { toast } from 'react-toastify';
 import { Op } from 'sequelize';
 import moment from 'moment';
+import { z } from 'zod';
 import Supplier from '../models/supplier';
 import Payment from '../models/payment';
 import Purchase from '../models/purchase';
@@ -136,8 +137,15 @@ export const getSupplierPaymentsFn = (
   startDate?: Date | string,
   endDate?: Date | string
 ) => async (dispatch: (arg0: { payload: any; type: string }) => void) => {
+  // use zod to validate input
+  const schema = z.object({
+    supplierId: z.number(),
+    startDate: z.date(),
+    endDate: z.date(),
+  });
   dispatch(getPayments());
   try {
+    schema.parse({ supplierId, startDate, endDate });
     const payments = await Payment.findAll({
       where: {
         supplierId,
@@ -162,8 +170,16 @@ export const getSupplierPurchasesFn = (
   startDate: Date | string,
   endDate: Date | string
 ) => async (dispatch: (arg0: { payload: any; type: string }) => void) => {
+  // use zod to validate input
+  const schema = z.object({
+    supplierId: z.number(),
+    startDate: z.date(),
+    endDate: z.date(),
+  });
+
   dispatch(getPurchases());
   try {
+    schema.parse({ supplierId, startDate, endDate });
     const purchases = await Purchase.findAll({
       where: {
         supplierId,
@@ -187,7 +203,12 @@ export const getSupplierPurchasesFn = (
 export const searchSupplierFn = (value: string) => async (
   dispatch: (arg0: { payload: any; type: string }) => void
 ) => {
+  // use zod to validate input
+  const schema = z.object({
+    value: z.string().min(1),
+  });
   try {
+    schema.parse({ value });
     const suppliers = await Supplier.findAll({
       where: {
         fullName: {
@@ -205,7 +226,13 @@ export const deleteSupplierFn = (
   id: string | number,
   cb?: () => void
 ) => async () => {
+  // use zod to validate input
+  const schema = z.object({
+    id: z.number(),
+  });
+
   try {
+    schema.parse({ id });
     // dispatch(updateCustomer());
     await Supplier.destroy({
       where: {
@@ -227,8 +254,17 @@ export const updateSupplierFn = (
   id: string | number,
   cb?: () => void
 ) => async () => {
+  // use zod to validate input
+  const schema = z.object({
+    id: z.number(),
+    fullName: z.string().min(1),
+    phoneNumber: z.string().min(1),
+    email: z.string().min(1),
+    address: z.string().min(1),
+  });
   try {
     // dispatch(updateSupplier());
+    schema.parse({ ...values, id });
     await Supplier.update(values, {
       where: {
         id,
@@ -247,7 +283,12 @@ export const updateSupplierFn = (
 export const getSingleSupplierFn = (supplierId: number | string) => async (
   dispatch: (arg0: { payload: any; type: string }) => void
 ) => {
+  // use zod to validate input
+  const schema = z.object({
+    supplierId: z.number(),
+  });
   try {
+    schema.parse({ supplierId });
     dispatch(getSingleSupplier());
     const singleSupplier = await Supplier.findByPk(supplierId);
     dispatch(getSingleSupplierSuccess(JSON.stringify(singleSupplier)));
@@ -277,8 +318,15 @@ export const getSuppliersFn = () => async (
 export const createSupplierFn = (values: any, cb?: () => void) => async (
   dispatch: (arg0: { payload: any; type: string }) => void
 ) => {
+  // use zod to validate input
+  const schema = z.object({
+    fullName: z.string().min(1),
+    phoneNumber: z.string().min(1),
+    address: z.string().min(1),
+  });
   try {
     dispatch(createSupplier());
+    schema.parse(values);
     // const response = await Supplier.create(values);
     const user =
       localStorage.getItem('user') !== null

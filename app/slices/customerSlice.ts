@@ -2,6 +2,7 @@ import { createSlice } from '@reduxjs/toolkit';
 import { toast } from 'react-toastify';
 import { Op } from 'sequelize';
 import moment from 'moment';
+import { z } from 'zod';
 import Customer from '../models/customer';
 import Invoice from '../models/invoice';
 import Receipt from '../models/receipt';
@@ -134,8 +135,16 @@ export const getCustomerReceiptsFn = (
   startDate?: Date | string,
   endDate?: Date | string
 ) => async (dispatch: (arg0: { payload: any; type: string }) => void) => {
+  // use zod to validate the input
+  const schema = z.object({
+    customerId: z.number(),
+    startDate: z.date().optional(),
+    endDate: z.date().optional(),
+  });
+
   dispatch(getReceipts());
   try {
+    schema.parse({ customerId, startDate, endDate });
     const receipts = await Receipt.findAll({
       where: {
         customerId,
@@ -160,8 +169,17 @@ export const getCustomerInvoicesFn = (
   startDate: Date | string,
   endDate: Date | string
 ) => async (dispatch: (arg0: { payload: any; type: string }) => void) => {
+  // use zod to validate the input
+
+  const schema = z.object({
+    customerId: z.number(),
+    startDate: z.date().optional(),
+    endDate: z.date().optional(),
+  });
+
   dispatch(getInvoices());
   try {
+    schema.parse({ customerId, startDate, endDate });
     const invoices = await Invoice.findAll({
       where: {
         customerId,
@@ -185,7 +203,12 @@ export const getCustomerInvoicesFn = (
 export const searchCustomerFn = (value: string) => async (
   dispatch: (arg0: { payload: any; type: string }) => void
 ) => {
+  // use zod to validate the input
+  const schema = z.object({
+    value: z.string().min(1),
+  });
   try {
+    schema.parse({ value });
     const customers = await Customer.findAll({
       where: {
         fullName: {
@@ -203,7 +226,12 @@ export const deleteCustomerFn = (
   id: string | number,
   cb?: () => void
 ) => async () => {
+  // use zod to validate the input
+  const schema = z.object({
+    id: z.number(),
+  });
   try {
+    schema.parse({ id });
     // dispatch(updateCustomer());
     await Customer.destroy({
       where: {
@@ -225,7 +253,19 @@ export const updateCustomerFn = (
   id: string | number,
   cb?: () => void
 ) => async () => {
+  // use zod to validate the input
+  const schema = z.object({
+    values: z.object({
+      fullName: z.string().min(1),
+      email: z.string().email(),
+      phone: z.string().min(1),
+      address: z.string().min(1),
+    }),
+    id: z.number(),
+  });
+
   try {
+    schema.parse({ values, id });
     // dispatch(updateCustomer());
     await Customer.update(values, {
       where: {
@@ -246,8 +286,13 @@ export const getSingleCustomerFn = (
   id: string | number,
   cb?: () => void
 ) => async (dispatch: (arg0: { payload: any; type: string }) => void) => {
+  // use zod to validate the input
+  const schema = z.object({
+    id: z.number(),
+  });
   try {
     dispatch(getSingleCustomer());
+    schema.parse({ id });
 
     const getSingleCustomerResponse = await Customer.findByPk(id);
 
@@ -257,7 +302,6 @@ export const getSingleCustomerFn = (
     if (cb) {
       cb();
     }
-    console.log(getSingleCustomerResponse);
   } catch (error) {
     toast.error(error.message || '');
   }
@@ -284,8 +328,18 @@ export const getCustomersFn = () => async (
 export const createCustomerFn = (values: any, cb?: () => void) => async (
   dispatch: (arg0: { payload: unknown; type: string }) => void
 ) => {
+  // use zod to validate the input
+  const schema = z.object({
+    values: z.object({
+      fullName: z.string().min(1),
+      email: z.string().email(),
+      phone: z.string().min(1),
+      address: z.string().min(1),
+    }),
+  });
   try {
     dispatch(createCustomer());
+    schema.parse({ values });
     const user =
       localStorage.getItem('user') !== null
         ? JSON.parse(localStorage.getItem('user') || '')

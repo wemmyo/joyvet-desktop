@@ -397,7 +397,6 @@ const InvoiceScreen: React.FC = () => {
                         onChange={(e) => {
                           handleChange(e);
                           dispatch(getSingleCustomerFn(e.target.value));
-                          console.log(e.target.value);
                         }}
                       >
                         <option value="" disabled hidden>

@@ -1,6 +1,7 @@
 import { createSlice } from '@reduxjs/toolkit';
 import { toast } from 'react-toastify';
 import { Op } from 'sequelize';
+import { z } from 'zod';
 import Payment from '../models/payment';
 import Supplier from '../models/supplier';
 import sequelize from '../utils/database';
@@ -84,7 +85,12 @@ export const {
 export const searchPaymentFn = (value: string) => async (
   dispatch: (arg0: { payload: any; type: string }) => void
 ) => {
+  // use zod to validate input
+  const searchPaymentSchema = z.object({
+    value: z.string().min(1),
+  });
   try {
+    searchPaymentSchema.parse({ value });
     const payments = await Payment.findAll({
       where: {
         id: {
@@ -103,7 +109,17 @@ export const updatePaymentFn = (
   id: string | number,
   cb?: () => void
 ) => async () => {
+  // use zod to validate input
+  const updatePaymentSchema = z.object({
+    id: z.number(),
+    values: z.object({
+      amount: z.number().min(1),
+      supplierId: z.number(),
+      paymentDate: z.string().min(1),
+    }),
+  });
   try {
+    updatePaymentSchema.parse({ id, values });
     // dispatch(updatePayment());
     await Payment.update(values, {
       where: {
@@ -124,7 +140,12 @@ export const getSinglePaymentFn = (
   id: string | number,
   cb?: () => void
 ) => async (dispatch: (arg0: { payload: any; type: string }) => void) => {
+  // use zod to validate input
+  const getSinglePaymentSchema = z.object({
+    id: z.number(),
+  });
   try {
+    getSinglePaymentSchema.parse({ id });
     dispatch(getSinglePayment());
     const getSinglePaymentResponse = await Payment.findByPk(id, {
       include: Supplier,
@@ -154,7 +175,12 @@ export const getPaymentsFn = () => async (
 export const deletePaymentFn = (id: string | number, cb: () => void) => async (
   dispatch: (arg0: { payload: any; type: string }) => void
 ) => {
+  // use zod to validate input
+  const deletePaymentSchema = z.object({
+    id: z.number(),
+  });
   try {
+    deletePaymentSchema.parse({ id });
     await sequelize.transaction(async (t) => {
       const payment = await Payment.findByPk(id);
 
@@ -178,7 +204,16 @@ export const deletePaymentFn = (id: string | number, cb: () => void) => async (
 export const createPaymentFn = (values: any, cb: () => void) => async (
   dispatch: (arg0: { payload: any; type: string }) => void
 ) => {
+  // use zod to validate input
+  const createPaymentSchema = z.object({
+    values: z.object({
+      amount: z.number().min(1),
+      supplierId: z.number(),
+      paymentDate: z.string().min(1),
+    }),
+  });
   try {
+    createPaymentSchema.parse({ values });
     await sequelize.transaction(async (t) => {
       dispatch(createPayment());
       const user =
