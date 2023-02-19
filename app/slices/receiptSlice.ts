@@ -183,9 +183,10 @@ export const getReceiptsFn = () => async (
   }
 };
 
-export const deleteReceiptFn = (id: string | number, cb: () => void) => async (
-  dispatch: (arg0: { payload: any; type: string }) => void
-) => {
+export const deleteReceiptFn = (
+  id: string | number,
+  cb: () => void
+) => async () => {
   // use zod to validate input
   const DeleteReceiptSchema = z.object({
     id: z.number(),

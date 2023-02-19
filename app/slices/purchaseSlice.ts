@@ -258,7 +258,7 @@ export const createPurchaseFn = (
 export const deletePurchaseFn = (
   id: string | number,
   cb?: () => void
-) => async (dispatch: (arg0: { payload: any; type: string }) => void) => {
+) => async () => {
   // use zod to validate input
   const deletePurchaseSchema = z.object({
     id: z.number(),

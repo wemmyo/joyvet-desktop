@@ -186,7 +186,7 @@ export const getSingleUserFn = (id: string | number, cb?: () => void) => async (
 export const deleteUserFn = (
   userId: string | number,
   cb?: () => void
-) => async (dispatch: (arg0: { payload: any; type: string }) => void) => {
+) => async () => {
   // use zod to validate input
   const DeleteUserSchema = z.object({
     id: z.string().min(3).max(255),

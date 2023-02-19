@@ -2,13 +2,18 @@ import sequelize from '../utils/database';
 
 const Sequelize = require('sequelize');
 
-// create expense interface
-export interface Expense {
+// create product interface
+export interface Product {
   id: number;
-  date: Date;
-  amount: number;
-  type: string;
-  note: string;
+  title: string;
+  stock: number;
+  sellPrice: number;
+  sellPrice2: number;
+  sellPrice3: number;
+  buyPrice: number;
+  reorderLevel: number;
+  productCode: string;
+  numberInPack: number;
   postedBy: string;
 }
 

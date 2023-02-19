@@ -172,9 +172,10 @@ export const getPaymentsFn = () => async (
   }
 };
 
-export const deletePaymentFn = (id: string | number, cb: () => void) => async (
-  dispatch: (arg0: { payload: any; type: string }) => void
-) => {
+export const deletePaymentFn = (
+  id: string | number,
+  cb: () => void
+) => async () => {
   // use zod to validate input
   const deletePaymentSchema = z.object({
     id: z.number(),

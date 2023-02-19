@@ -280,9 +280,10 @@ export const getInvoicesFn = () => async (
   }
 };
 
-export const deleteInvoiceFn = (id: string | number, cb?: () => void) => async (
-  dispatch: (arg0: { payload: any; type: string }) => void
-) => {
+export const deleteInvoiceFn = (
+  id: string | number,
+  cb?: () => void
+) => async () => {
   // use zod to validate input
   const deleteInvoiceSchema = z.object({
     id: z.number(),
@@ -345,7 +346,7 @@ export const deleteInvoiceItemFn = ({
   invoiceId: string | number;
   invoiceItemId: string | number;
   cb?: () => void;
-}) => async (dispatch: (arg0: { payload: any; type: string }) => void) => {
+}) => async () => {
   // use zod to validate input
   const deleteInvoiceItemSchema = z.object({
     productId: z.number(),
@@ -428,7 +429,7 @@ export const addInvoiceItemFn = ({
   unitPrice: number;
   profit: number;
   cb: () => void;
-}) => async (dispatch: (arg0: { payload: any; type: string }) => void) => {
+}) => async () => {
   // use zod to validate input
   const addInvoiceItemSchema = z.object({
     invoiceId: z.number(),
