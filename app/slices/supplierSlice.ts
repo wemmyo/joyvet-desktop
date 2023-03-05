@@ -3,30 +3,61 @@ import { toast } from 'react-toastify';
 import { Op } from 'sequelize';
 import moment from 'moment';
 import { z } from 'zod';
-import Supplier from '../models/supplier';
-import Payment from '../models/payment';
-import Purchase from '../models/purchase';
+import { ISupplier } from '../models/supplier';
+import Payment, { IPayment } from '../models/payment';
+import Purchase, { IPurchase } from '../models/purchase';
+import type { RootState } from '../store';
+import {
+  createSupplier as createSupplierService,
+  getSupplierById,
+  getSuppliers as getSuppliersService,
+  deleteSupplier as deleteSupplierService,
+  updateSupplier as updateSupplierService,
+} from '../services/supplier.service';
 
-const initialState = {
+interface IState {
+  singleSupplier: {
+    loading: boolean;
+    data: ISupplier;
+  };
+  suppliers: {
+    loading: boolean;
+    data: ISupplier[];
+  };
+  createSupplierState: {
+    loading: boolean;
+    data: ISupplier;
+  };
+  payments: {
+    loading: boolean;
+    data: IPayment[];
+  };
+  purchases: {
+    loading: boolean;
+    data: IPurchase[];
+  };
+}
+
+const initialState: IState = {
   singleSupplier: {
     loading: false,
-    data: '',
+    data: {} as ISupplier,
   },
   suppliers: {
     loading: false,
-    data: '',
+    data: [],
   },
   createSupplierState: {
     loading: false,
-    data: '',
+    data: {} as ISupplier,
   },
   payments: {
     loading: false,
-    data: '',
+    data: [],
   },
   purchases: {
     loading: false,
-    data: '',
+    data: [],
   },
 };
 
@@ -37,7 +68,6 @@ const supplierSlice = createSlice({
     clearSingleSupplier: (state) => {
       const { singleSupplier } = state;
       singleSupplier.loading = false;
-      singleSupplier.data = '';
     },
     getSingleSupplier: (state) => {
       const { singleSupplier } = state;
@@ -51,7 +81,6 @@ const supplierSlice = createSlice({
     getSingleSupplierFailed: (state) => {
       const { singleSupplier } = state;
       singleSupplier.loading = false;
-      singleSupplier.data = '';
     },
     getSuppliers: (state) => {
       const { suppliers } = state;
@@ -65,12 +94,10 @@ const supplierSlice = createSlice({
     getSuppliersFailed: (state) => {
       const { suppliers } = state;
       suppliers.loading = false;
-      suppliers.data = '';
     },
     createSupplier: (state) => {
       const { createSupplierState } = state;
       createSupplierState.loading = true;
-      createSupplierState.data = '';
     },
     createSupplierSuccess: (state, { payload }) => {
       const { createSupplierState } = state;
@@ -80,12 +107,10 @@ const supplierSlice = createSlice({
     createSupplierFailed: (state) => {
       const { createSupplierState } = state;
       createSupplierState.loading = false;
-      createSupplierState.data = '';
     },
     getPayments: (state) => {
       const { payments } = state;
       payments.loading = true;
-      payments.data = '';
     },
     getPaymentsSuccess: (state, { payload }) => {
       const { payments } = state;
@@ -99,7 +124,6 @@ const supplierSlice = createSlice({
     getPurchases: (state) => {
       const { purchases } = state;
       purchases.loading = true;
-      purchases.data = '';
     },
     getPurchasesSuccess: (state, { payload }) => {
       const { purchases } = state;
@@ -158,7 +182,7 @@ export const getSupplierPaymentsFn = (
       },
       order: [['createdAt', 'DESC']],
     });
-    dispatch(getPaymentsSuccess(JSON.stringify(payments)));
+    dispatch(getPaymentsSuccess(payments));
   } catch (error) {
     dispatch(getPaymentsFailed());
     toast.error(error.message || '');
@@ -192,7 +216,7 @@ export const getSupplierPurchasesFn = (
       },
       order: [['createdAt', 'DESC']],
     });
-    dispatch(getPurchasesSuccess(JSON.stringify(purchases)));
+    dispatch(getPurchasesSuccess(purchases));
   } catch (error) {
     dispatch(getPurchasesFailed());
 
@@ -209,23 +233,20 @@ export const searchSupplierFn = (value: string) => async (
   });
   try {
     schema.parse({ value });
-    const suppliers = await Supplier.findAll({
+    const suppliers = await getSuppliersService({
       where: {
         fullName: {
           [Op.substring]: value,
         },
       },
     });
-    dispatch(getSuppliersSuccess(JSON.stringify(suppliers)));
+    dispatch(getSuppliersSuccess(suppliers));
   } catch (error) {
     toast.error(error.message || '');
   }
 };
 
-export const deleteSupplierFn = (
-  id: string | number,
-  cb?: () => void
-) => async () => {
+export const deleteSupplierFn = (id: number, cb?: () => void) => async () => {
   // use zod to validate input
   const schema = z.object({
     id: z.number(),
@@ -234,12 +255,8 @@ export const deleteSupplierFn = (
   try {
     schema.parse({ id });
     // dispatch(updateCustomer());
-    await Supplier.destroy({
-      where: {
-        id,
-      },
-    });
-    // dispatch(updateCustomerSuccess(JSON.stringify(updateCustomerResponse)));
+    await deleteSupplierService(id);
+    // dispatch(updateCustomerSuccess((updateCustomerResponse)));
     toast.success('Successfully deleted');
     if (cb) {
       cb();
@@ -251,7 +268,7 @@ export const deleteSupplierFn = (
 
 export const updateSupplierFn = (
   values: any,
-  id: string | number,
+  id: number,
   cb?: () => void
 ) => async () => {
   // use zod to validate input
@@ -265,12 +282,8 @@ export const updateSupplierFn = (
   try {
     // dispatch(updateSupplier());
     schema.parse({ ...values, id });
-    await Supplier.update(values, {
-      where: {
-        id,
-      },
-    });
-    // dispatch(updateSupplierSuccess(JSON.stringify(updateSupplierResponse)));
+    await updateSupplierService(id, values);
+    // dispatch(updateSupplierSuccess((updateSupplierResponse)));
     toast.success('Successfully updated');
     if (cb) {
       cb();
@@ -280,18 +293,18 @@ export const updateSupplierFn = (
   }
 };
 
-export const getSingleSupplierFn = (supplierId: number | string) => async (
+export const getSingleSupplierFn = (id: number) => async (
   dispatch: (arg0: { payload: any; type: string }) => void
 ) => {
   // use zod to validate input
   const schema = z.object({
-    supplierId: z.number(),
+    id: z.number(),
   });
   try {
-    schema.parse({ supplierId });
+    schema.parse({ id });
     dispatch(getSingleSupplier());
-    const singleSupplier = await Supplier.findByPk(supplierId);
-    dispatch(getSingleSupplierSuccess(JSON.stringify(singleSupplier)));
+    const singleSupplier = await getSupplierById(id);
+    dispatch(getSingleSupplierSuccess(singleSupplier));
   } catch (error) {
     toast.error(error.message || '');
   }
@@ -308,8 +321,10 @@ export const getSuppliersFn = () => async (
 ) => {
   try {
     dispatch(getSuppliers());
-    const suppliers = await Supplier.findAll({ order: [['fullName', 'ASC']] });
-    dispatch(getSuppliersSuccess(JSON.stringify(suppliers)));
+    const suppliers = await getSuppliersService({
+      order: [['fullName', 'ASC']],
+    });
+    dispatch(getSuppliersSuccess(suppliers));
   } catch (error) {
     toast.error(error.message || '');
   }
@@ -332,7 +347,7 @@ export const createSupplierFn = (values: any, cb?: () => void) => async (
       localStorage.getItem('user') !== null
         ? JSON.parse(localStorage.getItem('user') || '')
         : '';
-    await Supplier.create({
+    await createSupplierService({
       fullName: values.fullName || null,
       address: values.address || null,
       phoneNumber: values.phoneNumber || null,
@@ -351,6 +366,6 @@ export const createSupplierFn = (values: any, cb?: () => void) => async (
   }
 };
 
-export const selectSupplierState = (state: any) => state.supplier;
+export const selectSupplierState = (state: RootState) => state.supplier;
 
 export default supplierSlice.reducer;

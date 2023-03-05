@@ -36,9 +36,7 @@ const ProductsScreen: React.FC = () => {
     content: () => componentRef.current,
   });
 
-  const { data: productsRaw, loading: productsLoading } = productState.products;
-
-  const products = productsRaw ? JSON.parse(productsRaw) : [];
+  const { data: products, loading: productsLoading } = productState.products;
 
   const fetchProducts = () => {
     dispatch(getProductsFn());

@@ -3,7 +3,7 @@ import sequelize from '../utils/database';
 const Sequelize = require('sequelize');
 
 // create supplier interface
-export interface Supplier {
+export interface ISupplier {
   id: number;
   fullName: string;
   address: string;

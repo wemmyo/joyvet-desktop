@@ -3,7 +3,7 @@ module.exports = {
   rules: {
     // A temporary hack related to IDE not resolving correct package.json
     'import/no-extraneous-dependencies': 'off',
-
+    'import/no-named-as-default': 'off',
     'jsx-a11y/label-has-associated-control': [
       'error',
       {

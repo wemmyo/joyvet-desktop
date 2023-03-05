@@ -40,9 +40,7 @@ const ExpensesScreen: React.FC = () => {
     content: () => componentRef.current,
   });
 
-  const { data: expensesRaw, loading: expensesLoading } = expenseState.expenses;
-
-  const expenses = expensesRaw ? JSON.parse(expensesRaw) : [];
+  const { data: expenses, loading: expensesLoading } = expenseState.expenses;
 
   const filterExpenses = () => {
     dispatch(filterExpensesFn({ startDate, endDate }));

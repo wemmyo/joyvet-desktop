@@ -1,4 +1,6 @@
 import sequelize from '../utils/database';
+import { IInvoice } from './invoice';
+import { IProduct } from './product';
 
 const Sequelize = require('sequelize');
 
@@ -9,6 +11,12 @@ export interface InvoiceItem {
   unitPrice: number;
   amount: number;
   profit: number;
+  invoiceId?: number;
+  productId?: number;
+  invoice?: IInvoice;
+  product?: IProduct;
+  createdAt?: Date;
+  updatedAt?: Date;
 }
 
 export default sequelize.define('invoiceItem', {

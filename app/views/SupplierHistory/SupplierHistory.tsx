@@ -26,16 +26,13 @@ const SuppplierHistory: React.SFC = ({ match }: any) => {
   const dispatch = useDispatch();
   const supplierState = useSelector(selectSupplierState);
 
-  const { data: paymentsRaw } = supplierState.payments;
-  const { data: purchasesRaw } = supplierState.purchases;
-
-  const payments = paymentsRaw ? JSON.parse(paymentsRaw) : [];
-  const purchases = purchasesRaw ? JSON.parse(purchasesRaw) : [];
+  const { data: payments } = supplierState.payments;
+  const { data: purchases } = supplierState.purchases;
 
   useEffect(() => {
     dispatch(getSupplierPaymentsFn(supplierId, startDate, endDate));
     dispatch(getSupplierPurchasesFn(supplierId, startDate, endDate));
-  }, [startDate, endDate]);
+  }, [startDate, endDate, supplierId, dispatch]);
 
   const resetFilters = () => {
     setStartDate(TODAYS_DATE);

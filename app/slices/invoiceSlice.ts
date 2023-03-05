@@ -4,25 +4,47 @@ import { Op } from 'sequelize';
 import moment from 'moment';
 import { z } from 'zod';
 
-import Invoice from '../models/invoice';
+import { IInvoice } from '../models/invoice';
 import Customer from '../models/customer';
 import Product from '../models/product';
 import InvoiceItem from '../models/invoiceItem';
 import { createInvoiceValidation } from '../sliceValidation/index';
 import sequelize from '../utils/database';
+import type { RootState } from '../store';
+import {
+  getInvoices as getInvoicesService,
+  getInvoiceById,
+} from '../services/invoice.service';
+import { getProductById } from '../services/product.service';
+import { getCustomerById } from '../services/customer.service';
 
-const initialState = {
+interface IState {
+  singleInvoice: {
+    loading: boolean;
+    data: IInvoice;
+  };
+  invoices: {
+    loading: boolean;
+    data: IInvoice[];
+  };
+  createInvoice: {
+    loading: boolean;
+    data: IInvoice;
+  };
+}
+
+const initialState: IState = {
   singleInvoice: {
     loading: false,
-    data: '',
+    data: {} as IInvoice,
   },
   invoices: {
     loading: false,
-    data: '',
+    data: [],
   },
   createInvoice: {
     loading: false,
-    data: '',
+    data: {} as IInvoice,
   },
 };
 
@@ -42,16 +64,15 @@ const invoiceSlice = createSlice({
     getSingleInvoiceFailed: (state) => {
       const { singleInvoice } = state;
       singleInvoice.loading = false;
-      singleInvoice.data = '';
     },
 
     filterByType: (state, { payload }) => {
       const { invoices } = state;
-      const parsedInvoice = JSON.parse(invoices.data);
+      const parsedInvoice = invoices.data;
       const filteredInvoice = parsedInvoice.filter(
-        (invoice: any) => invoice.saleType === payload
+        (invoice) => invoice.saleType === payload
       );
-      invoices.data = JSON.stringify(filteredInvoice);
+      invoices.data = filteredInvoice;
     },
     getInvoices: (state) => {
       const { invoices } = state;
@@ -65,12 +86,10 @@ const invoiceSlice = createSlice({
     getInvoicesFailed: (state) => {
       const { invoices } = state;
       invoices.loading = false;
-      invoices.data = '';
     },
     createInvoice: (state) => {
       const { createInvoice } = state;
       createInvoice.loading = true;
-      createInvoice.data = '';
     },
     createInvoiceSuccess: (state, { payload }) => {
       const { createInvoice } = state;
@@ -80,12 +99,10 @@ const invoiceSlice = createSlice({
     createInvoiceFailed: (state) => {
       const { createInvoice } = state;
       createInvoice.loading = false;
-      createInvoice.data = '';
     },
     clearCreateInvoice: (state) => {
       const { createInvoice } = state;
       createInvoice.loading = false;
-      createInvoice.data = '';
     },
   },
 });
@@ -124,7 +141,7 @@ export const filterInvoiceFn = (
     if (startDate && endDate && saleType === 'all') {
       // console.log('RAN FUNCTION 1');
 
-      invoices = await Invoice.findAll({
+      invoices = await getInvoicesService({
         where: {
           createdAt: {
             [Op.between]: [
@@ -143,7 +160,7 @@ export const filterInvoiceFn = (
     } else if (startDate && endDate && saleType !== 'all') {
       // console.log('RAN FUNCTION 2');
 
-      invoices = await Invoice.findAll({
+      invoices = await getInvoicesService({
         where: {
           saleType,
           createdAt: {
@@ -163,7 +180,7 @@ export const filterInvoiceFn = (
     } else if (saleType !== 'all' && !startDate && !endDate) {
       // console.log('RAN FUNCTION 3');
 
-      invoices = await Invoice.findAll({
+      invoices = await getInvoicesService({
         where: {
           saleType,
         },
@@ -177,7 +194,7 @@ export const filterInvoiceFn = (
     } else {
       // console.log('RAN FUNCTION 4');
 
-      invoices = await Invoice.findAll({
+      invoices = await getInvoicesService({
         order: [['createdAt', 'DESC']],
         include: [
           {
@@ -187,7 +204,7 @@ export const filterInvoiceFn = (
       });
     }
 
-    dispatch(getInvoicesSuccess(JSON.stringify(invoices)));
+    dispatch(getInvoicesSuccess(invoices));
   } catch (error) {
     toast.error(error.message || '');
   }
@@ -203,7 +220,7 @@ export const filterInvoiceById = (id: string | number) => async (
   try {
     dispatch(getInvoices());
     filterInvoiceByIdSchema.parse({ id });
-    const invoices = await Invoice.findAll({
+    const invoices = await getInvoicesService({
       where: {
         id: {
           [Op.startsWith]: id,
@@ -217,16 +234,15 @@ export const filterInvoiceById = (id: string | number) => async (
       ],
     });
 
-    dispatch(getInvoicesSuccess(JSON.stringify(invoices)));
+    dispatch(getInvoicesSuccess(invoices));
   } catch (error) {
     toast.error(error.message || '');
   }
 };
 
-export const getSingleInvoiceFn = (
-  id: string | number,
-  cb?: () => void
-) => async (dispatch: (arg0: { payload: any; type: string }) => void) => {
+export const getSingleInvoiceFn = (id: number, cb?: () => void) => async (
+  dispatch: (arg0: { payload: any; type: string }) => void
+) => {
   // use zod to validate input
   const getSingleInvoiceSchema = z.object({
     id: z.number(),
@@ -235,7 +251,7 @@ export const getSingleInvoiceFn = (
     dispatch(getSingleInvoice());
     getSingleInvoiceSchema.parse({ id });
 
-    const getSingleInvoiceResponse = await Invoice.findByPk(id, {
+    const getSingleInvoiceResponse = await getInvoiceById(id, {
       // include: { all: true, nested: true },
       include: [
         { model: Customer },
@@ -245,7 +261,7 @@ export const getSingleInvoiceFn = (
       ],
     });
 
-    dispatch(getSingleInvoiceSuccess(JSON.stringify(getSingleInvoiceResponse)));
+    dispatch(getSingleInvoiceSuccess(getSingleInvoiceResponse));
     if (cb) {
       cb();
     }
@@ -265,7 +281,7 @@ export const getInvoicesFn = () => async (
 ) => {
   try {
     dispatch(getInvoices());
-    const invoices = await Invoice.findAll({
+    const invoices = await getInvoicesService({
       order: [['createdAt', 'DESC']],
       include: [
         {
@@ -274,16 +290,13 @@ export const getInvoicesFn = () => async (
       ],
     });
 
-    dispatch(getInvoicesSuccess(JSON.stringify(invoices)));
+    dispatch(getInvoicesSuccess(invoices));
   } catch (error) {
     toast.error(error.message || '');
   }
 };
 
-export const deleteInvoiceFn = (
-  id: string | number,
-  cb?: () => void
-) => async () => {
+export const deleteInvoiceFn = (id: number, cb?: () => void) => async () => {
   // use zod to validate input
   const deleteInvoiceSchema = z.object({
     id: z.number(),
@@ -292,7 +305,7 @@ export const deleteInvoiceFn = (
     deleteInvoiceSchema.parse({ id });
 
     await sequelize.transaction(async (t) => {
-      const invoice = await Invoice.findByPk(id, {
+      const invoice = await getInvoiceById(id, {
         include: [
           {
             model: Product,
@@ -324,7 +337,7 @@ export const deleteInvoiceFn = (
 
       await invoice.destroy({ transaction: t });
 
-      // dispatch(getInvoicesSuccess(JSON.stringify(invoices)));
+      // dispatch(getInvoicesSuccess((invoices)));
     });
     toast.success('Invoice deleted');
 
@@ -342,21 +355,27 @@ export const deleteInvoiceItemFn = ({
   invoiceItemId,
   cb,
 }: {
-  productId: string | number;
-  invoiceId: string | number;
-  invoiceItemId: string | number;
+  productId: number;
+  invoiceId: number;
+  invoiceItemId: number;
   cb?: () => void;
 }) => async () => {
+  console.log({
+    productId,
+    invoiceId,
+    invoiceItemId,
+  });
+
   // use zod to validate input
   const deleteInvoiceItemSchema = z.object({
     productId: z.number(),
     invoiceId: z.number(),
-    invoiceItemid: z.number(),
+    invoiceItemId: z.number(),
   });
 
   try {
     deleteInvoiceItemSchema.parse({ productId, invoiceId, invoiceItemId });
-    const invoice = await Invoice.findByPk(invoiceId);
+    const invoice = await getInvoiceById(invoiceId);
     const invoiceItem = await InvoiceItem.findByPk(invoiceItemId);
 
     // transaction
@@ -422,14 +441,23 @@ export const addInvoiceItemFn = ({
   profit,
   cb,
 }: {
-  invoiceId: string | number;
-  productId: string | number;
+  invoiceId: number;
+  productId: number;
   quantity: number;
   amount: number;
   unitPrice: number;
   profit: number;
   cb: () => void;
 }) => async () => {
+  // console.log('addInvoiceItemFn', {
+  //   invoiceId,
+  //   productId,
+  //   quantity,
+  //   amount,
+  //   unitPrice,
+  //   profit,
+  // });
+
   // use zod to validate input
   const addInvoiceItemSchema = z.object({
     invoiceId: z.number(),
@@ -449,9 +477,9 @@ export const addInvoiceItemFn = ({
       unitPrice,
       profit,
     });
-    const invoice = await Invoice.findByPk(invoiceId);
-    const product = await Product.findByPk(productId);
-    const customer = await Customer.findByPk(invoice.customerId);
+    const invoice = await getInvoiceById(invoiceId);
+    const product = await getProductById(productId);
+    const customer = await getCustomerById(invoice.customerId);
 
     product.invoiceItem = {
       quantity,
@@ -504,6 +532,7 @@ export const addInvoiceItemFn = ({
     }
   } catch (error) {
     toast.error(error.message || '');
+    console.log(error);
   }
 };
 
@@ -512,6 +541,9 @@ export const createInvoiceFn = (
   meta?: any,
   cb?: () => void
 ) => async (dispatch: (arg0: { payload: any; type: string }) => void) => {
+  console.log('values', values);
+  console.log('meta', meta);
+
   // use zod to validate input
   const createInvoiceSchema = z.object({
     values: z.array(
@@ -539,7 +571,7 @@ export const createInvoiceFn = (
 
     // transaction
     await sequelize.transaction(async (t) => {
-      const customer = await Customer.findByPk(meta.customerId);
+      const customer = await getCustomerById(meta.customerId);
 
       const invoice = await customer.createInvoice(
         {
@@ -555,7 +587,7 @@ export const createInvoiceFn = (
 
       await Promise.all(
         values.map(async (each: any) => {
-          const prod = await Product.findByPk(each.id);
+          const prod = await getProductById(each.id);
           await Product.decrement('stock', {
             by: each.quantity,
             where: { id: each.id },
@@ -578,7 +610,7 @@ export const createInvoiceFn = (
           transaction: t,
         });
       }
-      dispatch(createInvoiceSuccess(JSON.stringify(invoice)));
+      dispatch(createInvoiceSuccess(invoice));
     });
     toast.success('Invoice created');
     if (cb) {
@@ -589,6 +621,6 @@ export const createInvoiceFn = (
   }
 };
 
-export const selectInvoiceState = (state: any) => state.invoice;
+export const selectInvoiceState = (state: RootState) => state.invoice;
 
 export default invoiceSlice.reducer;

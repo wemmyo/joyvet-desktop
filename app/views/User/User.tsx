@@ -13,6 +13,7 @@ import {
   closeSideContentFn,
 } from '../../slices/dashboardSlice';
 import EditUser from './components/EditUser/EditUser';
+import moment from 'moment';
 
 const CONTENT_CREATE = 'create';
 const CONTENT_EDIT = 'edit';
@@ -22,11 +23,8 @@ const UserScreen: React.FC = () => {
   const [userId, setUserId] = useState('');
 
   const dispatch = useDispatch();
-  const userState = useSelector(selectUserState);
-
-  const { data: usersRaw } = userState.users;
-
-  const users = usersRaw ? JSON.parse(usersRaw) : [];
+  const usersState = useSelector(selectUserState);
+  const { data: users, loading: usersLoading } = usersState.users;
 
   const fetchUsers = () => {
     dispatch(getUsersFn());
@@ -59,26 +57,33 @@ const UserScreen: React.FC = () => {
     );
   };
 
-  const openSingleUser = (id: any) => {
+  const openSingleUser = (id) => {
     setUserId(id);
     openSideContent(CONTENT_EDIT);
   };
 
-  const renderRows = () => {
-    const rows = users.map((each: any) => {
-      return (
-        <Table.Row onClick={() => openSingleUser(each.id)} key={each.id}>
-          <Table.Cell>{each.fullName}</Table.Cell>
-          <Table.Cell>{each.username}</Table.Cell>
-          <Table.Cell>{each.role}</Table.Cell>
-          <Table.Cell>
-            {new Date(each.createdAt).toLocaleDateString('en-gb')}
-          </Table.Cell>
-        </Table.Row>
-      );
-    });
-    return rows;
-  };
+  // const renderRows = () => {
+  //   console.log('users', users);
+
+  //   const rows = users.map((each) => {
+  //     return (
+  //       <Table.Row onClick={() => openSingleUser(each.id)} key={each.id}>
+  //         <Table.Cell>{each.fullName}</Table.Cell>
+  //         <Table.Cell>{each.username}</Table.Cell>
+  //         <Table.Cell>{each.role}</Table.Cell>
+  //         <Table.Cell>
+  //           {/* {new Date(each.createdAt).toLocaleDateString('en-gb')} */}
+  //           {each.createdAt}
+  //         </Table.Cell>
+  //       </Table.Row>
+  //     );
+  //   });
+  //   return rows;
+  // };
+
+  React.useEffect(() => {
+    console.log('users', users);
+  }, [users]);
 
   const renderSideContent = () => {
     if (sideContent === CONTENT_CREATE) {
@@ -122,7 +127,20 @@ const UserScreen: React.FC = () => {
           </Table.Row>
         </Table.Header>
 
-        <Table.Body>{renderRows()}</Table.Body>
+        <Table.Body>
+          {users.map((each) => {
+            return (
+              <Table.Row onClick={() => openSingleUser(each.id)} key={each.id}>
+                <Table.Cell>{each.fullName}</Table.Cell>
+                <Table.Cell>{each.username}</Table.Cell>
+                <Table.Cell>{each.role}</Table.Cell>
+                <Table.Cell>
+                  {moment(each.createdAt).format('DD/MM/YYYY')}
+                </Table.Cell>
+              </Table.Row>
+            );
+          })}
+        </Table.Body>
       </Table>
     </DashboardLayout>
   );

@@ -2,21 +2,44 @@ import { createSlice } from '@reduxjs/toolkit';
 import { toast } from 'react-toastify';
 import bycrpt from 'bcryptjs';
 import { z } from 'zod';
-// import jwt from 'jsonwebtoken';
-import User from '../models/user';
+import { IUser } from '../models/user';
+import type { RootState } from '../store';
+import {
+  getUsers as getUsersService,
+  getUserById as getUserByIdService,
+  updateUser as updateUserService,
+  createUser as createUserService,
+  findOneUser as findOneUserService,
+  deleteUser as deleteUserService,
+} from '../services/user.service';
 
-const initialState = {
+interface IState {
+  singleUser: {
+    loading: boolean;
+    data: IUser;
+  };
+  users: {
+    loading: boolean;
+    data: IUser[];
+  };
+  createUserState: {
+    loading: boolean;
+    data: IUser;
+  };
+}
+
+const initialState: IState = {
   singleUser: {
     loading: false,
-    data: '',
+    data: {} as IUser,
   },
   users: {
     loading: false,
-    data: '',
+    data: [],
   },
   createUserState: {
     loading: false,
-    data: '',
+    data: {} as IUser,
   },
 };
 
@@ -36,7 +59,6 @@ const userSlice = createSlice({
     getSingleUserFailed: (state) => {
       const { singleUser } = state;
       singleUser.loading = false;
-      singleUser.data = '';
     },
     getUsers: (state) => {
       const { users } = state;
@@ -54,7 +76,6 @@ const userSlice = createSlice({
     createUser: (state) => {
       const { createUserState } = state;
       createUserState.loading = true;
-      createUserState.data = '';
     },
     createUserSuccess: (state, { payload }) => {
       const { createUserState } = state;
@@ -94,7 +115,7 @@ export const loginUserFn = (
   try {
     LoginSchema.parse(values);
     // dispatch(updateUser());
-    const user = await User.findOne({
+    const user = await findOneUserService({
       where: {
         username: values.username,
       },
@@ -111,7 +132,7 @@ export const loginUserFn = (
       if (validPassword) {
         localStorage.setItem('user', JSON.stringify(loadedUser));
 
-        // dispatch(updateUserSuccess(JSON.stringify(updateUserResponse)));
+        // dispatch(updateUserSuccess((updateUserResponse)));
         if (cb) {
           cb();
         }
@@ -130,8 +151,8 @@ export const logoutFn = (cb: () => void) => async () => {
 };
 
 export const updateUserFn = (
-  values: any,
-  id: string | number,
+  values: Partial<IUser>,
+  id: number,
   cb?: () => void
 ) => async () => {
   // use zod to validate input
@@ -145,12 +166,8 @@ export const updateUserFn = (
   try {
     UpdateUserSchema.parse(values);
     // dispatch(updateUser());
-    await User.update(values, {
-      where: {
-        id,
-      },
-    });
-    // dispatch(updateUserSuccess(JSON.stringify(updateUserResponse)));
+    await updateUserService(id, values);
+    // dispatch(updateUserSuccess((updateUserResponse)));
     // toast.success('Successfully updated');
     if (cb) {
       cb();
@@ -160,21 +177,21 @@ export const updateUserFn = (
   }
 };
 
-export const getSingleUserFn = (id: string | number, cb?: () => void) => async (
+export const getSingleUserFn = (id: number, cb?: () => void) => async (
   dispatch: (arg0: { payload: any; type: string }) => void
 ) => {
   // use zod to validate input
   const GetSingleUserSchema = z.object({
-    id: z.string().min(3).max(255),
+    id: z.number(),
   });
 
   try {
     GetSingleUserSchema.parse({ id });
     dispatch(getSingleUser());
 
-    const getSingleUserResponse = await User.findByPk(id);
+    const getSingleUserResponse = await getUserByIdService(id);
 
-    dispatch(getSingleUserSuccess(JSON.stringify(getSingleUserResponse)));
+    dispatch(getSingleUserSuccess(getSingleUserResponse));
     if (cb) {
       cb();
     }
@@ -183,10 +200,7 @@ export const getSingleUserFn = (id: string | number, cb?: () => void) => async (
   }
 };
 
-export const deleteUserFn = (
-  userId: string | number,
-  cb?: () => void
-) => async () => {
+export const deleteUserFn = (userId: number, cb?: () => void) => async () => {
   // use zod to validate input
   const DeleteUserSchema = z.object({
     id: z.string().min(3).max(255),
@@ -195,7 +209,7 @@ export const deleteUserFn = (
   try {
     DeleteUserSchema.parse({ id: userId });
     // dispatch(getUsers());
-    const user = await User.findByPk(userId);
+    const user = await deleteUserService(userId);
     user.destroy();
     toast.success('User successfully deleted');
 
@@ -212,8 +226,9 @@ export const getUsersFn = () => async (
 ) => {
   try {
     dispatch(getUsers());
-    const users = await User.findAll();
-    dispatch(getUsersSuccess(JSON.stringify(users)));
+    // const users = await User.findAll();
+    const users = await getUsersService({});
+    dispatch(getUsersSuccess(users));
   } catch (error) {
     toast.error(error.message || '');
   }
@@ -235,7 +250,7 @@ export const createUserFn = (values: any, cb?: () => void) => async (
     CreateUserSchema.parse(values);
     // const response = await User.create(values);
     const hashedPassword = await bycrpt.hash(values.password, 12);
-    await User.create({
+    await createUserService({
       fullName: values.fullName || null,
       username: values.username || null,
       password: hashedPassword || null,
@@ -251,6 +266,6 @@ export const createUserFn = (values: any, cb?: () => void) => async (
   }
 };
 
-export const selectUserState = (state: any) => state.user;
+export const selectUserState = (state: RootState) => state.user;
 
 export default userSlice.reducer;

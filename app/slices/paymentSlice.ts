@@ -2,22 +2,38 @@ import { createSlice } from '@reduxjs/toolkit';
 import { toast } from 'react-toastify';
 import { Op } from 'sequelize';
 import { z } from 'zod';
-import Payment from '../models/payment';
+import Payment, { IPayment } from '../models/payment';
 import Supplier from '../models/supplier';
 import sequelize from '../utils/database';
+import type { RootState } from '../store';
 
-const initialState = {
+interface IState {
+  singlePayment: {
+    loading: boolean;
+    data: IPayment;
+  };
+  payments: {
+    loading: boolean;
+    data: IPayment[];
+  };
+  createPaymentState: {
+    loading: boolean;
+    data: IPayment;
+  };
+}
+
+const initialState: IState = {
   singlePayment: {
     loading: false,
-    data: '',
+    data: {} as IPayment,
   },
   payments: {
     loading: false,
-    data: '',
+    data: [],
   },
   createPaymentState: {
     loading: false,
-    data: '',
+    data: {} as IPayment,
   },
 };
 
@@ -37,7 +53,7 @@ const paymentSlice = createSlice({
     getSinglePaymentFailed: (state) => {
       const { singlePayment } = state;
       singlePayment.loading = false;
-      singlePayment.data = '';
+      singlePayment.data = {};
     },
     getPayments: (state) => {
       const { payments } = state;
@@ -51,12 +67,11 @@ const paymentSlice = createSlice({
     getPaymentsFailed: (state) => {
       const { payments } = state;
       payments.loading = false;
-      payments.data = '';
+      payments.data = [];
     },
     createPayment: (state) => {
       const { createPaymentState } = state;
       createPaymentState.loading = true;
-      createPaymentState.data = '';
     },
     createPaymentSuccess: (state, { payload }) => {
       const { createPaymentState } = state;
@@ -98,7 +113,7 @@ export const searchPaymentFn = (value: string) => async (
         },
       },
     });
-    dispatch(getPaymentsSuccess(JSON.stringify(payments)));
+    dispatch(getPaymentsSuccess(payments));
   } catch (error) {
     toast.error(error.message || '');
   }
@@ -126,7 +141,7 @@ export const updatePaymentFn = (
         id,
       },
     });
-    // dispatch(updatePaymentSuccess(JSON.stringify(updatePaymentResponse)));
+    // dispatch(updatePaymentSuccess((updatePaymentResponse)));
     toast.success('Successfully updated');
     if (cb) {
       cb();
@@ -151,7 +166,7 @@ export const getSinglePaymentFn = (
       include: Supplier,
     });
 
-    dispatch(getSinglePaymentSuccess(JSON.stringify(getSinglePaymentResponse)));
+    dispatch(getSinglePaymentSuccess(getSinglePaymentResponse));
     if (cb) {
       cb();
     }
@@ -166,7 +181,7 @@ export const getPaymentsFn = () => async (
   try {
     dispatch(getPayments());
     const payments = await Payment.findAll();
-    dispatch(getPaymentsSuccess(JSON.stringify(payments)));
+    dispatch(getPaymentsSuccess(payments));
   } catch (error) {
     toast.error(error.message || '');
   }
@@ -250,6 +265,6 @@ export const createPaymentFn = (values: any, cb: () => void) => async (
   }
 };
 
-export const selectPaymentState = (state: any) => state.payment;
+export const selectPaymentState = (state: RootState) => state.payment;
 
 export default paymentSlice.reducer;

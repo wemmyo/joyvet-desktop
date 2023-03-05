@@ -21,6 +21,7 @@ import {
 } from '../../slices/invoiceSlice';
 import TextInput from '../../components/TextInput/TextInput';
 import ComponentToPrint from '../../components/PrintedReceipt/ReceiptWrapper';
+import { IProduct } from '../../models/product';
 
 const InvoiceScreen: React.FC = () => {
   const componentRef = useRef(null);
@@ -36,25 +37,18 @@ const InvoiceScreen: React.FC = () => {
   const customerState = useSelector(selectCustomerState);
   const productState = useSelector(selectProductState);
   const invoiceState = useSelector(selectInvoiceState);
-  // const invoiceState = useSelector(selectInvoiceState);
 
-  const { data: singleCustomerRaw } = customerState.singleCustomer;
-  const { data: customersRaw } = customerState.customers;
-  const { data: productsRaw } = productState.products;
-  const { data: invoiceRaw } = invoiceState.createInvoice;
-  // const { data: createdInvoiceRaw } = invoiceState.createInvoiceState;
-
-  const singleCustomer = singleCustomerRaw ? JSON.parse(singleCustomerRaw) : {};
-  const customers = customersRaw ? JSON.parse(customersRaw) : [];
-  const products = productsRaw ? JSON.parse(productsRaw) : [];
-  const createdInvoice = invoiceRaw ? JSON.parse(invoiceRaw) : {};
+  const { data: singleCustomer } = customerState.singleCustomer;
+  const { data: customers } = customerState.customers;
+  const { data: products } = productState.products;
+  const { data: createdInvoice } = invoiceState.createInvoice;
 
   interface FormValues {
     customerId: string;
     saleType: string;
-    product: string;
-    unitPrice: string;
-    quantity: string;
+    product: IProduct;
+    unitPrice: number;
+    quantity: number;
   }
 
   const fetchCustomers = () => {
@@ -75,14 +69,14 @@ const InvoiceScreen: React.FC = () => {
   }, []);
 
   useEffect(() => {
-    if (invoiceRaw) {
+    if (createdInvoice) {
       dispatch(
         getSingleInvoiceFn(createdInvoice.id, () => {
           handlePrint();
         })
       );
     }
-  }, [invoiceRaw]);
+  }, [createdInvoice, dispatch, handlePrint]);
 
   const renderProducts = ({
     handleChange,
@@ -95,9 +89,9 @@ const InvoiceScreen: React.FC = () => {
       shouldValidate?: boolean
     ) => void;
   }) => {
-    const productList = products.map((product: any) => {
+    const productList = products.map((product) => {
       return (
-        <option key={product.id} value={JSON.stringify(product)}>
+        <option key={product.id} value={product}>
           {product.title}
         </option>
       );
@@ -125,7 +119,7 @@ const InvoiceScreen: React.FC = () => {
     );
   };
 
-  const renderPrices = (value: any) => {
+  const renderPrices = (value) => {
     if (!value) {
       return null;
     }
@@ -178,7 +172,7 @@ const InvoiceScreen: React.FC = () => {
   };
 
   const renderCustomers = () => {
-    const customerList = customers.map((customer: any) => {
+    const customerList = customers.map((customer) => {
       return (
         <option key={customer.id} value={customer.id}>
           {customer.fullName}
@@ -188,7 +182,7 @@ const InvoiceScreen: React.FC = () => {
     return customerList;
   };
 
-  const addToOrders = (value: any) => {
+  const addToOrders = (value) => {
     setOrders([...orders, value]);
   };
 

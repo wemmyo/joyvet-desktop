@@ -26,16 +26,13 @@ const ProductHistory: React.SFC = ({ match }: any) => {
   const dispatch = useDispatch();
   const productState = useSelector(selectProductState);
 
-  const { data: invoicesRaw } = productState.invoices;
-  const { data: purchasesRaw } = productState.purchases;
-
-  const invoices = invoicesRaw ? JSON.parse(invoicesRaw) : [];
-  const purchases = purchasesRaw ? JSON.parse(purchasesRaw) : [];
+  const { data: invoices } = productState.invoices;
+  const { data: purchases } = productState.purchases;
 
   useEffect(() => {
     dispatch(getProductInvoicesFn(productId, startDate, endDate));
     dispatch(getProductPurchasesFn(productId, startDate, endDate));
-  }, [startDate, endDate]);
+  }, [startDate, endDate, productId, dispatch]);
 
   const resetFilters = () => {
     setStartDate(TODAYS_DATE);

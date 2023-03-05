@@ -10,13 +10,12 @@ import {
   getSingleExpenseFn,
   selectExpenseState,
   updateExpenseFn,
-  getExpensesFn,
   deleteExpenseFn,
 } from '../../../../slices/expenseSlice';
 import { closeSideContentFn } from '../../../../slices/dashboardSlice';
 
 export interface EditExpenseProps {
-  expenseId: string | number;
+  expenseId: number;
 }
 
 const EditExpense: React.FC<EditExpenseProps> = ({
@@ -28,13 +27,12 @@ const EditExpense: React.FC<EditExpenseProps> = ({
     dispatch(getSingleExpenseFn(expenseId));
   };
 
-  useEffect(fetchData, [expenseId]);
+  useEffect(fetchData, [expenseId, dispatch]);
 
   const expenseState = useSelector(selectExpenseState);
 
-  const { data: expenseRaw } = expenseState.singleExpense;
+  const { data: expense } = expenseState.singleExpense;
 
-  const expense = expenseRaw ? JSON.parse(expenseRaw) : {};
   // console.log(expense);
 
   const { type, amount, date, note } = expense;
@@ -43,7 +41,6 @@ const EditExpense: React.FC<EditExpenseProps> = ({
     dispatch(
       deleteExpenseFn(expenseId, () => {
         dispatch(closeSideContentFn());
-        dispatch(getExpensesFn());
       })
     );
   };
@@ -65,7 +62,6 @@ const EditExpense: React.FC<EditExpenseProps> = ({
         dispatch(
           updateExpenseFn(values, expenseId, () => {
             dispatch(closeSideContentFn());
-            dispatch(getExpensesFn());
           })
         );
       }}
@@ -119,7 +115,3 @@ const EditExpense: React.FC<EditExpenseProps> = ({
   );
 };
 export default EditExpense;
-
-// const EditExpenseSchema = Yup.object().shape({
-//   title: Yup.string().required('Required'),
-// });

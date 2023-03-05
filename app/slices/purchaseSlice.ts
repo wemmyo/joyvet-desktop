@@ -2,23 +2,39 @@ import { createSlice } from '@reduxjs/toolkit';
 import { toast } from 'react-toastify';
 import { Op } from 'sequelize';
 import { z } from 'zod';
-import Purchase from '../models/purchase';
+import Purchase, { IPurchase } from '../models/purchase';
 import Supplier from '../models/supplier';
 import Product from '../models/product';
 import sequelize from '../utils/database';
+import type { RootState } from '../store';
 
-const initialState = {
+interface IState {
+  singlePurchase: {
+    loading: boolean;
+    data: IPurchase;
+  };
+  purchases: {
+    loading: boolean;
+    data: IPurchase[];
+  };
+  createPurchaseState: {
+    loading: boolean;
+    data: IPurchase;
+  };
+}
+
+const initialState: IState = {
   singlePurchase: {
     loading: false,
-    data: '',
+    data: {} as IPurchase,
   },
   purchases: {
     loading: false,
-    data: '',
+    data: [],
   },
   createPurchaseState: {
     loading: false,
-    data: '',
+    data: {} as IPurchase,
   },
 };
 
@@ -38,7 +54,6 @@ const purchaseSlice = createSlice({
     getSinglePurchaseFailed: (state) => {
       const { singlePurchase } = state;
       singlePurchase.loading = false;
-      singlePurchase.data = '';
     },
     getPurchases: (state) => {
       const { purchases } = state;
@@ -52,12 +67,10 @@ const purchaseSlice = createSlice({
     getPurchasesFailed: (state) => {
       const { purchases } = state;
       purchases.loading = false;
-      purchases.data = '';
     },
     createPurchase: (state) => {
       const { createPurchaseState } = state;
       createPurchaseState.loading = true;
-      createPurchaseState.data = '';
     },
     createPurchaseSuccess: (state, { payload }) => {
       const { createPurchaseState } = state;
@@ -105,7 +118,7 @@ export const searchPurchaseFn = (value: string) => async (
         },
       ],
     });
-    dispatch(getPurchasesSuccess(JSON.stringify(purchases)));
+    dispatch(getPurchasesSuccess(purchases));
   } catch (error) {
     toast.error(error.message || '');
   }
@@ -133,9 +146,7 @@ export const getSinglePurchaseFn = (
       ],
     });
 
-    dispatch(
-      getSinglePurchaseSuccess(JSON.stringify(getSinglePurchaseResponse))
-    );
+    dispatch(getSinglePurchaseSuccess(getSinglePurchaseResponse));
     if (cb) {
       cb();
     }
@@ -157,7 +168,7 @@ export const getPurchasesFn = () => async (
       ],
       order: [['createdAt', 'DESC']],
     });
-    dispatch(getPurchasesSuccess(JSON.stringify(purchases)));
+    dispatch(getPurchasesSuccess(purchases));
   } catch (error) {
     toast.error(error.message || '');
   }
@@ -302,7 +313,7 @@ export const deletePurchaseFn = (
 
       await purchase.destroy({ transaction: t });
 
-      // dispatch(getPurchasesSuccess(JSON.stringify(invoices)));
+      // dispatch(getPurchasesSuccess((invoices)));
     });
     toast.success('Purchase deleted');
     if (cb) {
@@ -313,6 +324,6 @@ export const deletePurchaseFn = (
   }
 };
 
-export const selectPurchaseState = (state: any) => state.purchase;
+export const selectPurchaseState = (state: RootState) => state.purchase;
 
 export default purchaseSlice.reducer;

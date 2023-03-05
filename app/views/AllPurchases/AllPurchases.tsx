@@ -28,11 +28,9 @@ const AllPurchasesScreen: React.FC = () => {
   const purchaseState = useSelector(selectPurchaseState);
 
   const {
-    data: purchasesRaw,
+    data: purchases,
     loading: purchasesLoading,
   } = purchaseState.purchases;
-
-  const purchases = purchasesRaw ? JSON.parse(purchasesRaw) : [];
 
   const fetchPurchases = () => {
     dispatch(getPurchasesFn());
@@ -59,13 +57,13 @@ const AllPurchasesScreen: React.FC = () => {
     };
   }, []);
 
-  const openSinglePurchase = (id: any) => {
+  const openSinglePurchase = (id) => {
     setPurchasesId(id);
     openSideContent(CONTENT_DETAIL);
   };
 
   const renderRows = () => {
-    const rows = purchases.map((each: any) => {
+    const rows = purchases.map((each) => {
       return (
         <Table.Row onClick={() => openSinglePurchase(each.id)} key={each.id}>
           <Table.Cell>{each.invoiceNumber}</Table.Cell>

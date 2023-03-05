@@ -29,9 +29,7 @@ const PaymentsScreen: React.FC = () => {
   const dispatch = useDispatch();
   const paymentState = useSelector(selectPaymentState);
 
-  const { data: paymentsRaw, loading: paymentsLoading } = paymentState.payments;
-
-  const payments = paymentsRaw ? JSON.parse(paymentsRaw) : [];
+  const { data: payments, loading: paymentsLoading } = paymentState.payments;
 
   const fetchPayments = () => {
     dispatch(getPaymentsFn());

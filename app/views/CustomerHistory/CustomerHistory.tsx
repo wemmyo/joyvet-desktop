@@ -30,11 +30,8 @@ const CustomerHistory: React.FC = ({ match }: any) => {
     content: () => componentRef.current,
   });
 
-  const { data: receiptsRaw } = customerState.receipts;
-  const { data: invoicesRaw } = customerState.invoices;
-
-  const receipts = receiptsRaw ? JSON.parse(receiptsRaw) : [];
-  const invoices = invoicesRaw ? JSON.parse(invoicesRaw) : [];
+  const { data: receipts } = customerState.receipts;
+  const { data: invoices } = customerState.invoices;
 
   useEffect(() => {
     dispatch(getCustomerInvoicesFn(customerId, startDate, endDate));

@@ -3,12 +3,14 @@ import sequelize from '../utils/database';
 const Sequelize = require('sequelize');
 
 // create user interface
-export interface User {
+export interface IUser {
   id: number;
   fullName: string;
   username: string;
   password: string;
   role: string;
+  createdAt?: Date;
+  updatedAt?: Date;
 }
 
 export default sequelize.define('user', {

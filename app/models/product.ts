@@ -3,7 +3,7 @@ import sequelize from '../utils/database';
 const Sequelize = require('sequelize');
 
 // create product interface
-export interface Product {
+export interface IProduct {
   id: number;
   title: string;
   stock: number;
@@ -15,6 +15,8 @@ export interface Product {
   productCode: string;
   numberInPack: number;
   postedBy: string;
+  createdAt?: Date;
+  updatedAt?: Date;
 }
 
 export default sequelize.define('product', {

@@ -3,20 +3,44 @@ import { toast } from 'react-toastify';
 import { Op } from 'sequelize';
 import moment from 'moment';
 import { z } from 'zod';
-import Expense from '../models/expense';
+import {
+  deleteExpense as deleteExpenseService,
+  getExpenseById as getExpenseByIdService,
+  getExpenses as getExpensesService,
+  updateExpense as updateExpenseService,
+  createExpense as createExpenseService,
+} from '../services/expense.service';
+import { IExpense } from '../models/expense';
+import type { RootState } from '../store';
+// import Expense from '../models/expense';
 
-const initialState = {
+interface IState {
+  singleExpense: {
+    loading: boolean;
+    data: IExpense;
+  };
+  expenses: {
+    loading: boolean;
+    data: IExpense[];
+  };
+  createExpenseState: {
+    loading: boolean;
+    data: IExpense;
+  };
+}
+
+const initialState: IState = {
   singleExpense: {
     loading: false,
-    data: '',
+    data: {} as IExpense,
   },
   expenses: {
     loading: false,
-    data: '',
+    data: [],
   },
   createExpenseState: {
     loading: false,
-    data: '',
+    data: {} as IExpense,
   },
 };
 
@@ -27,7 +51,6 @@ const expenseSlice = createSlice({
     clearSingleExpense: (state) => {
       const { singleExpense } = state;
       singleExpense.loading = false;
-      singleExpense.data = '';
     },
     getSingleExpense: (state) => {
       const { singleExpense } = state;
@@ -41,7 +64,6 @@ const expenseSlice = createSlice({
     getSingleExpenseFailed: (state) => {
       const { singleExpense } = state;
       singleExpense.loading = false;
-      singleExpense.data = '';
     },
     getExpenses: (state) => {
       const { expenses } = state;
@@ -59,7 +81,6 @@ const expenseSlice = createSlice({
     createExpense: (state) => {
       const { createExpenseState } = state;
       createExpenseState.loading = true;
-      createExpenseState.data = '';
     },
     createExpenseSuccess: (state, { payload }) => {
       const { createExpenseState } = state;
@@ -95,36 +116,30 @@ export const searchExpenseFn = (value: string) => async (
   });
   try {
     searchExpenseSchema.parse({ value });
-    const expenses = await Expense.findAll({
+
+    const expenses = getExpensesService({
       where: {
         type: {
           [Op.substring]: value,
         },
       },
     });
-    dispatch(getExpensesSuccess(JSON.stringify(expenses)));
+    dispatch(getExpensesSuccess(expenses));
   } catch (error) {
     toast.error(error.message || '');
   }
 };
 
-export const deleteExpenseFn = (
-  id: string | number,
-  cb?: () => void
-) => async () => {
+export const deleteExpenseFn = (id: number, cb?: () => void) => async () => {
   // use zod to validate the input
   const deleteExpenseSchema = z.object({
     id: z.number(),
   });
   try {
     deleteExpenseSchema.parse({ id });
-    // dispatch(updateExpense());
-    await Expense.destroy({
-      where: {
-        id,
-      },
-    });
-    // dispatch(updateExpenseSuccess(JSON.stringify(updateExpenseResponse)));
+
+    await deleteExpenseService(id);
+    // dispatch(updateExpenseSuccess((updateExpenseResponse)));
     toast.success('Successfully deleted');
     if (cb) {
       cb();
@@ -135,8 +150,8 @@ export const deleteExpenseFn = (
 };
 
 export const updateExpenseFn = (
-  values: any,
-  id: string | number,
+  values: Partial<IExpense>,
+  id: number,
   cb?: () => void
 ) => async () => {
   // use zod to validate the input
@@ -145,13 +160,9 @@ export const updateExpenseFn = (
   });
   try {
     updateExpenseSchema.parse({ id });
-    // dispatch(updateExpense());
-    await Expense.update(values, {
-      where: {
-        id,
-      },
-    });
-    // dispatch(updateExpenseSuccess(JSON.stringify(updateExpenseResponse)));
+
+    await updateExpenseService(id, values);
+    // dispatch(updateExpenseSuccess((updateExpenseResponse)));
     toast.success('Successfully updated');
     if (cb) {
       cb();
@@ -161,10 +172,9 @@ export const updateExpenseFn = (
   }
 };
 
-export const getSingleExpenseFn = (
-  id: string | number,
-  cb?: () => void
-) => async (dispatch: (arg0: { payload: any; type: string }) => void) => {
+export const getSingleExpenseFn = (id: number, cb?: () => void) => async (
+  dispatch: (arg0: { payload: any; type: string }) => void
+) => {
   // use zod to validate the input
   const getSingleExpenseSchema = z.object({
     id: z.number(),
@@ -173,9 +183,10 @@ export const getSingleExpenseFn = (
     dispatch(getSingleExpense());
     getSingleExpenseSchema.parse({ id });
 
-    const getSingleExpenseResponse = await Expense.findByPk(id);
+    // const getSingleExpenseResponse = await Expense.findByPk(id);
+    const response = await getExpenseByIdService(id);
 
-    dispatch(getSingleExpenseSuccess(JSON.stringify(getSingleExpenseResponse)));
+    dispatch(getSingleExpenseSuccess(response));
     if (cb) {
       cb();
     }
@@ -202,7 +213,7 @@ export const filterExpensesFn = ({ startDate, endDate }) => async (
     filterExpensesSchema.parse({ startDate, endDate });
     dispatch(getExpenses());
 
-    const expenses = await Expense.findAll({
+    const expenses = await getExpensesService({
       where: {
         date: {
           [Op.between]: [
@@ -212,7 +223,7 @@ export const filterExpensesFn = ({ startDate, endDate }) => async (
         },
       },
     });
-    dispatch(getExpensesSuccess(JSON.stringify(expenses)));
+    dispatch(getExpensesSuccess(expenses));
   } catch (error) {
     toast.error(error.message || '');
   }
@@ -232,13 +243,8 @@ export const createExpenseFn = (values: any, cb?: () => void) => async (
     dispatch(createExpense());
     createExpenseSchema.parse(values);
 
-    const createExpenseResponse = await Expense.create({
-      type: values.type || null,
-      amount: values.amount || null,
-      date: values.date || null,
-      note: values.note || null,
-    });
-    dispatch(createExpenseSuccess(JSON.stringify(createExpenseResponse)));
+    const response = await createExpenseService(values);
+    dispatch(createExpenseSuccess(response));
     if (cb) {
       cb();
     }
@@ -247,6 +253,6 @@ export const createExpenseFn = (values: any, cb?: () => void) => async (
   }
 };
 
-export const selectExpenseState = (state: any) => state.expense;
+export const selectExpenseState = (state: RootState) => state.expense;
 
 export default expenseSlice.reducer;

@@ -3,30 +3,65 @@ import { toast } from 'react-toastify';
 import { Op } from 'sequelize';
 import moment from 'moment';
 import { z } from 'zod';
-import Customer from '../models/customer';
-import Invoice from '../models/invoice';
-import Receipt from '../models/receipt';
+import { ICustomer } from '../models/customer';
 
-const initialState = {
+import {
+  getCustomers as getCustomersService,
+  updateCustomer as updateCustomerService,
+  deleteCustomer as deleteCustomerService,
+  createCustomer as createCustomerService,
+  getCustomerById as getCustomerByIdService,
+} from '../services/customer.service';
+
+import { getReceipts as getReceiptsService } from '../services/receipt.service';
+import { getInvoices as getInvoicesService } from '../services/invoice.service';
+import type { RootState } from '../store';
+import { IReceipt } from '../models/receipt';
+import { IInvoice } from '../models/invoice';
+
+interface IState {
+  singleCustomer: {
+    loading: boolean;
+    data: ICustomer;
+  };
+  customers: {
+    loading: boolean;
+    data: ICustomer[];
+  };
+  createCustomerState: {
+    loading: boolean;
+    data: ICustomer;
+  };
+  receipts: {
+    loading: boolean;
+    data: IReceipt[];
+  };
+  invoices: {
+    loading: boolean;
+    data: IInvoice[];
+  };
+}
+
+const initialState: IState = {
   singleCustomer: {
     loading: false,
-    data: '',
+    data: {} as ICustomer,
   },
   customers: {
     loading: false,
-    data: '',
+    data: [],
   },
   createCustomerState: {
     loading: false,
-    data: '',
+    data: {} as ICustomer,
   },
   receipts: {
     loading: false,
-    data: '',
+    data: [],
   },
   invoices: {
     loading: false,
-    data: '',
+    data: [],
   },
 };
 
@@ -37,7 +72,6 @@ const customerSlice = createSlice({
     clearSingleCustomer: (state) => {
       const { singleCustomer } = state;
       singleCustomer.loading = false;
-      singleCustomer.data = '';
     },
     getSingleCustomer: (state) => {
       const { singleCustomer } = state;
@@ -51,7 +85,6 @@ const customerSlice = createSlice({
     getSingleCustomerFailed: (state) => {
       const { singleCustomer } = state;
       singleCustomer.loading = false;
-      singleCustomer.data = '';
     },
     getCustomers: (state) => {
       const { customers } = state;
@@ -69,7 +102,6 @@ const customerSlice = createSlice({
     createCustomer: (state) => {
       const { createCustomerState } = state;
       createCustomerState.loading = true;
-      createCustomerState.data = '';
     },
     createCustomerSuccess: (state, { payload }) => {
       const { createCustomerState } = state;
@@ -83,7 +115,6 @@ const customerSlice = createSlice({
     getReceipts: (state) => {
       const { receipts } = state;
       receipts.loading = true;
-      receipts.data = '';
     },
     getReceiptsSuccess: (state, { payload }) => {
       const { receipts } = state;
@@ -97,7 +128,6 @@ const customerSlice = createSlice({
     getInvoices: (state) => {
       const { invoices } = state;
       invoices.loading = true;
-      invoices.data = '';
     },
     getInvoicesSuccess: (state, { payload }) => {
       const { invoices } = state;
@@ -145,7 +175,8 @@ export const getCustomerReceiptsFn = (
   dispatch(getReceipts());
   try {
     schema.parse({ customerId, startDate, endDate });
-    const receipts = await Receipt.findAll({
+
+    const receipts = await getReceiptsService({
       where: {
         customerId,
         createdAt: {
@@ -157,7 +188,7 @@ export const getCustomerReceiptsFn = (
       },
       order: [['createdAt', 'DESC']],
     });
-    dispatch(getReceiptsSuccess(JSON.stringify(receipts)));
+    dispatch(getReceiptsSuccess(receipts));
   } catch (error) {
     dispatch(getReceiptsFailed());
     toast.error(error.message || '');
@@ -180,7 +211,8 @@ export const getCustomerInvoicesFn = (
   dispatch(getInvoices());
   try {
     schema.parse({ customerId, startDate, endDate });
-    const invoices = await Invoice.findAll({
+
+    const invoices = await getInvoicesService({
       where: {
         customerId,
         createdAt: {
@@ -192,7 +224,8 @@ export const getCustomerInvoicesFn = (
       },
       order: [['createdAt', 'DESC']],
     });
-    dispatch(getInvoicesSuccess(JSON.stringify(invoices)));
+
+    dispatch(getInvoicesSuccess(invoices));
   } catch (error) {
     dispatch(getInvoicesFailed());
 
@@ -209,36 +242,27 @@ export const searchCustomerFn = (value: string) => async (
   });
   try {
     schema.parse({ value });
-    const customers = await Customer.findAll({
+    const customers = await getCustomersService({
       where: {
         fullName: {
           [Op.substring]: value,
         },
       },
     });
-    dispatch(getCustomersSuccess(JSON.stringify(customers)));
+    dispatch(getCustomersSuccess(customers));
   } catch (error) {
     toast.error(error.message || '');
   }
 };
 
-export const deleteCustomerFn = (
-  id: string | number,
-  cb?: () => void
-) => async () => {
+export const deleteCustomerFn = (id: number, cb?: () => void) => async () => {
   // use zod to validate the input
   const schema = z.object({
     id: z.number(),
   });
   try {
     schema.parse({ id });
-    // dispatch(updateCustomer());
-    await Customer.destroy({
-      where: {
-        id,
-      },
-    });
-    // dispatch(updateCustomerSuccess(JSON.stringify(updateCustomerResponse)));
+    await deleteCustomerService(id);
     toast.success('Successfully deleted');
     if (cb) {
       cb();
@@ -249,8 +273,8 @@ export const deleteCustomerFn = (
 };
 
 export const updateCustomerFn = (
-  values: any,
-  id: string | number,
+  values: Partial<ICustomer>,
+  id: number,
   cb?: () => void
 ) => async () => {
   // use zod to validate the input
@@ -266,13 +290,7 @@ export const updateCustomerFn = (
 
   try {
     schema.parse({ values, id });
-    // dispatch(updateCustomer());
-    await Customer.update(values, {
-      where: {
-        id,
-      },
-    });
-    // dispatch(updateCustomerSuccess(JSON.stringify(updateCustomerResponse)));
+    await updateCustomerService(id, values);
     toast.success('Successfully updated');
     if (cb) {
       cb();
@@ -282,10 +300,9 @@ export const updateCustomerFn = (
   }
 };
 
-export const getSingleCustomerFn = (
-  id: string | number,
-  cb?: () => void
-) => async (dispatch: (arg0: { payload: any; type: string }) => void) => {
+export const getSingleCustomerFn = (id: number, cb?: () => void) => async (
+  dispatch: (arg0: { payload: any; type: string }) => void
+) => {
   // use zod to validate the input
   const schema = z.object({
     id: z.number(),
@@ -294,11 +311,9 @@ export const getSingleCustomerFn = (
     dispatch(getSingleCustomer());
     schema.parse({ id });
 
-    const getSingleCustomerResponse = await Customer.findByPk(id);
+    const customer = await getCustomerByIdService(id);
 
-    dispatch(
-      getSingleCustomerSuccess(JSON.stringify(getSingleCustomerResponse))
-    );
+    dispatch(getSingleCustomerSuccess(customer));
     if (cb) {
       cb();
     }
@@ -318,8 +333,11 @@ export const getCustomersFn = () => async (
 ) => {
   try {
     dispatch(getCustomers());
-    const customers = await Customer.findAll({ order: [['fullName', 'ASC']] });
-    dispatch(getCustomersSuccess(JSON.stringify(customers)));
+
+    const customers = await getCustomersService({
+      order: [['fullName', 'ASC']],
+    });
+    dispatch(getCustomersSuccess(customers));
   } catch (error) {
     toast.error(error.message || '');
   }
@@ -345,14 +363,14 @@ export const createCustomerFn = (values: any, cb?: () => void) => async (
         ? JSON.parse(localStorage.getItem('user') || '')
         : '';
 
-    const createCustomerResponse = await Customer.create({
-      fullName: values.fullName || null,
-      address: values.address || null,
-      phoneNumber: values.phoneNumber || null,
-      balance: values.balance || 0,
+    const customer = await createCustomerService({
+      fullName: values.fullName,
+      address: values.address,
+      phoneNumber: values.phoneNumber,
+      balance: values.balance,
       postedBy: user.fullName,
     });
-    dispatch(createCustomerSuccess(JSON.stringify(createCustomerResponse)));
+    dispatch(createCustomerSuccess(customer));
     if (cb) {
       cb();
     }
@@ -361,6 +379,6 @@ export const createCustomerFn = (values: any, cb?: () => void) => async (
   }
 };
 
-export const selectCustomerState = (state: any) => state.customer;
+export const selectCustomerState = (state: RootState) => state.customer;
 
 export default customerSlice.reducer;

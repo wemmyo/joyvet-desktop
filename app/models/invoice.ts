@@ -1,14 +1,19 @@
 import sequelize from '../utils/database';
+import { ICustomer } from './customer';
 
 const Sequelize = require('sequelize');
 
 // create invoice interface
-export interface Invoice {
+export interface IInvoice {
   id: number;
   saleType: string;
   amount: number;
   profit: number;
   postedBy: string;
+  customerId?: number;
+  customer?: ICustomer;
+  createdAt?: Date;
+  updatedAt?: Date;
 }
 
 export default sequelize.define('invoice', {

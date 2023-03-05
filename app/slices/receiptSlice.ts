@@ -2,22 +2,39 @@ import { createSlice } from '@reduxjs/toolkit';
 import { toast } from 'react-toastify';
 import { Op } from 'sequelize';
 import { z } from 'zod';
-import Receipt from '../models/receipt';
+import Receipt, { IReceipt } from '../models/receipt';
 import Customer from '../models/customer';
 import sequelize from '../utils/database';
+import type { RootState } from '../store';
+import { getReceipts as getReceiptsService } from '../services/receipt.service';
 
-const initialState = {
+interface IState {
+  singleReceipt: {
+    loading: boolean;
+    data: IReceipt;
+  };
+  receipts: {
+    loading: boolean;
+    data: IReceipt[];
+  };
+  createReceiptState: {
+    loading: boolean;
+    data: IReceipt;
+  };
+}
+
+const initialState: IState = {
   singleReceipt: {
     loading: false,
-    data: '',
+    data: {} as IReceipt,
   },
   receipts: {
     loading: true,
-    data: '',
+    data: [],
   },
   createReceiptState: {
     loading: false,
-    data: '',
+    data: {} as IReceipt,
   },
 };
 
@@ -37,7 +54,6 @@ const receiptSlice = createSlice({
     getSingleReceiptFailed: (state) => {
       const { singleReceipt } = state;
       singleReceipt.loading = false;
-      singleReceipt.data = '';
     },
     getReceipts: (state) => {
       const { receipts } = state;
@@ -51,12 +67,10 @@ const receiptSlice = createSlice({
     getReceiptsFailed: (state) => {
       const { receipts } = state;
       receipts.loading = false;
-      receipts.data = '';
     },
     createReceipt: (state) => {
       const { createReceiptState } = state;
       createReceiptState.loading = true;
-      createReceiptState.data = '';
     },
     createReceiptSuccess: (state, { payload }) => {
       const { createReceiptState } = state;
@@ -66,7 +80,6 @@ const receiptSlice = createSlice({
     createReceiptFailed: (state) => {
       const { createReceiptState } = state;
       createReceiptState.loading = false;
-      createReceiptState.data = '';
     },
   },
 });
@@ -92,7 +105,8 @@ export const searchReceiptFn = (value: string) => async (
   });
   try {
     SearchReceiptSchema.parse({ value });
-    const receipts = await Receipt.findAll({
+
+    const receipts = await getReceiptsService({
       where: {
         id: {
           [Op.startsWith]: value,
@@ -104,7 +118,7 @@ export const searchReceiptFn = (value: string) => async (
         },
       ],
     });
-    dispatch(getReceiptsSuccess(JSON.stringify(receipts)));
+    dispatch(getReceiptsSuccess(receipts));
   } catch (error) {
     toast.error(error.message || '');
   }
@@ -130,7 +144,7 @@ export const updateReceiptFn = (
         id,
       },
     });
-    // dispatch(updateReceiptSuccess(JSON.stringify(updateReceiptResponse)));
+    // dispatch(updateReceiptSuccess((updateReceiptResponse)));
     toast.success('Successfully updated');
     if (cb) {
       cb();
@@ -156,7 +170,7 @@ export const getSingleReceiptFn = (
       include: Customer,
     });
 
-    dispatch(getSingleReceiptSuccess(JSON.stringify(getSingleReceiptResponse)));
+    dispatch(getSingleReceiptSuccess(getSingleReceiptResponse));
     if (cb) {
       cb();
     }
@@ -177,7 +191,7 @@ export const getReceiptsFn = () => async (
         },
       ],
     });
-    dispatch(getReceiptsSuccess(JSON.stringify(receipts)));
+    dispatch(getReceiptsSuccess(receipts));
   } catch (error) {
     toast.error(error.message || '');
   }
@@ -263,6 +277,6 @@ export const createReceiptFn = (values: any, cb?: () => void) => async (
   }
 };
 
-export const selectReceiptState = (state: any) => state.receipt;
+export const selectReceiptState = (state: RootState) => state.receipt;
 
 export default receiptSlice.reducer;

@@ -3,30 +3,56 @@ import { toast } from 'react-toastify';
 import { Op } from 'sequelize';
 import { z } from 'zod';
 import moment from 'moment';
-import Product from '../models/product';
+import Product, { IProduct } from '../models/product';
 import InvoiceItem from '../models/invoiceItem';
 import PurchaseItem from '../models/purchaseItem';
+import type { RootState } from '../store';
+import { IPurchase } from '../models/purchase';
+import { IInvoice } from '../models/invoice';
 
-const initialState = {
+interface IState {
+  singleProduct: {
+    loading: boolean;
+    data: IProduct;
+  };
+  products: {
+    loading: boolean;
+    data: IProduct[];
+  };
+  createProductState: {
+    loading: boolean;
+    data: IProduct;
+  };
+  purchases: {
+    loading: boolean;
+    data: IPurchase[];
+  };
+  invoices: {
+    loading: boolean;
+    data: IInvoice[];
+  };
+}
+
+const initialState: IState = {
   singleProduct: {
     loading: false,
-    data: '',
+    data: {} as IProduct,
   },
   products: {
     loading: false,
-    data: '',
+    data: [],
   },
   createProductState: {
     loading: false,
-    data: '',
+    data: {} as IProduct,
   },
   purchases: {
     loading: false,
-    data: '',
+    data: [],
   },
   invoices: {
     loading: false,
-    data: '',
+    data: [],
   },
 };
 
@@ -46,7 +72,6 @@ const productSlice = createSlice({
     getSingleProductFailed: (state) => {
       const { singleProduct } = state;
       singleProduct.loading = false;
-      singleProduct.data = '';
     },
     getProducts: (state) => {
       const { products } = state;
@@ -64,7 +89,7 @@ const productSlice = createSlice({
     createProduct: (state) => {
       const { createProductState } = state;
       createProductState.loading = true;
-      createProductState.data = '';
+      createProductState.data = {};
     },
     createProductSuccess: (state, { payload }) => {
       const { createProductState } = state;
@@ -78,7 +103,6 @@ const productSlice = createSlice({
     getPurchases: (state) => {
       const { purchases } = state;
       purchases.loading = true;
-      purchases.data = '';
     },
     getPurchasesSuccess: (state, { payload }) => {
       const { purchases } = state;
@@ -92,7 +116,6 @@ const productSlice = createSlice({
     getInvoices: (state) => {
       const { invoices } = state;
       invoices.loading = true;
-      invoices.data = '';
     },
     getInvoicesSuccess: (state, { payload }) => {
       const { invoices } = state;
@@ -151,7 +174,7 @@ export const getProductPurchasesFn = (
       },
       order: [['createdAt', 'DESC']],
     });
-    dispatch(getPurchasesSuccess(JSON.stringify(receipts)));
+    dispatch(getPurchasesSuccess(receipts));
   } catch (error) {
     dispatch(getPurchasesFailed());
     toast.error(error.message || '');
@@ -184,7 +207,7 @@ export const getProductInvoicesFn = (
       },
       order: [['createdAt', 'DESC']],
     });
-    dispatch(getInvoicesSuccess(JSON.stringify(invoices)));
+    dispatch(getInvoicesSuccess(invoices));
   } catch (error) {
     dispatch(getInvoicesFailed());
 
@@ -208,7 +231,7 @@ export const searchProductFn = (value: string) => async (
         },
       },
     });
-    dispatch(getProductsSuccess(JSON.stringify(products)));
+    dispatch(getProductsSuccess(products));
   } catch (error) {
     toast.error(error.message || '');
   }
@@ -238,7 +261,7 @@ export const updateProductFn = (
         id,
       },
     });
-    // dispatch(updateProductSuccess(JSON.stringify(updateProductResponse)));
+    // dispatch(updateProductSuccess((updateProductResponse)));
     toast.success('Successfully updated');
     if (cb) {
       cb();
@@ -263,11 +286,10 @@ export const getSingleProductFn = (
 
     const getSingleProductResponse = await Product.findByPk(id);
 
-    dispatch(getSingleProductSuccess(JSON.stringify(getSingleProductResponse)));
+    dispatch(getSingleProductSuccess(getSingleProductResponse));
     if (cb) {
       cb();
     }
-    console.log(getSingleProductResponse);
   } catch (error) {
     toast.error(error.message || '');
   }
@@ -291,7 +313,7 @@ export const getProductsFn = (filter?: 'inStock') => async (
       ...filters,
       order: [['title', 'ASC']],
     });
-    dispatch(getProductsSuccess(JSON.stringify(products)));
+    dispatch(getProductsSuccess(products));
   } catch (error) {
     toast.error(error.message || '');
   }
@@ -338,6 +360,6 @@ export const createProductFn = (values: any, cb?: () => void) => async (
   }
 };
 
-export const selectProductState = (state: any) => state.product;
+export const selectProductState = (state: RootState) => state.product;
 
 export default productSlice.reducer;

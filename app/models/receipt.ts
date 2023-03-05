@@ -1,9 +1,10 @@
 import sequelize from '../utils/database';
+import { ICustomer } from './customer';
 
 const Sequelize = require('sequelize');
 
 // create receipt interface
-export interface Receipt {
+export interface IReceipt {
   id: number;
   amount: number;
   paymentType: string;
@@ -11,6 +12,10 @@ export interface Receipt {
   bank: string;
   note: string;
   postedBy: string;
+  createdAt?: Date;
+  updatedAt?: Date;
+  customerId?: number;
+  customer?: ICustomer;
 }
 
 export default sequelize.define('receipt', {

@@ -31,11 +31,9 @@ const CustomersScreen: React.FC = () => {
   const customerState = useSelector(selectCustomerState);
 
   const {
-    data: customersRaw,
+    data: customers,
     loading: customersLoading,
   } = customerState.customers;
-
-  const customers = customersRaw ? JSON.parse(customersRaw) : [];
 
   const fetchCustomers = () => {
     dispatch(getCustomersFn());

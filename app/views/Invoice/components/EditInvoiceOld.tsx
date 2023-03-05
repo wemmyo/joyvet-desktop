@@ -1,53 +1,58 @@
 /* eslint-disable react/jsx-one-expression-per-line */
 import React, { useState, useEffect, useRef } from 'react';
-import { useReactToPrint } from 'react-to-print';
 import { Table, Grid, Button, Form, Segment } from 'semantic-ui-react';
 import { Field, Formik } from 'formik';
 import { useSelector, useDispatch } from 'react-redux';
 import { toast } from 'react-toastify';
+import { withRouter } from 'react-router-dom';
+import moment from 'moment';
+import { useReactToPrint } from 'react-to-print';
 
-import DashboardLayout from '../../layouts/DashboardLayout/DashboardLayout';
+import DashboardLayout from '../../../layouts/DashboardLayout/DashboardLayout';
 import {
   getCustomersFn,
   selectCustomerState,
-  getSingleCustomerFn,
-} from '../../slices/customerSlice';
-import { getProductsFn, selectProductState } from '../../slices/productSlice';
-import { numberWithCommas, sum } from '../../utils/helpers';
+} from '../../../slices/customerSlice';
 import {
-  createInvoiceFn,
+  getProductsFn,
+  selectProductState,
+} from '../../../slices/productSlice';
+import { numberWithCommas } from '../../../utils/helpers';
+import {
   getSingleInvoiceFn,
   selectInvoiceState,
-} from '../../slices/invoiceSlice';
-import TextInput from '../../components/TextInput/TextInput';
-import ComponentToPrint from '../../components/PrintedReceipt/ReceiptWrapper';
+  deleteInvoiceItemFn,
+  addInvoiceItemFn,
+} from '../../../slices/invoiceSlice';
+import TextInput from '../../../components/TextInput/TextInput';
+import ComponentToPrint from '../../../components/PrintedReceipt/ReceiptWrapper';
 
-const InvoiceScreen: React.FC = () => {
-  const componentRef = useRef(null);
+const EditInvoiceScreen: React.FC = ({ match }: any) => {
+  const invoiceId = match.params.id;
+
+  const componentRef = useRef();
   const dispatch = useDispatch();
+
+  const [printInvoice, setPrintInvoice] = useState(false);
 
   const handlePrint = useReactToPrint({
     content: () => componentRef.current,
   });
-
-  const [orders, setOrders] = useState([]);
-  const [printInvoice, setPrintInvoice] = useState(false);
 
   const customerState = useSelector(selectCustomerState);
   const productState = useSelector(selectProductState);
   const invoiceState = useSelector(selectInvoiceState);
   // const invoiceState = useSelector(selectInvoiceState);
 
-  const { data: singleCustomerRaw } = customerState.singleCustomer;
   const { data: customersRaw } = customerState.customers;
   const { data: productsRaw } = productState.products;
-  const { data: invoiceRaw } = invoiceState.createInvoice;
+  const { data: singleInvoiceRaw } = invoiceState.singleInvoice;
   // const { data: createdInvoiceRaw } = invoiceState.createInvoiceState;
 
-  const singleCustomer = singleCustomerRaw ? JSON.parse(singleCustomerRaw) : {};
   const customers = customersRaw ? JSON.parse(customersRaw) : [];
   const products = productsRaw ? JSON.parse(productsRaw) : [];
-  const createdInvoice = invoiceRaw ? JSON.parse(invoiceRaw) : {};
+  const singleInvoice = singleInvoiceRaw ? JSON.parse(singleInvoiceRaw) : {};
+  // console.log(createdInvoice);
 
   interface FormValues {
     customerId: string;
@@ -65,9 +70,18 @@ const InvoiceScreen: React.FC = () => {
     dispatch(getProductsFn('inStock'));
   };
 
+  const fetchSingleInvoice = () => {
+    dispatch(getSingleInvoiceFn(Number(invoiceId)));
+  };
+
   const fetchData = () => {
     fetchCustomers();
     fetchProducts();
+    fetchSingleInvoice();
+  };
+
+  const handlePrintFn = () => {
+    setPrintInvoice(true);
   };
 
   useEffect(() => {
@@ -75,14 +89,10 @@ const InvoiceScreen: React.FC = () => {
   }, []);
 
   useEffect(() => {
-    if (invoiceRaw) {
-      dispatch(
-        getSingleInvoiceFn(createdInvoice.id, () => {
-          handlePrint();
-        })
-      );
+    if (printInvoice) {
+      handlePrint();
     }
-  }, [invoiceRaw]);
+  }, [printInvoice]);
 
   const renderProducts = ({
     handleChange,
@@ -111,7 +121,7 @@ const InvoiceScreen: React.FC = () => {
           name="product"
           component="select"
           className="ui dropdown"
-          onChange={(e: React.ChangeEvent<any>) => {
+          onChange={(e) => {
             handleChange(e);
             setFieldValue('unitPrice', '');
           }}
@@ -131,34 +141,20 @@ const InvoiceScreen: React.FC = () => {
     }
 
     const product = JSON.parse(value);
-
     const productPrices = [
-      { label: 'Level 1', value: product.sellPrice, priceLevel: 1 },
-      { label: 'Level 2', value: product.sellPrice2, priceLevel: 2 },
-      { label: 'Level 3', value: product.sellPrice3, priceLevel: 3 },
-      { label: 'Level 4', value: product.buyPrice, priceLevel: 4 },
+      { label: 'Level 1', value: product.sellPrice },
+      { label: 'Level 2', value: product.sellPrice2 },
+      { label: 'Level 3', value: product.sellPrice3 },
+      { label: 'Level 4', value: product.buyPrice },
     ];
 
-    let filteredPriceLevel = [];
-
-    if (singleCustomer.maxPriceLevel) {
-      const fPrice = productPrices.filter(
-        (price) => singleCustomer.maxPriceLevel >= price.priceLevel
-      );
-      filteredPriceLevel = fPrice;
-    } else {
-      const dPrice = productPrices.filter((price) => price.priceLevel <= 2);
-      filteredPriceLevel = dPrice;
-    }
-
-    const productPriceList = filteredPriceLevel.map((price) => {
+    const productPriceList = productPrices.map((price) => {
       return (
         <option key={price.label} value={price.value}>
           {`${price.label}: ₦${numberWithCommas(price.value)}`}
         </option>
       );
     });
-
     return (
       <div className="field">
         <label htmlFor="unitPrice">Product</label>
@@ -188,51 +184,49 @@ const InvoiceScreen: React.FC = () => {
     return customerList;
   };
 
-  const addToOrders = (value: any) => {
-    setOrders([...orders, value]);
-  };
-
-  const sumOfOrders = () => {
-    if (orders.length === 0) {
-      return 0;
-    }
-    return orders
-      .map((item: any) => {
-        return item.amount;
+  const removeOrder = ({
+    productId,
+    invoiceItemId,
+  }: {
+    productId: string | number;
+    invoiceItemId: string | number;
+  }) => {
+    dispatch(
+      deleteInvoiceItemFn({
+        productId,
+        invoiceId: Number(invoiceId),
+        invoiceItemId,
+        cb: () => {
+          fetchSingleInvoice();
+        },
       })
-      .reduce(sum);
-  };
-
-  const sumOfProfits = () => {
-    return orders
-      .map((item: any) => {
-        return item.profit;
-      })
-      .reduce(sum);
-  };
-
-  const removeOrder = (orderId: number) => {
-    const filteredOrders = orders.filter(
-      (item: any) => item.orderId !== orderId
     );
-    setOrders(filteredOrders);
   };
 
   const renderOrders = () => {
+    if (!singleInvoiceRaw) {
+      return null;
+    }
+
     let serialNumber = 0;
-    const orderList = orders.map((order: any) => {
+    const orderList = singleInvoice.products.map((order: any) => {
       serialNumber += 1;
       return (
-        <Table.Row key={order.orderId}>
+        <Table.Row key={order.id}>
           <Table.Cell>{serialNumber}</Table.Cell>
           <Table.Cell>{order.title}</Table.Cell>
-          <Table.Cell>{order.quantity}</Table.Cell>
-          <Table.Cell>{numberWithCommas(order.unitPrice)}</Table.Cell>
-          <Table.Cell>{numberWithCommas(order.amount)}</Table.Cell>
+          <Table.Cell>{order.invoiceItem.quantity}</Table.Cell>
+          <Table.Cell>
+            {numberWithCommas(order.invoiceItem.unitPrice)}
+          </Table.Cell>
+          <Table.Cell>{numberWithCommas(order.invoiceItem.amount)}</Table.Cell>
           <Table.Cell>
             <Button
               onClick={() => {
-                removeOrder(order.orderId);
+                removeOrder({
+                  productId: order.id,
+                  invoiceItemId: order.invoiceItem.id,
+                });
               }}
               negative
             >
@@ -242,7 +236,51 @@ const InvoiceScreen: React.FC = () => {
         </Table.Row>
       );
     });
+
     return orderList;
+  };
+
+  const addItemToOrder = (values: FormValues, { resetForm }) => {
+    const product = JSON.parse(values.product);
+    const amount = Number(values.unitPrice) * Number(values.quantity);
+    const profit =
+      (Number(values.unitPrice) - Number(product.buyPrice)) *
+      Number(values.quantity);
+
+    if (product.stock < Number(values.quantity)) {
+      toast.error(`${product.title}: Re-order level`, {
+        autoClose: 5000,
+      });
+      resetForm({
+        values: {
+          ...values,
+          quantity: '',
+          unitPrice: '',
+          product: '',
+        },
+      });
+    } else {
+      dispatch(
+        addInvoiceItemFn({
+          invoiceId: Number(invoiceId),
+          productId: product.id,
+          quantity: Number(values.quantity),
+          amount,
+          unitPrice: Number(values.unitPrice),
+          profit,
+          cb: () => fetchSingleInvoice(),
+        })
+      );
+
+      // resetForm({
+      //   values: {
+      //     ...values,
+      //     quantity: '',
+      //     unitPrice: '',
+      //     product: '',
+      //   },
+      // });
+    }
   };
 
   const renderInvoiceToPrint = () => {
@@ -256,88 +294,22 @@ const InvoiceScreen: React.FC = () => {
     return null;
   };
 
-  const resetAddItemForm = (resetForm, values) => {
-    resetForm({
-      values: {
-        ...values,
-        quantity: '',
-        unitPrice: '',
-        product: '',
-      },
-    });
-  };
+  const disabledAdditem = () => {
+    const invoiceDate = moment(singleInvoice.createdAt).format('DD/MM/YYYY');
+    const todaysDate = moment().format('DD/MM/YYYY');
 
-  const addItemToOrder = (values: FormValues, { resetForm }) => {
-    const product = JSON.parse(values.product);
-    const unitPrice: number = parseFloat(values.unitPrice);
-    const quantity: number = parseFloat(values.quantity);
-    const amount: number = unitPrice * quantity;
-    const profit: number = (unitPrice - product.buyPrice) * quantity;
-
-    if (product.stock < quantity) {
-      toast.error(`${product.title}: Re-order level`, {
-        autoClose: 5000,
-      });
-      resetAddItemForm(resetForm, values);
-    } else {
-      const productInOrder = orders.find((order) => order.id === product.id);
-      if (productInOrder) {
-        const indexOfProductInOrder = orders.indexOf(productInOrder);
-        const updatedItem = productInOrder;
-        const newUnitPrice = unitPrice;
-        const newQuantity = updatedItem.quantity + quantity;
-        updatedItem.unitPrice = newUnitPrice;
-        updatedItem.quantity = newQuantity;
-        updatedItem.amount = newUnitPrice * newQuantity;
-        const newOrders = [...orders];
-        newOrders[indexOfProductInOrder] = updatedItem;
-        setOrders(newOrders);
-        resetAddItemForm(resetForm, values);
-      } else {
-        addToOrders({
-          ...product,
-          quantity,
-          amount,
-          unitPrice,
-          orderId: new Date().getUTCMilliseconds(),
-          profit,
-        });
-        resetAddItemForm(resetForm, values);
-      }
+    if (invoiceDate === todaysDate) {
+      return false;
     }
-  };
-
-  const createInvoice = ({
-    values,
-    resetForm,
-  }: {
-    values: FormValues;
-    resetForm: () => void;
-  }) => {
-    dispatch(
-      createInvoiceFn(
-        orders,
-        {
-          customerId: parseInt(values.customerId, 10),
-          saleType: values.saleType,
-          amount: sumOfOrders(),
-          profit: sumOfProfits(),
-        },
-        () => {
-          resetForm();
-          setOrders([]);
-          setPrintInvoice(true);
-        }
-      )
-    );
+    return true;
   };
 
   return (
-    <DashboardLayout screenTitle="Create Invoice">
+    <DashboardLayout screenTitle={`Edit Invoice ${invoiceId}`}>
       <Grid>
         <Grid.Row>
           <Grid.Column width={11}>
-            <h1>Total: ₦{numberWithCommas(sumOfOrders())}</h1>
+            <h1>Total: ₦{numberWithCommas(singleInvoice.amount)}</h1>
             <Table celled>
               <Table.Header>
                 <Table.Row>
@@ -359,7 +331,7 @@ const InvoiceScreen: React.FC = () => {
                   <Table.HeaderCell />
                   <Table.HeaderCell>Total</Table.HeaderCell>
                   <Table.HeaderCell>
-                    ₦{numberWithCommas(sumOfOrders())}
+                    ₦{numberWithCommas(singleInvoice.amount)}
                   </Table.HeaderCell>
                   <Table.HeaderCell />
                 </Table.Row>
@@ -370,8 +342,8 @@ const InvoiceScreen: React.FC = () => {
             <Segment>
               <Formik
                 initialValues={{
-                  customerId: '',
-                  saleType: '',
+                  customerId: singleInvoice.customer.id || '',
+                  saleType: singleInvoice.saleType || '',
                   product: '',
                   unitPrice: '',
                   quantity: '',
@@ -379,13 +351,7 @@ const InvoiceScreen: React.FC = () => {
                 // validationSchema={CreatePaymentSchema}
                 onSubmit={addItemToOrder}
               >
-                {({
-                  handleSubmit,
-                  handleChange,
-                  values,
-                  resetForm,
-                  setFieldValue,
-                }) => (
+                {({ handleSubmit, handleChange, values, setFieldValue }) => (
                   <Form>
                     <div className="field">
                       <label htmlFor="customer">Customer</label>
@@ -394,10 +360,7 @@ const InvoiceScreen: React.FC = () => {
                         name="customerId"
                         component="select"
                         className="ui dropdown"
-                        onChange={(e) => {
-                          handleChange(e);
-                          dispatch(getSingleCustomerFn(e.target.value));
-                        }}
+                        disabled
                       >
                         <option value="" disabled hidden>
                           Select Customer
@@ -412,6 +375,7 @@ const InvoiceScreen: React.FC = () => {
                         name="saleType"
                         component="select"
                         className="ui dropdown"
+                        disabled
                       >
                         <option value="" disabled hidden>
                           Select Sale
@@ -440,18 +404,18 @@ const InvoiceScreen: React.FC = () => {
                         type="Submit"
                         fluid
                         primary
+                        disabled={disabledAdditem()}
                       >
                         Add Item
                       </Button>
                     </Segment>
                     <Button
-                      disabled={orders.length < 1}
-                      onClick={() => createInvoice({ values, resetForm })}
+                      onClick={handlePrintFn}
                       type="button"
                       fluid
                       positive
                     >
-                      Save
+                      Print
                     </Button>
                     {renderInvoiceToPrint()}
                   </Form>
@@ -465,4 +429,4 @@ const InvoiceScreen: React.FC = () => {
   );
 };
 
-export default InvoiceScreen;
+export default withRouter(EditInvoiceScreen);

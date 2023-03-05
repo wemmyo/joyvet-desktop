@@ -32,11 +32,9 @@ const SuppliersScreen: React.FC = () => {
   const supplierState = useSelector(selectSupplierState);
 
   const {
-    data: suppliersRaw,
+    data: suppliers,
     loading: suppliersLoading,
   } = supplierState.suppliers;
-
-  const suppliers = suppliersRaw ? JSON.parse(suppliersRaw) : [];
 
   const fetchSuppliers = () => {
     dispatch(getSuppliersFn());

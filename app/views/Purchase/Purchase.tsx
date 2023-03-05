@@ -21,11 +21,8 @@ const PurchaseScreen: React.FC = () => {
   const supplierState = useSelector(selectSupplierState);
   const productState = useSelector(selectProductState);
 
-  const { data: suppliersRaw } = supplierState.suppliers;
-  const { data: productsRaw } = productState.products;
-
-  const suppliers = suppliersRaw ? JSON.parse(suppliersRaw) : [];
-  const products = productsRaw ? JSON.parse(productsRaw) : [];
+  const { data: suppliers } = supplierState.suppliers;
+  const { data: products } = productState.products;
 
   const fetchSuppliers = () => {
     dispatch(getSuppliersFn());
@@ -45,7 +42,7 @@ const PurchaseScreen: React.FC = () => {
   const renderProducts = () => {
     const productList = products.map((product: any) => {
       return (
-        <option key={product.id} value={JSON.stringify(product)}>
+        <option key={product.id} value={product}>
           {product.title}
         </option>
       );

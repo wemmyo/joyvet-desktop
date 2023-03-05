@@ -33,9 +33,7 @@ const SalesScreen: React.FC = () => {
 
   const invoiceState = useSelector(selectInvoiceState);
 
-  const { data: invoicesRaw } = invoiceState.invoices;
-
-  const invoices = invoicesRaw ? JSON.parse(invoicesRaw) : [];
+  const { data: invoices } = invoiceState.invoices;
 
   const fetchInvoices = () => {
     dispatch(getInvoicesFn());

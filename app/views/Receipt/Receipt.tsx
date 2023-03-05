@@ -30,8 +30,7 @@ const ReceiptsScreen: React.FC = () => {
 
   const receiptState = useSelector(selectReceiptState);
 
-  const { data: receiptsRaw, loading: receiptsLoading } = receiptState.receipts;
-  const receipts = receiptsRaw ? JSON.parse(receiptsRaw) : [];
+  const { data: receipts, loading: receiptsLoading } = receiptState.receipts;
 
   const fetchReceipts = () => {
     dispatch(getReceiptsFn());
