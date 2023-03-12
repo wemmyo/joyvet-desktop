@@ -11,8 +11,6 @@ import invoiceReducer from './slices/invoiceSlice';
 import dashboardReducer from './slices/dashboardSlice';
 import userReducer from './slices/userSlice';
 import expenseReducer from './slices/expenseSlice';
-// eslint-disable-next-line import/no-cycle
-// import counterReducer from './features/counter/counterSlice';
 
 export default function createRootReducer(history: History) {
   return combineReducers({

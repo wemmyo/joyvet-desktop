@@ -35,71 +35,48 @@ const SalesScreen: React.FC = () => {
 
   const { data: invoices } = invoiceState.invoices;
 
-  const fetchInvoices = () => {
-    dispatch(getInvoicesFn());
-  };
-
   const openSideContent = (content: string) => {
     dispatch(openSideContentFn());
     setSideContent(content);
   };
 
-  const closeSideContent = () => {
-    dispatch(closeSideContentFn());
-    setSideContent('');
-    setSalesId('');
-  };
-
-  const filterSales = () => {
-    dispatch(filterInvoiceFn(startDate, endDate, saleType));
-  };
-
-  const searchForInvoice = () => {
-    if (searchValue) {
-      dispatch(filterInvoiceById(searchValue));
-    } else if (searchValue.length === 0) {
-      fetchInvoices();
-    }
-  };
-
   useEffect(() => {
-    filterSales();
+    dispatch(filterInvoiceFn(startDate, endDate, saleType));
 
     return () => {
-      closeSideContent();
+      dispatch(closeSideContentFn());
+      setSideContent('');
+      setSalesId('');
     };
-  }, [startDate, endDate, saleType]);
+  }, [startDate, endDate, saleType, dispatch]);
 
   useEffect(() => {
-    if (searchValue.length > 0) {
-      searchForInvoice();
+    if (searchValue) {
+      dispatch(filterInvoiceById(Number(searchValue)));
+    } else {
+      dispatch(getInvoicesFn());
     }
-  }, [searchValue]);
+  }, [dispatch, searchValue]);
 
-  const openSingleSale = async (id: any) => {
+  const openSingleSale = async (id) => {
     setSalesId(id);
     openSideContent(CONTENT_DETAIL);
   };
 
-  const renderRows = () => {
-    const rows = invoices.map((each: any) => {
-      return (
-        <Table.Row onClick={() => openSingleSale(each.id)} key={each.id}>
-          <Table.Cell>{each.customer?.fullName}</Table.Cell>
-          <Table.Cell>{each.id}</Table.Cell>
-          <Table.Cell>{each.saleType}</Table.Cell>
-          <Table.Cell>₦{numberWithCommas(each.amount)}</Table.Cell>
-          {isAdmin() ? (
-            <Table.Cell>₦{numberWithCommas(each.profit)}</Table.Cell>
-          ) : null}
-          <Table.Cell>
-            {new Date(each.createdAt).toLocaleDateString('en-gb')}
-          </Table.Cell>
-        </Table.Row>
-      );
-    });
-    return rows;
-  };
+  const renderRows = invoices.map((each) => {
+    return (
+      <Table.Row onClick={() => openSingleSale(each.id)} key={each.id}>
+        <Table.Cell>{each['customer.fullName']}</Table.Cell>
+        <Table.Cell>{each.id}</Table.Cell>
+        <Table.Cell>{each.saleType}</Table.Cell>
+        <Table.Cell>₦{numberWithCommas(each.amount)}</Table.Cell>
+        {isAdmin() ? (
+          <Table.Cell>₦{numberWithCommas(each.profit)}</Table.Cell>
+        ) : null}
+        <Table.Cell>{moment(each.createdAt).format('DD/MM/YYYY')}</Table.Cell>
+      </Table.Row>
+    );
+  });
 
   const renderSideContent = () => {
     if (sideContent === CONTENT_DETAIL) {
@@ -120,7 +97,7 @@ const SalesScreen: React.FC = () => {
     setEndDate(TODAYS_DATE);
     setSaleType('all');
     setSearchValue('');
-    fetchInvoices();
+    dispatch(getInvoicesFn());
   };
 
   const headerContent = () => {
@@ -146,7 +123,7 @@ const SalesScreen: React.FC = () => {
               label="Type"
               options={options}
               placeholder="Choose type"
-              onChange={(e, { value }) => setSaleType(value)}
+              onChange={(e, { value }) => setSaleType(value as string)}
               value={saleType}
             />
             <Form.Input
@@ -170,7 +147,7 @@ const SalesScreen: React.FC = () => {
       return 0;
     }
     return invoices
-      .map((item: any) => {
+      .map((item) => {
         return item.amount;
       })
       .reduce(sum);
@@ -180,7 +157,7 @@ const SalesScreen: React.FC = () => {
       return 0;
     }
     return invoices
-      .map((item: any) => {
+      .map((item) => {
         return item.profit;
       })
       .reduce(sum);
@@ -204,7 +181,7 @@ const SalesScreen: React.FC = () => {
           </Table.Row>
         </Table.Header>
 
-        <Table.Body>{renderRows()}</Table.Body>
+        <Table.Body>{renderRows}</Table.Body>
 
         <Table.Footer>
           <Table.Row>

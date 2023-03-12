@@ -6,6 +6,12 @@ import Payment, { IPayment } from '../models/payment';
 import Supplier from '../models/supplier';
 import sequelize from '../utils/database';
 import type { RootState } from '../store';
+import {
+  getPayments as getPaymentsService,
+  getPaymentById,
+  createPayment as createPaymentService,
+  updatePayment as updatePaymentService,
+} from '../services/payment.service';
 
 interface IState {
   singlePayment: {
@@ -53,7 +59,7 @@ const paymentSlice = createSlice({
     getSinglePaymentFailed: (state) => {
       const { singlePayment } = state;
       singlePayment.loading = false;
-      singlePayment.data = {};
+      singlePayment.data = {} as IPayment;
     },
     getPayments: (state) => {
       const { payments } = state;
@@ -106,7 +112,8 @@ export const searchPaymentFn = (value: string) => async (
   });
   try {
     searchPaymentSchema.parse({ value });
-    const payments = await Payment.findAll({
+    dispatch(getPayments());
+    const payments = await getPaymentsService({
       where: {
         id: {
           [Op.startsWith]: value,
@@ -120,8 +127,8 @@ export const searchPaymentFn = (value: string) => async (
 };
 
 export const updatePaymentFn = (
-  values: any,
-  id: string | number,
+  values: Partial<IPayment>,
+  id: number,
   cb?: () => void
 ) => async () => {
   // use zod to validate input
@@ -136,11 +143,7 @@ export const updatePaymentFn = (
   try {
     updatePaymentSchema.parse({ id, values });
     // dispatch(updatePayment());
-    await Payment.update(values, {
-      where: {
-        id,
-      },
-    });
+    await updatePaymentService(id, values);
     // dispatch(updatePaymentSuccess((updatePaymentResponse)));
     toast.success('Successfully updated');
     if (cb) {
@@ -151,10 +154,9 @@ export const updatePaymentFn = (
   }
 };
 
-export const getSinglePaymentFn = (
-  id: string | number,
-  cb?: () => void
-) => async (dispatch: (arg0: { payload: any; type: string }) => void) => {
+export const getSinglePaymentFn = (id: number, cb?: () => void) => async (
+  dispatch: (arg0: { payload: any; type: string }) => void
+) => {
   // use zod to validate input
   const getSinglePaymentSchema = z.object({
     id: z.number(),
@@ -162,11 +164,11 @@ export const getSinglePaymentFn = (
   try {
     getSinglePaymentSchema.parse({ id });
     dispatch(getSinglePayment());
-    const getSinglePaymentResponse = await Payment.findByPk(id, {
+    const payment = await getPaymentById(id, {
       include: Supplier,
     });
 
-    dispatch(getSinglePaymentSuccess(getSinglePaymentResponse));
+    dispatch(getSinglePaymentSuccess(payment));
     if (cb) {
       cb();
     }
@@ -180,7 +182,7 @@ export const getPaymentsFn = () => async (
 ) => {
   try {
     dispatch(getPayments());
-    const payments = await Payment.findAll();
+    const payments = await getPaymentsService({});
     dispatch(getPaymentsSuccess(payments));
   } catch (error) {
     toast.error(error.message || '');
@@ -236,7 +238,7 @@ export const createPaymentFn = (values: any, cb: () => void) => async (
         localStorage.getItem('user') !== null
           ? JSON.parse(localStorage.getItem('user') || '')
           : '';
-      // const response = await Payment.create(values);
+
       await Payment.create(
         {
           supplierId: values.supplierId || null,

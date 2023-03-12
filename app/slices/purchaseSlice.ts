@@ -7,6 +7,12 @@ import Supplier from '../models/supplier';
 import Product from '../models/product';
 import sequelize from '../utils/database';
 import type { RootState } from '../store';
+import {
+  getPurchases as getPurchasesService,
+  getPurchaseById,
+  updatePurchase as updatePurchaseService,
+  deletePurchase as deletePurchaseService,
+} from '../services/purchase.service';
 
 interface IState {
   singlePurchase: {
@@ -106,7 +112,8 @@ export const searchPurchaseFn = (value: string) => async (
 
   try {
     searchPurchaseSchema.parse({ value });
-    const purchases = await Purchase.findAll({
+    dispatch(getPurchases());
+    const purchases = await getPurchasesService({
       where: {
         invoiceNumber: {
           [Op.startsWith]: value,
@@ -124,10 +131,9 @@ export const searchPurchaseFn = (value: string) => async (
   }
 };
 
-export const getSinglePurchaseFn = (
-  id: string | number,
-  cb?: () => void
-) => async (dispatch: (arg0: { payload: any; type: string }) => void) => {
+export const getSinglePurchaseFn = (id: number, cb?: () => void) => async (
+  dispatch: (arg0: { payload: any; type: string }) => void
+) => {
   // use zod to validate input
   const getSinglePurchaseSchema = z.object({
     id: z.number(),
@@ -137,7 +143,7 @@ export const getSinglePurchaseFn = (
     dispatch(getSinglePurchase());
     getSinglePurchaseSchema.parse({ id });
 
-    const getSinglePurchaseResponse = await Purchase.findByPk(id, {
+    const purchase = await getPurchaseById(id, {
       include: [
         { model: Supplier },
         {
@@ -146,7 +152,7 @@ export const getSinglePurchaseFn = (
       ],
     });
 
-    dispatch(getSinglePurchaseSuccess(getSinglePurchaseResponse));
+    dispatch(getSinglePurchaseSuccess(purchase));
     if (cb) {
       cb();
     }
@@ -160,7 +166,8 @@ export const getPurchasesFn = () => async (
 ) => {
   try {
     dispatch(getPurchases());
-    const purchases = await Purchase.findAll({
+
+    const purchases = await getPurchasesService({
       include: [
         {
           model: Supplier,

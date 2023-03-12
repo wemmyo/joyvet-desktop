@@ -1,5 +1,5 @@
-export const numberWithCommas = (n: string) => {
-  return parseFloat(n || '0')
+export const numberWithCommas = (n: number) => {
+  return parseFloat(n.toString())
     .toFixed(2)
     .replace(/(\d)(?=(\d{3})+\.)/g, '$1,');
 };

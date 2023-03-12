@@ -3,12 +3,20 @@ import { toast } from 'react-toastify';
 import { Op } from 'sequelize';
 import { z } from 'zod';
 import moment from 'moment';
-import Product, { IProduct } from '../models/product';
-import InvoiceItem from '../models/invoiceItem';
-import PurchaseItem from '../models/purchaseItem';
+
+import {
+  getProducts as getProductsService,
+  createProduct as createProductService,
+  updateProduct as updateProductService,
+  getProductById,
+} from '../services/product.service';
+import { getPurchaseItems as getPurchaseItemsService } from '../services/purchaseItem.service';
+import { getInvoices as getInvoicesService } from '../services/invoice.service';
+
+import type { IProduct } from '../models/product';
 import type { RootState } from '../store';
-import { IPurchase } from '../models/purchase';
-import { IInvoice } from '../models/invoice';
+import type { IPurchase } from '../models/purchase';
+import type { IInvoice } from '../models/invoice';
 
 interface IState {
   singleProduct: {
@@ -89,7 +97,7 @@ const productSlice = createSlice({
     createProduct: (state) => {
       const { createProductState } = state;
       createProductState.loading = true;
-      createProductState.data = {};
+      createProductState.data = {} as IProduct;
     },
     createProductSuccess: (state, { payload }) => {
       const { createProductState } = state;
@@ -162,7 +170,8 @@ export const getProductPurchasesFn = (
   dispatch(getPurchases());
   try {
     schema.parse({ productId, startDate, endDate });
-    const receipts = await PurchaseItem.findAll({
+
+    const receipts = await getPurchaseItemsService({
       where: {
         productId,
         createdAt: {
@@ -195,7 +204,8 @@ export const getProductInvoicesFn = (
   dispatch(getInvoices());
   try {
     schema.parse({ productId, startDate, endDate });
-    const invoices = await InvoiceItem.findAll({
+
+    const invoices = await getInvoicesService({
       where: {
         productId,
         createdAt: {
@@ -224,7 +234,8 @@ export const searchProductFn = (value: string) => async (
   });
   try {
     schema.parse({ value });
-    const products = await Product.findAll({
+
+    const products = await getProductsService({
       where: {
         title: {
           [Op.substring]: value,
@@ -238,8 +249,8 @@ export const searchProductFn = (value: string) => async (
 };
 
 export const updateProductFn = (
-  values: any,
-  id: string | number,
+  values: Partial<IProduct>,
+  id: number,
   cb?: () => void
 ) => async () => {
   // use zod to validate input
@@ -256,11 +267,8 @@ export const updateProductFn = (
   try {
     schema.parse({ values, id });
     // dispatch(updateProduct());
-    await Product.update(values, {
-      where: {
-        id,
-      },
-    });
+
+    await updateProductService(id, values);
     // dispatch(updateProductSuccess((updateProductResponse)));
     toast.success('Successfully updated');
     if (cb) {
@@ -271,10 +279,9 @@ export const updateProductFn = (
   }
 };
 
-export const getSingleProductFn = (
-  id: string | number,
-  cb?: () => void
-) => async (dispatch: (arg0: { payload: any; type: string }) => void) => {
+export const getSingleProductFn = (id: number, cb?: () => void) => async (
+  dispatch: (arg0: { payload: any; type: string }) => void
+) => {
   // use zod to validate input
   const schema = z.object({
     id: z.number(),
@@ -284,9 +291,9 @@ export const getSingleProductFn = (
     dispatch(getSingleProduct());
     schema.parse({ id });
 
-    const getSingleProductResponse = await Product.findByPk(id);
+    const product = await getProductById(id);
 
-    dispatch(getSingleProductSuccess(getSingleProductResponse));
+    dispatch(getSingleProductSuccess(product));
     if (cb) {
       cb();
     }
@@ -309,7 +316,8 @@ export const getProductsFn = (filter?: 'inStock') => async (
 
   try {
     dispatch(getProducts());
-    const products = await Product.findAll({
+
+    const products = await getProductsService({
       ...filters,
       order: [['title', 'ASC']],
     });
@@ -335,17 +343,13 @@ export const createProductFn = (values: any, cb?: () => void) => async (
   try {
     schema.parse({ values });
     dispatch(createProduct());
-    // const response = await Product.create(values);
     const user =
       localStorage.getItem('user') !== null
         ? JSON.parse(localStorage.getItem('user') || '')
         : '';
-    await Product.create({
-      title: values.title || null,
-      sellPrice: values.sellPrice || null,
-      sellPrice2: values.sellPrice2 || null,
-      sellPrice3: values.sellPrice3 || null,
-      buyPrice: values.buyPrice || null,
+
+    await createProductService({
+      ...values,
       postedBy: user.fullName,
     });
 

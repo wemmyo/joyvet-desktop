@@ -1,6 +1,6 @@
 import Invoice, { IInvoice } from '../models/invoice';
 
-export const getInvoices = (args) => {
+export const getInvoices = async (args) => {
   return Invoice.findAll({
     ...args,
     raw: true,

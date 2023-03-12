@@ -5,7 +5,7 @@ import { IPurchase } from './purchase';
 const Sequelize = require('sequelize');
 
 // create purchaseItem interface
-export interface PurchaseItem {
+export interface IPurchaseItem {
   id: number;
   quantity: number;
   unitPrice: number;

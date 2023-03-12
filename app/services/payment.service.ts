@@ -11,8 +11,9 @@ export const getPayments = (args) => {
   });
 };
 
-export const getPaymentById = (id: number) => {
+export const getPaymentById = (id: number, args) => {
   return Payment.findByPk(id, {
+    ...args,
     raw: true,
   }).then((data: IPayment) => {
     return data;

@@ -11,8 +11,9 @@ export const getPurchases = (args) => {
   });
 };
 
-export const getPurchaseById = (id: number) => {
+export const getPurchaseById = (id: number, args) => {
   return Purchase.findByPk(id, {
+    ...args,
     raw: true,
   }).then((data: IPurchase) => {
     return data;
