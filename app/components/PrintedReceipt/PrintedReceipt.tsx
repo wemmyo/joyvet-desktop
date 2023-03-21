@@ -16,11 +16,10 @@ export interface PrintedReceiptProps {
 
 class PrintedReceipt extends React.Component<PrintedReceiptProps> {
   renderItems = () => {
-    const { data: invoiceRaw } = this.props.invoice;
-    const invoice = invoiceRaw ? JSON.parse(invoiceRaw) : {};
+    const { data: invoice } = this.props.invoice;
 
-    if (invoiceRaw) {
-      const items = invoice.products.map((item: any) => {
+    if (invoice.products.length > 0) {
+      const items = invoice.products.map((item) => {
         return (
           <Table.Row key={item.id}>
             <Table.Cell>{item.title}</Table.Cell>
@@ -41,10 +40,9 @@ class PrintedReceipt extends React.Component<PrintedReceiptProps> {
   // state = { :  }
 
   render() {
-    const { data: invoiceRaw } = this.props.invoice;
-    const invoice = invoiceRaw ? JSON.parse(invoiceRaw) : {};
+    const { data: invoice } = this.props.invoice;
 
-    if (!invoiceRaw || invoiceRaw === 'null') {
+    if (Object.keys(invoice).length === 0) {
       return <p>No Data</p>;
     }
 
@@ -111,7 +109,7 @@ class PrintedReceipt extends React.Component<PrintedReceiptProps> {
   }
 }
 
-const mapStateToProps = ({ invoice }: { invoice: any }) => {
+const mapStateToProps = ({ invoice }) => {
   return {
     invoice: invoice.singleInvoice,
   };

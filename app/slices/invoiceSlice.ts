@@ -517,12 +517,30 @@ export const addInvoiceItemFn = ({
 };
 
 export const createInvoiceFn = (
-  values: Partial<IInvoiceItem>[],
-  meta?: Partial<IInvoice>,
-  cb?: () => void
+  invoiceItems: Partial<IInvoiceItem>[],
+  invoice?: Partial<IInvoice>,
+  cb?: (id: number) => void
 ) => async (dispatch: (arg0: { payload: any; type: string }) => void) => {
+  // validate inputs with zod
+  const schema = z.object({
+    invoiceItems: z.array(
+      z.object({
+        quantity: z.number(),
+        unitPrice: z.number(),
+        amount: z.number(),
+        profit: z.number(),
+      })
+    ),
+    invoice: z.object({
+      customerId: z.number(),
+      saleType: z.string(),
+      amount: z.number(),
+      profit: z.number(),
+    }),
+  });
+  schema.parse({ invoiceItems, invoice });
   try {
-    createInvoiceValidation(values, meta);
+    createInvoiceValidation(invoiceItems, invoice);
     dispatch(createInvoice());
     const user =
       localStorage.getItem('user') !== null
@@ -531,13 +549,13 @@ export const createInvoiceFn = (
 
     // transaction
     await sequelize.transaction(async (t) => {
-      const customer = await Customer.findByPk(meta?.customerId);
+      const customer = await Customer.findByPk(invoice?.customerId);
 
-      const invoice = await customer.createInvoice(
+      const customerInvoice = await customer.createInvoice(
         {
-          saleType: meta?.saleType,
-          amount: meta?.amount,
-          profit: meta?.profit,
+          saleType: invoice?.saleType,
+          amount: invoice?.amount,
+          profit: invoice?.profit,
           postedBy: user.fullName,
         },
         { transaction: t }
@@ -546,8 +564,8 @@ export const createInvoiceFn = (
       const prodArr: IInvoiceItem[] = [];
 
       await Promise.all(
-        values.map(async (each) => {
-          const prod = await Product.findByPk(each.id);
+        invoiceItems.map(async (each) => {
+          const prod = await Product.findByPk(each.product?.id);
           await Product.decrement('stock', {
             by: each.quantity,
             where: { id: each.id },
@@ -562,20 +580,21 @@ export const createInvoiceFn = (
           prodArr.push(prod);
         })
       );
-      await invoice.addProducts(prodArr, { transaction: t });
-      if (meta?.saleType === 'credit' || meta?.saleType === 'transfer') {
+      await customerInvoice.addProducts(prodArr, { transaction: t });
+      if (invoice?.saleType === 'credit' || invoice?.saleType === 'transfer') {
         await Customer.increment('balance', {
-          by: meta.amount,
-          where: { id: meta.customerId },
+          by: invoice.amount,
+          where: { id: invoice.customerId },
           transaction: t,
         });
       }
-      dispatch(createInvoiceSuccess(invoice));
+      dispatch(createInvoiceSuccess(customerInvoice));
+
+      toast.success('Invoice created');
+      if (cb) {
+        cb(customerInvoice.id);
+      }
     });
-    toast.success('Invoice created');
-    if (cb) {
-      cb();
-    }
   } catch (error) {
     toast.error(error.message);
   }
