@@ -1,4 +1,3 @@
-import { createSlice } from '@reduxjs/toolkit';
 import { toast } from 'react-toastify';
 import { Op } from 'sequelize';
 import moment from 'moment';
@@ -9,7 +8,6 @@ import Product from '../models/product';
 import InvoiceItem, { IInvoiceItem } from '../models/invoiceItem';
 import { createInvoiceValidation } from '../sliceValidation/index';
 import sequelize from '../utils/database';
-import type { RootState } from '../store';
 import {
   getInvoices as getInvoicesService,
   getInvoiceById,
@@ -18,119 +16,11 @@ import {
   deleteInvoice as deleteInvoiceService,
 } from '../services/invoice.service';
 
-interface IState {
-  singleInvoice: {
-    loading: boolean;
-    data: IInvoice;
-  };
-  invoices: {
-    loading: boolean;
-    data: IInvoice[];
-  };
-  createInvoice: {
-    loading: boolean;
-    data: IInvoice;
-  };
-}
-
-const initialState: IState = {
-  singleInvoice: {
-    loading: false,
-    data: {} as IInvoice,
-  },
-  invoices: {
-    loading: false,
-    data: [],
-  },
-  createInvoice: {
-    loading: false,
-    data: {} as IInvoice,
-  },
-};
-
-const invoiceSlice = createSlice({
-  name: 'invoice',
-  initialState,
-  reducers: {
-    getSingleInvoice: (state) => {
-      const { singleInvoice } = state;
-      singleInvoice.loading = true;
-    },
-    getSingleInvoiceSuccess: (state, { payload }) => {
-      const { singleInvoice } = state;
-      singleInvoice.loading = false;
-      singleInvoice.data = payload;
-    },
-    getSingleInvoiceFailed: (state) => {
-      const { singleInvoice } = state;
-      singleInvoice.loading = false;
-      singleInvoice.data = {} as IInvoice;
-    },
-
-    filterByType: (state, { payload }) => {
-      const { invoices } = state;
-      const parsedInvoice = invoices.data;
-      const filteredInvoice = parsedInvoice.filter(
-        (invoice) => invoice.saleType === payload
-      );
-      invoices.data = filteredInvoice;
-    },
-    getInvoices: (state) => {
-      const { invoices } = state;
-      invoices.loading = true;
-    },
-    getInvoicesSuccess: (state, { payload }) => {
-      const { invoices } = state;
-      invoices.loading = false;
-      invoices.data = payload;
-    },
-    getInvoicesFailed: (state) => {
-      const { invoices } = state;
-      invoices.loading = false;
-      invoices.data = [];
-    },
-    createInvoice: (state) => {
-      const { createInvoice } = state;
-      createInvoice.loading = true;
-      createInvoice.data = {} as IInvoice;
-    },
-    createInvoiceSuccess: (state, { payload }) => {
-      const { createInvoice } = state;
-      createInvoice.loading = false;
-      createInvoice.data = payload;
-    },
-    createInvoiceFailed: (state) => {
-      const { createInvoice } = state;
-      createInvoice.loading = false;
-      createInvoice.data = {} as IInvoice;
-    },
-    clearCreateInvoice: (state) => {
-      const { createInvoice } = state;
-      createInvoice.loading = false;
-      createInvoice.data = {} as IInvoice;
-    },
-  },
-});
-
-export const {
-  getSingleInvoice,
-  getSingleInvoiceSuccess,
-  getSingleInvoiceFailed,
-  getInvoices,
-  getInvoicesSuccess,
-  getInvoicesFailed,
-  createInvoice,
-  createInvoiceSuccess,
-  createInvoiceFailed,
-  filterByType,
-  clearCreateInvoice,
-} = invoiceSlice.actions;
-
-export const filterInvoiceFn = (
+export const filterInvoiceFn = async (
   startDate: string,
   endDate: string,
   saleType: string
-) => async (dispatch: (arg0: { payload: any; type: string }) => void) => {
+) => {
   // use zod to validate the input
   const schema = z.object({
     startDate: z.string(),
@@ -140,7 +30,6 @@ export const filterInvoiceFn = (
   schema.parse({ startDate, endDate, saleType });
 
   try {
-    dispatch(getInvoices());
     let invoices;
 
     if (startDate && endDate && saleType === 'all') {
@@ -209,7 +98,7 @@ export const filterInvoiceFn = (
       });
     }
 
-    dispatch(getInvoicesSuccess(invoices));
+    return invoices;
   } catch (error) {
     toast.error(error.message || '');
   }
@@ -224,8 +113,6 @@ export const filterInvoiceById = (id: number) => async (
   });
   schema.parse({ id });
   try {
-    dispatch(getInvoices());
-
     const invoices = await getInvoicesService({
       where: {
         id: {
@@ -240,22 +127,19 @@ export const filterInvoiceById = (id: number) => async (
       ],
     });
 
-    dispatch(getInvoicesSuccess(invoices));
+    return invoices;
   } catch (error) {
     toast.error(error.message || '');
   }
 };
 
-export const getSingleInvoiceFn = (id: number, cb?: () => void) => async (
-  dispatch: (arg0: { payload: any; type: string }) => void
-) => {
+export const getSingleInvoiceFn = async (id: number, cb?: () => void) => {
   try {
     // use zod to validate the input
     const schema = z.object({
       id: z.number(),
     });
     schema.parse({ id });
-    dispatch(getSingleInvoice());
 
     const invoice = await getInvoiceById(id, {
       include: [
@@ -266,27 +150,18 @@ export const getSingleInvoiceFn = (id: number, cb?: () => void) => async (
       ],
     });
 
-    dispatch(getSingleInvoiceSuccess(invoice));
     if (cb) {
       cb();
     }
+
+    return invoice;
   } catch (error) {
     toast.error(error.message || '');
   }
 };
 
-export const clearCreateInvoiceFn = () => async (
-  dispatch: (arg0: { payload: unknown; type: string }) => void
-) => {
-  dispatch(clearCreateInvoice());
-};
-
-export const getInvoicesFn = () => async (
-  dispatch: (arg0: { payload: any; type: string }) => void
-) => {
+export const getInvoicesFn = async () => {
   try {
-    dispatch(getInvoices());
-
     const invoices = await getInvoicesService({
       order: [['createdAt', 'DESC']],
       include: [
@@ -299,7 +174,7 @@ export const getInvoicesFn = () => async (
       ],
     });
 
-    dispatch(getInvoicesSuccess(invoices));
+    return invoices;
   } catch (error) {
     toast.error(error.message || '');
   }
@@ -519,11 +394,11 @@ export const addInvoiceItemFn = ({
   }
 };
 
-export const createInvoiceFn = (
+export const createInvoiceFn = async (
   invoiceItems: Partial<IInvoiceItem>[],
   invoice?: Partial<IInvoice>,
   cb?: (id: number) => void
-) => async (dispatch: (arg0: { payload: any; type: string }) => void) => {
+) => {
   // validate inputs with zod
   const schema = z.object({
     invoiceItems: z.array(
@@ -544,7 +419,6 @@ export const createInvoiceFn = (
   schema.parse({ invoiceItems, invoice });
   try {
     createInvoiceValidation(invoiceItems, invoice);
-    dispatch(createInvoice());
     const user =
       localStorage.getItem('user') !== null
         ? JSON.parse(localStorage.getItem('user') || '')
@@ -595,18 +469,14 @@ export const createInvoiceFn = (
         });
       }
 
-      dispatch(createInvoiceSuccess(customerInvoice));
-
       toast.success('Invoice created');
       if (cb) {
         cb(customerInvoice.id);
       }
+
+      return customerInvoice;
     });
   } catch (error) {
     toast.error(error.message);
   }
 };
-
-export const selectInvoiceState = (state: RootState) => state.invoice;
-
-export default invoiceSlice.reducer;

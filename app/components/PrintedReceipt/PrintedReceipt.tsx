@@ -11,38 +11,14 @@ import { numberWithCommas } from '../../utils/helpers';
 export interface PrintedReceiptProps {
   // invoiceId:string|number;
   invoice: any;
-  getSingleInvoiceFn: (id: string | number) => void;
 }
 
+// eslint-disable-next-line react/prefer-stateless-function
 class PrintedReceipt extends React.Component<PrintedReceiptProps> {
-  renderItems = () => {
-    const { data: invoice } = this.props.invoice;
-
-    if (invoice.products.length > 0) {
-      const items = invoice.products.map((item) => {
-        return (
-          <Table.Row key={item.id}>
-            <Table.Cell>{item.title}</Table.Cell>
-            <Table.Cell>{item.invoiceItem.quantity}</Table.Cell>
-            <Table.Cell>
-              ₦{numberWithCommas(item.invoiceItem.unitPrice)}
-            </Table.Cell>
-            <Table.Cell>
-              ₦{numberWithCommas(item.invoiceItem.amount)}
-            </Table.Cell>
-          </Table.Row>
-        );
-      });
-      return items;
-    }
-  };
-
-  // state = { :  }
-
   render() {
     const { data: invoice } = this.props.invoice;
 
-    if (Object.keys(invoice).length === 0) {
+    if (invoice.products.length === 0) {
       return <p>No Data</p>;
     }
 
@@ -85,7 +61,19 @@ class PrintedReceipt extends React.Component<PrintedReceiptProps> {
           </Table.Header>
 
           <Table.Body>
-            {this.renderItems()}
+            {/* {this.renderItems()} */}
+            {invoice.products.map((item) => (
+              <Table.Row key={item.id}>
+                <Table.Cell>{item.title}</Table.Cell>
+                <Table.Cell>{item.invoiceItem.quantity}</Table.Cell>
+                <Table.Cell>
+                  ₦{numberWithCommas(item.invoiceItem.unitPrice)}
+                </Table.Cell>
+                <Table.Cell>
+                  ₦{numberWithCommas(item.invoiceItem.amount)}
+                </Table.Cell>
+              </Table.Row>
+            ))}
             <Table.Row>
               <Table.Cell>Total</Table.Cell>
               <Table.Cell />

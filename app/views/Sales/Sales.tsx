@@ -23,7 +23,7 @@ const CONTENT_DETAIL = 'detail';
 
 const SalesScreen: React.FC = () => {
   const [sideContent, setSideContent] = useState('');
-  const [salesId, setSalesId] = useState('');
+  const [salesId, setSalesId] = useState<number | undefined>();
   const [saleType, setSaleType] = useState('all');
   const [searchValue, setSearchValue] = useState('');
   const [startDate, setStartDate] = useState(TODAYS_DATE);
@@ -46,7 +46,7 @@ const SalesScreen: React.FC = () => {
     return () => {
       dispatch(closeSideContentFn());
       setSideContent('');
-      setSalesId('');
+      setSalesId(undefined);
     };
   }, [startDate, endDate, saleType, dispatch]);
 
@@ -58,7 +58,7 @@ const SalesScreen: React.FC = () => {
     }
   }, [dispatch, searchValue]);
 
-  const openSingleSale = async (id) => {
+  const openSingleSale = async (id: number) => {
     setSalesId(id);
     openSideContent(CONTENT_DETAIL);
   };
@@ -80,7 +80,7 @@ const SalesScreen: React.FC = () => {
 
   const renderSideContent = () => {
     if (sideContent === CONTENT_DETAIL) {
-      return <SalesDetail salesId={salesId} />;
+      return <SalesDetail salesId={Number(salesId)} />;
     }
     return null;
   };

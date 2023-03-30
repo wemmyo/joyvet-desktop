@@ -23,10 +23,10 @@ const SalesDetail: React.FC<SalesDetailProps> = ({
   const dispatch = useDispatch();
 
   const fetchData = () => {
-    dispatch(getSinglePurchaseFn(purchaseId));
+    dispatch(getSinglePurchaseFn(Number(purchaseId)));
   };
 
-  useEffect(fetchData, [purchaseId]);
+  useEffect(fetchData, [purchaseId, dispatch]);
 
   const handleDelete = () => {
     dispatch(
@@ -39,9 +39,7 @@ const SalesDetail: React.FC<SalesDetailProps> = ({
 
   const purchaseState = useSelector(selectPurchaseState);
 
-  const { data: purchaseRaw, loading } = purchaseState.singlePurchase;
-
-  const purchase = purchaseRaw ? JSON.parse(purchaseRaw) : {};
+  const { data: purchase, loading } = purchaseState.singlePurchase;
 
   const renderOrders = () => {
     let serialNumber = 0;

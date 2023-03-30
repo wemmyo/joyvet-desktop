@@ -11,7 +11,7 @@ import { numberWithCommas } from '../../../../utils/helpers';
 import { closeSideContentFn } from '../../../../slices/dashboardSlice';
 
 export interface PaymentDetailProps {
-  paymentId: string | number;
+  paymentId: number;
 }
 
 const PaymentDetail: React.SFC<PaymentDetailProps> = ({
@@ -20,16 +20,14 @@ const PaymentDetail: React.SFC<PaymentDetailProps> = ({
   const dispatch = useDispatch();
 
   const fetchData = () => {
-    dispatch(getSinglePaymentFn(paymentId));
+    dispatch(getSinglePaymentFn(Number(paymentId)));
   };
 
-  useEffect(fetchData, [paymentId]);
+  useEffect(fetchData, [paymentId, dispatch]);
 
   const paymentState = useSelector(selectPaymentState);
 
-  const { data: singlePaymentRaw, loading } = paymentState.singlePayment;
-
-  const singlePayment = singlePaymentRaw ? JSON.parse(singlePaymentRaw) : {};
+  const { data: singlePayment, loading } = paymentState.singlePayment;
 
   const handleDelete = () => {
     dispatch(

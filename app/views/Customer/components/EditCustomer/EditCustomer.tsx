@@ -18,7 +18,7 @@ import routes from '../../../../routing/routes';
 import { isAdmin } from '../../../../utils/helpers';
 
 export interface EditCustomerProps {
-  customerId: string | number;
+  customerId: number;
 }
 
 const EditCustomer: React.FC<EditCustomerProps> = ({
@@ -27,23 +27,22 @@ const EditCustomer: React.FC<EditCustomerProps> = ({
   const dispatch = useDispatch();
 
   const fetchData = () => {
-    dispatch(getSingleCustomerFn(customerId));
+    dispatch(getSingleCustomerFn(Number(customerId)));
   };
 
-  useEffect(fetchData, [customerId]);
+  useEffect(fetchData, [customerId, dispatch]);
 
   const customerState = useSelector(selectCustomerState);
 
-  const { data: customerRaw } = customerState.singleCustomer;
+  const { data: customer } = customerState.singleCustomer;
 
-  const customer = customerRaw ? JSON.parse(customerRaw) : {};
   // console.log(customer);
 
   const { fullName, address, phoneNumber, balance, maxPriceLevel } = customer;
 
   const handleDeleteCustomer = () => {
     dispatch(
-      deleteCustomerFn(customerId, () => {
+      deleteCustomerFn(Number(customerId), () => {
         dispatch(closeSideContentFn());
         dispatch(getCustomersFn());
       })

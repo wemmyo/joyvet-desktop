@@ -21,11 +21,8 @@ const CreateReceipt: React.FC = () => {
 
   const customerState = useSelector(selectCustomerState);
 
-  const { data: customersRaw } = customerState.customers;
-  const { data: singleCustomerRaw } = customerState.singleCustomer;
-
-  const customers = customersRaw ? JSON.parse(customersRaw) : [];
-  const singleCustomer = singleCustomerRaw ? JSON.parse(singleCustomerRaw) : {};
+  const { data: customers } = customerState.customers;
+  const { data: singleCustomer } = customerState.singleCustomer;
 
   const fetchCustomers = () => {
     dispatch(getCustomersFn());

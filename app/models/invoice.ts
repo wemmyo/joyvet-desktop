@@ -1,5 +1,7 @@
 import sequelize from '../utils/database';
 import { ICustomer } from './customer';
+// import type { IInvoiceItem } from './invoiceItem';
+// import type { IProduct } from './product';
 
 const Sequelize = require('sequelize');
 
@@ -12,6 +14,8 @@ export interface IInvoice {
   postedBy: string;
   customerId?: number;
   customer?: ICustomer;
+  // products?: IProduct[];
+  // invoiceItems?: IInvoiceItem[];
   createdAt?: Date;
   updatedAt?: Date;
 }

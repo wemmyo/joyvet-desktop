@@ -31,19 +31,16 @@ const EditReceipt: React.FC<EditReceiptProps> = ({
     dispatch(getCustomersFn());
   };
 
-  useEffect(fetchData, [receiptId]);
+  useEffect(fetchData, [receiptId, dispatch]);
 
   const receiptState = useSelector(selectReceiptState);
   const customerState = useSelector(selectCustomerState);
 
-  const { data: receiptRaw } = receiptState.singleReceipt;
-  const { data: customersRaw } = customerState.customers;
-
-  const receipt = receiptRaw ? JSON.parse(receiptRaw) : {};
-  const customers = customersRaw ? JSON.parse(customersRaw) : [];
+  const { data: receipt } = receiptState.singleReceipt;
+  const { data: customers } = customerState.customers;
 
   const renderCustomers = () => {
-    const customerList = customers.map((customer: any) => {
+    const customerList = customers.map((customer) => {
       return (
         <option key={customer.id} value={customer.id}>
           {customer.fullName}

@@ -21,11 +21,8 @@ const CreatePayment: React.FC = () => {
 
   const supplierState = useSelector(selectSupplierState);
 
-  const { data: suppliersRaw } = supplierState.suppliers;
-  const { data: singleSupplierRaw } = supplierState.singleSupplier;
-
-  const suppliers = suppliersRaw ? JSON.parse(suppliersRaw) : [];
-  const singleSupplier = singleSupplierRaw ? JSON.parse(singleSupplierRaw) : {};
+  const { data: suppliers } = supplierState.suppliers;
+  const { data: singleSupplier } = supplierState.singleSupplier;
 
   const fetchSuppliers = () => {
     dispatch(getSuppliersFn());

@@ -22,20 +22,18 @@ const EditUser: React.FC<EditUserProps> = ({ userId }: EditUserProps) => {
   const dispatch = useDispatch();
 
   const fetchData = () => {
-    dispatch(getSingleUserFn(userId));
+    dispatch(getSingleUserFn(Number(userId)));
   };
 
   useEffect(fetchData, [dispatch, userId]);
 
   const userState = useSelector(selectUserState);
 
-  const { data: userRaw } = userState.singleUser;
-
-  const user = userRaw ? JSON.parse(userRaw) : {};
+  const { data: user } = userState.singleUser;
 
   const deleteUser = () => {
     dispatch(
-      deleteUserFn(userId, () => {
+      deleteUserFn(Number(userId), () => {
         dispatch(getUsersFn());
         dispatch(closeSideContentFn());
       })
@@ -54,7 +52,7 @@ const EditUser: React.FC<EditUserProps> = ({ userId }: EditUserProps) => {
       }}
       onSubmit={(values) => {
         dispatch(
-          updateUserFn(values, userId, () => {
+          updateUserFn(values, Number(userId), () => {
             dispatch(closeSideContentFn());
             dispatch(getUsersFn());
           })

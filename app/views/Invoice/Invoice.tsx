@@ -14,11 +14,7 @@ import {
 } from '../../slices/customerSlice';
 import { getProductsFn, selectProductState } from '../../slices/productSlice';
 import { numberWithCommas } from '../../utils/helpers';
-import {
-  createInvoiceFn,
-  getSingleInvoiceFn,
-  selectInvoiceState,
-} from '../../slices/invoiceSlice';
+import { createInvoiceFn, getSingleInvoiceFn } from '../../slices/invoiceSlice';
 import TextInput from '../../components/TextInput/TextInput';
 import ComponentToPrint from '../../components/PrintedReceipt/ReceiptWrapper';
 import { IProduct } from '../../models/product';
@@ -43,12 +39,10 @@ const InvoiceScreen: React.FC = () => {
 
   const customerState = useSelector(selectCustomerState);
   const productState = useSelector(selectProductState);
-  // const invoiceState = useSelector(selectInvoiceState);
 
   const { data: singleCustomer } = customerState.singleCustomer;
   const { data: customers } = customerState.customers;
   const { data: products } = productState.products;
-  // const { data: createdInvoice } = invoiceState.createInvoice;
 
   const removeInvoiceItem = (id: number) => {
     const filteredItems = invoiceItems.filter((item) => item.id !== id);
@@ -95,16 +89,6 @@ const InvoiceScreen: React.FC = () => {
     dispatch(getCustomersFn());
     dispatch(getProductsFn('inStock'));
   }, [dispatch]);
-
-  // useEffect(() => {
-  //   if (Object.keys(createdInvoice).length > 0) {
-  //     dispatch(
-  //       getSingleInvoiceFn(createdInvoice.id, () => {
-  //         handlePrint?.();
-  //       })
-  //     );
-  //   }
-  // }, [createdInvoice, dispatch, handlePrint]);
 
   const renderPrices = (product: IProduct) => {
     interface IProductPrice {
@@ -217,18 +201,15 @@ const InvoiceScreen: React.FC = () => {
     dispatch(
       createInvoiceFn(invoiceItems, invoice, (id) => {
         getSingleInvoiceFn(id, () => {
+          setPrintInvoice(true);
           handlePrint?.();
         });
         resetForm();
         setInvoiceItems([]);
         setInvoice(undefined);
-        setPrintInvoice(true);
       })
     );
   };
-
-  // console.log('invoice', invoice);
-  // console.log('invoiceItems', invoiceItems);
 
   const initialValues = {
     quantity: '',

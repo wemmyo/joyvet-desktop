@@ -117,7 +117,7 @@ export const searchExpenseFn = (value: string) => async (
   try {
     searchExpenseSchema.parse({ value });
 
-    const expenses = getExpensesService({
+    const expenses = await getExpensesService({
       where: {
         type: {
           [Op.substring]: value,

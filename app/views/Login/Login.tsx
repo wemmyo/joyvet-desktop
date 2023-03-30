@@ -10,7 +10,7 @@ const LoginScreen = () => {
   const history = useHistory();
 
   if (localStorage.getItem('user') !== null) {
-    history.push(routes.USER);
+    history.push(routes.INVOICE);
   }
   return (
     <div style={{ backgroundColor: '#89b4fa' }}>
