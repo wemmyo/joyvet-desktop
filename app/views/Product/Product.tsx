@@ -1,16 +1,10 @@
-/* eslint-disable react/jsx-one-expression-per-line */
 import React, { useEffect, useState, useRef } from 'react';
 import { Table, Button, Icon, Form, Loader } from 'semantic-ui-react';
-import { useSelector, useDispatch } from 'react-redux';
+import { useDispatch } from 'react-redux';
 import { useReactToPrint } from 'react-to-print';
 
 import DashboardLayout from '../../layouts/DashboardLayout/DashboardLayout';
-import {
-  selectProductState,
-  getProductsFn,
-  createProductFn,
-  searchProductFn,
-} from '../../slices/productSlice';
+
 import CreateProduct from './components/CreateProduct/CreateProduct';
 import { numberWithCommas } from '../../utils/helpers';
 import {
@@ -18,6 +12,12 @@ import {
   closeSideContentFn,
 } from '../../slices/dashboardSlice';
 import EditProduct from './components/EditProduct/EditProduct';
+import {
+  createProductFn,
+  getProductsFn,
+  searchProductFn,
+} from '../../controllers/product.controller';
+import { IProduct } from '../../models/product';
 
 const CONTENT_CREATE = 'create';
 const CONTENT_EDIT = 'edit';
@@ -26,9 +26,10 @@ const ProductsScreen: React.FC = () => {
   const [sideContent, setSideContent] = useState('');
   const [productId, setProductId] = useState('');
   const [searchValue, setSearchValue] = useState('');
+  const [products, setProducts] = useState<IProduct[]>([]);
+  const [loading, setLoading] = useState(false);
 
   const dispatch = useDispatch();
-  const productState = useSelector(selectProductState);
 
   const componentRef = useRef(null);
 
@@ -36,10 +37,11 @@ const ProductsScreen: React.FC = () => {
     content: () => componentRef.current,
   });
 
-  const { data: products, loading: productsLoading } = productState.products;
-
-  const fetchProducts = () => {
-    dispatch(getProductsFn());
+  const fetchProducts = async () => {
+    setLoading(true);
+    const response = await getProductsFn();
+    setProducts(response);
+    setLoading(false);
   };
 
   const openSideContent = (content: string) => {
@@ -47,26 +49,22 @@ const ProductsScreen: React.FC = () => {
     setSideContent(content);
   };
 
-  const closeSideContent = () => {
-    dispatch(closeSideContentFn());
-    setSideContent('');
-    setProductId('');
-  };
-
   useEffect(() => {
     fetchProducts();
 
     return () => {
+      const closeSideContent = () => {
+        dispatch(closeSideContentFn());
+        setSideContent('');
+        setProductId('');
+      };
       closeSideContent();
     };
-  }, []);
+  }, [dispatch]);
 
-  const handleNewProduct = (values: any) => {
-    dispatch(
-      createProductFn(values, () => {
-        fetchProducts();
-      })
-    );
+  const handleNewProduct = async (values: any) => {
+    await createProductFn(values);
+    await fetchProducts();
   };
 
   const openSingleProduct = (id: any) => {
@@ -83,14 +81,14 @@ const ProductsScreen: React.FC = () => {
       return 0;
     }
     return products
-      .map((item: any) => {
+      .map((item) => {
         return item.stock * item.buyPrice;
       })
       .reduce(sum);
   };
 
   const renderRows = () => {
-    const rows = products.map((each: any) => {
+    const rows = products.map((each) => {
       return (
         <Table.Row onClick={() => openSingleProduct(each.id)} key={each.id}>
           <Table.Cell>{each.title}</Table.Cell>
@@ -121,7 +119,7 @@ const ProductsScreen: React.FC = () => {
   const handleSearchChange = (e, { value }: { value: string }) => {
     setSearchValue(value);
     if (value.length > 0) {
-      dispatch(searchProductFn(value));
+      searchProductFn(value);
     } else {
       fetchProducts();
     }
@@ -157,7 +155,7 @@ const ProductsScreen: React.FC = () => {
       rightSidebar={renderSideContent()}
       headerContent={headerContent()}
     >
-      {productsLoading ? (
+      {loading ? (
         <Loader active inline="centered" />
       ) : (
         <div ref={componentRef}>

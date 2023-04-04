@@ -62,10 +62,10 @@ export const updateReceiptFn = (
   }
 };
 
-export const getSingleReceiptFn = (
+export const getSingleReceiptFn = async (
   id: string | number,
   cb?: () => void
-) => async (dispatch: (arg0: { payload: any; type: string }) => void) => {
+) => {
   // use zod to validate input
   const GetSingleReceiptSchema = z.object({
     id: z.number(),
@@ -101,10 +101,7 @@ export const getReceiptsFn = async () => {
   }
 };
 
-export const deleteReceiptFn = (
-  id: string | number,
-  cb: () => void
-) => async () => {
+export const deleteReceiptFn = async (id: string | number) => {
   // use zod to validate input
   const DeleteReceiptSchema = z.object({
     id: z.number(),
@@ -127,7 +124,6 @@ export const deleteReceiptFn = (
 
       await Promise.all([updateBalance, deleteReceipt]);
 
-      cb();
       toast.success('Receipt successfully deleted');
     });
   } catch (error) {

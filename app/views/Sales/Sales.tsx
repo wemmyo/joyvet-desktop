@@ -1,22 +1,20 @@
-/* eslint-disable react/jsx-one-expression-per-line */
 import React, { useEffect, useState } from 'react';
 import { Table, Form, Button } from 'semantic-ui-react';
-import { useSelector, useDispatch } from 'react-redux';
+import { useDispatch } from 'react-redux';
 import moment from 'moment';
 import DashboardLayout from '../../layouts/DashboardLayout/DashboardLayout';
-import {
-  selectInvoiceState,
-  getInvoicesFn,
-  filterInvoiceById,
-  filterInvoiceFn,
-  //   createInvoiceFn,
-} from '../../slices/invoiceSlice';
 import { numberWithCommas, isAdmin } from '../../utils/helpers';
 import {
   openSideContentFn,
   closeSideContentFn,
 } from '../../slices/dashboardSlice';
 import SalesDetail from './components/SalesDetail';
+import {
+  filterInvoiceFn,
+  filterInvoiceById,
+  getInvoicesFn,
+} from '../../controllers/invoice.controller';
+import { IInvoice } from '../../models/invoice';
 
 const TODAYS_DATE = `${moment().format('YYYY-MM-DD')}`;
 const CONTENT_DETAIL = 'detail';
@@ -28,12 +26,9 @@ const SalesScreen: React.FC = () => {
   const [searchValue, setSearchValue] = useState('');
   const [startDate, setStartDate] = useState(TODAYS_DATE);
   const [endDate, setEndDate] = useState(TODAYS_DATE);
+  const [invoices, setInvoices] = useState<IInvoice[]>([]);
 
   const dispatch = useDispatch();
-
-  const invoiceState = useSelector(selectInvoiceState);
-
-  const { data: invoices } = invoiceState.invoices;
 
   const openSideContent = (content: string) => {
     dispatch(openSideContentFn());
@@ -41,7 +36,11 @@ const SalesScreen: React.FC = () => {
   };
 
   useEffect(() => {
-    dispatch(filterInvoiceFn(startDate, endDate, saleType));
+    const fetchInvoices = async () => {
+      const response = await filterInvoiceFn(startDate, endDate, saleType);
+      setInvoices(response);
+    };
+    fetchInvoices();
 
     return () => {
       dispatch(closeSideContentFn());
@@ -51,12 +50,14 @@ const SalesScreen: React.FC = () => {
   }, [startDate, endDate, saleType, dispatch]);
 
   useEffect(() => {
-    if (searchValue) {
-      dispatch(filterInvoiceById(Number(searchValue)));
-    } else {
-      dispatch(getInvoicesFn());
-    }
-  }, [dispatch, searchValue]);
+    const fetchData = async () => {
+      if (searchValue) {
+        const response = await filterInvoiceById(Number(searchValue));
+        setInvoices(response);
+      }
+    };
+    fetchData();
+  }, [searchValue]);
 
   const openSingleSale = async (id: number) => {
     setSalesId(id);
@@ -66,7 +67,7 @@ const SalesScreen: React.FC = () => {
   const renderRows = invoices.map((each) => {
     return (
       <Table.Row onClick={() => openSingleSale(each.id)} key={each.id}>
-        <Table.Cell>{each['customer.fullName']}</Table.Cell>
+        <Table.Cell>{each.customer?.fullName}</Table.Cell>
         <Table.Cell>{each.id}</Table.Cell>
         <Table.Cell>{each.saleType}</Table.Cell>
         <Table.Cell>₦{numberWithCommas(each.amount)}</Table.Cell>
@@ -92,12 +93,12 @@ const SalesScreen: React.FC = () => {
     { key: 4, text: 'Credit', value: 'credit' },
   ];
 
-  const resetFilters = () => {
+  const resetFilters = async () => {
     setStartDate(TODAYS_DATE);
     setEndDate(TODAYS_DATE);
     setSaleType('all');
     setSearchValue('');
-    dispatch(getInvoicesFn());
+    await getInvoicesFn();
   };
 
   const headerContent = () => {

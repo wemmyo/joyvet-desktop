@@ -1,40 +1,30 @@
 import React, { useEffect, useState } from 'react';
 import { Table, Form, Loader } from 'semantic-ui-react';
-import { useSelector, useDispatch } from 'react-redux';
+import { useDispatch } from 'react-redux';
 
 import DashboardLayout from '../../layouts/DashboardLayout/DashboardLayout';
-import {
-  selectPurchaseState,
-  getPurchasesFn,
-  searchPurchaseFn,
-  //   createPurchaseFn,
-} from '../../slices/purchaseSlice';
+
 import { numberWithCommas } from '../../utils/helpers';
 import {
   openSideContentFn,
   closeSideContentFn,
 } from '../../slices/dashboardSlice';
 import PurchaseDetail from './components/PurchaseDetail';
+import { IPurchase } from '../../models/purchase';
+import {
+  getPurchasesFn,
+  searchPurchaseFn,
+} from '../../controllers/purchase.controller';
 
 const CONTENT_DETAIL = 'detail';
 
 const AllPurchasesScreen: React.FC = () => {
+  const dispatch = useDispatch();
   const [sideContent, setSideContent] = useState('');
   const [purchaseId, setPurchasesId] = useState('');
   const [searchValue, setSearchValue] = useState('');
-
-  const dispatch = useDispatch();
-
-  const purchaseState = useSelector(selectPurchaseState);
-
-  const {
-    data: purchases,
-    loading: purchasesLoading,
-  } = purchaseState.purchases;
-
-  const fetchPurchases = () => {
-    dispatch(getPurchasesFn());
-  };
+  const [loading, setLoading] = useState(false);
+  const [purchases, setPurchases] = useState<IPurchase[]>([]);
 
   const openSideContent = (content: string) => {
     dispatch(openSideContentFn());
@@ -46,8 +36,10 @@ const AllPurchasesScreen: React.FC = () => {
     setSideContent('');
     setPurchasesId('');
   };
-
-  // useEffect(fetchPurchases, []);
+  const fetchPurchases = async () => {
+    const response = await getPurchasesFn();
+    setPurchases(response);
+  };
 
   useEffect(() => {
     fetchPurchases();
@@ -78,6 +70,13 @@ const AllPurchasesScreen: React.FC = () => {
     return rows;
   };
 
+  const searchPurchase = async (value) => {
+    setLoading(true);
+    const response = await searchPurchaseFn(value);
+    setPurchases(response);
+    setLoading(false);
+  };
+
   const renderSideContent = () => {
     if (sideContent === CONTENT_DETAIL) {
       return <PurchaseDetail purchaseId={purchaseId} />;
@@ -88,7 +87,7 @@ const AllPurchasesScreen: React.FC = () => {
   const handleSearchChange = (e, { value }: { value: string }) => {
     setSearchValue(value);
     if (value.length > 0) {
-      dispatch(searchPurchaseFn(value));
+      searchPurchase(value);
     } else {
       fetchPurchases();
     }
@@ -110,7 +109,7 @@ const AllPurchasesScreen: React.FC = () => {
       rightSidebar={renderSideContent()}
       headerContent={headerContent()}
     >
-      {purchasesLoading ? (
+      {loading ? (
         <Loader active inline="centered" />
       ) : (
         <Table celled striped>

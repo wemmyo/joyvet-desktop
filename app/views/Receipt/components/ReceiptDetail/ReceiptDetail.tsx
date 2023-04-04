@@ -1,12 +1,13 @@
-import React, { useEffect } from 'react';
-import { useSelector, useDispatch } from 'react-redux';
+import React, { useEffect, useState } from 'react';
+import { useDispatch } from 'react-redux';
 import { Table, Button } from 'semantic-ui-react';
 import {
   getSingleReceiptFn,
-  selectReceiptState,
   deleteReceiptFn,
   getReceiptsFn,
-} from '../../../../slices/receiptSlice';
+} from '../../../../controllers/receipt.controller';
+import { IReceipt } from '../../../../models/receipt';
+
 import { closeSideContentFn } from '../../../../slices/dashboardSlice';
 
 export interface ReceiptDetailProps {
@@ -16,27 +17,25 @@ export interface ReceiptDetailProps {
 const ReceiptDetail: React.SFC<ReceiptDetailProps> = ({
   receiptId,
 }: ReceiptDetailProps) => {
+  const [singleReceipt, setSingleReceipt] = useState<IReceipt>({} as IReceipt);
+  const [loading, setLoading] = useState<boolean>(false);
   const dispatch = useDispatch();
 
-  const fetchData = () => {
-    dispatch(getSingleReceiptFn(receiptId));
-  };
+  useEffect(() => {
+    const fetchData = async () => {
+      setLoading(true);
+      const response = await getSingleReceiptFn(receiptId);
+      setSingleReceipt(response);
+      setLoading(false);
+    };
 
-  useEffect(fetchData, [receiptId]);
+    fetchData();
+  }, [receiptId]);
 
-  const receiptState = useSelector(selectReceiptState);
-
-  const { data: singleReceiptRaw, loading } = receiptState.singleReceipt;
-
-  const singleReceipt = singleReceiptRaw ? JSON.parse(singleReceiptRaw) : {};
-
-  const handleDelete = () => {
-    dispatch(
-      deleteReceiptFn(receiptId, () => {
-        dispatch(getReceiptsFn());
-        dispatch(closeSideContentFn());
-      })
-    );
+  const handleDelete = async () => {
+    await deleteReceiptFn(receiptId);
+    await getReceiptsFn();
+    dispatch(closeSideContentFn());
   };
 
   const {
@@ -49,7 +48,7 @@ const ReceiptDetail: React.SFC<ReceiptDetailProps> = ({
     bank,
   } = singleReceipt;
 
-  if (loading || !singleReceipt) {
+  if (loading) {
     return <p>Loading...</p>;
   }
 

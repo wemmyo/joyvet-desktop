@@ -3,7 +3,6 @@ import Expense, { IExpense } from '../models/expense';
 export const getExpenses = (args) => {
   return Expense.findAll({
     ...args,
-    raw: true,
   }).then((data: IExpense[]) => {
     return data.map((item) => {
       return item;
@@ -12,9 +11,7 @@ export const getExpenses = (args) => {
 };
 
 export const getExpenseById = (id: number) => {
-  return Expense.findByPk(id, {
-    raw: true,
-  }).then((data: IExpense) => {
+  return Expense.findByPk(id, {}).then((data: IExpense) => {
     return data;
   });
 };

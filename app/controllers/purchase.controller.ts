@@ -9,8 +9,6 @@ import sequelize from '../utils/database';
 import {
   getPurchases as getPurchasesService,
   getPurchaseById,
-  updatePurchase as updatePurchaseService,
-  deletePurchase as deletePurchaseService,
 } from '../services/purchase.service';
 
 export const searchPurchaseFn = async (value: string) => {

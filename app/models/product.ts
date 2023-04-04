@@ -1,4 +1,5 @@
 import sequelize from '../utils/database';
+import type { IInvoiceItem } from './invoiceItem';
 
 const Sequelize = require('sequelize');
 
@@ -17,6 +18,7 @@ export interface IProduct {
   postedBy: string;
   createdAt?: Date;
   updatedAt?: Date;
+  invoiceItem?: IInvoiceItem;
 }
 
 export default sequelize.define('product', {

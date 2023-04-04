@@ -1,15 +1,8 @@
-/* eslint-disable react/jsx-one-expression-per-line */
 import React, { useEffect, useState } from 'react';
 import { Table, Button, Icon, Form, Loader } from 'semantic-ui-react';
-import { useSelector, useDispatch } from 'react-redux';
+import { useDispatch } from 'react-redux';
 
 import DashboardLayout from '../../layouts/DashboardLayout/DashboardLayout';
-import {
-  selectCustomerState,
-  getCustomersFn,
-  createCustomerFn,
-  searchCustomerFn,
-} from '../../slices/customerSlice';
 import CreateCustomer from './components/CreateCustomer/CreateCustomer';
 import { numberWithCommas, isAdmin, sum } from '../../utils/helpers';
 import {
@@ -17,6 +10,12 @@ import {
   closeSideContentFn,
 } from '../../slices/dashboardSlice';
 import EditCustomer from './components/EditCustomer/EditCustomer';
+import {
+  createCustomerFn,
+  getCustomersFn,
+  searchCustomerFn,
+} from '../../controllers/customer.controller';
+import { ICustomer } from '../../models/customer';
 
 const CONTENT_CREATE = 'create';
 const CONTENT_EDIT = 'edit';
@@ -25,18 +24,16 @@ const CustomersScreen: React.FC = () => {
   const [sideContent, setSideContent] = useState('');
   const [customerId, setCustomerId] = useState('');
   const [searchValue, setSearchValue] = useState('');
+  const [customers, setCustomers] = useState<ICustomer[]>([]);
+  const [loading, setLoading] = useState(false);
 
   const dispatch = useDispatch();
 
-  const customerState = useSelector(selectCustomerState);
-
-  const {
-    data: customers,
-    loading: customersLoading,
-  } = customerState.customers;
-
-  const fetchCustomers = () => {
-    dispatch(getCustomersFn());
+  const fetchCustomers = async () => {
+    setLoading(true);
+    const response = await getCustomersFn();
+    setCustomers(response);
+    setLoading(false);
   };
 
   const openSideContent = (content: string) => {
@@ -44,42 +41,33 @@ const CustomersScreen: React.FC = () => {
     setSideContent(content);
   };
 
-  const closeSideContent = () => {
-    dispatch(closeSideContentFn());
-    setSideContent('');
-    setCustomerId('');
-  };
-
   useEffect(() => {
     fetchCustomers();
 
     return () => {
+      const closeSideContent = () => {
+        dispatch(closeSideContentFn());
+        setSideContent('');
+        setCustomerId('');
+      };
       closeSideContent();
     };
-  }, []);
+  }, [dispatch]);
 
-  const handleNewCustomer = (values: any) => {
-    dispatch(
-      createCustomerFn(values, () => {
-        fetchCustomers();
-      })
-    );
+  const handleNewCustomer = async (values) => {
+    await createCustomerFn(values);
+    await fetchCustomers();
   };
 
-  const openSingleCustomer = (id: any) => {
+  const openSingleCustomer = (id) => {
     setCustomerId(id);
     openSideContent(CONTENT_EDIT);
   };
 
   const renderRows = () => {
-    const rows = customers.map((each: any) => {
+    const rows = customers.map((each) => {
       return (
-        <Table.Row
-          key={each.id}
-          // eslint-disable-next-line react/jsx-props-no-spreading
-          // {...(isAdmin() && { onClick: () => openSingleCustomer(each.id) })}
-          onClick={() => openSingleCustomer(each.id)}
-        >
+        <Table.Row key={each.id} onClick={() => openSingleCustomer(each.id)}>
           <Table.Cell>{each.fullName}</Table.Cell>
           <Table.Cell>{each.address}</Table.Cell>
           <Table.Cell>{each.phoneNumber}</Table.Cell>
@@ -95,7 +83,7 @@ const CustomersScreen: React.FC = () => {
       return <CreateCustomer createCustomerFn={handleNewCustomer} />;
     }
     if (sideContent === CONTENT_EDIT) {
-      return <EditCustomer customerId={customerId} />;
+      return <EditCustomer customerId={Number(customerId)} />;
     }
     return null;
   };
@@ -103,7 +91,7 @@ const CustomersScreen: React.FC = () => {
   const handleSearchChange = (e, { value }: { value: string }) => {
     setSearchValue(value);
     if (value.length > 0) {
-      dispatch(searchCustomerFn(value));
+      searchCustomerFn(value);
     } else {
       fetchCustomers();
     }
@@ -149,7 +137,7 @@ const CustomersScreen: React.FC = () => {
       rightSidebar={renderSideContent()}
       headerContent={headerContent()}
     >
-      {customersLoading ? (
+      {loading ? (
         <Loader active inline="centered" />
       ) : (
         <Table celled striped>

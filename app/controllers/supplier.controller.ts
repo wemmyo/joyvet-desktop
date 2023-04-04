@@ -95,7 +95,7 @@ export const searchSupplierFn = async (value: string) => {
   }
 };
 
-export const deleteSupplierFn = (id: number, cb?: () => void) => async () => {
+export const deleteSupplierFn = async (id: number, cb?: () => void) => {
   // use zod to validate input
   const schema = z.object({
     id: z.number(),

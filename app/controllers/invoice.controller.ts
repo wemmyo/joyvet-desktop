@@ -11,9 +11,6 @@ import sequelize from '../utils/database';
 import {
   getInvoices as getInvoicesService,
   getInvoiceById,
-  createInvoice as createInvoiceService,
-  updateInvoice as updateInvoiceService,
-  deleteInvoice as deleteInvoiceService,
 } from '../services/invoice.service';
 
 export const filterInvoiceFn = async (
@@ -104,9 +101,7 @@ export const filterInvoiceFn = async (
   }
 };
 
-export const filterInvoiceById = (id: number) => async (
-  dispatch: (arg0: { payload: any; type: string }) => void
-) => {
+export const filterInvoiceById = async (id: number) => {
   // use zod to validate the input
   const schema = z.object({
     id: z.number(),
@@ -180,7 +175,7 @@ export const getInvoicesFn = async () => {
   }
 };
 
-export const deleteInvoiceFn = (id: number, cb?: () => void) => async () => {
+export const deleteInvoiceFn = async (id: number, cb?: () => void) => {
   // use zod to validate the input
   const schema = z.object({
     id: z.number(),

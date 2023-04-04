@@ -1,37 +1,38 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Button, Form, Message } from 'semantic-ui-react';
 import { Field, Formik } from 'formik';
-import { useSelector, useDispatch } from 'react-redux';
-// import * as Yup from 'yup';
+import { useDispatch } from 'react-redux';
+import TextInput from '../../../../components/TextInput/TextInput';
+import { numberWithCommas } from '../../../../utils/helpers';
+import {
+  getPaymentsFn,
+  createPaymentFn,
+} from '../../../../controllers/payment.controller';
 import {
   getSuppliersFn,
   getSingleSupplierFn,
-  selectSupplierState,
-  clearSingleSupplierFn,
-} from '../../../../slices/supplierSlice';
-import {
-  createPaymentFn,
-  getPaymentsFn,
-} from '../../../../slices/paymentSlice';
-import TextInput from '../../../../components/TextInput/TextInput';
-import { numberWithCommas } from '../../../../utils/helpers';
+} from '../../../../controllers/supplier.controller';
+import { ISupplier } from '../../../../models/supplier';
 
 const CreatePayment: React.FC = () => {
+  const [suppliers, setSuppliers] = useState<ISupplier[]>([]);
+  const [singleSupplier, setSingleSupplier] = useState<ISupplier>(
+    {} as ISupplier
+  );
+
   const dispatch = useDispatch();
 
-  const supplierState = useSelector(selectSupplierState);
-
-  const { data: suppliers } = supplierState.suppliers;
-  const { data: singleSupplier } = supplierState.singleSupplier;
-
-  const fetchSuppliers = () => {
-    dispatch(getSuppliersFn());
-  };
   const fetchPayments = () => {
-    dispatch(getPaymentsFn());
+    getPaymentsFn();
   };
 
-  useEffect(fetchSuppliers, []);
+  useEffect(() => {
+    const fetchSuppliers = async () => {
+      const response = await getSuppliersFn();
+      setSuppliers(response);
+    };
+    fetchSuppliers();
+  }, []);
 
   const renderSuppliers = () => {
     const supplierList = suppliers.map((eachSupplier: any) => {
@@ -97,7 +98,7 @@ const CreatePayment: React.FC = () => {
           createPaymentFn(values, () => {
             fetchPayments();
             actions.resetForm();
-            dispatch(clearSingleSupplierFn());
+            setSingleSupplier({} as ISupplier);
           })
         );
       }}
@@ -118,8 +119,6 @@ const CreatePayment: React.FC = () => {
                 const supplierId = e.currentTarget.value;
                 // console.log(someValue);
                 dispatch(getSingleSupplierFn(supplierId));
-
-                // ...
               }}
             >
               <option value="" disabled hidden>

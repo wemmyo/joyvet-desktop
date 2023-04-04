@@ -1,17 +1,16 @@
-/* eslint-disable react/jsx-one-expression-per-line */
-import React, { useEffect } from 'react';
-import { useSelector, useDispatch } from 'react-redux';
+import React, { useEffect, useState } from 'react';
 // import { useParams } from 'react-router-dom';
 import { Table, Button } from 'semantic-ui-react';
+import { useDispatch } from 'react-redux';
 
-import {
-  getSinglePurchaseFn,
-  selectPurchaseState,
-  deletePurchaseFn,
-  getPurchasesFn,
-} from '../../../slices/purchaseSlice';
 import { numberWithCommas } from '../../../utils/helpers';
 import { closeSideContentFn } from '../../../slices/dashboardSlice';
+import { IPurchase } from '../../../models/purchase';
+import {
+  deletePurchaseFn,
+  getPurchasesFn,
+  getSinglePurchaseFn,
+} from '../../../controllers/purchase.controller';
 
 interface SalesDetailProps {
   purchaseId: string | number;
@@ -20,26 +19,26 @@ interface SalesDetailProps {
 const SalesDetail: React.FC<SalesDetailProps> = ({
   purchaseId,
 }: SalesDetailProps) => {
+  const [purchase, setPurchase] = useState<IPurchase[]>([]);
+  const [loading, setLoading] = useState(false);
+
   const dispatch = useDispatch();
 
-  const fetchData = () => {
-    dispatch(getSinglePurchaseFn(Number(purchaseId)));
+  useEffect(() => {
+    const fetchData = async () => {
+      setLoading(true);
+      const response = await getSinglePurchaseFn(Number(purchaseId));
+      setPurchase(response);
+      setLoading(false);
+    };
+    fetchData();
+  }, [purchaseId]);
+
+  const handleDelete = async () => {
+    await deletePurchaseFn(purchaseId);
+    await getPurchasesFn();
+    dispatch(closeSideContentFn());
   };
-
-  useEffect(fetchData, [purchaseId, dispatch]);
-
-  const handleDelete = () => {
-    dispatch(
-      deletePurchaseFn(purchaseId, () => {
-        dispatch(getPurchasesFn());
-        dispatch(closeSideContentFn());
-      })
-    );
-  };
-
-  const purchaseState = useSelector(selectPurchaseState);
-
-  const { data: purchase, loading } = purchaseState.singlePurchase;
 
   const renderOrders = () => {
     let serialNumber = 0;

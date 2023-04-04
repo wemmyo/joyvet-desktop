@@ -1,25 +1,27 @@
-/* eslint-disable react/jsx-one-expression-per-line */
 import React, { useState, useEffect, useRef } from 'react';
 import { useReactToPrint } from 'react-to-print';
 import { Table, Grid, Button, Form, Segment } from 'semantic-ui-react';
 import { Field, Formik } from 'formik';
-import { useSelector, useDispatch } from 'react-redux';
+import { useDispatch } from 'react-redux';
 import { toast } from 'react-toastify';
 
 import DashboardLayout from '../../layouts/DashboardLayout/DashboardLayout';
-import {
-  getCustomersFn,
-  selectCustomerState,
-  getSingleCustomerFn,
-} from '../../slices/customerSlice';
-import { getProductsFn, selectProductState } from '../../slices/productSlice';
+
 import { numberWithCommas } from '../../utils/helpers';
-import { createInvoiceFn, getSingleInvoiceFn } from '../../slices/invoiceSlice';
 import TextInput from '../../components/TextInput/TextInput';
 import ComponentToPrint from '../../components/PrintedReceipt/ReceiptWrapper';
 import { IProduct } from '../../models/product';
 import { IInvoiceItem } from '../../models/invoiceItem';
 import { IInvoice } from '../../models/invoice';
+import {
+  getCustomersFn,
+  getSingleCustomerFn,
+} from '../../controllers/customer.controller';
+import {
+  createInvoiceFn,
+  getSingleInvoiceFn,
+} from '../../controllers/invoice.controller';
+import { getProductsFn } from '../../controllers/product.controller';
 
 interface InvoiceItem extends IInvoiceItem {
   product: IProduct;
@@ -36,13 +38,10 @@ const InvoiceScreen: React.FC = () => {
   const [invoiceItems, setInvoiceItems] = useState<InvoiceItem[]>([]);
   const [invoice, setInvoice] = useState<Partial<IInvoice>>();
   const [printInvoice, setPrintInvoice] = useState(false);
-
-  const customerState = useSelector(selectCustomerState);
-  const productState = useSelector(selectProductState);
-
-  const { data: singleCustomer } = customerState.singleCustomer;
-  const { data: customers } = customerState.customers;
-  const { data: products } = productState.products;
+  const [singleCustomer, setSingleCustomer] = useState(false);
+  const [customers, setCustomers] = useState([]);
+  const [products, setProducts] = useState([]);
+  const [createdInvoice, setCreatedInvoice] = useState({} as IInvoice);
 
   const removeInvoiceItem = (id: number) => {
     const filteredItems = invoiceItems.filter((item) => item.id !== id);
@@ -86,8 +85,17 @@ const InvoiceScreen: React.FC = () => {
   };
 
   useEffect(() => {
-    dispatch(getCustomersFn());
-    dispatch(getProductsFn('inStock'));
+    const fetchData = async () => {
+      const getCustomers = getCustomersFn();
+      const getproducts = getProductsFn('inStock');
+      const [customersResponse, productsResponse] = await Promise.all([
+        getCustomers,
+        getproducts,
+      ]);
+      setCustomers(customersResponse);
+      setProducts(productsResponse);
+    };
+    fetchData();
   }, [dispatch]);
 
   const renderPrices = (product: IProduct) => {
@@ -190,25 +198,25 @@ const InvoiceScreen: React.FC = () => {
     if (printInvoice) {
       return (
         <div style={{ display: 'none' }}>
-          <ComponentToPrint ref={componentRef} />
+          <ComponentToPrint ref={componentRef} invoice={createdInvoice} />
         </div>
       );
     }
     return null;
   };
 
-  const createInvoice = (resetForm) => {
-    dispatch(
-      createInvoiceFn(invoiceItems, invoice, (id) => {
-        getSingleInvoiceFn(id, () => {
-          setPrintInvoice(true);
-          handlePrint?.();
-        });
-        resetForm();
-        setInvoiceItems([]);
-        setInvoice(undefined);
-      })
-    );
+  const createInvoice = async (resetForm) => {
+    const response = await createInvoiceFn(invoiceItems, invoice, (id) => {
+      getSingleInvoiceFn(id, () => {
+        setPrintInvoice(true);
+        handlePrint?.();
+      });
+      resetForm();
+      setInvoiceItems([]);
+      setInvoice(undefined);
+    });
+
+    setCreatedInvoice(response);
   };
 
   const initialValues = {
@@ -295,14 +303,17 @@ const InvoiceScreen: React.FC = () => {
                         name="customerId"
                         component="select"
                         className="ui dropdown"
-                        onChange={(e) => {
+                        onChange={async (e) => {
                           const customerId = Number(e.target.value);
                           handleChange(e);
                           setInvoice({
                             ...invoice,
                             customerId,
                           });
-                          dispatch(getSingleCustomerFn(customerId));
+                          const response = await getSingleCustomerFn(
+                            customerId
+                          );
+                          setSingleCustomer(response);
                         }}
                       >
                         <option value="" selected disabled hidden>

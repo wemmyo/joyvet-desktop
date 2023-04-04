@@ -3,7 +3,6 @@ import Payment, { IPayment } from '../models/payment';
 export const getPayments = (args) => {
   return Payment.findAll({
     ...args,
-    raw: true,
   }).then((data: IPayment[]) => {
     return data.map((item) => {
       return item;
@@ -14,7 +13,6 @@ export const getPayments = (args) => {
 export const getPaymentById = (id: number, args) => {
   return Payment.findByPk(id, {
     ...args,
-    raw: true,
   }).then((data: IPayment) => {
     return data;
   });

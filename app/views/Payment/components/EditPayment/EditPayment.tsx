@@ -1,20 +1,19 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Button, Form } from 'semantic-ui-react';
 import { Field, Formik } from 'formik';
-import { useSelector, useDispatch } from 'react-redux';
+import { useDispatch } from 'react-redux';
 
 import TextInput from '../../../../components/TextInput/TextInput';
-import {
-  getSinglePaymentFn,
-  selectPaymentState,
-  updatePaymentFn,
-  getPaymentsFn,
-} from '../../../../slices/paymentSlice';
+
 import { closeSideContentFn } from '../../../../slices/dashboardSlice';
 import {
-  getSuppliersFn,
-  selectSupplierState,
-} from '../../../../slices/supplierSlice';
+  getPaymentsFn,
+  getSinglePaymentFn,
+  updatePaymentFn,
+} from '../../../../controllers/payment.controller';
+import { getSuppliersFn } from '../../../../controllers/supplier.controller';
+import { IPayment } from '../../../../models/payment';
+import { ISupplier } from '../../../../models/supplier';
 
 export interface EditPaymentProps {
   paymentId: string | number;
@@ -23,23 +22,21 @@ export interface EditPaymentProps {
 const EditPayment: React.FC<EditPaymentProps> = ({
   paymentId,
 }: EditPaymentProps) => {
+  const [payment, setPayment] = useState<IPayment>({} as IPayment);
+  const [suppliers, setSuppliers] = useState<ISupplier[]>([]);
   const dispatch = useDispatch();
 
-  const fetchData = () => {
-    dispatch(getSinglePaymentFn(paymentId));
-    dispatch(getSuppliersFn());
-  };
-
-  useEffect(fetchData, [paymentId]);
-
-  const paymentState = useSelector(selectPaymentState);
-  const supplierState = useSelector(selectSupplierState);
-
-  const { data: paymentRaw } = paymentState.singlePayment;
-  const { data: suppliersRaw } = supplierState.suppliers;
-
-  const payment = paymentRaw ? JSON.parse(paymentRaw) : {};
-  const suppliers = suppliersRaw ? JSON.parse(suppliersRaw) : [];
+  useEffect(() => {
+    const fetchData = async () => {
+      const [paymentResponse, suppliersResponse] = await Promise.all([
+        getSinglePaymentFn(Number(paymentId)),
+        getSuppliersFn(),
+      ]);
+      setPayment(paymentResponse);
+      setSuppliers(suppliersResponse);
+    };
+    fetchData();
+  }, [paymentId]);
 
   const renderSuppliers = () => {
     const supplierList = suppliers.map((eachSupplier: any) => {
@@ -106,7 +103,3 @@ const EditPayment: React.FC<EditPaymentProps> = ({
   );
 };
 export default EditPayment;
-
-// const EditPaymentSchema = Yup.object().shape({
-//   title: Yup.string().required('Required'),
-// });

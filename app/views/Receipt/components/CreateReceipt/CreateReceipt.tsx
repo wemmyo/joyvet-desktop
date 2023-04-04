@@ -1,49 +1,46 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Button, Form, Message } from 'semantic-ui-react';
 import { Field, Formik } from 'formik';
-import { useSelector, useDispatch } from 'react-redux';
-// import * as Yup from 'yup';
-import {
-  getCustomersFn,
-  selectCustomerState,
-  getSingleCustomerFn,
-  clearSingleCustomerFn,
-} from '../../../../slices/customerSlice';
-import {
-  createReceiptFn,
-  getReceiptsFn,
-} from '../../../../slices/receiptSlice';
+
 import TextInput from '../../../../components/TextInput/TextInput';
 import { numberWithCommas } from '../../../../utils/helpers';
+import {
+  getCustomersFn,
+  getSingleCustomerFn,
+} from '../../../../controllers/customer.controller';
+import {
+  getReceiptsFn,
+  createReceiptFn,
+} from '../../../../controllers/receipt.controller';
+import { ICustomer } from '../../../../models/customer';
 
 const CreateReceipt: React.FC = () => {
-  const dispatch = useDispatch();
+  const [customers, setCustomers] = useState<ICustomer[]>([]);
+  const [singleCustomer, setSingleCustomer] = useState<ICustomer>(
+    {} as ICustomer
+  );
 
-  const customerState = useSelector(selectCustomerState);
-
-  const { data: customers } = customerState.customers;
-  const { data: singleCustomer } = customerState.singleCustomer;
-
-  const fetchCustomers = () => {
-    dispatch(getCustomersFn());
+  const fetchCustomers = async () => {
+    const reponse = await getCustomersFn();
+    setCustomers(reponse);
   };
 
-  const fetchReceipts = () => {
-    dispatch(getReceiptsFn());
+  const fetchReceipts = async () => {
+    await getReceiptsFn();
   };
 
-  useEffect(fetchCustomers, []);
+  useEffect(() => {
+    fetchCustomers();
+  }, []);
 
-  const handleNewReceipt = (values: any) => {
-    dispatch(
-      createReceiptFn(values, () => {
-        fetchReceipts();
-      })
-    );
+  const handleNewReceipt = (values) => {
+    createReceiptFn(values, () => {
+      fetchReceipts();
+    });
   };
 
   const renderCustomers = () => {
-    const customerList = customers.map((customer: any) => {
+    const customerList = customers.map((customer) => {
       return (
         <option key={customer.id} value={customer.id}>
           {customer.fullName}
@@ -102,7 +99,7 @@ const CreateReceipt: React.FC = () => {
       onSubmit={(values, actions) => {
         handleNewReceipt(values);
         actions.resetForm();
-        dispatch(clearSingleCustomerFn());
+        setSingleCustomer({} as ICustomer);
       }}
     >
       {({ handleSubmit, handleChange, values }) => (
@@ -114,13 +111,13 @@ const CreateReceipt: React.FC = () => {
               name="customerId"
               component="select"
               className="ui dropdown"
-              onChange={(e: { currentTarget: { value: any } }) => {
+              onChange={async (e: { currentTarget: { value: any } }) => {
                 // call the built-in handleBur
                 handleChange(e);
                 // and do something about e
                 const customerId = e.currentTarget.value;
                 // console.log(someValue);
-                dispatch(getSingleCustomerFn(customerId));
+                await getSingleCustomerFn(customerId);
 
                 // ...
               }}

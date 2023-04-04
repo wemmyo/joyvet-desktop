@@ -3,7 +3,6 @@ import User, { IUser } from '../models/user';
 export const findOneUser = (args) => {
   return User.findOne({
     ...args,
-    raw: true,
   }).then((data: IUser) => {
     return data;
   });
@@ -12,7 +11,6 @@ export const findOneUser = (args) => {
 export const getUsers = (args) => {
   return User.findAll({
     ...args,
-    raw: true,
   }).then((data: IUser[]) => {
     return data.map((item) => {
       return item;
@@ -21,9 +19,7 @@ export const getUsers = (args) => {
 };
 
 export const getUserById = (id: number) => {
-  return User.findByPk(id, {
-    raw: true,
-  }).then((data: IUser) => {
+  return User.findByPk(id, {}).then((data: IUser) => {
     return data;
   });
 };

@@ -1,18 +1,19 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Button, Form } from 'semantic-ui-react';
 import { Field, Formik } from 'formik';
-import { useSelector, useDispatch } from 'react-redux';
+import { useDispatch } from 'react-redux';
 import moment from 'moment';
 
 // import * as Yup from 'yup';
 import TextInput from '../../../../components/TextInput/TextInput';
+
+import { closeSideContentFn } from '../../../../slices/dashboardSlice';
 import {
   getSingleExpenseFn,
-  selectExpenseState,
-  updateExpenseFn,
   deleteExpenseFn,
-} from '../../../../slices/expenseSlice';
-import { closeSideContentFn } from '../../../../slices/dashboardSlice';
+  updateExpenseFn,
+} from '../../../../controllers/expense.controller';
+import { IExpense } from '../../../../models/expense';
 
 export interface EditExpenseProps {
   expenseId: number;
@@ -21,28 +22,25 @@ export interface EditExpenseProps {
 const EditExpense: React.FC<EditExpenseProps> = ({
   expenseId,
 }: EditExpenseProps) => {
+  const [expense, setExpense] = useState<IExpense>({} as IExpense);
+
   const dispatch = useDispatch();
 
-  const fetchData = () => {
-    dispatch(getSingleExpenseFn(expenseId));
-  };
-
-  useEffect(fetchData, [expenseId, dispatch]);
-
-  const expenseState = useSelector(selectExpenseState);
-
-  const { data: expense } = expenseState.singleExpense;
+  useEffect(() => {
+    const fetchData = async () => {
+      const response = await getSingleExpenseFn(expenseId);
+      setExpense(response);
+    };
+    fetchData();
+  }, [expenseId, dispatch]);
 
   // console.log(expense);
 
   const { type, amount, date, note } = expense;
 
-  const handleDeleteExpense = () => {
-    dispatch(
-      deleteExpenseFn(expenseId, () => {
-        dispatch(closeSideContentFn());
-      })
-    );
+  const handleDeleteExpense = async () => {
+    await deleteExpenseFn(expenseId);
+    dispatch(closeSideContentFn());
   };
 
   return (
@@ -55,15 +53,12 @@ const EditExpense: React.FC<EditExpenseProps> = ({
         note: note || '',
       }}
       // validationSchema={EditExpenseSchema}
-      onSubmit={(values) => {
+      onSubmit={async (values) => {
         //   submitForm(values);
         // console.log(values);
 
-        dispatch(
-          updateExpenseFn(values, expenseId, () => {
-            dispatch(closeSideContentFn());
-          })
-        );
+        await updateExpenseFn(values, expenseId);
+        dispatch(closeSideContentFn());
       }}
     >
       {({ handleSubmit }) => (

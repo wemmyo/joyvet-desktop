@@ -3,7 +3,6 @@ import Product, { IProduct } from '../models/product';
 export const getProducts = (args) => {
   return Product.findAll({
     ...args,
-    raw: true,
   }).then((data: IProduct[]) => {
     return data.map((item) => {
       return item;
@@ -12,9 +11,7 @@ export const getProducts = (args) => {
 };
 
 export const getProductById = (id: number) => {
-  return Product.findByPk(id, {
-    raw: true,
-  }).then((data: IProduct) => {
+  return Product.findByPk(id, {}).then((data: IProduct) => {
     return data;
   });
 };

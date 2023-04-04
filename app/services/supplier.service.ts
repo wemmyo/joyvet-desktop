@@ -3,7 +3,6 @@ import Supplier, { ISupplier } from '../models/supplier';
 export const getSuppliers = (args) => {
   return Supplier.findAll({
     ...args,
-    raw: true,
   }).then((data: ISupplier[]) => {
     return data.map((item) => {
       return item;
@@ -12,9 +11,7 @@ export const getSuppliers = (args) => {
 };
 
 export const getSupplierById = (id: number) => {
-  return Supplier.findByPk(id, {
-    raw: true,
-  }).then((data: ISupplier) => {
+  return Supplier.findByPk(id, {}).then((data: ISupplier) => {
     return data;
   });
 };

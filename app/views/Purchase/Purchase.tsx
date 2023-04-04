@@ -1,46 +1,40 @@
-/* eslint-disable react/jsx-one-expression-per-line */
 import React, { useState, useEffect } from 'react';
 import { Table, Grid, Button, Form, Segment } from 'semantic-ui-react';
 import { Field, Formik } from 'formik';
-import { useSelector, useDispatch } from 'react-redux';
+import { useDispatch } from 'react-redux';
 
 import DashboardLayout from '../../layouts/DashboardLayout/DashboardLayout';
-import {
-  getSuppliersFn,
-  selectSupplierState,
-} from '../../slices/supplierSlice';
-import { getProductsFn, selectProductState } from '../../slices/productSlice';
-import { numberWithCommas } from '../../utils/helpers';
-import { createPurchaseFn } from '../../slices/purchaseSlice';
+
 import TextInput from '../../components/TextInput/TextInput';
+import { getSuppliersFn } from '../../controllers/supplier.controller';
+import { getProductsFn } from '../../controllers/product.controller';
+import { ISupplier } from '../../models/supplier';
+import { IProduct } from '../../models/product';
+import { numberWithCommas } from '../../utils/helpers';
 
 const PurchaseScreen: React.FC = () => {
   const [orders, setOrders] = useState([]);
+  const [suppliers, setSuppliers] = useState<ISupplier[]>([]);
+  const [products, setProducts] = useState<IProduct[]>([]);
 
   const dispatch = useDispatch();
-  const supplierState = useSelector(selectSupplierState);
-  const productState = useSelector(selectProductState);
 
-  const { data: suppliers } = supplierState.suppliers;
-  const { data: products } = productState.products;
-
-  const fetchSuppliers = () => {
-    dispatch(getSuppliersFn());
-  };
-
-  const fetchProducts = () => {
-    dispatch(getProductsFn());
-  };
-
-  const fetchData = () => {
-    fetchSuppliers();
-    fetchProducts();
-  };
-
-  useEffect(fetchData, []);
+  useEffect(() => {
+    const fetchData = async () => {
+      const getSuppliers = getSuppliersFn();
+      const getProducts = getProductsFn();
+      const [suppliersResponse, productsResponse] = await Promise.all([
+        getSuppliers,
+        getProducts,
+      ]);
+      setSuppliers(suppliersResponse);
+      setProducts(productsResponse);
+    };
+    fetchData();
+  }, []);
 
   const renderProducts = () => {
-    const productList = products.map((product: any) => {
+    const productList = products.map((product) => {
       return (
         <option key={product.id} value={product}>
           {product.title}

@@ -4,6 +4,8 @@ import { Form } from 'semantic-ui-react';
 export interface TextInputProps
   extends React.InputHTMLAttributes<HTMLInputElement> {
   label?: string;
+  field: any;
+  form: any;
 }
 
 const TextInput: React.FC<TextInputProps> = ({

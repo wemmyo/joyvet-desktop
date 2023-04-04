@@ -3,7 +3,6 @@ import Customer, { ICustomer } from '../models/customer';
 export const getCustomers = (args) => {
   return Customer.findAll({
     ...args,
-    raw: true,
   }).then((data: ICustomer[]) => {
     return data.map((item) => {
       return item;
@@ -12,9 +11,7 @@ export const getCustomers = (args) => {
 };
 
 export const getCustomerById = (id: number) => {
-  return Customer.findByPk(id, {
-    raw: true,
-  }).then((data: ICustomer) => {
+  return Customer.findByPk(id, {}).then((data: ICustomer) => {
     return data;
   });
 };

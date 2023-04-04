@@ -3,7 +3,6 @@ import PurchaseItem, { IPurchaseItem } from '../models/purchaseItem';
 export const getPurchaseItems = (args) => {
   return PurchaseItem.findAll({
     ...args,
-    raw: true,
   }).then((data: IPurchaseItem[]) => {
     return data.map((item) => {
       return item;
@@ -12,9 +11,7 @@ export const getPurchaseItems = (args) => {
 };
 
 export const getPurchaseItemById = (id: number) => {
-  return PurchaseItem.findByPk(id, {
-    raw: true,
-  }).then((data: IPurchaseItem) => {
+  return PurchaseItem.findByPk(id, {}).then((data: IPurchaseItem) => {
     return data;
   });
 };

@@ -1,18 +1,15 @@
-/* eslint-disable react/jsx-one-expression-per-line */
 import React, { useEffect, useRef, useState } from 'react';
-import { useSelector, useDispatch } from 'react-redux';
-// import { useParams } from 'react-router-dom';
+import { useDispatch } from 'react-redux';
 import { Table, Button } from 'semantic-ui-react';
 import { useReactToPrint } from 'react-to-print';
 import { Link } from 'react-router-dom';
 import moment from 'moment';
 
 import {
-  selectInvoiceState,
   deleteInvoiceFn,
   getInvoicesFn,
-} from '../../../slices/invoiceSlice';
-import { getSingleInvoiceFn } from '../../../controllers/invoice.controller';
+  getSingleInvoiceFn,
+} from '../../../controllers/invoice.controller';
 import { numberWithCommas, isAdmin } from '../../../utils/helpers';
 import ComponentToPrint from '../../../components/PrintedReceipt/ReceiptWrapper';
 import { closeSideContentFn } from '../../../slices/dashboardSlice';
@@ -25,7 +22,7 @@ interface SalesDetailProps {
 const SalesDetail: React.FC<SalesDetailProps> = ({
   salesId,
 }: SalesDetailProps) => {
-  const componentRef = useRef();
+  const componentRef = useRef(null);
   const dispatch = useDispatch();
 
   const [printInvoice, setPrintInvoice] = useState(false);
@@ -61,20 +58,17 @@ const SalesDetail: React.FC<SalesDetailProps> = ({
     fetchData();
   }, [salesId]);
 
-  const handleDeleteCustomer = () => {
-    dispatch(
-      deleteInvoiceFn(Number(salesId), () => {
-        dispatch(closeSideContentFn());
-        dispatch(getInvoicesFn());
-      })
-    );
+  const handleDeleteCustomer = async () => {
+    await deleteInvoiceFn(Number(salesId));
+    dispatch(closeSideContentFn());
+    await getInvoicesFn();
   };
 
   const renderInvoiceToPrint = () => {
     if (printInvoice) {
       return (
         <div style={{ display: 'none' }}>
-          <ComponentToPrint ref={componentRef} />
+          <ComponentToPrint ref={componentRef} invoice={sales} />
         </div>
       );
     }
@@ -140,7 +134,7 @@ const SalesDetail: React.FC<SalesDetailProps> = ({
         <Table.Body>
           {sales.products?.map((order, index) => (
             <Table.Row key={order.id}>
-              <Table.Cell>{index}</Table.Cell>
+              <Table.Cell>{index + 1}</Table.Cell>
               <Table.Cell>{order.title}</Table.Cell>
               <Table.Cell>{order.invoiceItem.quantity}</Table.Cell>
               <Table.Cell>

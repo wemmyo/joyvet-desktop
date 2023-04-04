@@ -88,10 +88,7 @@ export const getPaymentsFn = async () => {
   }
 };
 
-export const deletePaymentFn = (
-  id: string | number,
-  cb: () => void
-) => async () => {
+export const deletePaymentFn = async (id: string | number) => {
   // use zod to validate input
   const deletePaymentSchema = z.object({
     id: z.number(),
@@ -112,7 +109,6 @@ export const deletePaymentFn = (
       await Promise.all([updateBalance, deletePayment]);
     });
     toast.success('Payment successfully deleted');
-    cb();
   } catch (error) {
     toast.error(error.message || '');
   }

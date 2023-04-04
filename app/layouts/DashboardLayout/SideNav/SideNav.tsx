@@ -5,8 +5,8 @@ import { useDispatch } from 'react-redux';
 import styles from './SideNav.css';
 // import NavItem from './components/NavItem/NavItem';
 import routes from '../../../routing/routes';
-import { logoutFn } from '../../../slices/userSlice';
 import { isAdmin } from '../../../utils/helpers';
+import { logoutFn } from '../../../controllers/user.controller';
 // export interface SideNavProps {}
 
 const SideNav = () => {
@@ -109,11 +109,8 @@ const SideNav = () => {
         style={{ color: 'red', cursor: 'pointer' }}
         className={styles.sideNav__mainItem}
         onClick={() => {
-          dispatch(
-            logoutFn(() => {
-              history.push(routes.LOGIN);
-            })
-          );
+          logoutFn();
+          history.push(routes.LOGIN);
         }}
       >
         Log out

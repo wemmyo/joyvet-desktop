@@ -3,10 +3,9 @@ import { Button, Form, Grid, Segment, Header } from 'semantic-ui-react';
 import { useHistory } from 'react-router-dom';
 import { Field, Formik } from 'formik';
 import * as Yup from 'yup';
-import { useDispatch } from 'react-redux';
 import routes from '../../../../routing/routes';
 import TextInput from '../../../../components/TextInput/TextInput';
-import { loginUserFn } from '../../../../slices/userSlice';
+import { loginUserFn } from '../../../../controllers/user.controller';
 
 const CreateProductSchema = Yup.object().shape({
   username: Yup.string().required('Required'),
@@ -15,7 +14,6 @@ const CreateProductSchema = Yup.object().shape({
 // export interface LoginFormProps {}
 
 const LoginForm = () => {
-  const dispatch = useDispatch();
   const history = useHistory();
 
   return (
@@ -30,14 +28,10 @@ const LoginForm = () => {
             password: '',
           }}
           validationSchema={CreateProductSchema}
-          onSubmit={(values, actions) => {
-            //   submitForm(values);
-            dispatch(
-              loginUserFn(values, () => {
-                history.push(routes.INVOICE);
-                actions.resetForm();
-              })
-            );
+          onSubmit={async (values, actions) => {
+            await loginUserFn(values);
+            history.push(routes.INVOICE);
+            actions.resetForm();
           }}
         >
           {({ handleSubmit }) => (
@@ -66,7 +60,6 @@ const LoginForm = () => {
                   Login
                 </Button>
               </Segment>
-              {/* <Link to={routes.INVOICE}>to Overview</Link> */}
             </Form>
           )}
         </Formik>

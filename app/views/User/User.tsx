@@ -1,19 +1,17 @@
 import React, { useEffect, useState } from 'react';
 import { Table, Button, Icon } from 'semantic-ui-react';
-import { useSelector, useDispatch } from 'react-redux';
+import { useDispatch } from 'react-redux';
+import moment from 'moment';
 import DashboardLayout from '../../layouts/DashboardLayout/DashboardLayout';
-import {
-  selectUserState,
-  getUsersFn,
-  createUserFn,
-} from '../../slices/userSlice';
-import CreateUser from './components/CreateUser/CreateUser';
+
+import EditUser from './components/EditUser/EditUser';
+import { IUser } from '../../models/user';
+import { getUsersFn, createUserFn } from '../../controllers/user.controller';
 import {
   openSideContentFn,
   closeSideContentFn,
 } from '../../slices/dashboardSlice';
-import EditUser from './components/EditUser/EditUser';
-import moment from 'moment';
+import CreateUser from './components/CreateUser/CreateUser';
 
 const CONTENT_CREATE = 'create';
 const CONTENT_EDIT = 'edit';
@@ -21,13 +19,13 @@ const CONTENT_EDIT = 'edit';
 const UserScreen: React.FC = () => {
   const [sideContent, setSideContent] = useState('');
   const [userId, setUserId] = useState('');
+  const [users, setUsers] = useState<IUser[]>([]);
 
   const dispatch = useDispatch();
-  const usersState = useSelector(selectUserState);
-  const { data: users, loading: usersLoading } = usersState.users;
 
-  const fetchUsers = () => {
-    dispatch(getUsersFn());
+  const fetchUsers = async () => {
+    const response = await getUsersFn();
+    setUsers(response);
   };
 
   const openSideContent = (content: string) => {
@@ -35,55 +33,29 @@ const UserScreen: React.FC = () => {
     setSideContent(content);
   };
 
-  const closeSideContent = () => {
-    dispatch(closeSideContentFn());
-    setSideContent('');
-    setUserId('');
-  };
-
   useEffect(() => {
     fetchUsers();
 
     return () => {
+      const closeSideContent = () => {
+        dispatch(closeSideContentFn());
+        setSideContent('');
+        setUserId('');
+      };
       closeSideContent();
     };
-  }, []);
+  }, [dispatch]);
 
-  const handleNewUser = (values: any) => {
-    dispatch(
-      createUserFn(values, () => {
-        fetchUsers();
-      })
-    );
+  const handleNewUser = (values) => {
+    createUserFn(values, () => {
+      fetchUsers();
+    });
   };
 
   const openSingleUser = (id) => {
     setUserId(id);
     openSideContent(CONTENT_EDIT);
   };
-
-  // const renderRows = () => {
-  //   console.log('users', users);
-
-  //   const rows = users.map((each) => {
-  //     return (
-  //       <Table.Row onClick={() => openSingleUser(each.id)} key={each.id}>
-  //         <Table.Cell>{each.fullName}</Table.Cell>
-  //         <Table.Cell>{each.username}</Table.Cell>
-  //         <Table.Cell>{each.role}</Table.Cell>
-  //         <Table.Cell>
-  //           {/* {new Date(each.createdAt).toLocaleDateString('en-gb')} */}
-  //           {each.createdAt}
-  //         </Table.Cell>
-  //       </Table.Row>
-  //     );
-  //   });
-  //   return rows;
-  // };
-
-  React.useEffect(() => {
-    console.log('users', users);
-  }, [users]);
 
   const renderSideContent = () => {
     if (sideContent === CONTENT_CREATE) {

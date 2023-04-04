@@ -1,38 +1,43 @@
 import React, { useEffect, useState } from 'react';
 import { Form, Button, Tab } from 'semantic-ui-react';
 import moment from 'moment';
-import { useSelector, useDispatch } from 'react-redux';
-import { withRouter } from 'react-router';
 
 import DashboardLayout from '../../layouts/DashboardLayout/DashboardLayout';
+
+import ProductHistoryInvoices from './components/Invoices/Invoices';
+import ProductHistoryPurchases from './components/Purchases/Purchases';
 import {
   getProductInvoicesFn,
   getProductPurchasesFn,
-  selectProductState,
-} from '../../slices/productSlice';
-import ProductHistoryInvoices from './components/Invoices/Invoices';
-import ProductHistoryPurchases from './components/Purchases/Purchases';
+} from '../../controllers/product.controller';
 
 // export interface ProductHistoryProps {}
 
 const TODAYS_DATE = `${moment().format('YYYY-MM-DD')}`;
 
-const ProductHistory: React.SFC = ({ match }: any) => {
+const ProductHistory: React.FC = ({ match }: any) => {
   const [startDate, setStartDate] = useState(TODAYS_DATE);
   const [endDate, setEndDate] = useState(TODAYS_DATE);
 
   const productId = match.params.id;
 
-  const dispatch = useDispatch();
-  const productState = useSelector(selectProductState);
-
-  const { data: invoices } = productState.invoices;
-  const { data: purchases } = productState.purchases;
+  const [invoices, setInvoices] = useState([]);
+  const [purchases, setPurchases] = useState([]);
 
   useEffect(() => {
-    dispatch(getProductInvoicesFn(productId, startDate, endDate));
-    dispatch(getProductPurchasesFn(productId, startDate, endDate));
-  }, [startDate, endDate, productId, dispatch]);
+    const fetchData = async () => {
+      const getInvoices = getProductInvoicesFn(productId, startDate, endDate);
+      const getReceipts = getProductPurchasesFn(productId, startDate, endDate);
+
+      const [invoicesResponse, receiptsResponse] = await Promise.all([
+        getInvoices,
+        getReceipts,
+      ]);
+      setInvoices(invoicesResponse);
+      setPurchases(receiptsResponse);
+    };
+    fetchData();
+  }, [startDate, endDate, productId]);
 
   const resetFilters = () => {
     setStartDate(TODAYS_DATE);
@@ -102,4 +107,4 @@ const ProductHistory: React.SFC = ({ match }: any) => {
   );
 };
 
-export default withRouter(ProductHistory);
+export default ProductHistory;
