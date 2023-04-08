@@ -303,23 +303,14 @@ export const deleteInvoiceItemFn = ({
   }
 };
 
-export const addInvoiceItemFn = ({
+export const addInvoiceItemFn = async ({
   invoiceId,
   productId,
   quantity,
   amount,
   unitPrice,
   profit,
-  cb,
-}: {
-  invoiceId: number;
-  productId: number;
-  quantity: number;
-  amount: number;
-  unitPrice: number;
-  profit: number;
-  cb: () => void;
-}) => async () => {
+}: IInvoiceItem) => {
   // use zod to validate the input
   const schema = z.object({
     invoiceId: z.number(),
@@ -334,6 +325,8 @@ export const addInvoiceItemFn = ({
     const invoice = await Invoice.findByPk(invoiceId);
     const product = await Product.findByPk(productId);
     const customer = await Customer.findByPk(invoice.customerId);
+
+    // if product is already in the invoice, delete it first and then add updated invoice item
 
     product.invoiceItem = {
       quantity,
@@ -381,9 +374,6 @@ export const addInvoiceItemFn = ({
         updateCustomerBalance(),
       ]);
     });
-    if (cb) {
-      cb();
-    }
   } catch (error) {
     toast.error(error.message || '');
   }
@@ -473,6 +463,39 @@ export const createInvoiceFn = async (
 
       return customerInvoice;
     });
+  } catch (error) {
+    toast.error(error.message);
+  }
+};
+
+export const updateInvoiceFn = async (
+  invoiceItems: Partial<IInvoiceItem>[],
+  invoice: IInvoice,
+  cb?: (id: number) => void
+) => {
+  // validate inputs with zod
+  const schema = z.object({
+    invoiceItems: z.array(
+      z.object({
+        quantity: z.number(),
+        unitPrice: z.number(),
+        amount: z.number(),
+        profit: z.number(),
+      })
+    ),
+    invoice: z.object({
+      id: z.number(),
+      customerId: z.number(),
+      saleType: z.string(),
+      amount: z.number(),
+      profit: z.number(),
+    }),
+  });
+  schema.parse({ invoiceItems, invoice });
+
+  try {
+    await deleteInvoiceFn(invoice.id);
+    await createInvoiceFn(invoiceItems, invoice, cb);
   } catch (error) {
     toast.error(error.message);
   }

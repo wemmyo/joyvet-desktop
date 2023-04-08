@@ -1,22 +1,21 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useReactToPrint } from 'react-to-print';
 import { Table, Grid, Button, Form, Segment } from 'semantic-ui-react';
 import { Field, Formik } from 'formik';
 import { useDispatch } from 'react-redux';
 import { toast } from 'react-toastify';
+import moment from 'moment';
 
 import DashboardLayout from '../../../layouts/DashboardLayout/DashboardLayout';
-
 import { numberWithCommas } from '../../../utils/helpers';
 import TextInput from '../../../components/TextInput/TextInput';
 import ComponentToPrint from '../../../components/PrintedReceipt/ReceiptWrapper';
 import { IProduct } from '../../../models/product';
 import { IInvoiceItem } from '../../../models/invoiceItem';
 import { IInvoice } from '../../../models/invoice';
-import { getCustomersFn } from '../../../controllers/customer.controller';
 import {
-  createInvoiceFn,
   getSingleInvoiceFn,
+  updateInvoiceFn,
 } from '../../../controllers/invoice.controller';
 import { getProductsFn } from '../../../controllers/product.controller';
 import { ICustomer } from '../../../models/customer';
@@ -25,11 +24,10 @@ interface InvoiceItem extends IInvoiceItem {
   product: IProduct;
 }
 
-const EditInvoiceScreen: React.FC = ({ match }: any) => {
+const InvoiceScreen: React.FC = ({ match }: any) => {
   const invoiceId = match.params.id;
 
   const componentRef = useRef(null);
-  const dispatch = useDispatch();
 
   const handlePrint = useReactToPrint({
     content: () => componentRef.current,
@@ -38,10 +36,11 @@ const EditInvoiceScreen: React.FC = ({ match }: any) => {
   const [invoiceItems, setInvoiceItems] = useState<InvoiceItem[]>([]);
   const [invoice, setInvoice] = useState<Partial<IInvoice>>();
   const [printInvoice, setPrintInvoice] = useState(false);
-  const [singleCustomer] = useState({} as ICustomer);
-  const [customers, setCustomers] = useState<ICustomer[]>([]);
-  const [products, setProducts] = useState([]);
-  const [singleInvoice, setSingleInvoice] = useState<IInvoice>({} as IInvoice);
+  const [singleCustomer, setSingleCustomer] = useState({} as ICustomer);
+  const [products, setProducts] = useState<IProduct[]>([]);
+  const [createdInvoice, setCreatedInvoice] = useState<IInvoice>(
+    {} as IInvoice
+  );
 
   const removeInvoiceItem = (id: number) => {
     const filteredItems = invoiceItems.filter((item) => item.id !== id);
@@ -84,45 +83,44 @@ const EditInvoiceScreen: React.FC = ({ match }: any) => {
     }
   };
 
+  const fetchData = useCallback(async () => {
+    const getproducts = getProductsFn('inStock');
+    const getSingleInvoice = getSingleInvoiceFn(Number(invoiceId));
+    const [productsResponse, singleInvoiceResponse] = await Promise.all([
+      getproducts,
+      getSingleInvoice,
+    ]);
+    setProducts(productsResponse);
+
+    // set invoice
+    setInvoice({
+      ...invoice,
+      customerId: singleInvoiceResponse.customer.id,
+      saleType: singleInvoiceResponse.saleType,
+      id: singleInvoiceResponse.id,
+      createdAt: singleInvoiceResponse.createdAt,
+    });
+
+    // set invoice items
+    singleInvoiceResponse.products.map((product) => {
+      const { invoiceItem } = product;
+      const item: InvoiceItem = {
+        id: invoiceItem.id,
+        quantity: invoiceItem.quantity,
+        unitPrice: invoiceItem.unitPrice,
+        amount: invoiceItem.amount,
+        profit: invoiceItem.profit,
+        product,
+      };
+      setInvoiceItems((i) => [...i, item]);
+    });
+
+    setSingleCustomer(singleInvoiceResponse.customer);
+  }, [invoiceId]);
+
   useEffect(() => {
-    const fetchData = async () => {
-      const getCustomers = getCustomersFn();
-      const getproducts = getProductsFn('inStock');
-      const getSingleInvoice = getSingleInvoiceFn(Number(invoiceId));
-      const [
-        customersResponse,
-        productsResponse,
-        singleInvoiceResponse,
-      ] = await Promise.all([getCustomers, getproducts, getSingleInvoice]);
-      setCustomers(customersResponse);
-      setProducts(productsResponse);
-      setSingleInvoice(singleInvoiceResponse);
-
-      // set invoice items
-      singleInvoiceResponse.products.map((product) => {
-        const { invoiceItem } = product;
-        const item: InvoiceItem = {
-          id: invoiceItem.id,
-          quantity: invoiceItem.quantity,
-          unitPrice: invoiceItem.unitPrice,
-          amount: invoiceItem.amount,
-          profit: invoiceItem.profit,
-          product,
-        };
-        setInvoiceItems((i) => [...i, item]);
-      });
-
-      // set invoice
-      setInvoice((i) => {
-        return {
-          ...i,
-          customerId: singleInvoiceResponse.customer.id,
-          saleType: singleInvoiceResponse.saleType,
-        };
-      });
-    };
     fetchData();
-  }, [dispatch, invoiceId]);
+  }, [invoiceId, fetchData]);
 
   const renderPrices = (product: IProduct) => {
     interface IProductPrice {
@@ -174,17 +172,6 @@ const EditInvoiceScreen: React.FC = ({ match }: any) => {
     );
   };
 
-  const renderCustomers = () => {
-    const customerList = customers.map((customer) => {
-      return (
-        <option key={customer.id} value={customer.id}>
-          {customer.fullName}
-        </option>
-      );
-    });
-    return customerList;
-  };
-
   useEffect(() => {
     const totalAmount = invoiceItems.reduce(
       (acc, item) => acc + item.amount,
@@ -224,22 +211,35 @@ const EditInvoiceScreen: React.FC = ({ match }: any) => {
     if (printInvoice) {
       return (
         <div style={{ display: 'none' }}>
-          <ComponentToPrint ref={componentRef} invoice={singleInvoice} />
+          <ComponentToPrint ref={componentRef} invoice={createdInvoice} />
         </div>
       );
     }
     return null;
   };
 
-  // const createInvoice = async (resetForm) => {
-  //   const response = await createInvoiceFn(invoiceItems, invoice);
+  const updateInvoice = async (resetForm) => {
+    await updateInvoiceFn(invoiceItems, invoice, async (id) => {
+      const response = await getSingleInvoiceFn(id);
+      setCreatedInvoice(response);
+      setPrintInvoice(true);
+      handlePrint?.();
+      resetForm();
+      setInvoiceItems([]);
+      setInvoice(undefined);
+      setCreatedInvoice({} as IInvoice);
+    });
+  };
 
-  //   setPrintInvoice(true);
-  //     handlePrint?.();
-  //     resetForm();
-  //     setInvoiceItems([]);
-  //     setInvoice(undefined);
-  // };
+  const disabledAdditem = () => {
+    const invoiceDate = moment(invoice?.createdAt).format('DD/MM/YYYY');
+    const todaysDate = moment().format('DD/MM/YYYY');
+
+    if (invoiceDate === todaysDate) {
+      return false;
+    }
+    return true;
+  };
 
   const initialValues = {
     quantity: '',
@@ -251,7 +251,7 @@ const EditInvoiceScreen: React.FC = ({ match }: any) => {
   };
 
   return (
-    <DashboardLayout screenTitle="Edit Invoice">
+    <DashboardLayout screenTitle="Create Invoice">
       <Grid>
         <Grid.Row>
           <Grid.Column width={11}>
@@ -321,33 +321,35 @@ const EditInvoiceScreen: React.FC = ({ match }: any) => {
                     <div className="field">
                       <label htmlFor="customer">Customer</label>
                       <Field
+                        disabled
                         id="customer"
                         name="customerId"
                         component="select"
                         className="ui dropdown"
-                        disabled
                       >
-                        <option value="" selected disabled hidden>
-                          Select Customer
+                        <option selected disabled hidden>
+                          {singleCustomer.fullName}
                         </option>
-                        {renderCustomers()}
                       </Field>
                     </div>
                     <div className="field">
                       <label htmlFor="saleType">Sale Type</label>
                       <Field
+                        disabled
                         id="saleType"
                         name="saleType"
                         component="select"
                         className="ui dropdown"
-                        disabled
+                        onChange={(e) => {
+                          setInvoice({
+                            ...invoice,
+                            saleType: e.target.value,
+                          });
+                        }}
                       >
-                        <option value="" selected disabled hidden>
-                          Select Sale
+                        <option selected disabled hidden>
+                          {invoice?.saleType}
                         </option>
-                        <option value="cash">Cash Sales</option>
-                        <option value="credit">Credit Sales</option>
-                        <option value="transfer">Transfer</option>
                       </Field>
                     </div>
                     <Segment raised>
@@ -358,7 +360,7 @@ const EditInvoiceScreen: React.FC = ({ match }: any) => {
                           name="product"
                           component="select"
                           className="ui dropdown"
-                          onChange={(e) => {
+                          onChange={(e: React.ChangeEvent<any>) => {
                             handleChange(e);
                             // clear unit price field when product is changed
                             setFieldValue('unitPrice', '');
@@ -367,7 +369,7 @@ const EditInvoiceScreen: React.FC = ({ match }: any) => {
                           <option value="" selected disabled hidden>
                             Select Product
                           </option>
-                          {products.map((product: IProduct) => (
+                          {products.map((product) => (
                             <option
                               key={product.id}
                               value={JSON.stringify(product)}
@@ -396,13 +398,14 @@ const EditInvoiceScreen: React.FC = ({ match }: any) => {
                         type="Submit"
                         fluid
                         primary
+                        disabled={disabledAdditem()}
                       >
                         Add Item
                       </Button>
                     </Segment>
                     <Button
                       disabled={invoiceItems.length < 1}
-                      onClick={() => createInvoice(resetForm)}
+                      onClick={() => updateInvoice(resetForm)}
                       type="button"
                       fluid
                       positive
@@ -421,4 +424,4 @@ const EditInvoiceScreen: React.FC = ({ match }: any) => {
   );
 };
 
-export default EditInvoiceScreen;
+export default InvoiceScreen;
