@@ -14,6 +14,7 @@ import { numberWithCommas, isAdmin } from '../../../utils/helpers';
 import ComponentToPrint from '../../../components/PrintedReceipt/ReceiptWrapper';
 import { closeSideContentFn } from '../../../slices/dashboardSlice';
 import routes from '../../../routing/routes';
+import { IInvoice } from '../../../models/invoice';
 
 interface SalesDetailProps {
   salesId: number;
@@ -27,7 +28,7 @@ const SalesDetail: React.FC<SalesDetailProps> = ({
 
   const [printInvoice, setPrintInvoice] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [sales, setSales] = useState<any>(null);
+  const [sales, setSales] = useState<IInvoice>({} as IInvoice);
 
   const handlePrint = useReactToPrint({
     content: () => componentRef.current,
@@ -89,7 +90,7 @@ const SalesDetail: React.FC<SalesDetailProps> = ({
           </Table.Row>
           <Table.Row>
             <Table.Cell>Customer</Table.Cell>
-            <Table.Cell>{sales.customer.fullName}</Table.Cell>
+            <Table.Cell>{sales.customer?.fullName}</Table.Cell>
           </Table.Row>
           <Table.Row>
             <Table.Cell>Type</Table.Cell>
@@ -136,12 +137,18 @@ const SalesDetail: React.FC<SalesDetailProps> = ({
             <Table.Row key={order.id}>
               <Table.Cell>{index + 1}</Table.Cell>
               <Table.Cell>{order.title}</Table.Cell>
-              <Table.Cell>{order.invoiceItem.quantity}</Table.Cell>
+              <Table.Cell>{order.invoiceItem?.quantity}</Table.Cell>
               <Table.Cell>
-                ₦{numberWithCommas(order.invoiceItem.unitPrice)}
+                ₦
+                {order.invoiceItem?.unitPrice
+                  ? numberWithCommas(order.invoiceItem?.unitPrice)
+                  : 'N/A'}
               </Table.Cell>
               <Table.Cell>
-                ₦{numberWithCommas(order.invoiceItem.amount)}
+                ₦
+                {order.invoiceItem?.amount
+                  ? numberWithCommas(order.invoiceItem?.amount)
+                  : 'N/A'}
               </Table.Cell>
             </Table.Row>
           ))}

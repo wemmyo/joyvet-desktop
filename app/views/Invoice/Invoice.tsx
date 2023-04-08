@@ -22,6 +22,7 @@ import {
   getSingleInvoiceFn,
 } from '../../controllers/invoice.controller';
 import { getProductsFn } from '../../controllers/product.controller';
+import { ICustomer } from '../../models/customer';
 
 interface InvoiceItem extends IInvoiceItem {
   product: IProduct;
@@ -38,10 +39,12 @@ const InvoiceScreen: React.FC = () => {
   const [invoiceItems, setInvoiceItems] = useState<InvoiceItem[]>([]);
   const [invoice, setInvoice] = useState<Partial<IInvoice>>();
   const [printInvoice, setPrintInvoice] = useState(false);
-  const [singleCustomer, setSingleCustomer] = useState(false);
+  const [singleCustomer, setSingleCustomer] = useState({} as ICustomer);
   const [customers, setCustomers] = useState([]);
-  const [products, setProducts] = useState([]);
-  const [createdInvoice, setCreatedInvoice] = useState({} as IInvoice);
+  const [products, setProducts] = useState<IProduct[]>([]);
+  const [createdInvoice, setCreatedInvoice] = useState<IInvoice>(
+    {} as IInvoice
+  );
 
   const removeInvoiceItem = (id: number) => {
     const filteredItems = invoiceItems.filter((item) => item.id !== id);
@@ -149,7 +152,7 @@ const InvoiceScreen: React.FC = () => {
   };
 
   const renderCustomers = () => {
-    const customerList = customers.map((customer) => {
+    const customerList = customers.map((customer: ICustomer) => {
       return (
         <option key={customer.id} value={customer.id}>
           {customer.fullName}
@@ -206,17 +209,16 @@ const InvoiceScreen: React.FC = () => {
   };
 
   const createInvoice = async (resetForm) => {
-    const response = await createInvoiceFn(invoiceItems, invoice, (id) => {
-      getSingleInvoiceFn(id, () => {
-        setPrintInvoice(true);
-        handlePrint?.();
-      });
+    await createInvoiceFn(invoiceItems, invoice, async (id) => {
+      const response = await getSingleInvoiceFn(id);
+      setCreatedInvoice(response);
+      setPrintInvoice(true);
+      handlePrint?.();
       resetForm();
       setInvoiceItems([]);
       setInvoice(undefined);
+      setCreatedInvoice({} as IInvoice);
     });
-
-    setCreatedInvoice(response);
   };
 
   const initialValues = {

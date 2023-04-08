@@ -14,8 +14,6 @@ interface ReceiptWrapperProps {
 
 const ReceiptWrapper = React.forwardRef<HTMLDivElement, ReceiptWrapperProps>(
   ({ invoice }: ReceiptWrapperProps, ref) => {
-    // const { customer, products, invoice_date, total } = invoice;
-
     return (
       <div ref={ref} className={styles.receipt}>
         <div className={styles.receipt__companyInfo}>
@@ -34,7 +32,7 @@ const ReceiptWrapper = React.forwardRef<HTMLDivElement, ReceiptWrapperProps>(
         </div>
         <p>
           Customer:
-          {invoice.customer?.fullName || 'VALUED CUSTOMER'}
+          {invoice?.customer?.fullName || 'VALUED CUSTOMER'}
         </p>
         <p>
           Invoice#:

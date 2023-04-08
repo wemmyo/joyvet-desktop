@@ -88,7 +88,7 @@ const EditInvoiceScreen: React.FC = ({ match }: any) => {
     const fetchData = async () => {
       const getCustomers = getCustomersFn();
       const getproducts = getProductsFn('inStock');
-      const getSingleInvoice = getSingleInvoiceFn(invoiceId);
+      const getSingleInvoice = getSingleInvoiceFn(Number(invoiceId));
       const [
         customersResponse,
         productsResponse,
@@ -98,14 +98,31 @@ const EditInvoiceScreen: React.FC = ({ match }: any) => {
       setProducts(productsResponse);
       setSingleInvoice(singleInvoiceResponse);
 
-      setInvoice({
-        ...invoice,
-        customerId: singleInvoiceResponse.customer.id,
-        saleType: singleInvoiceResponse.saleType,
+      // set invoice items
+      singleInvoiceResponse.products.map((product) => {
+        const { invoiceItem } = product;
+        const item: InvoiceItem = {
+          id: invoiceItem.id,
+          quantity: invoiceItem.quantity,
+          unitPrice: invoiceItem.unitPrice,
+          amount: invoiceItem.amount,
+          profit: invoiceItem.profit,
+          product,
+        };
+        setInvoiceItems((i) => [...i, item]);
+      });
+
+      // set invoice
+      setInvoice((i) => {
+        return {
+          ...i,
+          customerId: singleInvoiceResponse.customer.id,
+          saleType: singleInvoiceResponse.saleType,
+        };
       });
     };
     fetchData();
-  }, [dispatch, invoiceId, invoice]);
+  }, [dispatch, invoiceId]);
 
   const renderPrices = (product: IProduct) => {
     interface IProductPrice {
@@ -214,17 +231,15 @@ const EditInvoiceScreen: React.FC = ({ match }: any) => {
     return null;
   };
 
-  const createInvoice = async (resetForm) => {
-    await createInvoiceFn(invoiceItems, invoice, (id) => {
-      getSingleInvoiceFn(id, () => {
-        setPrintInvoice(true);
-        handlePrint?.();
-      });
-      resetForm();
-      setInvoiceItems([]);
-      setInvoice(undefined);
-    });
-  };
+  // const createInvoice = async (resetForm) => {
+  //   const response = await createInvoiceFn(invoiceItems, invoice);
+
+  //   setPrintInvoice(true);
+  //     handlePrint?.();
+  //     resetForm();
+  //     setInvoiceItems([]);
+  //     setInvoice(undefined);
+  // };
 
   const initialValues = {
     quantity: '',
@@ -236,7 +251,7 @@ const EditInvoiceScreen: React.FC = ({ match }: any) => {
   };
 
   return (
-    <DashboardLayout screenTitle="Create Invoice">
+    <DashboardLayout screenTitle="Edit Invoice">
       <Grid>
         <Grid.Row>
           <Grid.Column width={11}>

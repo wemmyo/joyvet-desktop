@@ -412,6 +412,7 @@ export const createInvoiceFn = async (
     }),
   });
   schema.parse({ invoiceItems, invoice });
+
   try {
     createInvoiceValidation(invoiceItems, invoice);
     const user =
@@ -465,6 +466,7 @@ export const createInvoiceFn = async (
       }
 
       toast.success('Invoice created');
+
       if (cb) {
         cb(customerInvoice.id);
       }
