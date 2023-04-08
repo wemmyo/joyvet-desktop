@@ -2,12 +2,13 @@ import * as React from 'react';
 import { Table } from 'semantic-ui-react';
 import moment from 'moment';
 import { numberWithCommas, isAdmin, sum } from '../../../../utils/helpers';
+import { IPurchaseItem } from '../../../../models/purchaseItem';
 
 export interface ProductHistoryPurchasesProps {
-  data: any[];
+  data: IPurchaseItem[];
 }
 
-const ProductHistoryPurchases: React.SFC<ProductHistoryPurchasesProps> = ({
+const ProductHistoryPurchases: React.FC<ProductHistoryPurchasesProps> = ({
   data,
 }: ProductHistoryPurchasesProps) => {
   const renderPurchases = () => {

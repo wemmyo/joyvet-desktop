@@ -2,7 +2,6 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useReactToPrint } from 'react-to-print';
 import { Table, Grid, Button, Form, Segment } from 'semantic-ui-react';
 import { Field, Formik } from 'formik';
-import { useDispatch } from 'react-redux';
 import { toast } from 'react-toastify';
 
 import DashboardLayout from '../../layouts/DashboardLayout/DashboardLayout';
@@ -30,7 +29,6 @@ interface InvoiceItem extends IInvoiceItem {
 
 const InvoiceScreen: React.FC = () => {
   const componentRef = useRef(null);
-  const dispatch = useDispatch();
 
   const handlePrint = useReactToPrint({
     content: () => componentRef.current,
@@ -99,7 +97,7 @@ const InvoiceScreen: React.FC = () => {
       setProducts(productsResponse);
     };
     fetchData();
-  }, [dispatch]);
+  }, []);
 
   const renderPrices = (product: IProduct) => {
     interface IProductPrice {

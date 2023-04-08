@@ -1,32 +1,33 @@
 import React, { useEffect, useState } from 'react';
 import { Table, Button, Icon } from 'semantic-ui-react';
 import { useDispatch } from 'react-redux';
-import moment from 'moment';
 import DashboardLayout from '../../layouts/DashboardLayout/DashboardLayout';
 
-import EditUser from './components/EditUser/EditUser';
-import { IUser } from '../../models/user';
-import { getUsersFn, createUserFn } from '../../controllers/user.controller';
+import EditStoreInfo from './components/EditStoreInfo/EditStoreInfo';
 import {
   openSideContentFn,
   closeSideContentFn,
 } from '../../slices/dashboardSlice';
-import CreateUser from './components/CreateUser/CreateUser';
-import { createStoreInfoTable } from '../../controllers/storeInfo.controller';
+import CreateStoreInfo from './components/CreateStoreInfo/CreateStoreInfo';
+import {
+  createStoreInfoFn,
+  getStoreInfoFn,
+} from '../../controllers/storeInfo.controller';
+import { IStoreInfo } from '../../models/storeInfo';
 
 const CONTENT_CREATE = 'create';
 const CONTENT_EDIT = 'edit';
 
-const UserScreen: React.FC = () => {
+const StoreInfoScreen: React.FC = () => {
   const [sideContent, setSideContent] = useState('');
-  const [userId, setUserId] = useState('');
-  const [users, setUsers] = useState<IUser[]>([]);
+  const [storeInfoId, setStoreInfoId] = useState('');
+  const [storeInfos, setStoreInfos] = useState<IStoreInfo[]>([]);
 
   const dispatch = useDispatch();
 
-  const fetchUsers = async () => {
-    const response = await getUsersFn();
-    setUsers(response);
+  const fetchStoreInfos = async () => {
+    const response = await getStoreInfoFn();
+    setStoreInfos(response);
   };
 
   const openSideContent = (content: string) => {
@@ -35,35 +36,35 @@ const UserScreen: React.FC = () => {
   };
 
   useEffect(() => {
-    fetchUsers();
+    fetchStoreInfos();
 
     return () => {
       const closeSideContent = () => {
         dispatch(closeSideContentFn());
         setSideContent('');
-        setUserId('');
+        setStoreInfoId('');
       };
       closeSideContent();
     };
   }, [dispatch]);
 
-  const handleNewUser = (values) => {
-    createUserFn(values, () => {
-      fetchUsers();
+  const handleNewStoreInfo = (values) => {
+    createStoreInfoFn(values, () => {
+      fetchStoreInfos();
     });
   };
 
-  const openSingleUser = (id) => {
-    setUserId(id);
+  const openSingleStoreInfo = (id) => {
+    setStoreInfoId(id);
     openSideContent(CONTENT_EDIT);
   };
 
   const renderSideContent = () => {
     if (sideContent === CONTENT_CREATE) {
-      return <CreateUser createUserFn={handleNewUser} />;
+      return <CreateStoreInfo createStoreInfoFn={handleNewStoreInfo} />;
     }
     if (sideContent === CONTENT_EDIT) {
-      return <EditUser userId={userId} />;
+      return <EditStoreInfo storeInfoId={storeInfoId} />;
     }
     return null;
   };
@@ -86,37 +87,36 @@ const UserScreen: React.FC = () => {
 
   return (
     <DashboardLayout
-      screenTitle="Users"
+      screenTitle="StoreInfos"
       rightSidebar={renderSideContent()}
       headerContent={headerContent()}
     >
       <Table celled striped>
         <Table.Header>
           <Table.Row>
-            <Table.HeaderCell>Full Name</Table.HeaderCell>
-            <Table.HeaderCell>Username</Table.HeaderCell>
-            <Table.HeaderCell>Role</Table.HeaderCell>
-            <Table.HeaderCell>Created</Table.HeaderCell>
+            <Table.HeaderCell>Store Name</Table.HeaderCell>
+            <Table.HeaderCell>Address</Table.HeaderCell>
+            <Table.HeaderCell>Phone Number</Table.HeaderCell>
           </Table.Row>
         </Table.Header>
 
         <Table.Body>
-          {users.map((each) => {
+          {/* {storeInfos.map((each) => {
             return (
-              <Table.Row onClick={() => openSingleUser(each.id)} key={each.id}>
-                <Table.Cell>{each.fullName}</Table.Cell>
-                <Table.Cell>{each.username}</Table.Cell>
-                <Table.Cell>{each.role}</Table.Cell>
-                <Table.Cell>
-                  {moment(each.createdAt).format('DD/MM/YYYY')}
-                </Table.Cell>
+              <Table.Row
+                onClick={() => openSingleStoreInfo(each.id)}
+                key={each.id}
+              >
+                <Table.Cell>{each.storeName}</Table.Cell>
+                <Table.Cell>{each.address}</Table.Cell>
+                <Table.Cell>{each.phoneNumber}</Table.Cell>
               </Table.Row>
             );
-          })}
+          })} */}
         </Table.Body>
       </Table>
     </DashboardLayout>
   );
 };
 
-export default UserScreen;
+export default StoreInfoScreen;

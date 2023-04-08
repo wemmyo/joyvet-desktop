@@ -103,9 +103,7 @@ export const deleteSupplierFn = async (id: number, cb?: () => void) => {
 
   try {
     schema.parse({ id });
-    // dispatch(updateCustomer());
     await deleteSupplierService(id);
-    // dispatch(updateCustomerSuccess((updateCustomerResponse)));
     toast.success('Successfully deleted');
     if (cb) {
       cb();
@@ -129,10 +127,8 @@ export const updateSupplierFn = async (
     address: z.string().min(1),
   });
   try {
-    // dispatch(updateSupplier());
     schema.parse({ ...values, id });
     await updateSupplierService(id, values);
-    // dispatch(updateSupplierSuccess((updateSupplierResponse)));
     toast.success('Successfully updated');
     if (cb) {
       cb();

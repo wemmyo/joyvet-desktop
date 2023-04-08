@@ -23,6 +23,7 @@ import EditInvoiceScreen from '../views/Invoice/components/EditInvoice';
 import CustomerHistory from '../views/CustomerHistory/CustomerHistory';
 import SupplierHistory from '../views/SupplierHistory/SupplierHistory';
 import ProductHistory from '../views/ProductHistory/ProductHistory';
+import StoreInfoScreen from '../views/StoreInfo/StoreInfo';
 
 export default function Routes() {
   return (
@@ -45,6 +46,7 @@ export default function Routes() {
           path={`${routes.INVOICE}/:id`}
           component={EditInvoiceScreen}
         />
+        <PrivateRoute path={routes.STORE_INFO} component={StoreInfoScreen} />
         <PrivateRoute path={routes.EXPENSE} component={ExpenseScreen} />
         <PrivateRoute path={routes.USER} component={UserScreen} />
         <PrivateRoute path={routes.SALES} component={SalesScreen} />

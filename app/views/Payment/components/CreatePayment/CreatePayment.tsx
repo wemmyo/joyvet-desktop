@@ -112,13 +112,13 @@ const CreatePayment: React.FC = () => {
               name="supplierId"
               component="select"
               className="ui dropdown"
-              onChange={(e: { currentTarget: { value: any } }) => {
+              onChange={async (e: { currentTarget: { value: any } }) => {
                 // call the built-in handleBur
                 handleChange(e);
                 // and do something about e
                 const supplierId = e.currentTarget.value;
                 // console.log(someValue);
-                dispatch(getSingleSupplierFn(supplierId));
+                await getSingleSupplierFn(supplierId);
               }}
             >
               <option value="" disabled hidden>

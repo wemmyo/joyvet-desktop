@@ -60,13 +60,10 @@ const EditPayment: React.FC<EditPaymentProps> = ({
         note: note || '',
       }}
       // validationSchema={EditPaymentSchema}
-      onSubmit={(values) => {
-        dispatch(
-          updatePaymentFn(values, paymentId, () => {
-            dispatch(closeSideContentFn());
-            dispatch(getPaymentsFn());
-          })
-        );
+      onSubmit={async (values) => {
+        await updatePaymentFn(values, Number(paymentId));
+        dispatch(closeSideContentFn());
+        await getPaymentsFn();
       }}
     >
       {({ handleSubmit }) => (

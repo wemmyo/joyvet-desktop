@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Form, Button, Tab } from 'semantic-ui-react';
 import moment from 'moment';
-import { useDispatch } from 'react-redux';
 
 import DashboardLayout from '../../layouts/DashboardLayout/DashboardLayout';
 import SuppplierHistoryPayments from './components/Payments/Payments';
@@ -23,8 +22,6 @@ const SuppplierHistory: React.FC = ({ match }: any) => {
 
   const supplierId = match.params.id;
 
-  const dispatch = useDispatch();
-
   useEffect(() => {
     const fetchData = async () => {
       const getPayments = getSupplierPaymentsFn(supplierId, startDate, endDate);
@@ -41,7 +38,7 @@ const SuppplierHistory: React.FC = ({ match }: any) => {
       setPurchases(purchasesResponse);
     };
     fetchData();
-  }, [startDate, endDate, supplierId, dispatch]);
+  }, [startDate, endDate, supplierId]);
 
   const resetFilters = () => {
     setStartDate(TODAYS_DATE);

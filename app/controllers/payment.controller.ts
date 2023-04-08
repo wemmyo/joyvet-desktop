@@ -7,7 +7,6 @@ import sequelize from '../utils/database';
 import {
   getPayments as getPaymentsService,
   getPaymentById,
-  createPayment as createPaymentService,
   updatePayment as updatePaymentService,
 } from '../services/payment.service';
 
@@ -31,11 +30,11 @@ export const searchPaymentFn = async (value: string) => {
   }
 };
 
-export const updatePaymentFn = (
+export const updatePaymentFn = async (
   values: Partial<IPayment>,
   id: number,
   cb?: () => void
-) => async () => {
+) => {
   // use zod to validate input
   const updatePaymentSchema = z.object({
     id: z.number(),

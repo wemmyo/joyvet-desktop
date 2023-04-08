@@ -118,10 +118,7 @@ export const updateProductFn = async (
   });
   try {
     schema.parse({ values, id });
-    // dispatch(updateProduct());
-
     await updateProductService(id, values);
-    // dispatch(updateProductSuccess((updateProductResponse)));
     toast.success('Successfully updated');
     if (cb) {
       cb();

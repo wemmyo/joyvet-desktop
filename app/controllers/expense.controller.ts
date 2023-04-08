@@ -66,7 +66,6 @@ export const updateExpenseFn = async (
     updateExpenseSchema.parse({ id });
 
     await updateExpenseService(id, values);
-    // dispatch(updateExpenseSuccess((updateExpenseResponse)));
     toast.success('Successfully updated');
     if (cb) {
       cb();

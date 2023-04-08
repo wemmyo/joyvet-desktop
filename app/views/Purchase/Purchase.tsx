@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Table, Grid, Button, Form, Segment } from 'semantic-ui-react';
 import { Field, Formik } from 'formik';
-import { useDispatch } from 'react-redux';
 
 import DashboardLayout from '../../layouts/DashboardLayout/DashboardLayout';
 
@@ -11,13 +10,13 @@ import { getProductsFn } from '../../controllers/product.controller';
 import { ISupplier } from '../../models/supplier';
 import { IProduct } from '../../models/product';
 import { numberWithCommas } from '../../utils/helpers';
+import { createPurchaseFn } from '../../controllers/purchase.controller';
+import { IPurchaseItem } from '../../models/purchaseItem';
 
 const PurchaseScreen: React.FC = () => {
   const [orders, setOrders] = useState([]);
   const [suppliers, setSuppliers] = useState<ISupplier[]>([]);
   const [products, setProducts] = useState<IProduct[]>([]);
-
-  const dispatch = useDispatch();
 
   useEffect(() => {
     const fetchData = async () => {
@@ -45,7 +44,7 @@ const PurchaseScreen: React.FC = () => {
   };
 
   const renderSuppliers = () => {
-    const supplierList = suppliers.map((supplier: any) => {
+    const supplierList = suppliers.map((supplier) => {
       return (
         <option key={supplier.id} value={supplier.id}>
           {supplier.fullName}
@@ -63,7 +62,7 @@ const PurchaseScreen: React.FC = () => {
     return prev + next;
   };
 
-  const addToOrders = (value: any) => {
+  const addToOrders = (value: IPurchaseItem) => {
     setOrders([...orders, value]);
   };
 
@@ -82,12 +81,10 @@ const PurchaseScreen: React.FC = () => {
   };
 
   const renderOrders = () => {
-    let serialNumber = 0;
-    const orderList = orders.map((order: any) => {
-      serialNumber += 1;
+    const orderList = orders.map((order: any, index) => {
       return (
         <Table.Row key={order.orderId}>
-          <Table.Cell>{serialNumber}</Table.Cell>
+          <Table.Cell>{index + 1}</Table.Cell>
           <Table.Cell>{order.title}</Table.Cell>
           <Table.Cell>{order.quantity}</Table.Cell>
           <Table.Cell>{numberWithCommas(order.unitPrice)}</Table.Cell>
@@ -132,21 +129,14 @@ const PurchaseScreen: React.FC = () => {
     });
   };
 
-  const createPurchase = ({ values, resetForm }) => {
-    dispatch(
-      createPurchaseFn(
-        orders,
-        {
-          supplierId: values.supplierId,
-          invoiceNumber: values.invoiceNumber,
-          amount: sumOfOrders(),
-        },
-        () => {
-          resetForm();
-          setOrders([]);
-        }
-      )
-    );
+  const createPurchase = async ({ values, resetForm }) => {
+    await createPurchaseFn(orders, {
+      supplierId: values.supplierId,
+      invoiceNumber: values.invoiceNumber,
+      amount: sumOfOrders(),
+    });
+    resetForm();
+    setOrders([]);
   };
 
   const onProductChange = ({ handleChange, setFieldValue, e }) => {

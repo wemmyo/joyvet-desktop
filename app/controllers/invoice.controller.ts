@@ -214,8 +214,6 @@ export const deleteInvoiceFn = async (id: number, cb?: () => void) => {
       }
 
       await invoice.destroy({ transaction: t });
-
-      // dispatch(getInvoicesSuccess((invoices)));
     });
     toast.success('Invoice deleted');
 

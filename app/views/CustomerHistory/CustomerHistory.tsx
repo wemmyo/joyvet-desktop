@@ -10,14 +10,16 @@ import {
   getCustomerInvoicesFn,
   getCustomerReceiptsFn,
 } from '../../controllers/customer.controller';
+import { IReceipt } from '../../models/receipt';
+import { IInvoice } from '../../models/invoice';
 
 const TODAYS_DATE = `${moment().format('YYYY-MM-DD')}`;
 
 const CustomerHistory: React.FC = ({ match }: any) => {
   const [startDate, setStartDate] = useState(TODAYS_DATE);
   const [endDate, setEndDate] = useState(TODAYS_DATE);
-  const [receipts, setReceipts] = useState([]);
-  const [invoices, setInvoices] = useState([]);
+  const [receipts, setReceipts] = useState<IReceipt[]>([]);
+  const [invoices, setInvoices] = useState<IInvoice[]>([]);
 
   const customerId = match.params.id;
 

@@ -55,12 +55,9 @@ const SuppliersScreen: React.FC = () => {
     };
   }, [dispatch]);
 
-  const handleNewSupplier = (values) => {
-    dispatch(
-      createSupplierFn(values, () => {
-        fetchSuppliers();
-      })
-    );
+  const handleNewSupplier = async (values) => {
+    await createSupplierFn(values);
+    fetchSuppliers();
   };
 
   const openSingleSupplier = (id) => {
@@ -95,7 +92,7 @@ const SuppliersScreen: React.FC = () => {
   const handleSearchChange = (e, { value }: { value: string }) => {
     setSearchValue(value);
     if (value.length > 0) {
-      dispatch(searchSupplierFn(value));
+      searchSupplierFn(value);
     } else {
       fetchSuppliers();
     }

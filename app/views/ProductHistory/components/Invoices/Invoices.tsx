@@ -2,9 +2,10 @@ import * as React from 'react';
 import { Table } from 'semantic-ui-react';
 import moment from 'moment';
 import { numberWithCommas, isAdmin, sum } from '../../../../utils/helpers';
+import { IInvoiceItem } from '../../../../models/invoiceItem';
 
 export interface ProductHistoryInvoicesProps {
-  data: any[];
+  data: IInvoiceItem[];
 }
 
 const ProductHistoryInvoices: React.SFC<ProductHistoryInvoicesProps> = ({

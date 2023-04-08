@@ -1,5 +1,5 @@
 export const numberWithCommas = (n: number) => {
-  if (!n) {
+  if (!n || typeof n !== 'number') {
     return '';
   }
 

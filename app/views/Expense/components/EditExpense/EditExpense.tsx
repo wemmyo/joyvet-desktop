@@ -32,7 +32,7 @@ const EditExpense: React.FC<EditExpenseProps> = ({
       setExpense(response);
     };
     fetchData();
-  }, [expenseId, dispatch]);
+  }, [expenseId]);
 
   // console.log(expense);
 
@@ -57,7 +57,7 @@ const EditExpense: React.FC<EditExpenseProps> = ({
         //   submitForm(values);
         // console.log(values);
 
-        await updateExpenseFn(values, expenseId);
+        await updateExpenseFn(values, Number(expenseId));
         dispatch(closeSideContentFn());
       }}
     >

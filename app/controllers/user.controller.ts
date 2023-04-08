@@ -24,7 +24,6 @@ export const loginUserFn = async (
   let loadedUser;
   try {
     LoginSchema.parse(values);
-    // dispatch(updateUser());
     const user = await findOneUserService({
       where: {
         username: values.username,
@@ -42,7 +41,6 @@ export const loginUserFn = async (
       if (validPassword) {
         localStorage.setItem('user', JSON.stringify(loadedUser));
 
-        // dispatch(updateUserSuccess((updateUserResponse)));
         if (cb) {
           cb();
         }
@@ -76,9 +74,7 @@ export const updateUserFn = async (
 
   try {
     UpdateUserSchema.parse(values);
-    // dispatch(updateUser());
     await updateUserService(id, values);
-    // dispatch(updateUserSuccess((updateUserResponse)));
     // toast.success('Successfully updated');
     if (cb) {
       cb();
@@ -117,7 +113,6 @@ export const deleteUserFn = async (userId: number, cb?: () => void) => {
 
   try {
     DeleteUserSchema.parse({ id: userId });
-    // dispatch(getUsers());
     const user = await deleteUserService(userId);
     user.destroy();
     toast.success('User successfully deleted');

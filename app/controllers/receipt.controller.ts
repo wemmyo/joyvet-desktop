@@ -46,13 +46,11 @@ export const updateReceiptFn = (
 
   try {
     UpdateReceiptSchema.parse(values);
-    // dispatch(updateReceipt());
     await Receipt.update(values, {
       where: {
         id,
       },
     });
-    // dispatch(updateReceiptSuccess((updateReceiptResponse)));
     toast.success('Successfully updated');
     if (cb) {
       cb();

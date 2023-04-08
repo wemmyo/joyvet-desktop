@@ -14,12 +14,16 @@ import {
 
 import { getReceipts as getReceiptsService } from '../services/receipt.service';
 import { getInvoices as getInvoicesService } from '../services/invoice.service';
+import { IInvoice } from '../models/invoice';
+import { IReceipt } from '../models/receipt';
 
 export const getCustomerReceiptsFn = async (
   customerId: string | number,
   startDate?: Date | string,
   endDate?: Date | string
-) => {
+): Promise<IReceipt[]> => {
+  let receipts: IReceipt[] = [];
+
   // use zod to validate the input
   const schema = z.object({
     customerId: z.number(),
@@ -30,7 +34,7 @@ export const getCustomerReceiptsFn = async (
   try {
     schema.parse({ customerId, startDate, endDate });
 
-    const receipts = await getReceiptsService({
+    const response = await getReceiptsService({
       where: {
         customerId,
         createdAt: {
@@ -42,18 +46,22 @@ export const getCustomerReceiptsFn = async (
       },
       order: [['createdAt', 'DESC']],
     });
-    return receipts;
+    receipts = response;
   } catch (error) {
     toast.error(error.message || '');
   }
+
+  return receipts;
 };
 
 export const getCustomerInvoicesFn = async (
   customerId: string,
   startDate: Date | string,
   endDate: Date | string
-) => {
+): Promise<IInvoice[]> => {
   // use zod to validate the input
+
+  let invoices: IInvoice[] = [];
 
   const schema = z.object({
     customerId: z.number(),
@@ -64,7 +72,7 @@ export const getCustomerInvoicesFn = async (
   try {
     schema.parse({ customerId, startDate, endDate });
 
-    const invoices = await getInvoicesService({
+    const response = await getInvoicesService({
       where: {
         customerId,
         createdAt: {
@@ -76,11 +84,11 @@ export const getCustomerInvoicesFn = async (
       },
       order: [['createdAt', 'DESC']],
     });
-
-    return invoices;
+    invoices = response;
   } catch (error) {
     toast.error(error.message || '');
   }
+  return invoices;
 };
 
 export const searchCustomerFn = async (value: string) => {

@@ -216,8 +216,6 @@ export const deletePurchaseFn = async (
       });
 
       await purchase.destroy({ transaction: t });
-
-      // dispatch(getPurchasesSuccess((invoices)));
     });
     toast.success('Purchase deleted');
     if (cb) {
