@@ -151,7 +151,12 @@ const ExpensesScreen: React.FC = () => {
       return <CreateExpense createExpenseFn={handleNewExpense} />;
     }
     if (sideContent === CONTENT_EDIT) {
-      return <EditExpense expenseId={Number(expenseId)} />;
+      return (
+        <EditExpense
+          expenseId={Number(expenseId)}
+          refreshExpenses={filterExpenses}
+        />
+      );
     }
     return null;
   };

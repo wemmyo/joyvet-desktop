@@ -25,10 +25,8 @@ const CreateExpense: React.FC<CreateExpenseProps> = ({
       }}
       validationSchema={CreateExpenseSchema}
       onSubmit={(values, actions) => {
-        //   submitForm(values);
         createExpenseFn(values);
         actions.resetForm();
-        // console.log(values);
       }}
     >
       {({ handleSubmit }) => (

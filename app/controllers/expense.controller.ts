@@ -123,9 +123,9 @@ export const createExpenseFn = async (values: any, cb?: () => void) => {
   // use zod to validate the input
   const createExpenseSchema = z.object({
     type: z.string().min(1),
-    amount: z.string().min(1),
+    amount: z.number(),
     date: z.string().min(1),
-    note: z.string().min(1),
+    note: z.string(),
   });
   try {
     createExpenseSchema.parse(values);

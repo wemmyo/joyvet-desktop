@@ -17,10 +17,12 @@ import { IExpense } from '../../../../models/expense';
 
 export interface EditExpenseProps {
   expenseId: number;
+  refreshExpenses: () => void;
 }
 
 const EditExpense: React.FC<EditExpenseProps> = ({
   expenseId,
+  refreshExpenses,
 }: EditExpenseProps) => {
   const [expense, setExpense] = useState<IExpense>({} as IExpense);
 
@@ -40,6 +42,7 @@ const EditExpense: React.FC<EditExpenseProps> = ({
 
   const handleDeleteExpense = async () => {
     await deleteExpenseFn(expenseId);
+    refreshExpenses();
     dispatch(closeSideContentFn());
   };
 
@@ -54,10 +57,8 @@ const EditExpense: React.FC<EditExpenseProps> = ({
       }}
       // validationSchema={EditExpenseSchema}
       onSubmit={async (values) => {
-        //   submitForm(values);
-        // console.log(values);
-
         await updateExpenseFn(values, Number(expenseId));
+        refreshExpenses();
         dispatch(closeSideContentFn());
       }}
     >
