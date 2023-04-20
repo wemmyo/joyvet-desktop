@@ -113,13 +113,14 @@ export const deletePaymentFn = async (id: string | number) => {
   }
 };
 
-export const createPaymentFn = async (values: any, cb: () => void) => {
+export const createPaymentFn = async (values: any, cb?: () => void) => {
   // use zod to validate input
   const createPaymentSchema = z.object({
     values: z.object({
       amount: z.number().min(1),
       supplierId: z.number(),
-      paymentDate: z.string().min(1),
+      paymentMethod: z.string().min(1),
+      bank: z.string(),
     }),
   });
   try {
@@ -134,7 +135,6 @@ export const createPaymentFn = async (values: any, cb: () => void) => {
         {
           supplierId: values.supplierId || null,
           amount: values.amount || null,
-          paymentType: values.paymentType || null,
           paymentMethod: values.paymentMethod || null,
           bank: values.bank || null,
           note: values.note || null,
@@ -151,7 +151,9 @@ export const createPaymentFn = async (values: any, cb: () => void) => {
 
       toast.success('Payment successfully created');
     });
-    cb();
+    if (cb) {
+      cb();
+    }
   } catch (error) {
     toast.error(error.message || '');
   }

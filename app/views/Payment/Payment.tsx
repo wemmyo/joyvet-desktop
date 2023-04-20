@@ -79,10 +79,15 @@ const PaymentsScreen: React.FC = () => {
 
   const renderSideContent = () => {
     if (sideContent === CONTENT_DETAIL) {
-      return <PaymentDetail paymentId={Number(paymentId)} />;
+      return (
+        <PaymentDetail
+          paymentId={Number(paymentId)}
+          refreshPayments={fetchPayments}
+        />
+      );
     }
     if (sideContent === CONTENT_CREATE) {
-      return <CreatePayment />;
+      return <CreatePayment refreshPayments={fetchPayments} />;
     }
     if (sideContent === CONTENT_EDIT) {
       return <EditPayment paymentId={paymentId} />;

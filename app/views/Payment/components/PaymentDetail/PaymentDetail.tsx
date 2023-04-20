@@ -1,23 +1,22 @@
 import React, { useEffect, useState } from 'react';
 import { useDispatch } from 'react-redux';
 import { Table, Button } from 'semantic-ui-react';
+import moment from 'moment';
 
 import { numberWithCommas } from '../../../../utils/helpers';
 import { closeSideContentFn } from '../../../../slices/dashboardSlice';
 import {
   getSinglePaymentFn,
   deletePaymentFn,
-  getPaymentsFn,
 } from '../../../../controllers/payment.controller';
 import { IPayment } from '../../../../models/payment';
 
 export interface PaymentDetailProps {
   paymentId: number;
+  refreshPayments: () => void;
 }
 
-const PaymentDetail: React.SFC<PaymentDetailProps> = ({
-  paymentId,
-}: PaymentDetailProps) => {
+const PaymentDetail = ({ paymentId, refreshPayments }: PaymentDetailProps) => {
   const [singlePayment, setSinglePayment] = useState<IPayment>({} as IPayment);
   const [loading, setLoading] = useState<boolean>(true);
   const dispatch = useDispatch();
@@ -35,7 +34,7 @@ const PaymentDetail: React.SFC<PaymentDetailProps> = ({
 
   const handleDelete = async () => {
     await deletePaymentFn(paymentId);
-    await getPaymentsFn();
+    refreshPayments();
     dispatch(closeSideContentFn());
   };
 
@@ -85,7 +84,7 @@ const PaymentDetail: React.SFC<PaymentDetailProps> = ({
           <Table.Row>
             <Table.Cell>Date</Table.Cell>
             <Table.Cell>
-              {new Date(createdAt).toLocaleDateString('en-gb') || ''}
+              {moment(createdAt).format('DD/MM/YYYY') || ''}
             </Table.Cell>
           </Table.Row>
         </Table.Body>

@@ -73,19 +73,18 @@ const ExpensesScreen: React.FC = () => {
     setSideContent(content);
   };
 
-  const closeSideContent = () => {
-    dispatch(closeSideContentFn());
-    setSideContent('');
-    setExpenseId('');
-  };
-
   useEffect(() => {
     filterExpenses();
 
     return () => {
+      const closeSideContent = () => {
+        dispatch(closeSideContentFn());
+        setSideContent('');
+        setExpenseId('');
+      };
       closeSideContent();
     };
-  }, []);
+  }, [dispatch, filterExpenses]);
 
   const handleNewExpense = async (values) => {
     await createExpenseFn(values);
