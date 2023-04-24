@@ -13,15 +13,15 @@ import {
 } from '../services/supplier.service';
 
 export const getSupplierPaymentsFn = async (
-  supplierId: string | number,
-  startDate?: Date | string,
-  endDate?: Date | string
+  supplierId: number,
+  startDate?: string,
+  endDate?: string
 ) => {
   // use zod to validate input
   const schema = z.object({
     supplierId: z.number(),
-    startDate: z.date(),
-    endDate: z.date(),
+    startDate: z.string(),
+    endDate: z.string(),
   });
   try {
     schema.parse({ supplierId, startDate, endDate });
@@ -44,15 +44,15 @@ export const getSupplierPaymentsFn = async (
 };
 
 export const getSupplierPurchasesFn = async (
-  supplierId: string,
-  startDate: Date | string,
-  endDate: Date | string
+  supplierId: number,
+  startDate: string,
+  endDate: string
 ) => {
   // use zod to validate input
   const schema = z.object({
     supplierId: z.number(),
-    startDate: z.date(),
-    endDate: z.date(),
+    startDate: z.string(),
+    endDate: z.string(),
   });
 
   try {

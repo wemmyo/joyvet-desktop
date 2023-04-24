@@ -24,9 +24,13 @@ const SuppplierHistory: React.FC = ({ match }: any) => {
 
   useEffect(() => {
     const fetchData = async () => {
-      const getPayments = getSupplierPaymentsFn(supplierId, startDate, endDate);
+      const getPayments = getSupplierPaymentsFn(
+        Number(supplierId),
+        startDate,
+        endDate
+      );
       const getPurchases = getSupplierPurchasesFn(
-        supplierId,
+        Number(supplierId),
         startDate,
         endDate
       );

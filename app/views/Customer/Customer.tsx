@@ -90,12 +90,13 @@ const CustomersScreen: React.FC = () => {
 
   const handleSearchChange = (e, { value }: { value: string }) => {
     setSearchValue(value);
-    if (value.length > 0) {
-      searchCustomerFn(value);
-    } else {
+  };
+
+  useEffect(() => {
+    if (searchValue === '') {
       fetchCustomers();
     }
-  };
+  }, [searchValue]);
 
   const sumOfBalances = () => {
     if (customers.length === 0) {
@@ -122,11 +123,18 @@ const CustomersScreen: React.FC = () => {
           <Icon inverted color="grey" name="add" />
           Create
         </Button>
-        <Form.Input
-          placeholder="Search Customer"
-          onChange={handleSearchChange}
-          value={searchValue}
-        />
+        <Form
+          onSubmit={async () => {
+            const response = await searchCustomerFn(searchValue);
+            setCustomers(response);
+          }}
+        >
+          <Form.Input
+            placeholder="Search Customer"
+            onChange={handleSearchChange}
+            value={searchValue}
+          />
+        </Form>
       </>
     );
   };

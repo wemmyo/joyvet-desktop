@@ -118,12 +118,13 @@ const ProductsScreen: React.FC = () => {
 
   const handleSearchChange = (e, { value }: { value: string }) => {
     setSearchValue(value);
-    if (value.length > 0) {
-      searchProductFn(value);
-    } else {
+  };
+
+  useEffect(() => {
+    if (searchValue === '') {
       fetchProducts();
     }
-  };
+  }, [searchValue]);
 
   const headerContent = () => {
     return (
@@ -140,11 +141,18 @@ const ProductsScreen: React.FC = () => {
           Create
         </Button>
         <Button onClick={handlePrint} icon="print" />
-        <Form.Input
-          placeholder="Search Product"
-          onChange={handleSearchChange}
-          value={searchValue}
-        />
+        <Form
+          onSubmit={async () => {
+            const response = await searchProductFn(searchValue);
+            setProducts(response);
+          }}
+        >
+          <Form.Input
+            placeholder="Search Product"
+            onChange={handleSearchChange}
+            value={searchValue}
+          />
+        </Form>
       </>
     );
   };

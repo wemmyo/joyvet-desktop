@@ -31,8 +31,16 @@ const CustomerHistory: React.FC = ({ match }: any) => {
 
   useEffect(() => {
     const fetchData = async () => {
-      const getInvoices = getCustomerInvoicesFn(customerId, startDate, endDate);
-      const getReceipts = getCustomerReceiptsFn(customerId, startDate, endDate);
+      const getInvoices = getCustomerInvoicesFn(
+        Number(customerId),
+        startDate,
+        endDate
+      );
+      const getReceipts = getCustomerReceiptsFn(
+        Number(customerId),
+        startDate,
+        endDate
+      );
 
       const [invoicesResponse, receiptsResponse] = await Promise.all([
         getInvoices,

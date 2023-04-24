@@ -18,17 +18,17 @@ import { IInvoice } from '../models/invoice';
 import { IReceipt } from '../models/receipt';
 
 export const getCustomerReceiptsFn = async (
-  customerId: string | number,
-  startDate?: Date | string,
-  endDate?: Date | string
+  customerId: number,
+  startDate?: string,
+  endDate?: string
 ): Promise<IReceipt[]> => {
   let receipts: IReceipt[] = [];
 
   // use zod to validate the input
   const schema = z.object({
     customerId: z.number(),
-    startDate: z.date().optional(),
-    endDate: z.date().optional(),
+    startDate: z.string().optional(),
+    endDate: z.string().optional(),
   });
 
   try {
@@ -55,9 +55,9 @@ export const getCustomerReceiptsFn = async (
 };
 
 export const getCustomerInvoicesFn = async (
-  customerId: string,
-  startDate: Date | string,
-  endDate: Date | string
+  customerId: number,
+  startDate: string,
+  endDate: string
 ): Promise<IInvoice[]> => {
   // use zod to validate the input
 
@@ -65,8 +65,8 @@ export const getCustomerInvoicesFn = async (
 
   const schema = z.object({
     customerId: z.number(),
-    startDate: z.date().optional(),
-    endDate: z.date().optional(),
+    startDate: z.string().optional(),
+    endDate: z.string().optional(),
   });
 
   try {

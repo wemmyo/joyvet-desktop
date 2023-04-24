@@ -91,12 +91,13 @@ const SuppliersScreen: React.FC = () => {
 
   const handleSearchChange = (e, { value }: { value: string }) => {
     setSearchValue(value);
-    if (value.length > 0) {
-      searchSupplierFn(value);
-    } else {
+  };
+
+  useEffect(() => {
+    if (searchValue === '') {
       fetchSuppliers();
     }
-  };
+  }, [searchValue]);
 
   const sumOfBalances = () => {
     if (suppliers.length === 0) {
@@ -123,11 +124,18 @@ const SuppliersScreen: React.FC = () => {
           <Icon inverted color="grey" name="add" />
           Create
         </Button>
-        <Form.Input
-          placeholder="Search Supplier"
-          onChange={handleSearchChange}
-          value={searchValue}
-        />
+        <Form
+          onSubmit={async () => {
+            const response = await searchSupplierFn(searchValue);
+            setSuppliers(response);
+          }}
+        >
+          <Form.Input
+            placeholder="Search Supplier"
+            onChange={handleSearchChange}
+            value={searchValue}
+          />
+        </Form>
       </>
     );
   };
