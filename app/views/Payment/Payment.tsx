@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Table, Button, Icon, Form, Loader } from 'semantic-ui-react';
 import { useDispatch } from 'react-redux';
+import moment from 'moment';
 
 import DashboardLayout from '../../layouts/DashboardLayout/DashboardLayout';
 import CreatePayment from './components/CreatePayment/CreatePayment';
@@ -68,9 +69,7 @@ const PaymentsScreen: React.FC = () => {
           <Table.Cell>{numberWithCommas(each.amount)}</Table.Cell>
           <Table.Cell>{each.paymentMethod}</Table.Cell>
           <Table.Cell>{each.bank}</Table.Cell>
-          <Table.Cell>
-            {new Date(each.createdAt).toLocaleDateString('en-gb')}
-          </Table.Cell>
+          <Table.Cell>{moment(each.createdAt).format('DD/MM/YYYY')}</Table.Cell>
         </Table.Row>
       );
     });
@@ -97,13 +96,13 @@ const PaymentsScreen: React.FC = () => {
 
   const handleSearchChange = async (e, { value }: { value: string }) => {
     setSearchValue(value);
-    if (value.length > 0) {
-      const response = await searchPaymentFn(value);
-      setPayments(response);
-    } else {
+  };
+
+  useEffect(() => {
+    if (searchValue.length === 0) {
       fetchPayments();
     }
-  };
+  }, [searchValue]);
 
   const headerContent = () => {
     return (
@@ -119,11 +118,24 @@ const PaymentsScreen: React.FC = () => {
           <Icon inverted color="grey" name="add" />
           Create
         </Button>
-        <Form.Input
-          placeholder="Search Payment"
-          onChange={handleSearchChange}
-          value={searchValue}
-        />
+        <Button icon labelPosition="left" onClick={fetchPayments}>
+          <Icon name="redo" />
+          Refresh
+        </Button>
+        <Form
+          onSubmit={async () => {
+            setLoading(true);
+            const response = await searchPaymentFn(searchValue);
+            setPayments(response);
+            setLoading(false);
+          }}
+        >
+          <Form.Input
+            placeholder="Search Payment"
+            onChange={handleSearchChange}
+            value={searchValue}
+          />
+        </Form>
       </>
     );
   };

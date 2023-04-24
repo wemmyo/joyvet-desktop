@@ -123,6 +123,10 @@ const CustomersScreen: React.FC = () => {
           <Icon inverted color="grey" name="add" />
           Create
         </Button>
+        <Button icon labelPosition="left" onClick={fetchCustomers}>
+          <Icon name="redo" />
+          Refresh
+        </Button>
         <Form
           onSubmit={async () => {
             const response = await searchCustomerFn(searchValue);

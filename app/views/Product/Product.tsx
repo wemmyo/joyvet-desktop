@@ -141,6 +141,10 @@ const ProductsScreen: React.FC = () => {
           Create
         </Button>
         <Button onClick={handlePrint} icon="print" />
+        <Button icon labelPosition="left" onClick={fetchProducts}>
+          <Icon name="redo" />
+          Refresh
+        </Button>
         <Form
           onSubmit={async () => {
             const response = await searchProductFn(searchValue);

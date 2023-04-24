@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Table, Form, Loader } from 'semantic-ui-react';
+import { Table, Form, Loader, Button, Icon } from 'semantic-ui-react';
 import { useDispatch } from 'react-redux';
 
 import DashboardLayout from '../../layouts/DashboardLayout/DashboardLayout';
@@ -95,11 +95,17 @@ const AllPurchasesScreen: React.FC = () => {
 
   const headerContent = () => {
     return (
-      <Form.Input
-        placeholder="Search Invoice Number"
-        onChange={handleSearchChange}
-        value={searchValue}
-      />
+      <>
+        <Form.Input
+          placeholder="Search Invoice Number"
+          onChange={handleSearchChange}
+          value={searchValue}
+        />
+        <Button icon labelPosition="left" onClick={fetchPurchases}>
+          <Icon name="redo" />
+          Refresh
+        </Button>
+      </>
     );
   };
 

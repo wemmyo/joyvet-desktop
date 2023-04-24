@@ -12,7 +12,7 @@ import {
   closeSideContentFn,
 } from '../../slices/dashboardSlice';
 import CreateUser from './components/CreateUser/CreateUser';
-import { createStoreInfoTable } from '../../controllers/storeInfo.controller';
+// import { createStoreInfoTable } from '../../controllers/storeInfo.controller';
 
 const CONTENT_CREATE = 'create';
 const CONTENT_EDIT = 'edit';
@@ -70,17 +70,23 @@ const UserScreen: React.FC = () => {
 
   const headerContent = () => {
     return (
-      <Button
-        color="blue"
-        icon
-        labelPosition="left"
-        onClick={() => {
-          openSideContent(CONTENT_CREATE);
-        }}
-      >
-        <Icon inverted color="grey" name="add" />
-        Create
-      </Button>
+      <>
+        <Button
+          color="blue"
+          icon
+          labelPosition="left"
+          onClick={() => {
+            openSideContent(CONTENT_CREATE);
+          }}
+        >
+          <Icon inverted color="grey" name="add" />
+          Create
+        </Button>
+        <Button icon labelPosition="left" onClick={fetchUsers}>
+          <Icon name="redo" />
+          Refresh
+        </Button>
+      </>
     );
   };
 

@@ -124,6 +124,10 @@ const SuppliersScreen: React.FC = () => {
           <Icon inverted color="grey" name="add" />
           Create
         </Button>
+        <Button icon labelPosition="left" onClick={fetchSuppliers}>
+          <Icon name="redo" />
+          Refresh
+        </Button>
         <Form
           onSubmit={async () => {
             const response = await searchSupplierFn(searchValue);

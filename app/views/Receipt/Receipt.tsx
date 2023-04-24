@@ -92,12 +92,13 @@ const ReceiptsScreen: React.FC = () => {
 
   const handleSearchChange = (e, { value }: { value: string }) => {
     setSearchValue(value);
-    if (value.length > 0) {
-      searchReceiptFn(value);
-    } else {
+  };
+
+  useEffect(() => {
+    if (searchValue.length === 0) {
       fetchReceipts();
     }
-  };
+  }, [searchValue]);
 
   const headerContent = () => {
     return (
@@ -113,11 +114,24 @@ const ReceiptsScreen: React.FC = () => {
           <Icon inverted color="grey" name="add" />
           Create
         </Button>
-        <Form.Input
-          placeholder="Search Receipt No"
-          onChange={handleSearchChange}
-          value={searchValue}
-        />
+        <Button icon labelPosition="left" onClick={fetchReceipts}>
+          <Icon name="redo" />
+          Refresh
+        </Button>
+        <Form
+          onSubmit={async () => {
+            setLoading(true);
+            const response = await searchReceiptFn(searchValue);
+            setReceipts(response);
+            setLoading(false);
+          }}
+        >
+          <Form.Input
+            placeholder="Search Receipt No"
+            onChange={handleSearchChange}
+            value={searchValue}
+          />
+        </Form>
       </>
     );
   };

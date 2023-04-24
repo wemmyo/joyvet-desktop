@@ -1,4 +1,10 @@
-import React, { Fragment, useEffect, useState, useRef } from 'react';
+import React, {
+  Fragment,
+  useEffect,
+  useState,
+  useRef,
+  useCallback,
+} from 'react';
 import { Table, Button, Icon, Form, Loader } from 'semantic-ui-react';
 import { useDispatch } from 'react-redux';
 import { useReactToPrint } from 'react-to-print';
@@ -39,12 +45,12 @@ const ExpensesScreen: React.FC = () => {
     content: () => componentRef.current,
   });
 
-  const filterExpenses = async () => {
+  const filterExpenses = useCallback(async () => {
     setLoading(true);
     const response = await filterExpensesFn({ startDate, endDate });
     setExpenses(response);
     setLoading(false);
-  };
+  }, [endDate, startDate]);
 
   const sum = (prev: number, next: number) => {
     return prev + next;
