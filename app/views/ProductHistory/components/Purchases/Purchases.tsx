@@ -66,7 +66,7 @@ const ProductHistoryPurchases: React.FC<ProductHistoryPurchasesProps> = ({
           <Table.HeaderCell>Date & Time</Table.HeaderCell>
         </Table.Row>
       </Table.Header>
-      <Table.Body>{renderPurchases()}</Table.Body>
+      <Table.Body> {renderPurchases()} </Table.Body>
 
       {isAdmin() ? (
         <Table.Footer>

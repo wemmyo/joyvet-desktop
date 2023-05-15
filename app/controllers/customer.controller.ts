@@ -192,9 +192,8 @@ export const createCustomerFn = async (values: any, cb?: () => void) => {
   const schema = z.object({
     values: z.object({
       fullName: z.string().min(1),
-      email: z.string().email(),
-      phone: z.string().min(1),
-      address: z.string().min(1),
+      phoneNumber: z.string(),
+      address: z.string(),
     }),
   });
   try {

@@ -50,7 +50,7 @@ const ProductHistoryInvoices: React.SFC<ProductHistoryInvoicesProps> = ({
           <Table.HeaderCell>Date & Time</Table.HeaderCell>
         </Table.Row>
       </Table.Header>
-      <Table.Body>{renderInvoices()}</Table.Body>
+      <Table.Body> {renderInvoices()} </Table.Body>
 
       {isAdmin() ? (
         <Table.Footer>

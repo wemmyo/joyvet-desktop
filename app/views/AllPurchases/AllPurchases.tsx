@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Table, Form, Loader, Button, Icon } from 'semantic-ui-react';
 import { useDispatch } from 'react-redux';
+import moment from 'moment';
 
 import DashboardLayout from '../../layouts/DashboardLayout/DashboardLayout';
 
@@ -31,11 +32,6 @@ const AllPurchasesScreen: React.FC = () => {
     setSideContent(content);
   };
 
-  const closeSideContent = () => {
-    dispatch(closeSideContentFn());
-    setSideContent('');
-    setPurchasesId('');
-  };
   const fetchPurchases = async () => {
     const response = await getPurchasesFn();
     setPurchases(response);
@@ -45,9 +41,11 @@ const AllPurchasesScreen: React.FC = () => {
     fetchPurchases();
 
     return () => {
-      closeSideContent();
+      dispatch(closeSideContentFn());
+      setSideContent('');
+      setPurchasesId('');
     };
-  }, []);
+  }, [dispatch]);
 
   const openSinglePurchase = (id) => {
     setPurchasesId(id);
@@ -59,11 +57,9 @@ const AllPurchasesScreen: React.FC = () => {
       return (
         <Table.Row onClick={() => openSinglePurchase(each.id)} key={each.id}>
           <Table.Cell>{each.invoiceNumber}</Table.Cell>
-          <Table.Cell>{each.supplier.fullName}</Table.Cell>
+          <Table.Cell>{each?.supplier?.fullName}</Table.Cell>
           <Table.Cell>{numberWithCommas(each.amount)}</Table.Cell>
-          <Table.Cell>
-            {new Date(each.createdAt).toLocaleDateString('en-gb')}
-          </Table.Cell>
+          <Table.Cell>{moment(each.createdAt).format('DD-MM-YYYY')}</Table.Cell>
         </Table.Row>
       );
     });

@@ -1,5 +1,6 @@
 import * as React from 'react';
 import { NavLink, useHistory } from 'react-router-dom';
+import { Button } from 'semantic-ui-react';
 
 import styles from './SideNav.css';
 // import NavItem from './components/NavItem/NavItem';
@@ -109,9 +110,9 @@ const SideNav = () => {
         </NavLink>
       ) : null}
 
-      <div
-        // type="div"
-        style={{ color: 'red', cursor: 'pointer' }}
+      <Button
+        negative
+        type="button"
         className={styles.sideNav__mainItem}
         onClick={() => {
           logoutFn();
@@ -119,7 +120,7 @@ const SideNav = () => {
         }}
       >
         Log out
-      </div>
+      </Button>
       {/* <IconNavItem title="Get Started" /> */}
       {/* <IconNavWithChildren title="Sales" /> */}
     </section>

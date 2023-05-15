@@ -25,10 +25,8 @@ const CreateCustomer: React.FC<CreateCustomerProps> = ({
       }}
       validationSchema={CreateCustomerSchema}
       onSubmit={(values, actions) => {
-        //   submitForm(values);
         createCustomerFn(values);
         actions.resetForm();
-        // console.log(values);
       }}
     >
       {({ handleSubmit }) => (

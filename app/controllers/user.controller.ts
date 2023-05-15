@@ -53,9 +53,8 @@ export const loginUserFn = async (
   }
 };
 
-export const logoutFn = (cb: () => void) => async () => {
+export const logoutFn = () => {
   localStorage.removeItem('user');
-  cb();
   // window.location.reload(false);
 };
 

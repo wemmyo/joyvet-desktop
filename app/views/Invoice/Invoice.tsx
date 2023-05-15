@@ -269,7 +269,6 @@ const InvoiceScreen: React.FC = () => {
               <Formik
                 initialValues={initialValues}
                 onSubmit={(values, { resetForm }) => {
-                  // console.log('values', values);
                   const product: IProduct = JSON.parse(values.product as any);
                   const quantity = Number(values.quantity);
                   const unitPrice = Number(values.unitPrice);

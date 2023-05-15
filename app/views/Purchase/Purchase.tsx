@@ -35,7 +35,7 @@ const PurchaseScreen: React.FC = () => {
   const renderProducts = () => {
     const productList = products.map((product) => {
       return (
-        <option key={product.id} value={product}>
+        <option key={product.id} value={JSON.stringify(product)}>
           {product.title}
         </option>
       );

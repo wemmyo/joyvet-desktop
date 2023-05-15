@@ -96,9 +96,13 @@ const CreateReceipt: React.FC = () => {
         note: '',
       }}
       // validationSchema={CreateReceiptSchema}
-      onSubmit={(values, actions) => {
-        handleNewReceipt(values);
-        actions.resetForm();
+      onSubmit={(values, { resetForm }) => {
+        handleNewReceipt({
+          ...values,
+          customerId: Number(values.customerId),
+          amount: Number(values.amount),
+        });
+        resetForm();
         setSingleCustomer({} as ICustomer);
       }}
     >
@@ -117,7 +121,7 @@ const CreateReceipt: React.FC = () => {
                 // and do something about e
                 const customerId = e.currentTarget.value;
                 // console.log(someValue);
-                await getSingleCustomerFn(customerId);
+                await getSingleCustomerFn(Number(customerId));
 
                 // ...
               }}

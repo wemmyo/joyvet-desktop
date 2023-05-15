@@ -10,20 +10,20 @@ import {
   getProductById,
 } from '../services/product.service';
 import { getPurchaseItems as getPurchaseItemsService } from '../services/purchaseItem.service';
-import { getInvoices as getInvoicesService } from '../services/invoice.service';
 
 import type { IProduct } from '../models/product';
+import { getInvoiceItems } from '../services/invoiceItem.service';
 
 export const getProductPurchasesFn = async (
-  productId: string | number,
+  productId: number,
   startDate?: Date | string,
   endDate?: Date | string
 ) => {
   // use zod to validate input
   const schema = z.object({
     productId: z.number(),
-    startDate: z.date().optional(),
-    endDate: z.date().optional(),
+    startDate: z.string(),
+    endDate: z.string(),
   });
 
   try {
@@ -48,20 +48,20 @@ export const getProductPurchasesFn = async (
 };
 
 export const getProductInvoicesFn = async (
-  productId: string,
-  startDate: Date | string,
-  endDate: Date | string
+  productId: number,
+  startDate: string,
+  endDate: string
 ) => {
   // use zod to validate input
   const schema = z.object({
     productId: z.number(),
-    startDate: z.date(),
-    endDate: z.date(),
+    startDate: z.string(),
+    endDate: z.string(),
   });
   try {
     schema.parse({ productId, startDate, endDate });
 
-    const invoices = await getInvoicesService({
+    const invoices = await getInvoiceItems({
       where: {
         productId,
         createdAt: {
