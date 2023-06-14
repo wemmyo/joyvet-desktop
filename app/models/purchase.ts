@@ -11,7 +11,7 @@ export interface IPurchase {
   postedBy: string;
   createdAt?: Date;
   updatedAt?: Date;
-  supplierId?: number;
+  supplierId: number;
   supplier?: ISupplier;
 }
 

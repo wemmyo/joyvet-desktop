@@ -105,7 +105,7 @@ const PurchaseScreen: React.FC = () => {
     return orderList;
   };
 
-  const addItemToOrder = (values: any, { resetForm }) => {
+  const addItemToOrder = (values, { resetForm }) => {
     addToOrders({
       ...JSON.parse(values.product),
       quantity: values.quantity,
@@ -131,7 +131,7 @@ const PurchaseScreen: React.FC = () => {
 
   const createPurchase = async ({ values, resetForm }) => {
     await createPurchaseFn(orders, {
-      supplierId: values.supplierId,
+      supplierId: Number(values.supplierId),
       invoiceNumber: values.invoiceNumber,
       amount: sumOfOrders(),
     });
@@ -223,7 +223,6 @@ const PurchaseScreen: React.FC = () => {
                       name="invoiceNumber"
                       placeholder="Invoice Number"
                       label="Invoice Number"
-                      type="number"
                       component={TextInput}
                     />
                     <Segment raised>

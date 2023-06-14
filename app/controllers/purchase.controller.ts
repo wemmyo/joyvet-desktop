@@ -1,7 +1,7 @@
 import { toast } from 'react-toastify';
 import { Op } from 'sequelize';
 import { z } from 'zod';
-import Purchase from '../models/purchase';
+import Purchase, { IPurchase } from '../models/purchase';
 import Supplier from '../models/supplier';
 import Product from '../models/product';
 import sequelize from '../utils/database';
@@ -10,6 +10,7 @@ import {
   getPurchases as getPurchasesService,
   getPurchaseById,
 } from '../services/purchase.service';
+import { IPurchaseItem } from '../models/purchaseItem';
 
 export const searchPurchaseFn = async (value: string) => {
   // use zod to validate input
@@ -81,8 +82,8 @@ export const getPurchasesFn = async () => {
 };
 
 export const createPurchaseFn = async (
-  values: any,
-  meta?: any,
+  values: IPurchaseItem[],
+  meta: Omit<IPurchase, 'id' | 'postedBy'>,
   cb?: () => void
 ) => {
   // use zod to validate input
