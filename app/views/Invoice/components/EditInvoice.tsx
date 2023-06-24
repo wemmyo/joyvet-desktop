@@ -249,6 +249,8 @@ const InvoiceScreen: React.FC = ({ match }: any) => {
     profit: '',
   };
 
+  const hasInvoiceItems = invoiceItems.length > 0;
+
   return (
     <DashboardLayout screenTitle="Create Invoice">
       <Grid>
@@ -284,13 +286,13 @@ const InvoiceScreen: React.FC = ({ match }: any) => {
                 </Table.Row>
               </Table.Footer>
             </Table>
+            <p>Don&apos;t forget to save after removing an item</p>
           </Grid.Column>
           <Grid.Column width={5}>
             <Segment>
               <Formik
                 initialValues={initialValues}
                 onSubmit={(values, { resetForm }) => {
-                  // console.log('values', values);
                   const product: IProduct = JSON.parse(values.product as any);
                   const quantity = Number(values.quantity);
                   const unitPrice = Number(values.unitPrice);
@@ -403,13 +405,15 @@ const InvoiceScreen: React.FC = ({ match }: any) => {
                       </Button>
                     </Segment>
                     <Button
-                      disabled={invoiceItems.length < 1}
                       onClick={() => updateInvoice(resetForm)}
                       type="button"
                       fluid
-                      positive
+                      // eslint-disable-next-line react/jsx-props-no-spreading
+                      {...(hasInvoiceItems
+                        ? { positive: true }
+                        : { negative: true })}
                     >
-                      Save
+                      {hasInvoiceItems ? 'Save' : 'Delete'}
                     </Button>
                     {renderInvoiceToPrint()}
                   </Form>

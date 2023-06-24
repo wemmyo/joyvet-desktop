@@ -187,7 +187,10 @@ export const getCustomersFn = async () => {
   }
 };
 
-export const createCustomerFn = async (values: any, cb?: () => void) => {
+export const createCustomerFn = async (
+  values: Partial<ICustomer>,
+  cb?: () => void
+) => {
   // use zod to validate the input
   const schema = z.object({
     values: z.object({

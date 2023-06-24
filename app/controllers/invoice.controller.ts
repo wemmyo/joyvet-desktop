@@ -491,9 +491,13 @@ export const updateInvoiceFn = async (
   });
   schema.parse({ invoiceItems, invoice });
 
+  const hasInvoiceItems = invoiceItems.length > 0;
+
   try {
     await deleteInvoiceFn(invoice.id);
-    await createInvoiceFn(invoiceItems, invoice, cb);
+    if (hasInvoiceItems) {
+      await createInvoiceFn(invoiceItems, invoice, cb);
+    }
   } catch (error) {
     toast.error(error.message);
   }

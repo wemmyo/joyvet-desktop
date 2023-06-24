@@ -88,9 +88,10 @@ const ProductsScreen: React.FC = () => {
   };
 
   const renderRows = () => {
-    const rows = products.map((each) => {
+    const rows = products.map((each, index) => {
       return (
         <Table.Row onClick={() => openSingleProduct(each.id)} key={each.id}>
+          <Table.Cell>{index + 1}</Table.Cell>
           <Table.Cell>{each.title}</Table.Cell>
           <Table.Cell>{each.stock}</Table.Cell>
           <Table.Cell>{numberWithCommas(each.buyPrice)}</Table.Cell>
@@ -174,6 +175,7 @@ const ProductsScreen: React.FC = () => {
           <Table celled striped>
             <Table.Header>
               <Table.Row>
+                <Table.HeaderCell>No</Table.HeaderCell>
                 <Table.HeaderCell>Title</Table.HeaderCell>
                 <Table.HeaderCell>Quantity</Table.HeaderCell>
                 <Table.HeaderCell>Buy Price</Table.HeaderCell>
@@ -188,6 +190,7 @@ const ProductsScreen: React.FC = () => {
 
             <Table.Footer>
               <Table.Row>
+                <Table.HeaderCell />
                 <Table.HeaderCell />
                 <Table.HeaderCell />
                 <Table.HeaderCell />
