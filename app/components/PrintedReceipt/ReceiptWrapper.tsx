@@ -23,7 +23,7 @@ const ReceiptWrapper = React.forwardRef<HTMLDivElement, ReceiptWrapperProps>(
             <br />
             Ota, Ogun State
             <br />
-            08095988354, 08095988693
+            08027634893 ,08095988354, 08095988693
           </p>
           <p>
             <b>Sales Invoice!</b>

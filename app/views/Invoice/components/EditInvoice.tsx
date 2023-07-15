@@ -2,7 +2,6 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useReactToPrint } from 'react-to-print';
 import { Table, Grid, Button, Form, Segment } from 'semantic-ui-react';
 import { Field, Formik } from 'formik';
-import { toast } from 'react-toastify';
 import moment from 'moment';
 
 import DashboardLayout from '../../../layouts/DashboardLayout/DashboardLayout';
@@ -13,8 +12,9 @@ import { IProduct } from '../../../models/product';
 import { IInvoiceItem } from '../../../models/invoiceItem';
 import { IInvoice } from '../../../models/invoice';
 import {
+  addInvoiceItemFn,
+  deleteInvoiceItemFn,
   getSingleInvoiceFn,
-  updateInvoiceFn,
 } from '../../../controllers/invoice.controller';
 import { getProductsFn } from '../../../controllers/product.controller';
 import { ICustomer } from '../../../models/customer';
@@ -33,54 +33,10 @@ const InvoiceScreen: React.FC = ({ match }: any) => {
   });
 
   const [invoiceItems, setInvoiceItems] = useState<InvoiceItem[]>([]);
-  const [invoice, setInvoice] = useState<Partial<IInvoice>>();
+  const [invoice, setInvoice] = useState<IInvoice>({} as IInvoice);
   const [printInvoice, setPrintInvoice] = useState(false);
   const [singleCustomer, setSingleCustomer] = useState({} as ICustomer);
   const [products, setProducts] = useState<IProduct[]>([]);
-  const [createdInvoice, setCreatedInvoice] = useState<IInvoice>(
-    {} as IInvoice
-  );
-
-  const removeInvoiceItem = (id: number) => {
-    const filteredItems = invoiceItems.filter((item) => item.id !== id);
-    setInvoiceItems(filteredItems);
-  };
-
-  const updateInoviceItem = (updatedItem: InvoiceItem) => {
-    // check reorder level
-    if (
-      updatedItem.product?.stock < updatedItem.quantity ||
-      updatedItem.product?.reorderLevel < updatedItem.quantity
-    ) {
-      toast.error(`${updatedItem.product?.title}: Re-order level`, {
-        autoClose: 5000,
-      });
-    }
-
-    // if updatedItem is in invoiceItems, update it
-    // else add it to invoiceItems
-    const itemIndex = invoiceItems.findIndex(
-      (item) => item.product?.title === updatedItem.product?.title
-    );
-
-    if (itemIndex !== -1) {
-      const updatedItems = [...invoiceItems];
-      const prevItem = updatedItems[itemIndex];
-      const updatedQuantity = prevItem.quantity + updatedItem.quantity;
-      updatedItems[itemIndex] = {
-        ...prevItem,
-        quantity: updatedQuantity,
-        unitPrice: updatedItem.unitPrice,
-        amount: updatedItem.unitPrice * updatedQuantity,
-        profit:
-          (updatedItem.unitPrice - updatedItem.product?.buyPrice) *
-          updatedQuantity,
-      };
-      setInvoiceItems(updatedItems);
-    } else {
-      setInvoiceItems([...invoiceItems, updatedItem]);
-    }
-  };
 
   const fetchData = useCallback(async () => {
     const getproducts = getProductsFn('inStock');
@@ -91,17 +47,18 @@ const InvoiceScreen: React.FC = ({ match }: any) => {
     ]);
     setProducts(productsResponse);
 
-    // set invoice
     setInvoice({
-      ...invoice,
+      ...singleInvoiceResponse,
       customerId: singleInvoiceResponse.customer.id,
       saleType: singleInvoiceResponse.saleType,
       id: singleInvoiceResponse.id,
       createdAt: singleInvoiceResponse.createdAt,
     });
 
+    const invoiceItemList: InvoiceItem[] = [];
+
     // set invoice items
-    singleInvoiceResponse.products.map((product) => {
+    singleInvoiceResponse.products.forEach((product) => {
       const { invoiceItem } = product;
       const item: InvoiceItem = {
         id: invoiceItem.id,
@@ -111,15 +68,28 @@ const InvoiceScreen: React.FC = ({ match }: any) => {
         profit: invoiceItem.profit,
         product,
       };
-      setInvoiceItems((i) => [...i, item]);
+      invoiceItemList.push(item);
     });
 
+    setInvoiceItems(invoiceItemList);
     setSingleCustomer(singleInvoiceResponse.customer);
   }, [invoiceId]);
 
   useEffect(() => {
     fetchData();
   }, [invoiceId, fetchData]);
+
+  const removeInvoiceItem = async (
+    invoiceItemId: number,
+    productId: number
+  ) => {
+    await deleteInvoiceItemFn({
+      productId,
+      invoiceId: Number(invoiceId),
+      invoiceItemId,
+    });
+    fetchData();
+  };
 
   const renderPrices = (product: IProduct) => {
     interface IProductPrice {
@@ -171,19 +141,6 @@ const InvoiceScreen: React.FC = ({ match }: any) => {
     );
   };
 
-  useEffect(() => {
-    const totalAmount = invoiceItems.reduce(
-      (acc, item) => acc + item.amount,
-      0
-    );
-    const totalProfit = invoiceItems.reduce(
-      (acc, item) => acc + item.profit,
-      0
-    );
-    setInvoice({ ...invoice, amount: totalAmount, profit: totalProfit });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [JSON.stringify(invoiceItems), JSON.stringify(invoice)]);
-
   const renderOrders = invoiceItems.map((invoiceItem, index) => {
     return (
       <Table.Row key={invoiceItem.id}>
@@ -195,7 +152,7 @@ const InvoiceScreen: React.FC = ({ match }: any) => {
         <Table.Cell>
           <Button
             onClick={() => {
-              removeInvoiceItem(invoiceItem.id);
+              removeInvoiceItem(invoiceItem.id, invoiceItem.product.id);
             }}
             negative
           >
@@ -210,25 +167,23 @@ const InvoiceScreen: React.FC = ({ match }: any) => {
     if (printInvoice) {
       return (
         <div style={{ display: 'none' }}>
-          <ComponentToPrint ref={componentRef} invoice={createdInvoice} />
+          <ComponentToPrint ref={componentRef} invoice={invoice} />
         </div>
       );
     }
     return null;
   };
 
-  const updateInvoice = async (resetForm) => {
-    await updateInvoiceFn(invoiceItems, invoice, async (id) => {
-      const response = await getSingleInvoiceFn(id);
-      setCreatedInvoice(response);
-      setPrintInvoice(true);
-      handlePrint?.();
-      resetForm();
-      setInvoiceItems([]);
-      setInvoice(undefined);
-      setCreatedInvoice({} as IInvoice);
-    });
+  const handlePrintInvoice = () => {
+    setPrintInvoice(true);
   };
+
+  useEffect(() => {
+    if (printInvoice) {
+      handlePrint?.();
+      setPrintInvoice(false); // set back to false after printing
+    }
+  }, [printInvoice, handlePrint]);
 
   const disabledAdditem = () => {
     const invoiceDate = moment(invoice?.createdAt).format('DD/MM/YYYY');
@@ -249,10 +204,8 @@ const InvoiceScreen: React.FC = ({ match }: any) => {
     profit: '',
   };
 
-  const hasInvoiceItems = invoiceItems.length > 0;
-
   return (
-    <DashboardLayout screenTitle="Create Invoice">
+    <DashboardLayout screenTitle="Update Invoice">
       <Grid>
         <Grid.Row>
           <Grid.Column width={11}>
@@ -286,13 +239,16 @@ const InvoiceScreen: React.FC = ({ match }: any) => {
                 </Table.Row>
               </Table.Footer>
             </Table>
-            <p>Don&apos;t forget to save after removing an item</p>
+            <p>
+              Note: Use same price level when updating exisiting product
+              quantity
+            </p>
           </Grid.Column>
           <Grid.Column width={5}>
             <Segment>
               <Formik
                 initialValues={initialValues}
-                onSubmit={(values, { resetForm }) => {
+                onSubmit={async (values, { resetForm }) => {
                   const product: IProduct = JSON.parse(values.product as any);
                   const quantity = Number(values.quantity);
                   const unitPrice = Number(values.unitPrice);
@@ -300,24 +256,21 @@ const InvoiceScreen: React.FC = ({ match }: any) => {
                   const profit: number =
                     (unitPrice - product.buyPrice) * quantity;
 
-                  updateInoviceItem({
-                    id: new Date().getUTCMilliseconds(),
+                  const updatedItem = {
                     quantity,
                     unitPrice,
                     amount,
                     profit,
                     product,
-                  });
+                  };
+
+                  await addInvoiceItemFn(invoice, updatedItem);
+                  await fetchData();
+
                   resetForm();
                 }}
               >
-                {({
-                  handleSubmit,
-                  handleChange,
-                  values,
-                  resetForm,
-                  setFieldValue,
-                }) => (
+                {({ handleSubmit, handleChange, values, setFieldValue }) => (
                   <Form>
                     <div className="field">
                       <label htmlFor="customer">Customer</label>
@@ -405,15 +358,12 @@ const InvoiceScreen: React.FC = ({ match }: any) => {
                       </Button>
                     </Segment>
                     <Button
-                      onClick={() => updateInvoice(resetForm)}
+                      onClick={handlePrintInvoice}
                       type="button"
                       fluid
-                      // eslint-disable-next-line react/jsx-props-no-spreading
-                      {...(hasInvoiceItems
-                        ? { positive: true }
-                        : { negative: true })}
+                      positive
                     >
-                      {hasInvoiceItems ? 'Save' : 'Delete'}
+                      Print
                     </Button>
                     {renderInvoiceToPrint()}
                   </Form>

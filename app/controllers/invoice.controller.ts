@@ -149,7 +149,7 @@ export const getSingleInvoiceFn = async (id: number, cb?: () => void) => {
       cb();
     }
 
-    return invoice;
+    return invoice.toJSON();
   } catch (error) {
     toast.error(error.message || '');
   }
@@ -225,7 +225,7 @@ export const deleteInvoiceFn = async (id: number, cb?: () => void) => {
   }
 };
 
-export const deleteInvoiceItemFn = ({
+export const deleteInvoiceItemFn = async ({
   productId,
   invoiceId,
   invoiceItemId,
@@ -235,7 +235,7 @@ export const deleteInvoiceItemFn = ({
   invoiceId: number;
   invoiceItemId: number;
   cb?: () => void;
-}) => async () => {
+}) => {
   // use zod to validate the input
   const schema = z.object({
     productId: z.number(),
@@ -244,11 +244,12 @@ export const deleteInvoiceItemFn = ({
   });
   schema.parse({ productId, invoiceId, invoiceItemId });
   try {
-    const invoice = await Invoice.findByPk(invoiceId);
-    const invoiceItem = await InvoiceItem.findByPk(invoiceItemId);
-
-    // transaction
     await sequelize.transaction(async (t) => {
+      const invoice = await Invoice.findByPk(invoiceId, { transaction: t });
+      const invoiceItem = await InvoiceItem.findByPk(invoiceItemId, {
+        transaction: t,
+      });
+
       // update stock
       const updateStock = Product.increment('stock', {
         by: invoiceItem.quantity,
@@ -301,79 +302,112 @@ export const deleteInvoiceItemFn = ({
   }
 };
 
-export const addInvoiceItemFn = async ({
-  invoiceId,
-  productId,
-  quantity,
-  amount,
-  unitPrice,
-  profit,
-}: IInvoiceItem) => {
-  // use zod to validate the input
-  const schema = z.object({
-    invoiceId: z.number(),
-    productId: z.number(),
-    quantity: z.number(),
-    amount: z.number(),
-    unitPrice: z.number(),
-    profit: z.number(),
-  });
-  schema.parse({ invoiceId, productId, quantity, amount, unitPrice, profit });
+export const addInvoiceItemFn = async (
+  currentInvoice: Pick<
+    IInvoice,
+    'id' | 'saleType' | 'amount' | 'profit' | 'customer'
+  >,
+  currentInvoiceItem: Partial<IInvoiceItem>
+) => {
   try {
-    const invoice = await Invoice.findByPk(invoiceId);
-    const product = await Product.findByPk(productId);
-    const customer = await Customer.findByPk(invoice.customerId);
-
-    // if product is already in the invoice, delete it first and then add updated invoice item
-
-    product.invoiceItem = {
-      quantity,
-      unitPrice,
-      amount,
-      profit,
-    };
-
-    // transaction
     await sequelize.transaction(async (t) => {
-      const addProductToInvoice = invoice.addProduct(product, {
-        transaction: t,
+      // find the Invoice
+      const invoice = await Invoice.findByPk(currentInvoice.id, {
+        include: [Product],
       });
+      if (!invoice)
+        throw new Error(`Invoice with id ${currentInvoice.id} not found`);
 
-      const decreaseStock = product.decrement(
-        {
-          stock: quantity,
-        },
-        { transaction: t }
+      // find the Product
+      const product = await Product.findByPk(currentInvoiceItem.product?.id);
+      if (!product)
+        throw new Error(
+          `Product with id ${currentInvoiceItem.product?.id} not found`
+        );
+
+      // prepare the InvoiceItem data
+      const newInvoiceItem = {
+        quantity: currentInvoiceItem.quantity,
+        unitPrice: currentInvoiceItem.unitPrice,
+        amount: currentInvoiceItem.amount,
+        profit: currentInvoiceItem.profit,
+      };
+
+      // if the product is already in the invoice, update the quantity and amount
+      const existingInvoiceItem = await invoice.products.find(
+        (item) => item.id === product.id
       );
 
-      const updateInvoice = invoice.increment(
-        {
-          amount,
-          profit,
-        },
-        { transaction: t }
-      );
-
-      const updateCustomerBalance = async () => {
-        if (invoice.saleType === 'credit' || invoice.saleType === 'transfer') {
-          await customer.increment(
+      const updateInvoiceItem = async () => {
+        if (existingInvoiceItem) {
+          // update the InvoiceItem
+          InvoiceItem.increment(
             {
-              balance: amount,
+              quantity: currentInvoiceItem.quantity,
+              amount: currentInvoiceItem.amount,
+              profit: currentInvoiceItem.profit,
             },
-            { transaction: t }
+            {
+              transaction: t,
+              where: { id: existingInvoiceItem.invoiceItem?.id },
+            }
           );
+        } else {
+          // Add product to invoice (this will create an InvoiceItem)
+          invoice.addProduct(product, {
+            through: newInvoiceItem,
+            transaction: t,
+          });
+        }
+      };
+
+      // update the Invoice
+      const updatedInvoice = Invoice.increment(
+        {
+          amount: currentInvoiceItem.amount,
+          profit: currentInvoiceItem.profit,
+        },
+        {
+          transaction: t,
+          where: { id: currentInvoice.id },
+        }
+      );
+
+      // update the Product
+      const updatedProduct = Product.decrement(
+        'stock',
+        {
+          by: currentInvoiceItem.quantity,
+          where: { id: currentInvoiceItem.product?.id },
+        },
+        { transaction: t }
+      );
+
+      // update customer balance
+      const updateBalance = async () => {
+        if (invoice.saleType === 'credit' || invoice.saleType === 'transfer') {
+          return Customer.increment('balance', {
+            by: currentInvoiceItem.amount,
+            where: {
+              id: invoice.customer.id,
+            },
+            transaction: t,
+          });
         }
       };
 
       await Promise.all([
-        addProductToInvoice,
-        decreaseStock,
-        updateInvoice,
-        updateCustomerBalance(),
+        updatedInvoice,
+        updatedProduct,
+        updateInvoiceItem(),
+        updateBalance(),
       ]);
+
+      toast.success('Successfully added item');
     });
   } catch (error) {
     toast.error(error.message || '');
+    throw error;
   }
 };
 
@@ -410,7 +444,9 @@ export const createInvoiceFn = async (
 
     // transaction
     await sequelize.transaction(async (t) => {
-      const customer = await Customer.findByPk(invoice?.customerId);
+      const customer = await Customer.findByPk(invoice?.customerId, {
+        transaction: t,
+      });
 
       const customerInvoice = await customer.createInvoice(
         {
@@ -426,10 +462,12 @@ export const createInvoiceFn = async (
 
       await Promise.all(
         invoiceItems.map(async (item) => {
-          const product = await Product.findByPk(item.product?.id);
+          const product = await Product.findByPk(item.product?.id, {
+            transaction: t,
+          });
           await Product.decrement('stock', {
             by: item.quantity,
-            where: { id: item.id },
+            where: { id: item.product?.id },
             transaction: t,
           });
           product.invoiceItem = {
