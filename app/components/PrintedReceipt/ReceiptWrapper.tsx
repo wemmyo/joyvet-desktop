@@ -19,11 +19,11 @@ const ReceiptWrapper = React.forwardRef<HTMLDivElement, ReceiptWrapperProps>(
         <div className={styles.receipt__companyInfo}>
           <h5>JOY VETERINARY</h5>
           <p>
-            37, Iganmode Road
+            342, Old Abeokuta Road
             <br />
-            Ota, Ogun State
+            Gengento bus stop, Agege
             <br />
-            08027634893 ,08095988354, 08095988693
+            08095988235
           </p>
           <p>
             <b>Sales Invoice!</b>
