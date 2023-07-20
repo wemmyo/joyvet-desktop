@@ -11,16 +11,18 @@ import { isAdmin } from '../../../../utils/helpers';
 import {
   getSingleProductFn,
   updateProductFn,
-  getProductsFn,
+  deleteProductFn,
 } from '../../../../controllers/product.controller';
 import { IProduct } from '../../../../models/product';
 
 export interface EditProductProps {
   productId: string | number;
+  refreshProducts: () => void;
 }
 
 const EditProduct: React.FC<EditProductProps> = ({
   productId,
+  refreshProducts,
 }: EditProductProps) => {
   const [product, setProduct] = useState<IProduct>({} as IProduct);
   const dispatch = useDispatch();
@@ -34,6 +36,12 @@ const EditProduct: React.FC<EditProductProps> = ({
   }, [productId]);
 
   const { title, stock, sellPrice, sellPrice2, sellPrice3, buyPrice } = product;
+
+  const onDeleteProduct = async () => {
+    await deleteProductFn(Number(productId));
+    dispatch(closeSideContentFn());
+    refreshProducts();
+  };
 
   return (
     <Formik
@@ -49,7 +57,7 @@ const EditProduct: React.FC<EditProductProps> = ({
       onSubmit={async (values) => {
         await updateProductFn(values, productId);
         dispatch(closeSideContentFn());
-        await getProductsFn();
+        refreshProducts();
       }}
     >
       {({ handleSubmit }) => (
@@ -108,6 +116,14 @@ const EditProduct: React.FC<EditProductProps> = ({
             to={`${routes.PRODUCT}/${productId}`}
           >
             History
+          </Button>
+          <Button
+            negative
+            style={{ marginTop: '1rem' }}
+            fluid
+            onClick={onDeleteProduct}
+          >
+            Delete
           </Button>
         </Form>
       )}

@@ -8,6 +8,7 @@ import {
   createProduct as createProductService,
   updateProduct as updateProductService,
   getProductById,
+  deleteProduct,
 } from '../services/product.service';
 import { getPurchaseItems as getPurchaseItemsService } from '../services/purchaseItem.service';
 
@@ -105,19 +106,7 @@ export const updateProductFn = async (
   id: number,
   cb?: () => void
 ) => {
-  // use zod to validate input
-  const schema = z.object({
-    values: z.object({
-      title: z.string().min(1),
-      description: z.string().min(1),
-      price: z.number(),
-      quantity: z.number(),
-      category: z.string().min(1),
-    }),
-    id: z.number(),
-  });
   try {
-    schema.parse({ values, id });
     await updateProductService(id, values);
     toast.success('Successfully updated');
     if (cb) {
@@ -169,7 +158,10 @@ export const getProductsFn = async (filter?: 'inStock') => {
   }
 };
 
-export const createProductFn = async (values: any, cb?: () => void) => {
+export const createProductFn = async (
+  values: Partial<IProduct>,
+  cb?: () => void
+) => {
   // use zod to validate input
   const schema = z.object({
     values: z.object({
@@ -196,6 +188,23 @@ export const createProductFn = async (values: any, cb?: () => void) => {
       cb();
     }
     toast.success('Successfully created');
+  } catch (error) {
+    toast.error(error.message || '');
+  }
+};
+
+export const deleteProductFn = async (id: number, cb?: () => void) => {
+  // use zod to validate input
+  const schema = z.object({
+    id: z.number(),
+  });
+  try {
+    schema.parse({ id });
+    await deleteProduct(id);
+    toast.success('Successfully deleted');
+    if (cb) {
+      cb();
+    }
   } catch (error) {
     toast.error(error.message || '');
   }
