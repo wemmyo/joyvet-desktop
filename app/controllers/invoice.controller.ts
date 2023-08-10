@@ -4,7 +4,7 @@ import moment from 'moment';
 import { z } from 'zod';
 import Invoice, { IInvoice } from '../models/invoice';
 import Customer from '../models/customer';
-import Product from '../models/product';
+import Product, { IProduct } from '../models/product';
 import InvoiceItem, { IInvoiceItem } from '../models/invoiceItem';
 import { createInvoiceValidation } from '../sliceValidation/index';
 import sequelize from '../utils/database';
@@ -24,9 +24,9 @@ export const filterInvoiceFn = async (
     endDate: z.string(),
     saleType: z.string(),
   });
-  schema.parse({ startDate, endDate, saleType });
 
   try {
+    schema.parse({ startDate, endDate, saleType });
     let invoices;
 
     if (startDate && endDate && saleType === 'all') {
@@ -106,8 +106,8 @@ export const filterInvoiceById = async (id: number) => {
   const schema = z.object({
     id: z.number(),
   });
-  schema.parse({ id });
   try {
+    schema.parse({ id });
     const invoices = await getInvoicesService({
       where: {
         id: {
@@ -180,8 +180,8 @@ export const deleteInvoiceFn = async (id: number, cb?: () => void) => {
   const schema = z.object({
     id: z.number(),
   });
-  schema.parse({ id });
   try {
+    schema.parse({ id });
     await sequelize.transaction(async (t) => {
       const invoice = await Invoice.findByPk(id, {
         include: [
@@ -242,8 +242,8 @@ export const deleteInvoiceItemFn = async ({
     invoiceId: z.number(),
     invoiceItemId: z.number(),
   });
-  schema.parse({ productId, invoiceId, invoiceItemId });
   try {
+    schema.parse({ productId, invoiceId, invoiceItemId });
     await sequelize.transaction(async (t) => {
       const invoice = await Invoice.findByPk(invoiceId, { transaction: t });
       const invoiceItem = await InvoiceItem.findByPk(invoiceItemId, {
@@ -420,22 +420,22 @@ export const createInvoiceFn = async (
   const schema = z.object({
     invoiceItems: z.array(
       z.object({
-        quantity: z.number(),
-        unitPrice: z.number(),
-        amount: z.number(),
+        quantity: z.number().min(1),
+        unitPrice: z.number().min(1),
+        amount: z.number().min(1),
         profit: z.number(),
       })
     ),
     invoice: z.object({
-      customerId: z.number(),
-      saleType: z.string(),
-      amount: z.number(),
+      customerId: z.number().min(1),
+      saleType: z.string().min(1),
+      amount: z.number().min(1),
       profit: z.number(),
     }),
   });
-  schema.parse({ invoiceItems, invoice });
 
   try {
+    schema.parse({ invoiceItems, invoice });
     createInvoiceValidation(invoiceItems, invoice);
     const user =
       localStorage.getItem('user') !== null
@@ -465,6 +465,15 @@ export const createInvoiceFn = async (
           const product = await Product.findByPk(item.product?.id, {
             transaction: t,
           });
+          if (!item.quantity) {
+            throw new Error(`Quantity missing for for ${product.title}`);
+          }
+          // if item quantity is higher than stock quantity, throw error
+          if (item.quantity > product.stock) {
+            throw new Error(
+              `Not enough in stock for ${product.title}. ${product.stock} remaining`
+            );
+          }
           await Product.decrement('stock', {
             by: item.quantity,
             where: { id: item.product?.id },
@@ -527,11 +536,11 @@ export const updateInvoiceFn = async (
       profit: z.number(),
     }),
   });
-  schema.parse({ invoiceItems, invoice });
 
   const hasInvoiceItems = invoiceItems.length > 0;
 
   try {
+    schema.parse({ invoiceItems, invoice });
     await deleteInvoiceFn(invoice.id);
     if (hasInvoiceItems) {
       await createInvoiceFn(invoiceItems, invoice, cb);
