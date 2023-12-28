@@ -1,4 +1,5 @@
 import sequelize from '../utils/database';
+import { IProduct } from './product';
 import { ISupplier } from './supplier';
 
 const Sequelize = require('sequelize');
@@ -13,6 +14,7 @@ export interface IPurchase {
   updatedAt?: Date;
   supplierId: number;
   supplier?: ISupplier;
+  products: IProduct[];
 }
 
 export default sequelize.define('purchase', {
