@@ -137,9 +137,8 @@ export const updateCustomerFn = async (
   const schema = z.object({
     values: z.object({
       fullName: z.string().min(1),
-      email: z.string().email(),
-      phone: z.string().min(1),
-      address: z.string().min(1),
+      phoneNumber: z.string(),
+      address: z.string(),
     }),
     id: z.number(),
   });
@@ -147,7 +146,7 @@ export const updateCustomerFn = async (
   try {
     schema.parse({ values, id });
     await updateCustomerService(id, values);
-    toast.success('Successfully updated');
+    toast.success('Successfully updated, refresh to see changes');
     if (cb) {
       cb();
     }
@@ -195,10 +194,11 @@ export const createCustomerFn = async (
   const schema = z.object({
     values: z.object({
       fullName: z.string().min(1),
-      phoneNumber: z.string(),
-      address: z.string(),
+      phoneNumber: z.string().optional(),
+      address: z.string().optional(),
     }),
   });
+
   try {
     schema.parse({ values });
     const user =
@@ -207,12 +207,11 @@ export const createCustomerFn = async (
         : '';
 
     const customer = await createCustomerService({
-      fullName: values.fullName,
-      address: values.address,
-      phoneNumber: values.phoneNumber,
-      balance: values.balance,
+      ...values,
       postedBy: user.fullName,
+      id: Date.now(),
     });
+    toast.success('Successfully created');
     if (cb) {
       cb();
     }

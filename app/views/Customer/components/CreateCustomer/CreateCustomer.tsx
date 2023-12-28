@@ -50,7 +50,7 @@ const CreateCustomer: React.FC<CreateCustomerProps> = ({
             name="phoneNumber"
             placeholder="Phone Number"
             label="Phone Number"
-            type="tel"
+            type="text"
             component={TextInput}
           />
           <Field
