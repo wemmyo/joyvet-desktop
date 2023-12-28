@@ -17,7 +17,6 @@ export default sequelize.define(
   {
     id: {
       type: Sequelize.INTEGER,
-      autoIncrement: true,
       allowNull: false,
       primaryKey: true,
     },
