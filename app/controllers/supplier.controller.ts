@@ -122,14 +122,15 @@ export const updateSupplierFn = async (
   const schema = z.object({
     id: z.number(),
     fullName: z.string().min(1),
-    phoneNumber: z.string().min(1),
-    email: z.string().min(1),
-    address: z.string().min(1),
+    phoneNumber: z.string(),
+    address: z.string(),
   });
   try {
     schema.parse({ ...values, id });
     await updateSupplierService(id, values);
-    toast.success('Successfully updated');
+    toast.success('Successfully updated, refresh to see changes', {
+      autoClose: 5000,
+    });
     if (cb) {
       cb();
     }
