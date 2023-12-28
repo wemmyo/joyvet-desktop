@@ -11,6 +11,7 @@ import {
   deleteSupplier as deleteSupplierService,
   updateSupplier as updateSupplierService,
 } from '../services/supplier.service';
+import { ISupplier } from '../models/supplier';
 
 export const getSupplierPaymentsFn = async (
   supplierId: number,
@@ -164,12 +165,15 @@ export const getSuppliersFn = async () => {
   }
 };
 
-export const createSupplierFn = async (values: any, cb?: () => void) => {
+export const createSupplierFn = async (
+  values: Partial<ISupplier>,
+  cb?: () => void
+) => {
   // use zod to validate input
   const schema = z.object({
     fullName: z.string().min(1),
-    phoneNumber: z.string().min(1),
-    address: z.string().min(1),
+    phoneNumber: z.string(),
+    address: z.string(),
   });
   try {
     schema.parse(values);
@@ -178,11 +182,10 @@ export const createSupplierFn = async (values: any, cb?: () => void) => {
       localStorage.getItem('user') !== null
         ? JSON.parse(localStorage.getItem('user') || '')
         : '';
+
     await createSupplierService({
-      fullName: values.fullName || null,
-      address: values.address || null,
-      phoneNumber: values.phoneNumber || null,
-      balance: values.balance || 0,
+      ...values,
+      id: Date.now(),
       postedBy: user.fullName,
     });
 
