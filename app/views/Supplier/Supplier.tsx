@@ -1,9 +1,9 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Table, Form, Button, Icon, Loader } from 'semantic-ui-react';
 import { useDispatch } from 'react-redux';
+import { useReactToPrint } from 'react-to-print';
 
 import DashboardLayout from '../../layouts/DashboardLayout/DashboardLayout';
-
 import CreateSupplier from './components/CreateSupplier/CreateSupplier';
 import { numberWithCommas, isAdmin, sum } from '../../utils/helpers';
 import {
@@ -29,6 +29,12 @@ const SuppliersScreen: React.FC = () => {
   const [loading, setLoading] = useState(false);
 
   const dispatch = useDispatch();
+
+  const componentRef = useRef(null);
+
+  const handlePrint = useReactToPrint({
+    content: () => componentRef.current,
+  });
 
   const fetchSuppliers = async () => {
     setLoading(true);
@@ -128,6 +134,7 @@ const SuppliersScreen: React.FC = () => {
           <Icon name="redo" />
           Refresh
         </Button>
+        <Button onClick={handlePrint} icon="print" />
         <Form
           onSubmit={async () => {
             const response = await searchSupplierFn(searchValue);
@@ -153,31 +160,33 @@ const SuppliersScreen: React.FC = () => {
       {loading ? (
         <Loader active inline="centered" />
       ) : (
-        <Table celled striped>
-          <Table.Header>
-            <Table.Row>
-              <Table.HeaderCell>Full Name</Table.HeaderCell>
-              <Table.HeaderCell>Address</Table.HeaderCell>
-              <Table.HeaderCell>Phone Number</Table.HeaderCell>
-              <Table.HeaderCell>Balance</Table.HeaderCell>
-            </Table.Row>
-          </Table.Header>
-
-          <Table.Body>{renderRows()}</Table.Body>
-
-          {isAdmin() ? (
-            <Table.Footer>
+        <div ref={componentRef}>
+          <Table celled striped>
+            <Table.Header>
               <Table.Row>
-                <Table.HeaderCell />
-                <Table.HeaderCell />
-                <Table.HeaderCell />
-                <Table.HeaderCell style={{ fontWeight: 'bold' }}>
-                  Total: ₦{numberWithCommas(sumOfBalances())}
-                </Table.HeaderCell>
+                <Table.HeaderCell>Full Name</Table.HeaderCell>
+                <Table.HeaderCell>Address</Table.HeaderCell>
+                <Table.HeaderCell>Phone Number</Table.HeaderCell>
+                <Table.HeaderCell>Balance</Table.HeaderCell>
               </Table.Row>
-            </Table.Footer>
-          ) : null}
-        </Table>
+            </Table.Header>
+
+            <Table.Body>{renderRows()}</Table.Body>
+
+            {isAdmin() ? (
+              <Table.Footer>
+                <Table.Row>
+                  <Table.HeaderCell />
+                  <Table.HeaderCell />
+                  <Table.HeaderCell />
+                  <Table.HeaderCell style={{ fontWeight: 'bold' }}>
+                    Total: ₦{numberWithCommas(sumOfBalances())}
+                  </Table.HeaderCell>
+                </Table.Row>
+              </Table.Footer>
+            ) : null}
+          </Table>
+        </div>
       )}
     </DashboardLayout>
   );
