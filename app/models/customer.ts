@@ -2,12 +2,22 @@ import sequelize from '../utils/database';
 
 const Sequelize = require('sequelize');
 
+// create customer interface
+export interface ICustomer {
+  id: number;
+  fullName: string;
+  address: string;
+  phoneNumber: string;
+  balance: number;
+  postedBy: string;
+  maxPriceLevel: number;
+}
+
 export default sequelize.define(
   'customer',
   {
     id: {
       type: Sequelize.INTEGER,
-      autoIncrement: true,
       allowNull: false,
       primaryKey: true,
     },

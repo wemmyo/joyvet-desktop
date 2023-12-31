@@ -1,17 +1,16 @@
-/* eslint-disable react/jsx-one-expression-per-line */
-import React, { useEffect } from 'react';
-import { useSelector, useDispatch } from 'react-redux';
-// import { useParams } from 'react-router-dom';
+import React, { useEffect, useState } from 'react';
 import { Table, Button } from 'semantic-ui-react';
+import { useDispatch } from 'react-redux';
+import moment from 'moment';
 
+import { isAdmin, numberWithCommas } from '../../../utils/helpers';
+import { closeSideContentFn } from '../../../slices/dashboardSlice';
+import { IPurchase } from '../../../models/purchase';
 import {
-  getSinglePurchaseFn,
-  selectPurchaseState,
   deletePurchaseFn,
   getPurchasesFn,
-} from '../../../slices/purchaseSlice';
-import { numberWithCommas } from '../../../utils/helpers';
-import { closeSideContentFn } from '../../../slices/dashboardSlice';
+  getSinglePurchaseFn,
+} from '../../../controllers/purchase.controller';
 
 interface SalesDetailProps {
   purchaseId: string | number;
@@ -20,28 +19,26 @@ interface SalesDetailProps {
 const SalesDetail: React.FC<SalesDetailProps> = ({
   purchaseId,
 }: SalesDetailProps) => {
+  const [purchase, setPurchase] = useState<IPurchase>({} as IPurchase);
+  const [loading, setLoading] = useState(false);
+
   const dispatch = useDispatch();
 
-  const fetchData = () => {
-    dispatch(getSinglePurchaseFn(purchaseId));
+  useEffect(() => {
+    const fetchData = async () => {
+      setLoading(true);
+      const response = await getSinglePurchaseFn(Number(purchaseId));
+      setPurchase(response);
+      setLoading(false);
+    };
+    fetchData();
+  }, [purchaseId]);
+
+  const handleDelete = async () => {
+    await deletePurchaseFn(purchaseId);
+    await getPurchasesFn();
+    dispatch(closeSideContentFn());
   };
-
-  useEffect(fetchData, [purchaseId]);
-
-  const handleDelete = () => {
-    dispatch(
-      deletePurchaseFn(purchaseId, () => {
-        dispatch(getPurchasesFn());
-        dispatch(closeSideContentFn());
-      })
-    );
-  };
-
-  const purchaseState = useSelector(selectPurchaseState);
-
-  const { data: purchaseRaw, loading } = purchaseState.singlePurchase;
-
-  const purchase = purchaseRaw ? JSON.parse(purchaseRaw) : {};
 
   const renderOrders = () => {
     let serialNumber = 0;
@@ -87,7 +84,7 @@ const SalesDetail: React.FC<SalesDetailProps> = ({
           <Table.Row>
             <Table.Cell>Date Posted</Table.Cell>
             <Table.Cell>
-              {new Date(purchase.createdAt).toLocaleDateString('en-gb')}
+              {moment(purchase.createdAt).format('DD/MM/YYYY')}
             </Table.Cell>
           </Table.Row>
         </Table.Body>
@@ -106,7 +103,12 @@ const SalesDetail: React.FC<SalesDetailProps> = ({
 
         <Table.Body>{renderOrders()}</Table.Body>
       </Table>
-      <Button onClick={() => handleDelete()} type="Submit" negative>
+      <Button
+        disabled={!isAdmin()}
+        onClick={() => handleDelete()}
+        type="Submit"
+        negative
+      >
         Delete
       </Button>
     </>

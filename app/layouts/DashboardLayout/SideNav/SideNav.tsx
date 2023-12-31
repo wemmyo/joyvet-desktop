@@ -1,16 +1,15 @@
 import * as React from 'react';
 import { NavLink, useHistory } from 'react-router-dom';
-import { useDispatch } from 'react-redux';
-// import { Icon } from 'semantic-ui-react';
+import { Button } from 'semantic-ui-react';
+
 import styles from './SideNav.css';
 // import NavItem from './components/NavItem/NavItem';
 import routes from '../../../routing/routes';
-import { logoutFn } from '../../../slices/userSlice';
 import { isAdmin } from '../../../utils/helpers';
+import { logoutFn } from '../../../controllers/user.controller';
 // export interface SideNavProps {}
 
 const SideNav = () => {
-  const dispatch = useDispatch();
   const history = useHistory();
 
   return (
@@ -94,6 +93,13 @@ const SideNav = () => {
       >
         Expenditure
       </NavLink>
+      {/* <NavLink
+        activeClassName={styles.sideNav__mainItemActive}
+        className={styles.sideNav__mainItem}
+        to={routes.STORE_INFO}
+      >
+        Store Info
+      </NavLink> */}
       {isAdmin() ? (
         <NavLink
           activeClassName={styles.sideNav__mainItemActive}
@@ -104,20 +110,17 @@ const SideNav = () => {
         </NavLink>
       ) : null}
 
-      <div
-        // type="div"
-        style={{ color: 'red', cursor: 'pointer' }}
+      <Button
+        negative
+        type="button"
         className={styles.sideNav__mainItem}
         onClick={() => {
-          dispatch(
-            logoutFn(() => {
-              history.push(routes.LOGIN);
-            })
-          );
+          logoutFn();
+          history.push(routes.LOGIN);
         }}
       >
         Log out
-      </div>
+      </Button>
       {/* <IconNavItem title="Get Started" /> */}
       {/* <IconNavWithChildren title="Sales" /> */}
     </section>

@@ -1,53 +1,49 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Button, Form } from 'semantic-ui-react';
 import { Field, Formik } from 'formik';
-import { useSelector, useDispatch } from 'react-redux';
+import { useDispatch } from 'react-redux';
 import { Link } from 'react-router-dom';
 
 // import * as Yup from 'yup';
 import TextInput from '../../../../components/TextInput/TextInput';
-import {
-  getSingleCustomerFn,
-  selectCustomerState,
-  updateCustomerFn,
-  getCustomersFn,
-  deleteCustomerFn,
-} from '../../../../slices/customerSlice';
+
 import { closeSideContentFn } from '../../../../slices/dashboardSlice';
 import routes from '../../../../routing/routes';
 import { isAdmin } from '../../../../utils/helpers';
+import { ICustomer } from '../../../../models/customer';
+import {
+  getSingleCustomerFn,
+  deleteCustomerFn,
+  getCustomersFn,
+  updateCustomerFn,
+} from '../../../../controllers/customer.controller';
 
 export interface EditCustomerProps {
-  customerId: string | number;
+  customerId: number;
 }
 
 const EditCustomer: React.FC<EditCustomerProps> = ({
   customerId,
 }: EditCustomerProps) => {
+  const [customer, setCustomer] = useState<ICustomer>({} as ICustomer);
+
   const dispatch = useDispatch();
 
-  const fetchData = () => {
-    dispatch(getSingleCustomerFn(customerId));
-  };
+  useEffect(() => {
+    const fetchData = async () => {
+      const response = await getSingleCustomerFn(Number(customerId));
+      setCustomer(response);
+    };
 
-  useEffect(fetchData, [customerId]);
-
-  const customerState = useSelector(selectCustomerState);
-
-  const { data: customerRaw } = customerState.singleCustomer;
-
-  const customer = customerRaw ? JSON.parse(customerRaw) : {};
-  // console.log(customer);
+    fetchData();
+  }, [customerId]);
 
   const { fullName, address, phoneNumber, balance, maxPriceLevel } = customer;
 
-  const handleDeleteCustomer = () => {
-    dispatch(
-      deleteCustomerFn(customerId, () => {
-        dispatch(closeSideContentFn());
-        dispatch(getCustomersFn());
-      })
-    );
+  const handleDeleteCustomer = async () => {
+    await deleteCustomerFn(Number(customerId));
+    dispatch(closeSideContentFn());
+    await getCustomersFn();
   };
 
   return (
@@ -60,17 +56,10 @@ const EditCustomer: React.FC<EditCustomerProps> = ({
         balance: balance || '',
         maxPriceLevel: maxPriceLevel || '',
       }}
-      // validationSchema={EditCustomerSchema}
-      onSubmit={(values) => {
-        //   submitForm(values);
-        // console.log(values);
-
-        dispatch(
-          updateCustomerFn(values, customerId, () => {
-            dispatch(closeSideContentFn());
-            dispatch(getCustomersFn());
-          })
-        );
+      onSubmit={async (values) => {
+        await updateCustomerFn(values, customerId);
+        dispatch(closeSideContentFn());
+        await getCustomersFn();
       }}
     >
       {({ handleSubmit }) => (
@@ -133,7 +122,3 @@ const EditCustomer: React.FC<EditCustomerProps> = ({
   );
 };
 export default EditCustomer;
-
-// const EditCustomerSchema = Yup.object().shape({
-//   title: Yup.string().required('Required'),
-// });

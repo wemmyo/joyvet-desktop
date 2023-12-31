@@ -3,13 +3,14 @@ import { Button, Form } from 'semantic-ui-react';
 import { Field, Formik } from 'formik';
 import * as Yup from 'yup';
 import TextInput from '../../../../components/TextInput/TextInput';
+import { ICustomer } from '../../../../models/customer';
 
 const CreateCustomerSchema = Yup.object().shape({
   fullName: Yup.string().required('Required'),
 });
 
 export interface CreateCustomerProps {
-  createCustomerFn: (values: any) => void;
+  createCustomerFn: (values: Partial<ICustomer>) => void;
 }
 
 const CreateCustomer: React.FC<CreateCustomerProps> = ({
@@ -21,14 +22,12 @@ const CreateCustomer: React.FC<CreateCustomerProps> = ({
         fullName: '',
         address: '',
         phoneNumber: '',
-        balance: '',
+        balance: 0,
       }}
       validationSchema={CreateCustomerSchema}
       onSubmit={(values, actions) => {
-        //   submitForm(values);
         createCustomerFn(values);
         actions.resetForm();
-        // console.log(values);
       }}
     >
       {({ handleSubmit }) => (
@@ -51,7 +50,7 @@ const CreateCustomer: React.FC<CreateCustomerProps> = ({
             name="phoneNumber"
             placeholder="Phone Number"
             label="Phone Number"
-            type="tel"
+            type="text"
             component={TextInput}
           />
           <Field

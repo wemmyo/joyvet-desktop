@@ -1,45 +1,39 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Button, Form } from 'semantic-ui-react';
 import { Field, Formik } from 'formik';
-import { useSelector, useDispatch } from 'react-redux';
+import { useDispatch } from 'react-redux';
 
 import TextInput from '../../../../components/TextInput/TextInput';
-import {
-  getSingleUserFn,
-  selectUserState,
-  updateUserFn,
-  getUsersFn,
-  deleteUserFn,
-} from '../../../../slices/userSlice';
 
 import { closeSideContentFn } from '../../../../slices/dashboardSlice';
+import {
+  getSingleUserFn,
+  deleteUserFn,
+  getUsersFn,
+  updateUserFn,
+} from '../../../../controllers/user.controller';
+import { IUser } from '../../../../models/user';
 
 export interface EditUserProps {
   userId: string | number;
 }
 
 const EditUser: React.FC<EditUserProps> = ({ userId }: EditUserProps) => {
+  const [user, setUser] = useState<IUser>({} as IUser);
   const dispatch = useDispatch();
 
-  const fetchData = () => {
-    dispatch(getSingleUserFn(userId));
-  };
+  useEffect(() => {
+    const fetchData = async () => {
+      const response = await getSingleUserFn(Number(userId));
+      setUser(response);
+    };
+    fetchData();
+  }, [dispatch, userId]);
 
-  useEffect(fetchData, [dispatch, userId]);
-
-  const userState = useSelector(selectUserState);
-
-  const { data: userRaw } = userState.singleUser;
-
-  const user = userRaw ? JSON.parse(userRaw) : {};
-
-  const deleteUser = () => {
-    dispatch(
-      deleteUserFn(userId, () => {
-        dispatch(getUsersFn());
-        dispatch(closeSideContentFn());
-      })
-    );
+  const deleteUser = async () => {
+    await deleteUserFn(Number(userId));
+    await getUsersFn();
+    dispatch(closeSideContentFn());
   };
 
   const { fullName, username, role } = user;
@@ -52,13 +46,10 @@ const EditUser: React.FC<EditUserProps> = ({ userId }: EditUserProps) => {
         username: username || '',
         role: role || '',
       }}
-      onSubmit={(values) => {
-        dispatch(
-          updateUserFn(values, userId, () => {
-            dispatch(closeSideContentFn());
-            dispatch(getUsersFn());
-          })
-        );
+      onSubmit={async (values) => {
+        await updateUserFn(values, Number(userId));
+        dispatch(closeSideContentFn());
+        await getUsersFn();
       }}
     >
       {({ handleSubmit }) => (

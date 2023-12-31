@@ -12,4 +12,5 @@ export default {
   SALES: '/sales',
   USER: '/user',
   EXPENSE: '/expense',
+  STORE_INFO: '/store-info',
 };

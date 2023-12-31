@@ -1,4 +1,4 @@
-.main {
+.mainContainer {
   padding: 15px 35px;
   flex: 1;
   display: flex;
@@ -11,9 +11,12 @@
 }
 .rightSidebar__open {
   flex-basis: 500px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  height: 100vh;
 }
 .rightSidebar__close {
-  width: 0px;
+  width: 0;
   overflow: hidden;
   padding: 0;
 }
@@ -48,4 +51,11 @@
   align-items: center;
   justify-content: space-between;
   margin: 20px 0;
+}
+
+.main {
+  overflow-y: auto;
+  overflow-x: hidden;
+  height: 100%;
+  height: calc(100vh - 7rem);
 }

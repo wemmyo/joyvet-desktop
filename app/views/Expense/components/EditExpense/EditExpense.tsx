@@ -1,51 +1,49 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Button, Form } from 'semantic-ui-react';
 import { Field, Formik } from 'formik';
-import { useSelector, useDispatch } from 'react-redux';
+import { useDispatch } from 'react-redux';
 import moment from 'moment';
 
 // import * as Yup from 'yup';
 import TextInput from '../../../../components/TextInput/TextInput';
+
+import { closeSideContentFn } from '../../../../slices/dashboardSlice';
 import {
   getSingleExpenseFn,
-  selectExpenseState,
-  updateExpenseFn,
-  getExpensesFn,
   deleteExpenseFn,
-} from '../../../../slices/expenseSlice';
-import { closeSideContentFn } from '../../../../slices/dashboardSlice';
+  updateExpenseFn,
+} from '../../../../controllers/expense.controller';
+import { IExpense } from '../../../../models/expense';
 
 export interface EditExpenseProps {
-  expenseId: string | number;
+  expenseId: number;
+  refreshExpenses: () => void;
 }
 
 const EditExpense: React.FC<EditExpenseProps> = ({
   expenseId,
+  refreshExpenses,
 }: EditExpenseProps) => {
+  const [expense, setExpense] = useState<IExpense>({} as IExpense);
+
   const dispatch = useDispatch();
 
-  const fetchData = () => {
-    dispatch(getSingleExpenseFn(expenseId));
-  };
+  useEffect(() => {
+    const fetchData = async () => {
+      const response = await getSingleExpenseFn(expenseId);
+      setExpense(response);
+    };
+    fetchData();
+  }, [expenseId]);
 
-  useEffect(fetchData, [expenseId]);
-
-  const expenseState = useSelector(selectExpenseState);
-
-  const { data: expenseRaw } = expenseState.singleExpense;
-
-  const expense = expenseRaw ? JSON.parse(expenseRaw) : {};
   // console.log(expense);
 
   const { type, amount, date, note } = expense;
 
-  const handleDeleteExpense = () => {
-    dispatch(
-      deleteExpenseFn(expenseId, () => {
-        dispatch(closeSideContentFn());
-        dispatch(getExpensesFn());
-      })
-    );
+  const handleDeleteExpense = async () => {
+    await deleteExpenseFn(expenseId);
+    refreshExpenses();
+    dispatch(closeSideContentFn());
   };
 
   return (
@@ -58,16 +56,10 @@ const EditExpense: React.FC<EditExpenseProps> = ({
         note: note || '',
       }}
       // validationSchema={EditExpenseSchema}
-      onSubmit={(values) => {
-        //   submitForm(values);
-        // console.log(values);
-
-        dispatch(
-          updateExpenseFn(values, expenseId, () => {
-            dispatch(closeSideContentFn());
-            dispatch(getExpensesFn());
-          })
-        );
+      onSubmit={async (values) => {
+        await updateExpenseFn(values, Number(expenseId));
+        refreshExpenses();
+        dispatch(closeSideContentFn());
       }}
     >
       {({ handleSubmit }) => (
@@ -119,7 +111,3 @@ const EditExpense: React.FC<EditExpenseProps> = ({
   );
 };
 export default EditExpense;
-
-// const EditExpenseSchema = Yup.object().shape({
-//   title: Yup.string().required('Required'),
-// });

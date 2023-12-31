@@ -1,11 +1,14 @@
 import * as React from 'react';
 import { Form } from 'semantic-ui-react';
 
-export interface TextInputProps {
+export interface TextInputProps
+  extends React.InputHTMLAttributes<HTMLInputElement> {
   label?: string;
+  field: any;
+  form: any;
 }
 
-const TextInput: React.SFC<TextInputProps> = ({
+const TextInput: React.FC<TextInputProps> = ({
   field, // { name, value, onChange, onBlur }
   form: { touched, errors }, // also values, setXXXX, handleXXXX, dirty, isValid, status, etc.
   ...props
@@ -21,7 +24,7 @@ const TextInput: React.SFC<TextInputProps> = ({
       }
       label={props.label}
     >
-      <input placeholder={props.placeholder} {...field} {...props} />
+      <input {...field} {...props} />
     </Form.Input>
   );
 };

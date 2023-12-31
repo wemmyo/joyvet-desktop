@@ -23,22 +23,12 @@ import EditInvoiceScreen from '../views/Invoice/components/EditInvoice';
 import CustomerHistory from '../views/CustomerHistory/CustomerHistory';
 import SupplierHistory from '../views/SupplierHistory/SupplierHistory';
 import ProductHistory from '../views/ProductHistory/ProductHistory';
-
-// Lazily load routes and code split with webpacck
-// const LazyCounterPage = React.lazy(() =>
-//   import(/* webpackChunkName: "CounterPage" */ './views/CounterPage')
-// );
-
-// const CounterPage = (props: Record<string, any>) => (
-//   <React.Suspense fallback={<h1>Loading...</h1>}>
-//     <LazyCounterPage {...props} />
-//   </React.Suspense>
-// );
+import StoreInfoScreen from '../views/StoreInfo/StoreInfo';
 
 export default function Routes() {
   return (
     <App>
-      <ToastContainer autoClose={2000} />
+      <ToastContainer autoClose={5000} />
       <Switch>
         <PrivateRoute
           path={`${routes.PRODUCT}/:id`}
@@ -56,6 +46,7 @@ export default function Routes() {
           path={`${routes.INVOICE}/:id`}
           component={EditInvoiceScreen}
         />
+        <PrivateRoute path={routes.STORE_INFO} component={StoreInfoScreen} />
         <PrivateRoute path={routes.EXPENSE} component={ExpenseScreen} />
         <PrivateRoute path={routes.USER} component={UserScreen} />
         <PrivateRoute path={routes.SALES} component={SalesScreen} />

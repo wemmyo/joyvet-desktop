@@ -1,6 +1,30 @@
 import sequelize from '../utils/database';
+import { IProduct } from './product';
+import { IPurchase } from './purchase';
 
 const Sequelize = require('sequelize');
+
+// create purchaseItem interface
+export interface IPurchaseItem {
+  id: number;
+  quantity: number;
+  unitPrice: number;
+  amount: number;
+  sellPrice: number;
+  sellPrice2: number;
+  sellPrice3: number;
+  oldBuyPrice: number;
+  oldSellPrice: number;
+  oldSellPrice2: number;
+  oldSellPrice3: number;
+  oldStockLevel: number;
+  purchaseId?: number;
+  productId?: number;
+  purchase?: IPurchase;
+  product?: IProduct;
+  createdAt?: Date;
+  updatedAt?: Date;
+}
 
 export default sequelize.define('purchaseItem', {
   id: {

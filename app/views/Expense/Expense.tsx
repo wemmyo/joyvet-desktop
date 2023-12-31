@@ -1,16 +1,17 @@
-/* eslint-disable react/jsx-one-expression-per-line */
-import React, { Fragment, useEffect, useState, useRef } from 'react';
+import React, {
+  Fragment,
+  useEffect,
+  useState,
+  useRef,
+  useCallback,
+} from 'react';
 import { Table, Button, Icon, Form, Loader } from 'semantic-ui-react';
-import { useSelector, useDispatch } from 'react-redux';
+import { useDispatch } from 'react-redux';
 import { useReactToPrint } from 'react-to-print';
 import moment from 'moment';
 
 import DashboardLayout from '../../layouts/DashboardLayout/DashboardLayout';
-import {
-  selectExpenseState,
-  createExpenseFn,
-  filterExpensesFn,
-} from '../../slices/expenseSlice';
+
 import CreateExpense from './components/CreateExpense/CreateExpense';
 import { numberWithCommas } from '../../utils/helpers';
 import {
@@ -18,6 +19,11 @@ import {
   closeSideContentFn,
 } from '../../slices/dashboardSlice';
 import EditExpense from './components/EditExpense/EditExpense';
+import { IExpense } from '../../models/expense';
+import {
+  filterExpensesFn,
+  createExpenseFn,
+} from '../../controllers/expense.controller';
 
 const CONTENT_CREATE = 'create';
 const CONTENT_EDIT = 'edit';
@@ -26,13 +32,12 @@ const TODAYS_DATE = `${moment().format('YYYY-MM-DD')}`;
 const ExpensesScreen: React.FC = () => {
   const [sideContent, setSideContent] = useState('');
   const [expenseId, setExpenseId] = useState('');
-  // const [searchValue, setSearchValue] = useState('');
   const [startDate, setStartDate] = useState(TODAYS_DATE);
   const [endDate, setEndDate] = useState(TODAYS_DATE);
+  const [expenses, setExpenses] = useState<IExpense[]>([]);
+  const [loading, setLoading] = useState(false);
 
   const dispatch = useDispatch();
-
-  const expenseState = useSelector(selectExpenseState);
 
   const componentRef = useRef(null);
 
@@ -40,13 +45,12 @@ const ExpensesScreen: React.FC = () => {
     content: () => componentRef.current,
   });
 
-  const { data: expensesRaw, loading: expensesLoading } = expenseState.expenses;
-
-  const expenses = expensesRaw ? JSON.parse(expensesRaw) : [];
-
-  const filterExpenses = () => {
-    dispatch(filterExpensesFn({ startDate, endDate }));
-  };
+  const filterExpenses = useCallback(async () => {
+    setLoading(true);
+    const response = await filterExpensesFn({ startDate, endDate });
+    setExpenses(response);
+    setLoading(false);
+  }, [endDate, startDate]);
 
   const sum = (prev: number, next: number) => {
     return prev + next;
@@ -75,26 +79,22 @@ const ExpensesScreen: React.FC = () => {
     setSideContent(content);
   };
 
-  const closeSideContent = () => {
-    dispatch(closeSideContentFn());
-    setSideContent('');
-    setExpenseId('');
-  };
-
   useEffect(() => {
     filterExpenses();
 
     return () => {
+      const closeSideContent = () => {
+        dispatch(closeSideContentFn());
+        setSideContent('');
+        setExpenseId('');
+      };
       closeSideContent();
     };
-  }, []);
+  }, [dispatch, filterExpenses]);
 
-  const handleNewExpense = (values: any) => {
-    dispatch(
-      createExpenseFn(values, () => {
-        filterExpenses();
-      })
-    );
+  const handleNewExpense = async (values) => {
+    await createExpenseFn(values);
+    filterExpenses();
   };
 
   const openSingleExpense = (id: any) => {
@@ -156,7 +156,12 @@ const ExpensesScreen: React.FC = () => {
       return <CreateExpense createExpenseFn={handleNewExpense} />;
     }
     if (sideContent === CONTENT_EDIT) {
-      return <EditExpense expenseId={expenseId} />;
+      return (
+        <EditExpense
+          expenseId={Number(expenseId)}
+          refreshExpenses={filterExpenses}
+        />
+      );
     }
     return null;
   };
@@ -205,13 +210,12 @@ const ExpensesScreen: React.FC = () => {
               Filter
             </Button>
             <Button
-              onClick={() => {
-                dispatch(
-                  filterExpensesFn({
-                    startDate: TODAYS_DATE,
-                    endDate: TODAYS_DATE,
-                  })
-                );
+              onClick={async () => {
+                const response = await filterExpensesFn({
+                  startDate: TODAYS_DATE,
+                  endDate: TODAYS_DATE,
+                });
+                setExpenses(response);
               }}
               type="button"
             >
@@ -225,7 +229,7 @@ const ExpensesScreen: React.FC = () => {
 
   return (
     <DashboardLayout screenTitle="Expenses" rightSidebar={renderSideContent()}>
-      {expensesLoading ? (
+      {loading ? (
         <Loader active inline="centered" />
       ) : (
         <div ref={componentRef}>

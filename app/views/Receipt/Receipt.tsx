@@ -1,13 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { Table, Button, Icon, Form, Loader } from 'semantic-ui-react';
-import { useSelector, useDispatch } from 'react-redux';
-import DashboardLayout from '../../layouts/DashboardLayout/DashboardLayout';
+import { useDispatch } from 'react-redux';
+import moment from 'moment';
 
-import {
-  selectReceiptState,
-  getReceiptsFn,
-  searchReceiptFn,
-} from '../../slices/receiptSlice';
+import DashboardLayout from '../../layouts/DashboardLayout/DashboardLayout';
 import CreateReceipt from './components/CreateReceipt/CreateReceipt';
 import { numberWithCommas } from '../../utils/helpers';
 import {
@@ -16,6 +12,11 @@ import {
 } from '../../slices/dashboardSlice';
 import EditReceipt from './components/EditReceipt/EditReceipt';
 import ReceiptDetail from './components/ReceiptDetail/ReceiptDetail';
+import { IReceipt } from '../../models/receipt';
+import {
+  getReceiptsFn,
+  searchReceiptFn,
+} from '../../controllers/receipt.controller';
 
 const CONTENT_CREATE = 'create';
 const CONTENT_EDIT = 'edit';
@@ -25,16 +26,16 @@ const ReceiptsScreen: React.FC = () => {
   const [sideContent, setSideContent] = useState('');
   const [receiptId, setReceiptId] = useState('');
   const [searchValue, setSearchValue] = useState('');
+  const [receipts, setReceipts] = useState<IReceipt[]>([]);
+  const [loading, setLoading] = useState(false);
 
   const dispatch = useDispatch();
 
-  const receiptState = useSelector(selectReceiptState);
-
-  const { data: receiptsRaw, loading: receiptsLoading } = receiptState.receipts;
-  const receipts = receiptsRaw ? JSON.parse(receiptsRaw) : [];
-
-  const fetchReceipts = () => {
-    dispatch(getReceiptsFn());
+  const fetchReceipts = async () => {
+    setLoading(true);
+    const response = await getReceiptsFn();
+    setReceipts(response);
+    setLoading(false);
   };
 
   const openSideContent = (content: string) => {
@@ -42,36 +43,34 @@ const ReceiptsScreen: React.FC = () => {
     setSideContent(content);
   };
 
-  const closeSideContent = () => {
-    dispatch(closeSideContentFn());
-    setSideContent('');
-    setReceiptId('');
-  };
-
   useEffect(() => {
     fetchReceipts();
 
     return () => {
+      const closeSideContent = () => {
+        dispatch(closeSideContentFn());
+        setSideContent('');
+        setReceiptId('');
+      };
+
       closeSideContent();
     };
-  }, []);
+  }, [dispatch]);
 
-  const viewSingleReceipt = (id: any) => {
+  const viewSingleReceipt = (id) => {
     setReceiptId(id);
     openSideContent(CONTENT_DETAIL);
   };
 
   const renderRows = () => {
-    const rows = receipts.map((each: any) => {
+    const rows = receipts.map((each) => {
       return (
         <Table.Row key={each.id} onClick={() => viewSingleReceipt(each.id)}>
           <Table.Cell>{each.id}</Table.Cell>
           <Table.Cell>{each.customer?.fullName}</Table.Cell>
           <Table.Cell>{numberWithCommas(each.amount)}</Table.Cell>
           <Table.Cell>{each.paymentMethod}</Table.Cell>
-          <Table.Cell>
-            {new Date(each.createdAt).toLocaleDateString('en-gb')}
-          </Table.Cell>
+          <Table.Cell>{moment(each.createdAt).format('DD/MM/YYYY')}</Table.Cell>
         </Table.Row>
       );
     });
@@ -93,12 +92,13 @@ const ReceiptsScreen: React.FC = () => {
 
   const handleSearchChange = (e, { value }: { value: string }) => {
     setSearchValue(value);
-    if (value.length > 0) {
-      dispatch(searchReceiptFn(value));
-    } else {
+  };
+
+  useEffect(() => {
+    if (searchValue.length === 0) {
       fetchReceipts();
     }
-  };
+  }, [searchValue]);
 
   const headerContent = () => {
     return (
@@ -114,11 +114,24 @@ const ReceiptsScreen: React.FC = () => {
           <Icon inverted color="grey" name="add" />
           Create
         </Button>
-        <Form.Input
-          placeholder="Search Receipt No"
-          onChange={handleSearchChange}
-          value={searchValue}
-        />
+        <Button icon labelPosition="left" onClick={fetchReceipts}>
+          <Icon name="redo" />
+          Refresh
+        </Button>
+        <Form
+          onSubmit={async () => {
+            setLoading(true);
+            const response = await searchReceiptFn(searchValue);
+            setReceipts(response);
+            setLoading(false);
+          }}
+        >
+          <Form.Input
+            placeholder="Search Receipt No"
+            onChange={handleSearchChange}
+            value={searchValue}
+          />
+        </Form>
       </>
     );
   };
@@ -129,7 +142,7 @@ const ReceiptsScreen: React.FC = () => {
       rightSidebar={renderSideContent()}
       headerContent={headerContent()}
     >
-      {receiptsLoading ? (
+      {loading ? (
         <Loader active inline="centered" />
       ) : (
         <Table celled striped>

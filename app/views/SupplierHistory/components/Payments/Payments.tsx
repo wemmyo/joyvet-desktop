@@ -1,4 +1,3 @@
-/* eslint-disable react/jsx-one-expression-per-line */
 import * as React from 'react';
 import { Table } from 'semantic-ui-react';
 import moment from 'moment';

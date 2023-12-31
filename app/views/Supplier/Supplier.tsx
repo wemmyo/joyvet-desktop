@@ -1,16 +1,9 @@
-/* eslint-disable react/jsx-one-expression-per-line */
 import React, { useEffect, useState } from 'react';
 import { Table, Form, Button, Icon, Loader } from 'semantic-ui-react';
-import { useSelector, useDispatch } from 'react-redux';
+import { useDispatch } from 'react-redux';
 
 import DashboardLayout from '../../layouts/DashboardLayout/DashboardLayout';
-import {
-  selectSupplierState,
-  getSuppliersFn,
-  createSupplierFn,
-  searchSupplierFn,
-  clearSingleSupplierFn,
-} from '../../slices/supplierSlice';
+
 import CreateSupplier from './components/CreateSupplier/CreateSupplier';
 import { numberWithCommas, isAdmin, sum } from '../../utils/helpers';
 import {
@@ -18,6 +11,12 @@ import {
   closeSideContentFn,
 } from '../../slices/dashboardSlice';
 import EditSupplier from './components/EditSupplier/EditSupplier';
+import {
+  getSuppliersFn,
+  createSupplierFn,
+  searchSupplierFn,
+} from '../../controllers/supplier.controller';
+import { ISupplier } from '../../models/supplier';
 
 const CONTENT_CREATE = 'create';
 const CONTENT_EDIT = 'edit';
@@ -26,20 +25,16 @@ const SuppliersScreen: React.FC = () => {
   const [sideContent, setSideContent] = useState('');
   const [supplierId, setSupplierId] = useState('');
   const [searchValue, setSearchValue] = useState('');
+  const [suppliers, setSuppliers] = useState<ISupplier[]>([]);
+  const [loading, setLoading] = useState(false);
 
   const dispatch = useDispatch();
 
-  const supplierState = useSelector(selectSupplierState);
-
-  const {
-    data: suppliersRaw,
-    loading: suppliersLoading,
-  } = supplierState.suppliers;
-
-  const suppliers = suppliersRaw ? JSON.parse(suppliersRaw) : [];
-
-  const fetchSuppliers = () => {
-    dispatch(getSuppliersFn());
+  const fetchSuppliers = async () => {
+    setLoading(true);
+    const response = await getSuppliersFn();
+    setSuppliers(response);
+    setLoading(false);
   };
 
   const openSideContent = (content: string) => {
@@ -47,44 +42,33 @@ const SuppliersScreen: React.FC = () => {
     setSideContent(content);
   };
 
-  const closeSideContent = () => {
-    dispatch(closeSideContentFn());
-    setSideContent('');
-    setSupplierId('');
-  };
-
   useEffect(() => {
     fetchSuppliers();
 
     return () => {
+      const closeSideContent = () => {
+        dispatch(closeSideContentFn());
+        setSideContent('');
+        setSupplierId('');
+      };
       closeSideContent();
-      dispatch(clearSingleSupplierFn());
     };
-  }, []);
+  }, [dispatch]);
 
-  const handleNewSupplier = (values: any) => {
-    dispatch(
-      createSupplierFn(values, () => {
-        fetchSuppliers();
-        // console.log('created');
-      })
-    );
+  const handleNewSupplier = async (values) => {
+    await createSupplierFn(values);
+    fetchSuppliers();
   };
 
-  const openSingleSupplier = (id: any) => {
+  const openSingleSupplier = (id) => {
     setSupplierId(id);
     openSideContent(CONTENT_EDIT);
   };
 
   const renderRows = () => {
-    const rows = suppliers.map((each: any) => {
+    const rows = suppliers.map((each) => {
       return (
-        <Table.Row
-          key={each.id}
-          // eslint-disable-next-line react/jsx-props-no-spreading
-          // {...(isAdmin() && { onClick: () => openSingleSupplier(each.id) })}
-          onClick={() => openSingleSupplier(each.id)}
-        >
+        <Table.Row key={each.id} onClick={() => openSingleSupplier(each.id)}>
           <Table.Cell>{each.fullName}</Table.Cell>
           <Table.Cell>{each.address}</Table.Cell>
           <Table.Cell>{each.phoneNumber}</Table.Cell>
@@ -100,19 +84,20 @@ const SuppliersScreen: React.FC = () => {
       return <CreateSupplier createSupplierFn={handleNewSupplier} />;
     }
     if (sideContent === CONTENT_EDIT) {
-      return <EditSupplier supplierId={supplierId} />;
+      return <EditSupplier supplierId={Number(supplierId)} />;
     }
     return null;
   };
 
   const handleSearchChange = (e, { value }: { value: string }) => {
     setSearchValue(value);
-    if (value.length > 0) {
-      dispatch(searchSupplierFn(value));
-    } else {
+  };
+
+  useEffect(() => {
+    if (searchValue === '') {
       fetchSuppliers();
     }
-  };
+  }, [searchValue]);
 
   const sumOfBalances = () => {
     if (suppliers.length === 0) {
@@ -139,11 +124,22 @@ const SuppliersScreen: React.FC = () => {
           <Icon inverted color="grey" name="add" />
           Create
         </Button>
-        <Form.Input
-          placeholder="Search Supplier"
-          onChange={handleSearchChange}
-          value={searchValue}
-        />
+        <Button icon labelPosition="left" onClick={fetchSuppliers}>
+          <Icon name="redo" />
+          Refresh
+        </Button>
+        <Form
+          onSubmit={async () => {
+            const response = await searchSupplierFn(searchValue);
+            setSuppliers(response);
+          }}
+        >
+          <Form.Input
+            placeholder="Search Supplier"
+            onChange={handleSearchChange}
+            value={searchValue}
+          />
+        </Form>
       </>
     );
   };
@@ -154,7 +150,7 @@ const SuppliersScreen: React.FC = () => {
       rightSidebar={renderSideContent()}
       headerContent={headerContent()}
     >
-      {suppliersLoading ? (
+      {loading ? (
         <Loader active inline="centered" />
       ) : (
         <Table celled striped>

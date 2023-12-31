@@ -1,7 +1,10 @@
-export const numberWithCommas = (n: string) => {
-  return parseFloat(n || '0')
-    .toFixed(2)
-    .replace(/(\d)(?=(\d{3})+\.)/g, '$1,');
+export const numberWithCommas = (n: number) => {
+  if (!n || typeof n !== 'number') {
+    return '';
+  }
+
+  // add commas to n and 2 decimal places
+  return n.toFixed(2).replace(/\d(?=(\d{3})+\.)/g, '$&,');
 };
 
 export const isAdmin = () => {

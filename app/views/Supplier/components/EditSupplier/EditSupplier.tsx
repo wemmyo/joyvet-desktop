@@ -1,54 +1,46 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Button, Form } from 'semantic-ui-react';
 import { Field, Formik } from 'formik';
-import { useSelector, useDispatch } from 'react-redux';
+import { useDispatch } from 'react-redux';
 import { Link } from 'react-router-dom';
 
-// import * as Yup from 'yup';
 import TextInput from '../../../../components/TextInput/TextInput';
-import {
-  getSingleSupplierFn,
-  selectSupplierState,
-  updateSupplierFn,
-  getSuppliersFn,
-  deleteSupplierFn,
-} from '../../../../slices/supplierSlice';
 import { closeSideContentFn } from '../../../../slices/dashboardSlice';
 import routes from '../../../../routing/routes';
 import { isAdmin } from '../../../../utils/helpers';
+import {
+  getSingleSupplierFn,
+  deleteSupplierFn,
+  getSuppliersFn,
+  updateSupplierFn,
+} from '../../../../controllers/supplier.controller';
+import { ISupplier } from '../../../../models/supplier';
 
 export interface EditSupplierProps {
-  supplierId: string | number;
+  supplierId: number;
 }
 
 const EditSupplier: React.FC<EditSupplierProps> = ({
   supplierId,
 }: EditSupplierProps) => {
+  const [supplier, setSupplier] = useState<ISupplier>({} as ISupplier);
+
   const dispatch = useDispatch();
 
   useEffect(() => {
-    const fetchData = () => {
-      dispatch(getSingleSupplierFn(supplierId));
+    const fetchData = async () => {
+      const response = await getSingleSupplierFn(supplierId);
+      setSupplier(response);
     };
     fetchData();
   }, [supplierId]);
 
-  const supplierState = useSelector(selectSupplierState);
-
-  const { data: supplierRaw } = supplierState.singleSupplier;
-
-  const supplier = supplierRaw ? JSON.parse(supplierRaw) : {};
-  // console.log(supplier);
-
   const { fullName, address, phoneNumber, balance } = supplier;
 
-  const handleDeleteSupplier = () => {
-    dispatch(
-      deleteSupplierFn(supplierId, () => {
-        dispatch(closeSideContentFn());
-        dispatch(getSuppliersFn());
-      })
-    );
+  const handleDeleteSupplier = async () => {
+    await deleteSupplierFn(supplierId);
+    dispatch(closeSideContentFn());
+    await getSuppliersFn();
   };
 
   return (
@@ -60,17 +52,10 @@ const EditSupplier: React.FC<EditSupplierProps> = ({
         phoneNumber: phoneNumber || '',
         balance: balance || '',
       }}
-      // validationSchema={EditSupplierSchema}
-      onSubmit={(values) => {
-        //   submitForm(values);
-        // console.log(values);
-
-        dispatch(
-          updateSupplierFn(values, supplierId, () => {
-            dispatch(closeSideContentFn());
-            dispatch(getSuppliersFn());
-          })
-        );
+      onSubmit={async (values) => {
+        await updateSupplierFn(values, supplierId);
+        dispatch(closeSideContentFn());
+        await getSuppliersFn();
       }}
     >
       {({ handleSubmit }) => (
@@ -123,7 +108,3 @@ const EditSupplier: React.FC<EditSupplierProps> = ({
   );
 };
 export default EditSupplier;
-
-// const EditSupplierSchema = Yup.object().shape({
-//   title: Yup.string().required('Required'),
-// });

@@ -1,44 +1,47 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Button, Form } from 'semantic-ui-react';
 import { Field, Formik } from 'formik';
-import { useSelector, useDispatch } from 'react-redux';
+import { useDispatch } from 'react-redux';
 import { Link } from 'react-router-dom';
 
-// import * as Yup from 'yup';
 import TextInput from '../../../../components/TextInput/TextInput';
-import {
-  getSingleProductFn,
-  selectProductState,
-  updateProductFn,
-  getProductsFn,
-} from '../../../../slices/productSlice';
 import { closeSideContentFn } from '../../../../slices/dashboardSlice';
 import routes from '../../../../routing/routes';
 import { isAdmin } from '../../../../utils/helpers';
+import {
+  getSingleProductFn,
+  updateProductFn,
+  deleteProductFn,
+} from '../../../../controllers/product.controller';
+import { IProduct } from '../../../../models/product';
 
 export interface EditProductProps {
   productId: string | number;
+  refreshProducts: () => void;
 }
 
 const EditProduct: React.FC<EditProductProps> = ({
   productId,
+  refreshProducts,
 }: EditProductProps) => {
+  const [product, setProduct] = useState<IProduct>({} as IProduct);
   const dispatch = useDispatch();
 
-  const fetchData = () => {
-    dispatch(getSingleProductFn(productId));
-  };
-
-  useEffect(fetchData, [productId]);
-
-  const productState = useSelector(selectProductState);
-
-  const { data: productRaw } = productState.singleProduct;
-
-  const product = productRaw ? JSON.parse(productRaw) : {};
-  // console.log(product);
+  useEffect(() => {
+    const fetchData = async () => {
+      const response = await getSingleProductFn(Number(productId));
+      setProduct(response);
+    };
+    fetchData();
+  }, [productId]);
 
   const { title, stock, sellPrice, sellPrice2, sellPrice3, buyPrice } = product;
+
+  const onDeleteProduct = async () => {
+    await deleteProductFn(Number(productId));
+    dispatch(closeSideContentFn());
+    refreshProducts();
+  };
 
   return (
     <Formik
@@ -51,17 +54,10 @@ const EditProduct: React.FC<EditProductProps> = ({
         sellPrice3: sellPrice3 || '',
         buyPrice: buyPrice || '',
       }}
-      // validationSchema={EditProductSchema}
-      onSubmit={(values, actions) => {
-        //   submitForm(values);
-        // console.log(values);
-
-        dispatch(
-          updateProductFn(values, productId, () => {
-            dispatch(closeSideContentFn());
-            dispatch(getProductsFn());
-          })
-        );
+      onSubmit={async (values) => {
+        await updateProductFn(values, productId);
+        dispatch(closeSideContentFn());
+        refreshProducts();
       }}
     >
       {({ handleSubmit }) => (
@@ -121,13 +117,17 @@ const EditProduct: React.FC<EditProductProps> = ({
           >
             History
           </Button>
+          <Button
+            negative
+            style={{ marginTop: '1rem' }}
+            fluid
+            onClick={onDeleteProduct}
+          >
+            Delete
+          </Button>
         </Form>
       )}
     </Formik>
   );
 };
 export default EditProduct;
-
-// const EditProductSchema = Yup.object().shape({
-//   title: Yup.string().required('Required'),
-// });

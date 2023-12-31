@@ -1,16 +1,10 @@
-/* eslint-disable react/jsx-one-expression-per-line */
 import React, { useEffect, useState, useRef } from 'react';
 import { Table, Button, Icon, Form, Loader } from 'semantic-ui-react';
-import { useSelector, useDispatch } from 'react-redux';
+import { useDispatch } from 'react-redux';
 import { useReactToPrint } from 'react-to-print';
 
 import DashboardLayout from '../../layouts/DashboardLayout/DashboardLayout';
-import {
-  selectProductState,
-  getProductsFn,
-  createProductFn,
-  searchProductFn,
-} from '../../slices/productSlice';
+
 import CreateProduct from './components/CreateProduct/CreateProduct';
 import { numberWithCommas } from '../../utils/helpers';
 import {
@@ -18,6 +12,12 @@ import {
   closeSideContentFn,
 } from '../../slices/dashboardSlice';
 import EditProduct from './components/EditProduct/EditProduct';
+import {
+  createProductFn,
+  getProductsFn,
+  searchProductFn,
+} from '../../controllers/product.controller';
+import { IProduct } from '../../models/product';
 
 const CONTENT_CREATE = 'create';
 const CONTENT_EDIT = 'edit';
@@ -26,9 +26,10 @@ const ProductsScreen: React.FC = () => {
   const [sideContent, setSideContent] = useState('');
   const [productId, setProductId] = useState('');
   const [searchValue, setSearchValue] = useState('');
+  const [products, setProducts] = useState<IProduct[]>([]);
+  const [loading, setLoading] = useState(false);
 
   const dispatch = useDispatch();
-  const productState = useSelector(selectProductState);
 
   const componentRef = useRef(null);
 
@@ -36,12 +37,11 @@ const ProductsScreen: React.FC = () => {
     content: () => componentRef.current,
   });
 
-  const { data: productsRaw, loading: productsLoading } = productState.products;
-
-  const products = productsRaw ? JSON.parse(productsRaw) : [];
-
-  const fetchProducts = () => {
-    dispatch(getProductsFn());
+  const fetchProducts = async () => {
+    setLoading(true);
+    const response = await getProductsFn();
+    setProducts(response);
+    setLoading(false);
   };
 
   const openSideContent = (content: string) => {
@@ -49,26 +49,22 @@ const ProductsScreen: React.FC = () => {
     setSideContent(content);
   };
 
-  const closeSideContent = () => {
-    dispatch(closeSideContentFn());
-    setSideContent('');
-    setProductId('');
-  };
-
   useEffect(() => {
     fetchProducts();
 
     return () => {
+      const closeSideContent = () => {
+        dispatch(closeSideContentFn());
+        setSideContent('');
+        setProductId('');
+      };
       closeSideContent();
     };
-  }, []);
+  }, [dispatch]);
 
-  const handleNewProduct = (values: any) => {
-    dispatch(
-      createProductFn(values, () => {
-        fetchProducts();
-      })
-    );
+  const handleNewProduct = async (values: Partial<IProduct>) => {
+    await createProductFn(values);
+    await fetchProducts();
   };
 
   const openSingleProduct = (id: any) => {
@@ -85,16 +81,17 @@ const ProductsScreen: React.FC = () => {
       return 0;
     }
     return products
-      .map((item: any) => {
+      .map((item) => {
         return item.stock * item.buyPrice;
       })
       .reduce(sum);
   };
 
   const renderRows = () => {
-    const rows = products.map((each: any) => {
+    const rows = products.map((each, index) => {
       return (
         <Table.Row onClick={() => openSingleProduct(each.id)} key={each.id}>
+          <Table.Cell>{index + 1}</Table.Cell>
           <Table.Cell>{each.title}</Table.Cell>
           <Table.Cell>{each.stock}</Table.Cell>
           <Table.Cell>{numberWithCommas(each.buyPrice)}</Table.Cell>
@@ -112,22 +109,30 @@ const ProductsScreen: React.FC = () => {
 
   const renderSideContent = () => {
     if (sideContent === CONTENT_CREATE) {
-      return <CreateProduct createProductFn={handleNewProduct} />;
+      return (
+        <CreateProduct
+          createProductFn={handleNewProduct}
+          refreshProducts={fetchProducts}
+        />
+      );
     }
     if (sideContent === CONTENT_EDIT) {
-      return <EditProduct productId={productId} />;
+      return (
+        <EditProduct productId={productId} refreshProducts={fetchProducts} />
+      );
     }
     return null;
   };
 
   const handleSearchChange = (e, { value }: { value: string }) => {
     setSearchValue(value);
-    if (value.length > 0) {
-      dispatch(searchProductFn(value));
-    } else {
+  };
+
+  useEffect(() => {
+    if (searchValue === '') {
       fetchProducts();
     }
-  };
+  }, [searchValue]);
 
   const headerContent = () => {
     return (
@@ -144,11 +149,22 @@ const ProductsScreen: React.FC = () => {
           Create
         </Button>
         <Button onClick={handlePrint} icon="print" />
-        <Form.Input
-          placeholder="Search Product"
-          onChange={handleSearchChange}
-          value={searchValue}
-        />
+        <Button icon labelPosition="left" onClick={fetchProducts}>
+          <Icon name="redo" />
+          Refresh
+        </Button>
+        <Form
+          onSubmit={async () => {
+            const response = await searchProductFn(searchValue);
+            setProducts(response);
+          }}
+        >
+          <Form.Input
+            placeholder="Search Product"
+            onChange={handleSearchChange}
+            value={searchValue}
+          />
+        </Form>
       </>
     );
   };
@@ -159,13 +175,14 @@ const ProductsScreen: React.FC = () => {
       rightSidebar={renderSideContent()}
       headerContent={headerContent()}
     >
-      {productsLoading ? (
+      {loading ? (
         <Loader active inline="centered" />
       ) : (
         <div ref={componentRef}>
           <Table celled striped>
             <Table.Header>
               <Table.Row>
+                <Table.HeaderCell>No</Table.HeaderCell>
                 <Table.HeaderCell>Title</Table.HeaderCell>
                 <Table.HeaderCell>Quantity</Table.HeaderCell>
                 <Table.HeaderCell>Buy Price</Table.HeaderCell>
@@ -180,6 +197,7 @@ const ProductsScreen: React.FC = () => {
 
             <Table.Footer>
               <Table.Row>
+                <Table.HeaderCell />
                 <Table.HeaderCell />
                 <Table.HeaderCell />
                 <Table.HeaderCell />

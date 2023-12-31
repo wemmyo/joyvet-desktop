@@ -1,43 +1,41 @@
-import React, { useEffect } from 'react';
-import { useSelector, useDispatch } from 'react-redux';
+import React, { useEffect, useState } from 'react';
+import { useDispatch } from 'react-redux';
 import { Table, Button } from 'semantic-ui-react';
-import {
-  getSinglePaymentFn,
-  selectPaymentState,
-  deletePaymentFn,
-  getPaymentsFn,
-} from '../../../../slices/paymentSlice';
+import moment from 'moment';
+
 import { numberWithCommas } from '../../../../utils/helpers';
 import { closeSideContentFn } from '../../../../slices/dashboardSlice';
+import {
+  getSinglePaymentFn,
+  deletePaymentFn,
+} from '../../../../controllers/payment.controller';
+import { IPayment } from '../../../../models/payment';
 
 export interface PaymentDetailProps {
-  paymentId: string | number;
+  paymentId: number;
+  refreshPayments: () => void;
 }
 
-const PaymentDetail: React.SFC<PaymentDetailProps> = ({
-  paymentId,
-}: PaymentDetailProps) => {
+const PaymentDetail = ({ paymentId, refreshPayments }: PaymentDetailProps) => {
+  const [singlePayment, setSinglePayment] = useState<IPayment>({} as IPayment);
+  const [loading, setLoading] = useState<boolean>(true);
   const dispatch = useDispatch();
 
-  const fetchData = () => {
-    dispatch(getSinglePaymentFn(paymentId));
-  };
+  useEffect(() => {
+    const fetchData = async () => {
+      setLoading(true);
+      const response = await getSinglePaymentFn(Number(paymentId));
+      setSinglePayment(response);
+      setLoading(false);
+    };
 
-  useEffect(fetchData, [paymentId]);
+    fetchData();
+  }, [paymentId]);
 
-  const paymentState = useSelector(selectPaymentState);
-
-  const { data: singlePaymentRaw, loading } = paymentState.singlePayment;
-
-  const singlePayment = singlePaymentRaw ? JSON.parse(singlePaymentRaw) : {};
-
-  const handleDelete = () => {
-    dispatch(
-      deletePaymentFn(paymentId, () => {
-        dispatch(getPaymentsFn());
-        dispatch(closeSideContentFn());
-      })
-    );
+  const handleDelete = async () => {
+    await deletePaymentFn(paymentId);
+    refreshPayments();
+    dispatch(closeSideContentFn());
   };
 
   const {
@@ -49,7 +47,7 @@ const PaymentDetail: React.SFC<PaymentDetailProps> = ({
     bank,
   } = singlePayment;
 
-  if (loading || !singlePayment) {
+  if (loading) {
     return <p>Loading...</p>;
   }
 
@@ -86,7 +84,7 @@ const PaymentDetail: React.SFC<PaymentDetailProps> = ({
           <Table.Row>
             <Table.Cell>Date</Table.Cell>
             <Table.Cell>
-              {new Date(createdAt).toLocaleDateString('en-gb') || ''}
+              {moment(createdAt).format('DD/MM/YYYY') || ''}
             </Table.Cell>
           </Table.Row>
         </Table.Body>

@@ -1,21 +1,19 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Button, Form } from 'semantic-ui-react';
 import { Field, Formik } from 'formik';
-import { useSelector, useDispatch } from 'react-redux';
+import { useDispatch } from 'react-redux';
 
 // import * as Yup from 'yup';
 import TextInput from '../../../../components/TextInput/TextInput';
 import {
-  getSingleReceiptFn,
-  selectReceiptState,
   updateReceiptFn,
   getReceiptsFn,
-} from '../../../../slices/receiptSlice';
+  getSingleReceiptFn,
+} from '../../../../controllers/receipt.controller';
+import { ICustomer } from '../../../../models/customer';
+import { IReceipt } from '../../../../models/receipt';
 import { closeSideContentFn } from '../../../../slices/dashboardSlice';
-import {
-  getCustomersFn,
-  selectCustomerState,
-} from '../../../../slices/customerSlice';
+import { getCustomersFn } from '../../../../controllers/customer.controller';
 
 export interface EditReceiptProps {
   receiptId: string | number;
@@ -24,26 +22,26 @@ export interface EditReceiptProps {
 const EditReceipt: React.FC<EditReceiptProps> = ({
   receiptId,
 }: EditReceiptProps) => {
+  const [receipt, setReceipt] = useState<IReceipt>({} as IReceipt);
+  const [customers, setCustomers] = useState<ICustomer[]>([] as ICustomer[]);
   const dispatch = useDispatch();
 
-  const fetchData = () => {
-    dispatch(getSingleReceiptFn(receiptId));
-    dispatch(getCustomersFn());
-  };
-
-  useEffect(fetchData, [receiptId]);
-
-  const receiptState = useSelector(selectReceiptState);
-  const customerState = useSelector(selectCustomerState);
-
-  const { data: receiptRaw } = receiptState.singleReceipt;
-  const { data: customersRaw } = customerState.customers;
-
-  const receipt = receiptRaw ? JSON.parse(receiptRaw) : {};
-  const customers = customersRaw ? JSON.parse(customersRaw) : [];
+  useEffect(() => {
+    const fetchData = async () => {
+      const getSingleReceipt = getSingleReceiptFn(receiptId);
+      const getCustomers = getCustomersFn();
+      const [receiptResponse, customersResponse] = await Promise.all([
+        getSingleReceipt,
+        getCustomers,
+      ]);
+      setReceipt(receiptResponse);
+      setCustomers(customersResponse);
+    };
+    fetchData();
+  }, [receiptId]);
 
   const renderCustomers = () => {
-    const customerList = customers.map((customer: any) => {
+    const customerList = customers.map((customer) => {
       return (
         <option key={customer.id} value={customer.id}>
           {customer.fullName}
@@ -117,7 +115,3 @@ const EditReceipt: React.FC<EditReceiptProps> = ({
   );
 };
 export default EditReceipt;
-
-// const EditReceiptSchema = Yup.object().shape({
-//   title: Yup.string().required('Required'),
-// });

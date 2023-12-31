@@ -1,92 +1,27 @@
-import { createSlice } from '@reduxjs/toolkit';
 import { toast } from 'react-toastify';
 import { Op } from 'sequelize';
-import Purchase from '../models/purchase';
+import { z } from 'zod';
+import Purchase, { IPurchase } from '../models/purchase';
 import Supplier from '../models/supplier';
 import Product from '../models/product';
 import sequelize from '../utils/database';
 
-const initialState = {
-  singlePurchase: {
-    loading: false,
-    data: '',
-  },
-  purchases: {
-    loading: false,
-    data: '',
-  },
-  createPurchaseState: {
-    loading: false,
-    data: '',
-  },
-};
+import {
+  getPurchases as getPurchasesService,
+  getPurchaseById,
+} from '../services/purchase.service';
+import { IPurchaseItem } from '../models/purchaseItem';
 
-const purchaseSlice = createSlice({
-  name: 'purchases',
-  initialState,
-  reducers: {
-    getSinglePurchase: (state) => {
-      const { singlePurchase } = state;
-      singlePurchase.loading = true;
-    },
-    getSinglePurchaseSuccess: (state, { payload }) => {
-      const { singlePurchase } = state;
-      singlePurchase.loading = false;
-      singlePurchase.data = payload;
-    },
-    getSinglePurchaseFailed: (state) => {
-      const { singlePurchase } = state;
-      singlePurchase.loading = false;
-      singlePurchase.data = '';
-    },
-    getPurchases: (state) => {
-      const { purchases } = state;
-      purchases.loading = true;
-    },
-    getPurchasesSuccess: (state, { payload }) => {
-      const { purchases } = state;
-      purchases.loading = false;
-      purchases.data = payload;
-    },
-    getPurchasesFailed: (state) => {
-      const { purchases } = state;
-      purchases.loading = false;
-      purchases.data = '';
-    },
-    createPurchase: (state) => {
-      const { createPurchaseState } = state;
-      createPurchaseState.loading = true;
-      createPurchaseState.data = '';
-    },
-    createPurchaseSuccess: (state, { payload }) => {
-      const { createPurchaseState } = state;
-      createPurchaseState.loading = false;
-      createPurchaseState.data = payload;
-    },
-    createPurchaseFailed: (state) => {
-      const { createPurchaseState } = state;
-      createPurchaseState.loading = false;
-    },
-  },
-});
+export const searchPurchaseFn = async (value: string) => {
+  // use zod to validate input
+  const searchPurchaseSchema = z.object({
+    value: z.string().min(1),
+  });
 
-export const {
-  getSinglePurchase,
-  getSinglePurchaseSuccess,
-  getSinglePurchaseFailed,
-  getPurchases,
-  getPurchasesSuccess,
-  getPurchasesFailed,
-  createPurchase,
-  createPurchaseSuccess,
-  createPurchaseFailed,
-} = purchaseSlice.actions;
-
-export const searchPurchaseFn = (value: string) => async (
-  dispatch: (arg0: { payload: any; type: string }) => void
-) => {
   try {
-    const purchases = await Purchase.findAll({
+    searchPurchaseSchema.parse({ value });
+
+    const purchases = await getPurchasesService({
       where: {
         invoiceNumber: {
           [Op.startsWith]: value,
@@ -98,20 +33,22 @@ export const searchPurchaseFn = (value: string) => async (
         },
       ],
     });
-    dispatch(getPurchasesSuccess(JSON.stringify(purchases)));
+    return purchases;
   } catch (error) {
     toast.error(error.message || '');
   }
 };
 
-export const getSinglePurchaseFn = (
-  id: string | number,
-  cb?: () => void
-) => async (dispatch: (arg0: { payload: any; type: string }) => void) => {
-  try {
-    dispatch(getSinglePurchase());
+export const getSinglePurchaseFn = async (id: number, cb?: () => void) => {
+  // use zod to validate input
+  const getSinglePurchaseSchema = z.object({
+    id: z.number(),
+  });
 
-    const getSinglePurchaseResponse = await Purchase.findByPk(id, {
+  try {
+    getSinglePurchaseSchema.parse({ id });
+
+    const purchase = await getPurchaseById(id, {
       include: [
         { model: Supplier },
         {
@@ -119,25 +56,18 @@ export const getSinglePurchaseFn = (
         },
       ],
     });
-
-    dispatch(
-      getSinglePurchaseSuccess(JSON.stringify(getSinglePurchaseResponse))
-    );
     if (cb) {
       cb();
     }
-    console.log(getSinglePurchaseResponse);
+    return purchase;
   } catch (error) {
     toast.error(error.message || '');
   }
 };
 
-export const getPurchasesFn = () => async (
-  dispatch: (arg0: { payload: any; type: string }) => void
-) => {
+export const getPurchasesFn = async () => {
   try {
-    dispatch(getPurchases());
-    const purchases = await Purchase.findAll({
+    const purchases = await getPurchasesService({
       include: [
         {
           model: Supplier,
@@ -145,20 +75,30 @@ export const getPurchasesFn = () => async (
       ],
       order: [['createdAt', 'DESC']],
     });
-    dispatch(getPurchasesSuccess(JSON.stringify(purchases)));
+    return purchases;
   } catch (error) {
     toast.error(error.message || '');
   }
 };
 
-export const createPurchaseFn = (
-  values: any,
-  meta?: any,
+export const createPurchaseFn = async (
+  values: IPurchaseItem[],
+  meta: Omit<IPurchase, 'id' | 'postedBy'>,
   cb?: () => void
-) => async (dispatch: (arg0: { payload: any; type: string }) => void) => {
+) => {
+  // use zod to validate input
+  const createPurchaseSchema = z.object({
+    values: z.array(z.any()),
+    meta: z.object({
+      supplierId: z.number(),
+      invoiceNumber: z.string().min(1),
+      amount: z.number(),
+    }),
+  });
+
   try {
+    createPurchaseSchema.parse({ values, meta });
     await sequelize.transaction(async (t) => {
-      dispatch(createPurchase());
       const user =
         localStorage.getItem('user') !== null
           ? JSON.parse(localStorage.getItem('user') || '')
@@ -221,7 +161,6 @@ export const createPurchaseFn = (
         transaction: t,
       });
     });
-    dispatch(createPurchaseSuccess({}));
     toast.success('Purchase created');
 
     if (cb) {
@@ -232,11 +171,16 @@ export const createPurchaseFn = (
   }
 };
 
-export const deletePurchaseFn = (
+export const deletePurchaseFn = async (
   id: string | number,
   cb?: () => void
-) => async (dispatch: (arg0: { payload: any; type: string }) => void) => {
+) => {
+  // use zod to validate input
+  const deletePurchaseSchema = z.object({
+    id: z.number(),
+  });
   try {
+    deletePurchaseSchema.parse({ id });
     await sequelize.transaction(async (t) => {
       const purchase = await Purchase.findByPk(id, {
         include: [
@@ -273,20 +217,12 @@ export const deletePurchaseFn = (
       });
 
       await purchase.destroy({ transaction: t });
-
-      // dispatch(getPurchasesSuccess(JSON.stringify(invoices)));
     });
     toast.success('Purchase deleted');
     if (cb) {
       cb();
     }
   } catch (error) {
-    console.log(error);
-
     toast.error(error.message || '');
   }
 };
-
-export const selectPurchaseState = (state: any) => state.purchase;
-
-export default purchaseSlice.reducer;

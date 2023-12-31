@@ -1,49 +1,39 @@
-/* eslint-disable react/jsx-one-expression-per-line */
 import React, { useState, useEffect } from 'react';
 import { Table, Grid, Button, Form, Segment } from 'semantic-ui-react';
 import { Field, Formik } from 'formik';
-import { useSelector, useDispatch } from 'react-redux';
 
 import DashboardLayout from '../../layouts/DashboardLayout/DashboardLayout';
-import {
-  getSuppliersFn,
-  selectSupplierState,
-} from '../../slices/supplierSlice';
-import { getProductsFn, selectProductState } from '../../slices/productSlice';
-import { numberWithCommas } from '../../utils/helpers';
-import { createPurchaseFn } from '../../slices/purchaseSlice';
+
 import TextInput from '../../components/TextInput/TextInput';
+import { getSuppliersFn } from '../../controllers/supplier.controller';
+import { getProductsFn } from '../../controllers/product.controller';
+import { ISupplier } from '../../models/supplier';
+import { IProduct } from '../../models/product';
+import { numberWithCommas } from '../../utils/helpers';
+import { createPurchaseFn } from '../../controllers/purchase.controller';
+import { IPurchaseItem } from '../../models/purchaseItem';
 
 const PurchaseScreen: React.FC = () => {
   const [orders, setOrders] = useState([]);
+  const [suppliers, setSuppliers] = useState<ISupplier[]>([]);
+  const [products, setProducts] = useState<IProduct[]>([]);
 
-  const dispatch = useDispatch();
-  const supplierState = useSelector(selectSupplierState);
-  const productState = useSelector(selectProductState);
-
-  const { data: suppliersRaw } = supplierState.suppliers;
-  const { data: productsRaw } = productState.products;
-
-  const suppliers = suppliersRaw ? JSON.parse(suppliersRaw) : [];
-  const products = productsRaw ? JSON.parse(productsRaw) : [];
-
-  const fetchSuppliers = () => {
-    dispatch(getSuppliersFn());
-  };
-
-  const fetchProducts = () => {
-    dispatch(getProductsFn());
-  };
-
-  const fetchData = () => {
-    fetchSuppliers();
-    fetchProducts();
-  };
-
-  useEffect(fetchData, []);
+  useEffect(() => {
+    const fetchData = async () => {
+      const getSuppliers = getSuppliersFn();
+      const getProducts = getProductsFn();
+      const [suppliersResponse, productsResponse] = await Promise.all([
+        getSuppliers,
+        getProducts,
+      ]);
+      setSuppliers(suppliersResponse);
+      setProducts(productsResponse);
+    };
+    fetchData();
+  }, []);
 
   const renderProducts = () => {
-    const productList = products.map((product: any) => {
+    const productList = products.map((product) => {
       return (
         <option key={product.id} value={JSON.stringify(product)}>
           {product.title}
@@ -54,7 +44,7 @@ const PurchaseScreen: React.FC = () => {
   };
 
   const renderSuppliers = () => {
-    const supplierList = suppliers.map((supplier: any) => {
+    const supplierList = suppliers.map((supplier) => {
       return (
         <option key={supplier.id} value={supplier.id}>
           {supplier.fullName}
@@ -72,7 +62,7 @@ const PurchaseScreen: React.FC = () => {
     return prev + next;
   };
 
-  const addToOrders = (value: any) => {
+  const addToOrders = (value: IPurchaseItem) => {
     setOrders([...orders, value]);
   };
 
@@ -91,12 +81,10 @@ const PurchaseScreen: React.FC = () => {
   };
 
   const renderOrders = () => {
-    let serialNumber = 0;
-    const orderList = orders.map((order: any) => {
-      serialNumber += 1;
+    const orderList = orders.map((order: any, index) => {
       return (
         <Table.Row key={order.orderId}>
-          <Table.Cell>{serialNumber}</Table.Cell>
+          <Table.Cell>{index + 1}</Table.Cell>
           <Table.Cell>{order.title}</Table.Cell>
           <Table.Cell>{order.quantity}</Table.Cell>
           <Table.Cell>{numberWithCommas(order.unitPrice)}</Table.Cell>
@@ -117,7 +105,7 @@ const PurchaseScreen: React.FC = () => {
     return orderList;
   };
 
-  const addItemToOrder = (values: any, { resetForm }) => {
+  const addItemToOrder = (values, { resetForm }) => {
     addToOrders({
       ...JSON.parse(values.product),
       quantity: values.quantity,
@@ -141,21 +129,14 @@ const PurchaseScreen: React.FC = () => {
     });
   };
 
-  const createPurchase = ({ values, resetForm }) => {
-    dispatch(
-      createPurchaseFn(
-        orders,
-        {
-          supplierId: values.supplierId,
-          invoiceNumber: values.invoiceNumber,
-          amount: sumOfOrders(),
-        },
-        () => {
-          resetForm();
-          setOrders([]);
-        }
-      )
-    );
+  const createPurchase = async ({ values, resetForm }) => {
+    await createPurchaseFn(orders, {
+      supplierId: Number(values.supplierId),
+      invoiceNumber: values.invoiceNumber,
+      amount: sumOfOrders(),
+    });
+    resetForm();
+    setOrders([]);
   };
 
   const onProductChange = ({ handleChange, setFieldValue, e }) => {
@@ -242,7 +223,6 @@ const PurchaseScreen: React.FC = () => {
                       name="invoiceNumber"
                       placeholder="Invoice Number"
                       label="Invoice Number"
-                      type="number"
                       component={TextInput}
                     />
                     <Segment raised>

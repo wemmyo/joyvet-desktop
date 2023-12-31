@@ -1,111 +1,87 @@
-/* eslint-disable react/jsx-one-expression-per-line */
 import React, { useEffect, useState } from 'react';
 import { Table, Form, Button } from 'semantic-ui-react';
-import { useSelector, useDispatch } from 'react-redux';
+import { useDispatch } from 'react-redux';
 import moment from 'moment';
 import DashboardLayout from '../../layouts/DashboardLayout/DashboardLayout';
-import {
-  selectInvoiceState,
-  getInvoicesFn,
-  filterInvoiceById,
-  filterInvoiceFn,
-  //   createInvoiceFn,
-} from '../../slices/invoiceSlice';
 import { numberWithCommas, isAdmin } from '../../utils/helpers';
 import {
   openSideContentFn,
   closeSideContentFn,
 } from '../../slices/dashboardSlice';
 import SalesDetail from './components/SalesDetail';
+import {
+  filterInvoiceFn,
+  filterInvoiceById,
+  getInvoicesFn,
+} from '../../controllers/invoice.controller';
+import { IInvoice } from '../../models/invoice';
 
 const TODAYS_DATE = `${moment().format('YYYY-MM-DD')}`;
 const CONTENT_DETAIL = 'detail';
 
 const SalesScreen: React.FC = () => {
   const [sideContent, setSideContent] = useState('');
-  const [salesId, setSalesId] = useState('');
+  const [salesId, setSalesId] = useState<number | undefined>();
   const [saleType, setSaleType] = useState('all');
   const [searchValue, setSearchValue] = useState('');
   const [startDate, setStartDate] = useState(TODAYS_DATE);
   const [endDate, setEndDate] = useState(TODAYS_DATE);
+  const [invoices, setInvoices] = useState<IInvoice[]>([]);
 
   const dispatch = useDispatch();
-
-  const invoiceState = useSelector(selectInvoiceState);
-
-  const { data: invoicesRaw } = invoiceState.invoices;
-
-  const invoices = invoicesRaw ? JSON.parse(invoicesRaw) : [];
-
-  const fetchInvoices = () => {
-    dispatch(getInvoicesFn());
-  };
 
   const openSideContent = (content: string) => {
     dispatch(openSideContentFn());
     setSideContent(content);
   };
 
-  const closeSideContent = () => {
-    dispatch(closeSideContentFn());
-    setSideContent('');
-    setSalesId('');
-  };
-
-  const filterSales = () => {
-    dispatch(filterInvoiceFn(startDate, endDate, saleType));
-  };
-
-  const searchForInvoice = () => {
-    if (searchValue) {
-      dispatch(filterInvoiceById(searchValue));
-    } else if (searchValue.length === 0) {
-      fetchInvoices();
-    }
-  };
-
   useEffect(() => {
-    filterSales();
+    const fetchInvoices = async () => {
+      const response = await filterInvoiceFn(startDate, endDate, saleType);
+      setInvoices(response);
+    };
+    fetchInvoices();
 
     return () => {
-      closeSideContent();
+      dispatch(closeSideContentFn());
+      setSideContent('');
+      setSalesId(undefined);
     };
-  }, [startDate, endDate, saleType]);
+  }, [startDate, endDate, saleType, dispatch]);
 
   useEffect(() => {
-    if (searchValue.length > 0) {
-      searchForInvoice();
-    }
+    const fetchData = async () => {
+      if (searchValue) {
+        const response = await filterInvoiceById(Number(searchValue));
+        setInvoices(response);
+      }
+    };
+    fetchData();
   }, [searchValue]);
 
-  const openSingleSale = async (id: any) => {
+  const openSingleSale = async (id: number) => {
     setSalesId(id);
     openSideContent(CONTENT_DETAIL);
   };
 
-  const renderRows = () => {
-    const rows = invoices.map((each: any) => {
-      return (
-        <Table.Row onClick={() => openSingleSale(each.id)} key={each.id}>
-          <Table.Cell>{each.customer?.fullName}</Table.Cell>
-          <Table.Cell>{each.id}</Table.Cell>
-          <Table.Cell>{each.saleType}</Table.Cell>
-          <Table.Cell>₦{numberWithCommas(each.amount)}</Table.Cell>
-          {isAdmin() ? (
-            <Table.Cell>₦{numberWithCommas(each.profit)}</Table.Cell>
-          ) : null}
-          <Table.Cell>
-            {new Date(each.createdAt).toLocaleDateString('en-gb')}
-          </Table.Cell>
-        </Table.Row>
-      );
-    });
-    return rows;
-  };
+  const renderRows = invoices.map((each) => {
+    return (
+      <Table.Row onClick={() => openSingleSale(each.id)} key={each.id}>
+        <Table.Cell>{each.customer?.fullName}</Table.Cell>
+        <Table.Cell>{each.id}</Table.Cell>
+        <Table.Cell>{each.saleType}</Table.Cell>
+        <Table.Cell>₦{numberWithCommas(each.amount)}</Table.Cell>
+        {isAdmin() ? (
+          <Table.Cell>₦{numberWithCommas(each.profit)}</Table.Cell>
+        ) : null}
+        <Table.Cell>{moment(each.createdAt).format('DD/MM/YYYY')}</Table.Cell>
+      </Table.Row>
+    );
+  });
 
   const renderSideContent = () => {
     if (sideContent === CONTENT_DETAIL) {
-      return <SalesDetail salesId={salesId} />;
+      return <SalesDetail salesId={Number(salesId)} />;
     }
     return null;
   };
@@ -117,12 +93,12 @@ const SalesScreen: React.FC = () => {
     { key: 4, text: 'Credit', value: 'credit' },
   ];
 
-  const resetFilters = () => {
+  const resetFilters = async () => {
     setStartDate(TODAYS_DATE);
     setEndDate(TODAYS_DATE);
     setSaleType('all');
     setSearchValue('');
-    fetchInvoices();
+    await getInvoicesFn();
   };
 
   const headerContent = () => {
@@ -148,7 +124,7 @@ const SalesScreen: React.FC = () => {
               label="Type"
               options={options}
               placeholder="Choose type"
-              onChange={(e, { value }) => setSaleType(value)}
+              onChange={(e, { value }) => setSaleType(value as string)}
               value={saleType}
             />
             <Form.Input
@@ -172,7 +148,7 @@ const SalesScreen: React.FC = () => {
       return 0;
     }
     return invoices
-      .map((item: any) => {
+      .map((item) => {
         return item.amount;
       })
       .reduce(sum);
@@ -182,7 +158,7 @@ const SalesScreen: React.FC = () => {
       return 0;
     }
     return invoices
-      .map((item: any) => {
+      .map((item) => {
         return item.profit;
       })
       .reduce(sum);
@@ -206,7 +182,7 @@ const SalesScreen: React.FC = () => {
           </Table.Row>
         </Table.Header>
 
-        <Table.Body>{renderRows()}</Table.Body>
+        <Table.Body>{renderRows}</Table.Body>
 
         <Table.Footer>
           <Table.Row>

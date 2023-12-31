@@ -1,45 +1,37 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Button, Form, Message } from 'semantic-ui-react';
 import { Field, Formik } from 'formik';
-import { useSelector, useDispatch } from 'react-redux';
-// import * as Yup from 'yup';
+import TextInput from '../../../../components/TextInput/TextInput';
+import { numberWithCommas } from '../../../../utils/helpers';
+import { createPaymentFn } from '../../../../controllers/payment.controller';
 import {
   getSuppliersFn,
   getSingleSupplierFn,
-  selectSupplierState,
-  clearSingleSupplierFn,
-} from '../../../../slices/supplierSlice';
-import {
-  createPaymentFn,
-  getPaymentsFn,
-} from '../../../../slices/paymentSlice';
-import TextInput from '../../../../components/TextInput/TextInput';
-import { numberWithCommas } from '../../../../utils/helpers';
+} from '../../../../controllers/supplier.controller';
+import { ISupplier } from '../../../../models/supplier';
 
-const CreatePayment: React.FC = () => {
-  const dispatch = useDispatch();
+interface ICreatePayment {
+  refreshPayments: () => void;
+}
 
-  const supplierState = useSelector(selectSupplierState);
+const CreatePayment = ({ refreshPayments }: ICreatePayment) => {
+  const [suppliers, setSuppliers] = useState<ISupplier[]>([]);
+  const [singleSupplier, setSingleSupplier] = useState<ISupplier>(
+    {} as ISupplier
+  );
 
-  const { data: suppliersRaw } = supplierState.suppliers;
-  const { data: singleSupplierRaw } = supplierState.singleSupplier;
-
-  const suppliers = suppliersRaw ? JSON.parse(suppliersRaw) : [];
-  const singleSupplier = singleSupplierRaw ? JSON.parse(singleSupplierRaw) : {};
-
-  const fetchSuppliers = () => {
-    dispatch(getSuppliersFn());
-  };
-  const fetchPayments = () => {
-    dispatch(getPaymentsFn());
-  };
-
-  useEffect(fetchSuppliers, []);
+  useEffect(() => {
+    const fetchSuppliers = async () => {
+      const response = await getSuppliersFn();
+      setSuppliers(response);
+    };
+    fetchSuppliers();
+  }, []);
 
   const renderSuppliers = () => {
-    const supplierList = suppliers.map((eachSupplier: any) => {
+    const supplierList = suppliers.map((eachSupplier) => {
       return (
-        <option key={eachSupplier.id} value={eachSupplier.id}>
+        <option key={eachSupplier.id} value={Number(eachSupplier.id)}>
           {eachSupplier.fullName}
         </option>
       );
@@ -95,14 +87,15 @@ const CreatePayment: React.FC = () => {
         note: '',
       }}
       // validationSchema={CreatePaymentSchema}
-      onSubmit={(values, actions) => {
-        dispatch(
-          createPaymentFn(values, () => {
-            fetchPayments();
-            actions.resetForm();
-            dispatch(clearSingleSupplierFn());
-          })
-        );
+      onSubmit={async (values, actions) => {
+        await createPaymentFn({
+          ...values,
+          supplierId: Number(values.supplierId),
+          amount: Number(values.amount),
+        });
+        refreshPayments();
+        actions.resetForm();
+        setSingleSupplier({} as ISupplier);
       }}
     >
       {({ handleSubmit, handleChange, values }) => (
@@ -114,15 +107,13 @@ const CreatePayment: React.FC = () => {
               name="supplierId"
               component="select"
               className="ui dropdown"
-              onChange={(e: { currentTarget: { value: any } }) => {
+              onChange={async (e: { currentTarget: { value: any } }) => {
                 // call the built-in handleBur
                 handleChange(e);
                 // and do something about e
                 const supplierId = e.currentTarget.value;
                 // console.log(someValue);
-                dispatch(getSingleSupplierFn(supplierId));
-
-                // ...
+                await getSingleSupplierFn(Number(supplierId));
               }}
             >
               <option value="" disabled hidden>
@@ -138,7 +129,7 @@ const CreatePayment: React.FC = () => {
             name="amount"
             placeholder="Amount"
             label="Amount"
-            type="text"
+            type="number"
             component={TextInput}
           />
 

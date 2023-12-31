@@ -1,18 +1,18 @@
 import React, { useEffect, useState } from 'react';
 import { Table, Button, Icon } from 'semantic-ui-react';
-import { useSelector, useDispatch } from 'react-redux';
+import { useDispatch } from 'react-redux';
+import moment from 'moment';
 import DashboardLayout from '../../layouts/DashboardLayout/DashboardLayout';
-import {
-  selectUserState,
-  getUsersFn,
-  createUserFn,
-} from '../../slices/userSlice';
-import CreateUser from './components/CreateUser/CreateUser';
+
+import EditUser from './components/EditUser/EditUser';
+import { IUser } from '../../models/user';
+import { getUsersFn, createUserFn } from '../../controllers/user.controller';
 import {
   openSideContentFn,
   closeSideContentFn,
 } from '../../slices/dashboardSlice';
-import EditUser from './components/EditUser/EditUser';
+import CreateUser from './components/CreateUser/CreateUser';
+// import { createStoreInfoTable } from '../../controllers/storeInfo.controller';
 
 const CONTENT_CREATE = 'create';
 const CONTENT_EDIT = 'edit';
@@ -20,16 +20,13 @@ const CONTENT_EDIT = 'edit';
 const UserScreen: React.FC = () => {
   const [sideContent, setSideContent] = useState('');
   const [userId, setUserId] = useState('');
+  const [users, setUsers] = useState<IUser[]>([]);
 
   const dispatch = useDispatch();
-  const userState = useSelector(selectUserState);
 
-  const { data: usersRaw } = userState.users;
-
-  const users = usersRaw ? JSON.parse(usersRaw) : [];
-
-  const fetchUsers = () => {
-    dispatch(getUsersFn());
+  const fetchUsers = async () => {
+    const response = await getUsersFn();
+    setUsers(response);
   };
 
   const openSideContent = (content: string) => {
@@ -37,47 +34,28 @@ const UserScreen: React.FC = () => {
     setSideContent(content);
   };
 
-  const closeSideContent = () => {
-    dispatch(closeSideContentFn());
-    setSideContent('');
-    setUserId('');
-  };
-
   useEffect(() => {
     fetchUsers();
 
     return () => {
+      const closeSideContent = () => {
+        dispatch(closeSideContentFn());
+        setSideContent('');
+        setUserId('');
+      };
       closeSideContent();
     };
-  }, []);
+  }, [dispatch]);
 
-  const handleNewUser = (values: any) => {
-    dispatch(
-      createUserFn(values, () => {
-        fetchUsers();
-      })
-    );
+  const handleNewUser = (values) => {
+    createUserFn(values, () => {
+      fetchUsers();
+    });
   };
 
-  const openSingleUser = (id: any) => {
+  const openSingleUser = (id) => {
     setUserId(id);
     openSideContent(CONTENT_EDIT);
-  };
-
-  const renderRows = () => {
-    const rows = users.map((each: any) => {
-      return (
-        <Table.Row onClick={() => openSingleUser(each.id)} key={each.id}>
-          <Table.Cell>{each.fullName}</Table.Cell>
-          <Table.Cell>{each.username}</Table.Cell>
-          <Table.Cell>{each.role}</Table.Cell>
-          <Table.Cell>
-            {new Date(each.createdAt).toLocaleDateString('en-gb')}
-          </Table.Cell>
-        </Table.Row>
-      );
-    });
-    return rows;
   };
 
   const renderSideContent = () => {
@@ -92,17 +70,23 @@ const UserScreen: React.FC = () => {
 
   const headerContent = () => {
     return (
-      <Button
-        color="blue"
-        icon
-        labelPosition="left"
-        onClick={() => {
-          openSideContent(CONTENT_CREATE);
-        }}
-      >
-        <Icon inverted color="grey" name="add" />
-        Create
-      </Button>
+      <>
+        <Button
+          color="blue"
+          icon
+          labelPosition="left"
+          onClick={() => {
+            openSideContent(CONTENT_CREATE);
+          }}
+        >
+          <Icon inverted color="grey" name="add" />
+          Create
+        </Button>
+        <Button icon labelPosition="left" onClick={fetchUsers}>
+          <Icon name="redo" />
+          Refresh
+        </Button>
+      </>
     );
   };
 
@@ -122,7 +106,20 @@ const UserScreen: React.FC = () => {
           </Table.Row>
         </Table.Header>
 
-        <Table.Body>{renderRows()}</Table.Body>
+        <Table.Body>
+          {users.map((each) => {
+            return (
+              <Table.Row onClick={() => openSingleUser(each.id)} key={each.id}>
+                <Table.Cell>{each.fullName}</Table.Cell>
+                <Table.Cell>{each.username}</Table.Cell>
+                <Table.Cell>{each.role}</Table.Cell>
+                <Table.Cell>
+                  {moment(each.createdAt).format('DD/MM/YYYY')}
+                </Table.Cell>
+              </Table.Row>
+            );
+          })}
+        </Table.Body>
       </Table>
     </DashboardLayout>
   );

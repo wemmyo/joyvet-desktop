@@ -1,13 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { Table, Button, Icon, Form, Loader } from 'semantic-ui-react';
-import { useSelector, useDispatch } from 'react-redux';
+import { useDispatch } from 'react-redux';
+import moment from 'moment';
 
 import DashboardLayout from '../../layouts/DashboardLayout/DashboardLayout';
-import {
-  selectPaymentState,
-  getPaymentsFn,
-  searchPaymentFn,
-} from '../../slices/paymentSlice';
 import CreatePayment from './components/CreatePayment/CreatePayment';
 import { numberWithCommas } from '../../utils/helpers';
 import PaymentDetail from './components/PaymentDetail/PaymentDetail';
@@ -16,6 +12,11 @@ import {
   closeSideContentFn,
 } from '../../slices/dashboardSlice';
 import EditPayment from './components/EditPayment/EditPayment';
+import {
+  getPaymentsFn,
+  searchPaymentFn,
+} from '../../controllers/payment.controller';
+import { IPayment } from '../../models/payment';
 
 const CONTENT_CREATE = 'create';
 const CONTENT_DETAIL = 'detail';
@@ -25,16 +26,16 @@ const PaymentsScreen: React.FC = () => {
   const [sideContent, setSideContent] = useState('');
   const [paymentId, setPaymentId] = useState('');
   const [searchValue, setSearchValue] = useState('');
+  const [payments, setPayments] = useState<IPayment[]>([]);
+  const [loading, setLoading] = useState(false);
 
   const dispatch = useDispatch();
-  const paymentState = useSelector(selectPaymentState);
 
-  const { data: paymentsRaw, loading: paymentsLoading } = paymentState.payments;
-
-  const payments = paymentsRaw ? JSON.parse(paymentsRaw) : [];
-
-  const fetchPayments = () => {
-    dispatch(getPaymentsFn());
+  const fetchPayments = async () => {
+    setLoading(true);
+    const response = await getPaymentsFn();
+    setPayments(response);
+    setLoading(false);
   };
 
   const openSideContent = (content: string) => {
@@ -42,41 +43,33 @@ const PaymentsScreen: React.FC = () => {
     setSideContent(content);
   };
 
-  const closeSideContent = () => {
-    dispatch(closeSideContentFn());
-    setSideContent('');
-    setPaymentId('');
-  };
-
   useEffect(() => {
     fetchPayments();
 
     return () => {
+      const closeSideContent = () => {
+        dispatch(closeSideContentFn());
+        setSideContent('');
+        setPaymentId('');
+      };
       closeSideContent();
     };
-  }, []);
+  }, [dispatch]);
 
-  const viewPaymentReceipt = (id: any) => {
+  const viewPaymentReceipt = (id) => {
     setPaymentId(id);
     openSideContent(CONTENT_DETAIL);
   };
 
-  // const editPaymentReceipt = (id: any) => {
-  //   setPaymentId(id);
-  //   openSideContent(CONTENT_EDIT);
-  // };
-
   const renderRows = () => {
-    const rows = payments.map((each: any) => {
+    const rows = payments.map((each) => {
       return (
         <Table.Row key={each.id} onClick={() => viewPaymentReceipt(each.id)}>
           <Table.Cell>{each.id}</Table.Cell>
           <Table.Cell>{numberWithCommas(each.amount)}</Table.Cell>
           <Table.Cell>{each.paymentMethod}</Table.Cell>
           <Table.Cell>{each.bank}</Table.Cell>
-          <Table.Cell>
-            {new Date(each.createdAt).toLocaleDateString('en-gb')}
-          </Table.Cell>
+          <Table.Cell>{moment(each.createdAt).format('DD/MM/YYYY')}</Table.Cell>
         </Table.Row>
       );
     });
@@ -85,10 +78,15 @@ const PaymentsScreen: React.FC = () => {
 
   const renderSideContent = () => {
     if (sideContent === CONTENT_DETAIL) {
-      return <PaymentDetail paymentId={paymentId} />;
+      return (
+        <PaymentDetail
+          paymentId={Number(paymentId)}
+          refreshPayments={fetchPayments}
+        />
+      );
     }
     if (sideContent === CONTENT_CREATE) {
-      return <CreatePayment />;
+      return <CreatePayment refreshPayments={fetchPayments} />;
     }
     if (sideContent === CONTENT_EDIT) {
       return <EditPayment paymentId={paymentId} />;
@@ -96,14 +94,15 @@ const PaymentsScreen: React.FC = () => {
     return null;
   };
 
-  const handleSearchChange = (e, { value }: { value: string }) => {
+  const handleSearchChange = async (e, { value }: { value: string }) => {
     setSearchValue(value);
-    if (value.length > 0) {
-      dispatch(searchPaymentFn(value));
-    } else {
+  };
+
+  useEffect(() => {
+    if (searchValue.length === 0) {
       fetchPayments();
     }
-  };
+  }, [searchValue]);
 
   const headerContent = () => {
     return (
@@ -119,11 +118,24 @@ const PaymentsScreen: React.FC = () => {
           <Icon inverted color="grey" name="add" />
           Create
         </Button>
-        <Form.Input
-          placeholder="Search Payment"
-          onChange={handleSearchChange}
-          value={searchValue}
-        />
+        <Button icon labelPosition="left" onClick={fetchPayments}>
+          <Icon name="redo" />
+          Refresh
+        </Button>
+        <Form
+          onSubmit={async () => {
+            setLoading(true);
+            const response = await searchPaymentFn(searchValue);
+            setPayments(response);
+            setLoading(false);
+          }}
+        >
+          <Form.Input
+            placeholder="Search Payment"
+            onChange={handleSearchChange}
+            value={searchValue}
+          />
+        </Form>
       </>
     );
   };
@@ -134,7 +146,7 @@ const PaymentsScreen: React.FC = () => {
       rightSidebar={renderSideContent()}
       headerContent={headerContent()}
     >
-      {paymentsLoading ? (
+      {loading ? (
         <Loader active inline="centered" />
       ) : (
         <Table celled striped>

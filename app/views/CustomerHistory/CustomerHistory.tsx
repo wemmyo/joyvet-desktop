@@ -1,28 +1,27 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { Form, Button, Tab } from 'semantic-ui-react';
 import moment from 'moment';
-import { useSelector, useDispatch } from 'react-redux';
 import { useReactToPrint } from 'react-to-print';
 
 import DashboardLayout from '../../layouts/DashboardLayout/DashboardLayout';
+import CustomerHistoryInvoices from './components/Invoices/Invoices';
+import CustomerHistoryReceipts from './components/Receipts/Receipts';
 import {
   getCustomerInvoicesFn,
   getCustomerReceiptsFn,
-  selectCustomerState,
-} from '../../slices/customerSlice';
-import CustomerHistoryInvoices from './components/Invoices/Invoices';
-import CustomerHistoryReceipts from './components/Receipts/Receipts';
+} from '../../controllers/customer.controller';
+import { IReceipt } from '../../models/receipt';
+import { IInvoice } from '../../models/invoice';
 
 const TODAYS_DATE = `${moment().format('YYYY-MM-DD')}`;
 
 const CustomerHistory: React.FC = ({ match }: any) => {
   const [startDate, setStartDate] = useState(TODAYS_DATE);
   const [endDate, setEndDate] = useState(TODAYS_DATE);
+  const [receipts, setReceipts] = useState<IReceipt[]>([]);
+  const [invoices, setInvoices] = useState<IInvoice[]>([]);
 
   const customerId = match.params.id;
-
-  const dispatch = useDispatch();
-  const customerState = useSelector(selectCustomerState);
 
   const componentRef = useRef(null);
 
@@ -30,16 +29,29 @@ const CustomerHistory: React.FC = ({ match }: any) => {
     content: () => componentRef.current,
   });
 
-  const { data: receiptsRaw } = customerState.receipts;
-  const { data: invoicesRaw } = customerState.invoices;
-
-  const receipts = receiptsRaw ? JSON.parse(receiptsRaw) : [];
-  const invoices = invoicesRaw ? JSON.parse(invoicesRaw) : [];
-
   useEffect(() => {
-    dispatch(getCustomerInvoicesFn(customerId, startDate, endDate));
-    dispatch(getCustomerReceiptsFn(customerId, startDate, endDate));
-  }, [startDate, endDate, customerId, dispatch]);
+    const fetchData = async () => {
+      const getInvoices = getCustomerInvoicesFn(
+        Number(customerId),
+        startDate,
+        endDate
+      );
+      const getReceipts = getCustomerReceiptsFn(
+        Number(customerId),
+        startDate,
+        endDate
+      );
+
+      const [invoicesResponse, receiptsResponse] = await Promise.all([
+        getInvoices,
+        getReceipts,
+      ]);
+      setInvoices(invoicesResponse);
+      setReceipts(receiptsResponse);
+    };
+
+    fetchData();
+  }, [startDate, endDate, customerId]);
 
   const resetFilters = () => {
     setStartDate(TODAYS_DATE);

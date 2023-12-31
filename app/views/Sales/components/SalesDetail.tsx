@@ -1,34 +1,34 @@
-/* eslint-disable react/jsx-one-expression-per-line */
 import React, { useEffect, useRef, useState } from 'react';
-import { useSelector, useDispatch } from 'react-redux';
-// import { useParams } from 'react-router-dom';
+import { useDispatch } from 'react-redux';
 import { Table, Button } from 'semantic-ui-react';
 import { useReactToPrint } from 'react-to-print';
 import { Link } from 'react-router-dom';
 import moment from 'moment';
 
 import {
-  getSingleInvoiceFn,
-  selectInvoiceState,
   deleteInvoiceFn,
   getInvoicesFn,
-} from '../../../slices/invoiceSlice';
+  getSingleInvoiceFn,
+} from '../../../controllers/invoice.controller';
 import { numberWithCommas, isAdmin } from '../../../utils/helpers';
 import ComponentToPrint from '../../../components/PrintedReceipt/ReceiptWrapper';
 import { closeSideContentFn } from '../../../slices/dashboardSlice';
 import routes from '../../../routing/routes';
+import { IInvoice } from '../../../models/invoice';
 
 interface SalesDetailProps {
-  salesId: string | number;
+  salesId: number;
 }
 
 const SalesDetail: React.FC<SalesDetailProps> = ({
   salesId,
 }: SalesDetailProps) => {
-  const componentRef = useRef();
+  const componentRef = useRef(null);
   const dispatch = useDispatch();
 
   const [printInvoice, setPrintInvoice] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [sales, setSales] = useState<IInvoice>({} as IInvoice);
 
   const handlePrint = useReactToPrint({
     content: () => componentRef.current,
@@ -44,55 +44,32 @@ const SalesDetail: React.FC<SalesDetailProps> = ({
 
   useEffect(() => {
     if (printInvoice) {
-      handlePrint();
+      handlePrint?.();
     }
-  }, [printInvoice]);
+  }, [printInvoice, handlePrint]);
 
-  const fetchData = () => {
-    dispatch(getSingleInvoiceFn(salesId));
-  };
+  useEffect(() => {
+    const fetchData = async () => {
+      setLoading(true);
+      const response = await getSingleInvoiceFn(Number(salesId));
 
-  useEffect(fetchData, [salesId]);
+      setSales(response);
+      setLoading(false);
+    };
+    fetchData();
+  }, [salesId]);
 
-  const invoiceState = useSelector(selectInvoiceState);
-
-  const { data: salesRaw, loading } = invoiceState.singleInvoice;
-
-  const sales = salesRaw ? JSON.parse(salesRaw) : {};
-
-  const handleDeleteCustomer = () => {
-    dispatch(
-      deleteInvoiceFn(salesId, () => {
-        dispatch(closeSideContentFn());
-        dispatch(getInvoicesFn());
-      })
-    );
-  };
-
-  const renderOrders = () => {
-    let serialNumber = 0;
-    const orderList = sales.products?.map((order: any) => {
-      serialNumber += 1;
-      return (
-        <Table.Row key={order.id}>
-          <Table.Cell>{serialNumber}</Table.Cell>
-          <Table.Cell>{order.title}</Table.Cell>
-          <Table.Cell>{order.invoiceItem.quantity}</Table.Cell>
-          <Table.Cell>
-            ₦{numberWithCommas(order.invoiceItem.unitPrice)}
-          </Table.Cell>
-          <Table.Cell>₦{numberWithCommas(order.invoiceItem.amount)}</Table.Cell>
-        </Table.Row>
-      );
-    });
-    return orderList;
+  const handleDeleteCustomer = async () => {
+    await deleteInvoiceFn(Number(salesId));
+    dispatch(closeSideContentFn());
+    await getInvoicesFn();
   };
 
   const renderInvoiceToPrint = () => {
     if (printInvoice) {
       return (
         <div style={{ display: 'none' }}>
-          <ComponentToPrint ref={componentRef} />
+          <ComponentToPrint ref={componentRef} invoice={sales} />
         </div>
       );
     }
@@ -113,9 +90,7 @@ const SalesDetail: React.FC<SalesDetailProps> = ({
           </Table.Row>
           <Table.Row>
             <Table.Cell>Customer</Table.Cell>
-            <Table.Cell>
-              {sales.customer ? sales.customer.fullName : ''}
-            </Table.Cell>
+            <Table.Cell>{sales.customer?.fullName}</Table.Cell>
           </Table.Row>
           <Table.Row>
             <Table.Cell>Type</Table.Cell>
@@ -157,7 +132,27 @@ const SalesDetail: React.FC<SalesDetailProps> = ({
           </Table.Row>
         </Table.Header>
 
-        <Table.Body>{renderOrders()}</Table.Body>
+        <Table.Body>
+          {sales.products?.map((order, index) => (
+            <Table.Row key={order.id}>
+              <Table.Cell>{index + 1}</Table.Cell>
+              <Table.Cell>{order.title}</Table.Cell>
+              <Table.Cell>{order.invoiceItem?.quantity}</Table.Cell>
+              <Table.Cell>
+                ₦
+                {order.invoiceItem?.unitPrice
+                  ? numberWithCommas(order.invoiceItem?.unitPrice)
+                  : 'N/A'}
+              </Table.Cell>
+              <Table.Cell>
+                ₦
+                {order.invoiceItem?.amount
+                  ? numberWithCommas(order.invoiceItem?.amount)
+                  : 'N/A'}
+              </Table.Cell>
+            </Table.Row>
+          ))}
+        </Table.Body>
       </Table>
       <Button color="green" type="button" onClick={handlePrintFn}>
         Print

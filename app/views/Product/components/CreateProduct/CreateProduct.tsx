@@ -10,6 +10,7 @@ export interface CreateProductProps {
     stock?: string;
     unitPrice?: string | number;
   }) => void;
+  refreshProducts: () => void;
 }
 
 const CreateProductSchema = Yup.object().shape({
@@ -18,6 +19,7 @@ const CreateProductSchema = Yup.object().shape({
 
 const CreateProduct: React.FC<CreateProductProps> = ({
   createProductFn,
+  refreshProducts,
 }: CreateProductProps) => {
   return (
     <Formik
@@ -31,6 +33,7 @@ const CreateProduct: React.FC<CreateProductProps> = ({
       validationSchema={CreateProductSchema}
       onSubmit={(values, actions) => {
         createProductFn(values);
+        refreshProducts();
         actions.resetForm();
       }}
     >

@@ -1,6 +1,25 @@
 import sequelize from '../utils/database';
+import type { IInvoiceItem } from './invoiceItem';
 
 const Sequelize = require('sequelize');
+
+// create product interface
+export interface IProduct {
+  id: number;
+  title: string;
+  stock: number;
+  sellPrice: number;
+  sellPrice2: number;
+  sellPrice3: number;
+  buyPrice: number;
+  reorderLevel: number;
+  productCode: string;
+  numberInPack: number;
+  postedBy: string;
+  createdAt?: Date;
+  updatedAt?: Date;
+  invoiceItem?: IInvoiceItem;
+}
 
 export default sequelize.define('product', {
   id: {

@@ -50,18 +50,6 @@ import { sum } from '../utils/helpers';
 // };
 
 export const createInvoiceValidation = (values, meta) => {
-  //  If not customer
-  if (!meta.customerId) {
-    throw new Error('Customers validation failed');
-  }
-  //  If not saleType
-  if (!meta.saleType) {
-    throw new Error('Sale type validation failed');
-  }
-  // If not amount
-  if (!meta.amount) {
-    throw new Error('Amount validation failed');
-  }
   //  If an item is out of stock
   if (values.length < 0) {
     throw new Error('Products validation failed');

@@ -1,41 +1,48 @@
 import React, { useEffect, useState } from 'react';
 import { Form, Button, Tab } from 'semantic-ui-react';
 import moment from 'moment';
-import { useSelector, useDispatch } from 'react-redux';
-import { withRouter } from 'react-router';
 
 import DashboardLayout from '../../layouts/DashboardLayout/DashboardLayout';
+import SuppplierHistoryPayments from './components/Payments/Payments';
+import SuppplierHistoryPurchases from './components/Purchases/Purchases';
 import {
   getSupplierPaymentsFn,
   getSupplierPurchasesFn,
-  selectSupplierState,
-} from '../../slices/supplierSlice';
-import SuppplierHistoryPayments from './components/Payments/Payments';
-import SuppplierHistoryPurchases from './components/Purchases/Purchases';
+} from '../../controllers/supplier.controller';
 
 // export interface SuppplierHistoryProps {}
 
 const TODAYS_DATE = `${moment().format('YYYY-MM-DD')}`;
 
-const SuppplierHistory: React.SFC = ({ match }: any) => {
+const SuppplierHistory: React.FC = ({ match }: any) => {
   const [startDate, setStartDate] = useState(TODAYS_DATE);
   const [endDate, setEndDate] = useState(TODAYS_DATE);
+  const [payments, setPayments] = useState([]);
+  const [purchases, setPurchases] = useState([]);
 
   const supplierId = match.params.id;
 
-  const dispatch = useDispatch();
-  const supplierState = useSelector(selectSupplierState);
-
-  const { data: paymentsRaw } = supplierState.payments;
-  const { data: purchasesRaw } = supplierState.purchases;
-
-  const payments = paymentsRaw ? JSON.parse(paymentsRaw) : [];
-  const purchases = purchasesRaw ? JSON.parse(purchasesRaw) : [];
-
   useEffect(() => {
-    dispatch(getSupplierPaymentsFn(supplierId, startDate, endDate));
-    dispatch(getSupplierPurchasesFn(supplierId, startDate, endDate));
-  }, [startDate, endDate]);
+    const fetchData = async () => {
+      const getPayments = getSupplierPaymentsFn(
+        Number(supplierId),
+        startDate,
+        endDate
+      );
+      const getPurchases = getSupplierPurchasesFn(
+        Number(supplierId),
+        startDate,
+        endDate
+      );
+      const [paymentsResponse, purchasesResponse] = await Promise.all([
+        getPayments,
+        getPurchases,
+      ]);
+      setPayments(paymentsResponse);
+      setPurchases(purchasesResponse);
+    };
+    fetchData();
+  }, [startDate, endDate, supplierId]);
 
   const resetFilters = () => {
     setStartDate(TODAYS_DATE);
@@ -105,4 +112,4 @@ const SuppplierHistory: React.SFC = ({ match }: any) => {
   );
 };
 
-export default withRouter(SuppplierHistory);
+export default SuppplierHistory;
