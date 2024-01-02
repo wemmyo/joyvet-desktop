@@ -4,7 +4,7 @@ import moment from 'moment';
 import { z } from 'zod';
 import Invoice, { IInvoice } from '../models/invoice';
 import Customer from '../models/customer';
-import Product, { IProduct } from '../models/product';
+import Product from '../models/product';
 import InvoiceItem, { IInvoiceItem } from '../models/invoiceItem';
 import { createInvoiceValidation } from '../sliceValidation/index';
 import sequelize from '../utils/database';
@@ -420,7 +420,7 @@ export const createInvoiceFn = async (
   const schema = z.object({
     invoiceItems: z.array(
       z.object({
-        quantity: z.number().min(1),
+        quantity: z.number().min(0),
         unitPrice: z.number().min(1),
         amount: z.number().min(1),
         profit: z.number(),
@@ -429,7 +429,7 @@ export const createInvoiceFn = async (
     invoice: z.object({
       customerId: z.number().min(1),
       saleType: z.string().min(1),
-      amount: z.number().min(1),
+      amount: z.number().min(0),
       profit: z.number(),
     }),
   });
