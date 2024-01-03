@@ -7,7 +7,6 @@ import moment from 'moment';
 
 import {
   deleteInvoiceFn,
-  getInvoicesFn,
   getSingleInvoiceFn,
 } from '../../../controllers/invoice.controller';
 import { numberWithCommas, isAdmin } from '../../../utils/helpers';
@@ -18,11 +17,11 @@ import { IInvoice } from '../../../models/invoice';
 
 interface SalesDetailProps {
   salesId: number;
+  // eslint-disable-next-line react/require-default-props
+  onRefresh?: () => void;
 }
 
-const SalesDetail: React.FC<SalesDetailProps> = ({
-  salesId,
-}: SalesDetailProps) => {
+const SalesDetail = ({ salesId, onRefresh }: SalesDetailProps) => {
   const componentRef = useRef(null);
   const dispatch = useDispatch();
 
@@ -59,10 +58,10 @@ const SalesDetail: React.FC<SalesDetailProps> = ({
     fetchData();
   }, [salesId]);
 
-  const handleDeleteCustomer = async () => {
+  const handleDeleteInvoice = async () => {
     await deleteInvoiceFn(Number(salesId));
     dispatch(closeSideContentFn());
-    await getInvoicesFn();
+    onRefresh?.();
   };
 
   const renderInvoiceToPrint = () => {
@@ -164,7 +163,7 @@ const SalesDetail: React.FC<SalesDetailProps> = ({
       {isAdmin() ? (
         <Button
           style={{ marginTop: '1rem' }}
-          onClick={handleDeleteCustomer}
+          onClick={handleDeleteInvoice}
           type="button"
           negative
         >
