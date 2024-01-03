@@ -96,12 +96,13 @@ export const filterInvoiceFn = async (
 };
 
 export const filterInvoiceById = async (id: number) => {
-  // use zod to validate the input
   const schema = z.object({
     id: z.number(),
   });
+
   try {
     schema.parse({ id });
+
     const invoices = await getInvoicesService({
       where: {
         id: {
@@ -109,16 +110,18 @@ export const filterInvoiceById = async (id: number) => {
         },
       },
       order: [['createdAt', 'DESC']],
-      include: [
-        {
-          model: Customer,
-        },
-      ],
+      include: [{ model: Customer }],
     });
 
     return invoices;
   } catch (error) {
-    toast.error(error.message || '');
+    // More descriptive error message
+    const errorMessage =
+      error instanceof Error
+        ? error.message
+        : 'An unknown error occurred while filtering invoices by ID';
+    toast.error(errorMessage);
+    throw new Error(errorMessage); // Rethrow to allow specific error handling
   }
 };
 
