@@ -19,7 +19,7 @@ export const openDialog = () => {
 
 const checkForDB = () => {
   /*
-  userData The directory for storing your app's configuration files, 
+  userData The directory for storing your app's configuration files,
   which by default it is the appData directory appended with your app's name.
   */
   const userDataDir = app.getPath('userData');
@@ -59,11 +59,13 @@ const database = (() => {
     return new Sequelize({
       dialect: 'sqlite',
       storage: checkForTestDB(),
+      dialectOptions: { connectTimeout: 3000 },
     });
   }
   return new Sequelize({
     dialect: 'sqlite',
     storage: checkForDB(),
+    dialectOptions: { connectTimeout: 3000 },
   });
 })();
 
