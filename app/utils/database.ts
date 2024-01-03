@@ -32,7 +32,7 @@ const checkForDB = () => {
   // Else open save dialog
   const pathContent = remote.dialog.showSaveDialogSync({
     title: 'Select folder',
-    defaultPath: 'joyvet.db',
+    defaultPath: 'sales.db',
     properties: ['createDirectory'],
   });
 

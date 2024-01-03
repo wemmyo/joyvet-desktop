@@ -1,6 +1,6 @@
 {
-  "name": "joyvet-sales",
-  "productName": "JoyvetSales",
+  "name": "sales-software",
+  "productName": "SalesSoftware",
   "version": "1.4.0",
   "description": "Electron application boilerplate based on React, React Router, Webpack, React Hot Loader for rapid application development",
   "scripts": {
@@ -47,8 +47,8 @@
     ]
   },
   "build": {
-    "productName": "JoyvetSales",
-    "appId": "org.develar.JoyvetSales",
+    "productName": "SalesSoftware",
+    "appId": "org.develar.SalesSoftware",
     "files": [
       "dist/",
       "node_modules/",
