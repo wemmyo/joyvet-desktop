@@ -18,7 +18,7 @@ export const filterInvoiceFn = async (
   endDate: string,
   saleType: string
 ) => {
-  // use zod to validate the input
+  // Schema for input validation
   const schema = z.object({
     startDate: z.string(),
     endDate: z.string(),
@@ -26,78 +26,72 @@ export const filterInvoiceFn = async (
   });
 
   try {
+    // Validate inputs
     schema.parse({ startDate, endDate, saleType });
     let invoices;
 
-    if (startDate && endDate && saleType === 'all') {
-      // console.log('RAN FUNCTION 1');
+    // Implementing a default maximum range limit for dates to prevent heavy queries
+    const MAX_DATE_RANGE = 90; // maximum date range in days
+    const dateDifference = moment(endDate).diff(moment(startDate), 'days');
 
+    if (dateDifference > MAX_DATE_RANGE) {
+      throw new Error(
+        `Date range too large. Please select a range smaller than ${MAX_DATE_RANGE} days.`
+      );
+    }
+
+    // Optimized query handling based on input
+    if (startDate && endDate && saleType === 'all') {
       invoices = await getInvoicesService({
         where: {
           createdAt: {
             [Op.between]: [
               `${moment(startDate).format('YYYY-MM-DD')} 00:00:00`,
-              `${moment(endDate).format('YYYY-MM-DD')} 23:00:00`,
+              `${moment(endDate).format('YYYY-MM-DD')} 23:59:59`,
             ],
           },
         },
         order: [['createdAt', 'DESC']],
-        include: [
-          {
-            model: Customer,
-          },
-        ],
+        include: [{ model: Customer }],
       });
     } else if (startDate && endDate && saleType !== 'all') {
-      // console.log('RAN FUNCTION 2');
-
       invoices = await getInvoicesService({
         where: {
           saleType,
           createdAt: {
             [Op.between]: [
               `${moment(startDate).format('YYYY-MM-DD')} 00:00:00`,
-              `${moment(endDate).format('YYYY-MM-DD')} 23:00:00`,
+              `${moment(endDate).format('YYYY-MM-DD')} 23:59:59`,
             ],
           },
         },
         order: [['createdAt', 'DESC']],
-        include: [
-          {
-            model: Customer,
-          },
-        ],
+        include: [{ model: Customer }],
       });
     } else if (saleType !== 'all' && !startDate && !endDate) {
-      // console.log('RAN FUNCTION 3');
-
       invoices = await getInvoicesService({
         where: {
           saleType,
         },
         order: [['createdAt', 'DESC']],
-        include: [
-          {
-            model: Customer,
-          },
-        ],
+        include: [{ model: Customer }],
       });
     } else {
-      // console.log('RAN FUNCTION 4');
-
       invoices = await getInvoicesService({
         order: [['createdAt', 'DESC']],
-        include: [
-          {
-            model: Customer,
-          },
-        ],
+        include: [{ model: Customer }],
       });
     }
 
     return invoices;
   } catch (error) {
-    toast.error(error.message || '');
+    // More descriptive error message
+    const errorMessage =
+      error instanceof Error
+        ? error.message
+        : 'An unknown error occurred while filtering invoices';
+    toast.error(errorMessage);
+    throw new Error(errorMessage); // Rethrow to allow specific error handling
   }
 };
 
