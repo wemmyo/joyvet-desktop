@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from 'react';
-// import { useParams } from 'react-router-dom';
 import { Table, Button } from 'semantic-ui-react';
 import { useDispatch } from 'react-redux';
+import moment from 'moment';
 
-import { numberWithCommas } from '../../../utils/helpers';
+import { isAdmin, numberWithCommas } from '../../../utils/helpers';
 import { closeSideContentFn } from '../../../slices/dashboardSlice';
 import { IPurchase } from '../../../models/purchase';
 import {
@@ -19,7 +19,7 @@ interface SalesDetailProps {
 const SalesDetail: React.FC<SalesDetailProps> = ({
   purchaseId,
 }: SalesDetailProps) => {
-  const [purchase, setPurchase] = useState<IPurchase[]>([]);
+  const [purchase, setPurchase] = useState<IPurchase>({} as IPurchase);
   const [loading, setLoading] = useState(false);
 
   const dispatch = useDispatch();
@@ -84,7 +84,7 @@ const SalesDetail: React.FC<SalesDetailProps> = ({
           <Table.Row>
             <Table.Cell>Date Posted</Table.Cell>
             <Table.Cell>
-              {new Date(purchase.createdAt).toLocaleDateString('en-gb')}
+              {moment(purchase.createdAt).format('DD/MM/YYYY')}
             </Table.Cell>
           </Table.Row>
         </Table.Body>
@@ -103,7 +103,12 @@ const SalesDetail: React.FC<SalesDetailProps> = ({
 
         <Table.Body>{renderOrders()}</Table.Body>
       </Table>
-      <Button onClick={() => handleDelete()} type="Submit" negative>
+      <Button
+        disabled={!isAdmin()}
+        onClick={() => handleDelete()}
+        type="Submit"
+        negative
+      >
         Delete
       </Button>
     </>

@@ -33,10 +33,10 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
       : '';
 
   return (
-    <div style={{ display: 'flex' }}>
+    <div style={{ display: 'flex', flex: 1 }}>
       <Sidebar />
-      <div style={{ display: 'flex', flex: 1, overflowX: 'scroll' }}>
-        <div className={styles.main}>
+      <div style={{ display: 'flex', flex: 1, overflow: 'auto' }}>
+        <div className={styles.mainContainer}>
           <header>
             <div className={styles.headerSection1}>
               <h2 className={styles.headerSection1__title}>{screenTitle}</h2>
@@ -51,27 +51,27 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
             </div>
             <div className={styles.headerSection2}>{headerContent}</div>
           </header>
-          {children}
+          <main className={styles.main}>{children}</main>
         </div>
-        <div
-          className={`${styles.rightSidebar} ${
-            sideContentisOpen
-              ? styles.rightSidebar__open
-              : styles.rightSidebar__close
-          }`}
-        >
-          <div style={{ position: 'sticky', left: 0, top: 20 }}>
-            <div style={{ marginBottom: '2rem' }}>
-              <Button
-                content="Close"
-                onClick={() => {
-                  dispatch(closeSideContentFn());
-                }}
-              />
-            </div>
-
-            {rightSidebar}
+      </div>
+      <div
+        className={`${styles.rightSidebar} ${
+          sideContentisOpen
+            ? styles.rightSidebar__open
+            : styles.rightSidebar__close
+        }`}
+      >
+        <div style={{ position: 'sticky', left: 0, top: 20 }}>
+          <div style={{ marginBottom: '2rem' }}>
+            <Button
+              content="Close"
+              onClick={() => {
+                dispatch(closeSideContentFn());
+              }}
+            />
           </div>
+
+          {rightSidebar}
         </div>
       </div>
     </div>

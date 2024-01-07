@@ -62,7 +62,7 @@ const ProductsScreen: React.FC = () => {
     };
   }, [dispatch]);
 
-  const handleNewProduct = async (values: any) => {
+  const handleNewProduct = async (values: Partial<IProduct>) => {
     await createProductFn(values);
     await fetchProducts();
   };
@@ -109,10 +109,17 @@ const ProductsScreen: React.FC = () => {
 
   const renderSideContent = () => {
     if (sideContent === CONTENT_CREATE) {
-      return <CreateProduct createProductFn={handleNewProduct} />;
+      return (
+        <CreateProduct
+          createProductFn={handleNewProduct}
+          refreshProducts={fetchProducts}
+        />
+      );
     }
     if (sideContent === CONTENT_EDIT) {
-      return <EditProduct productId={productId} />;
+      return (
+        <EditProduct productId={productId} refreshProducts={fetchProducts} />
+      );
     }
     return null;
   };

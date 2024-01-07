@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { Table, Form, Button } from 'semantic-ui-react';
 import { useDispatch } from 'react-redux';
 import moment from 'moment';
@@ -35,11 +35,12 @@ const SalesScreen: React.FC = () => {
     setSideContent(content);
   };
 
+  const fetchInvoices = useCallback(async () => {
+    const response = await filterInvoiceFn(startDate, endDate, saleType);
+    setInvoices(response);
+  }, [startDate, endDate, saleType]);
+
   useEffect(() => {
-    const fetchInvoices = async () => {
-      const response = await filterInvoiceFn(startDate, endDate, saleType);
-      setInvoices(response);
-    };
     fetchInvoices();
 
     return () => {
@@ -47,7 +48,7 @@ const SalesScreen: React.FC = () => {
       setSideContent('');
       setSalesId(undefined);
     };
-  }, [startDate, endDate, saleType, dispatch]);
+  }, [fetchInvoices, dispatch]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -81,7 +82,9 @@ const SalesScreen: React.FC = () => {
 
   const renderSideContent = () => {
     if (sideContent === CONTENT_DETAIL) {
-      return <SalesDetail salesId={Number(salesId)} />;
+      return (
+        <SalesDetail salesId={Number(salesId)} onRefresh={fetchInvoices} />
+      );
     }
     return null;
   };

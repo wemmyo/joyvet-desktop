@@ -56,11 +56,7 @@ const EditCustomer: React.FC<EditCustomerProps> = ({
         balance: balance || '',
         maxPriceLevel: maxPriceLevel || '',
       }}
-      // validationSchema={EditCustomerSchema}
       onSubmit={async (values) => {
-        //   submitForm(values);
-        // console.log(values);
-
         await updateCustomerFn(values, customerId);
         dispatch(closeSideContentFn());
         await getCustomersFn();

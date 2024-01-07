@@ -18,96 +18,91 @@ export const filterInvoiceFn = async (
   endDate: string,
   saleType: string
 ) => {
-  // use zod to validate the input
+  // Schema for input validation
   const schema = z.object({
     startDate: z.string(),
     endDate: z.string(),
     saleType: z.string(),
   });
-  schema.parse({ startDate, endDate, saleType });
 
   try {
+    // Validate inputs
+    schema.parse({ startDate, endDate, saleType });
     let invoices;
 
-    if (startDate && endDate && saleType === 'all') {
-      // console.log('RAN FUNCTION 1');
+    // Implementing a default maximum range limit for dates to prevent heavy queries
+    const MAX_DATE_RANGE = 90; // maximum date range in days
+    const dateDifference = moment(endDate).diff(moment(startDate), 'days');
 
+    if (dateDifference > MAX_DATE_RANGE) {
+      throw new Error(
+        `Date range too large. Please select a range smaller than ${MAX_DATE_RANGE} days.`
+      );
+    }
+
+    // Optimized query handling based on input
+    if (startDate && endDate && saleType === 'all') {
       invoices = await getInvoicesService({
         where: {
           createdAt: {
             [Op.between]: [
               `${moment(startDate).format('YYYY-MM-DD')} 00:00:00`,
-              `${moment(endDate).format('YYYY-MM-DD')} 23:00:00`,
+              `${moment(endDate).format('YYYY-MM-DD')} 23:59:59`,
             ],
           },
         },
         order: [['createdAt', 'DESC']],
-        include: [
-          {
-            model: Customer,
-          },
-        ],
+        include: [{ model: Customer }],
       });
     } else if (startDate && endDate && saleType !== 'all') {
-      // console.log('RAN FUNCTION 2');
-
       invoices = await getInvoicesService({
         where: {
           saleType,
           createdAt: {
             [Op.between]: [
               `${moment(startDate).format('YYYY-MM-DD')} 00:00:00`,
-              `${moment(endDate).format('YYYY-MM-DD')} 23:00:00`,
+              `${moment(endDate).format('YYYY-MM-DD')} 23:59:59`,
             ],
           },
         },
         order: [['createdAt', 'DESC']],
-        include: [
-          {
-            model: Customer,
-          },
-        ],
+        include: [{ model: Customer }],
       });
     } else if (saleType !== 'all' && !startDate && !endDate) {
-      // console.log('RAN FUNCTION 3');
-
       invoices = await getInvoicesService({
         where: {
           saleType,
         },
         order: [['createdAt', 'DESC']],
-        include: [
-          {
-            model: Customer,
-          },
-        ],
+        include: [{ model: Customer }],
       });
     } else {
-      // console.log('RAN FUNCTION 4');
-
       invoices = await getInvoicesService({
         order: [['createdAt', 'DESC']],
-        include: [
-          {
-            model: Customer,
-          },
-        ],
+        include: [{ model: Customer }],
       });
     }
 
     return invoices;
   } catch (error) {
-    toast.error(error.message || '');
+    // More descriptive error message
+    const errorMessage =
+      error instanceof Error
+        ? error.message
+        : 'An unknown error occurred while filtering invoices';
+    toast.error(errorMessage);
+    throw new Error(errorMessage); // Rethrow to allow specific error handling
   }
 };
 
 export const filterInvoiceById = async (id: number) => {
-  // use zod to validate the input
   const schema = z.object({
     id: z.number(),
   });
-  schema.parse({ id });
+
   try {
+    schema.parse({ id });
+
     const invoices = await getInvoicesService({
       where: {
         id: {
@@ -115,16 +110,18 @@ export const filterInvoiceById = async (id: number) => {
         },
       },
       order: [['createdAt', 'DESC']],
-      include: [
-        {
-          model: Customer,
-        },
-      ],
+      include: [{ model: Customer }],
     });
 
     return invoices;
   } catch (error) {
-    toast.error(error.message || '');
+    // More descriptive error message
+    const errorMessage =
+      error instanceof Error
+        ? error.message
+        : 'An unknown error occurred while filtering invoices by ID';
+    toast.error(errorMessage);
+    throw new Error(errorMessage); // Rethrow to allow specific error handling
   }
 };
 
@@ -176,52 +173,64 @@ export const getInvoicesFn = async () => {
 };
 
 export const deleteInvoiceFn = async (id: number, cb?: () => void) => {
-  // use zod to validate the input
-  const schema = z.object({
-    id: z.number(),
-  });
-  schema.parse({ id });
+  const schema = z.object({ id: z.number() });
+
   try {
+    // Validate the input
+    schema.parse({ id });
+
     await sequelize.transaction(async (t) => {
       const invoice = await Invoice.findByPk(id, {
-        include: [
-          {
-            model: Product,
-          },
-        ],
+        include: [Product],
+        transaction: t,
       });
 
+      if (!invoice) {
+        throw new Error('Invoice not found');
+      }
+
+      // Ensure stock is correctly managed when an invoice is deleted
       await Promise.all(
-        invoice.products.map(async (each: any) => {
-          await Product.increment('stock', {
-            by: each.invoiceItem.quantity,
-            where: { id: each.id },
-            transaction: t,
-          });
+        invoice.products.map(async (product) => {
+          const { invoiceItem } = product;
+          const newStock = product.stock + invoiceItem.quantity;
+          if (newStock < 0) {
+            throw new Error(
+              `Can't delete invoice. It would result in negative stock for product: ${product.title}`
+            );
+          }
+
+          await Product.update(
+            { stock: newStock },
+            { where: { id: product.id }, transaction: t }
+          );
         })
       );
 
-      // update customer balance
-
-      if (invoice.saleType === 'credit' || invoice.saleType === 'transfer') {
+      // Adjust the customer's balance if the invoice is on credit or transfer
+      if (['credit', 'transfer'].includes(invoice.saleType)) {
         await Customer.decrement('balance', {
           by: invoice.amount,
-          where: {
-            id: invoice.customerId,
-          },
+          where: { id: invoice.customerId },
           transaction: t,
         });
       }
 
+      // Delete the invoice and its associated items
       await invoice.destroy({ transaction: t });
-    });
-    toast.success('Invoice deleted');
 
-    if (cb) {
-      cb();
-    }
+      toast.success('Invoice deleted successfully.');
+      if (cb) {
+        cb();
+      }
+    });
   } catch (error) {
-    toast.error(error.message || '');
+    const errorMessage =
+      error instanceof Error
+        ? error.message
+        : 'An unknown error occurred while deleting the invoice';
+    toast.error(errorMessage);
+    throw new Error(errorMessage); // Rethrow to allow specific error handling
   }
 };
 
@@ -230,75 +239,82 @@ export const deleteInvoiceItemFn = async ({
   invoiceId,
   invoiceItemId,
   cb,
-}: {
-  productId: number;
-  invoiceId: number;
-  invoiceItemId: number;
-  cb?: () => void;
 }) => {
-  // use zod to validate the input
   const schema = z.object({
     productId: z.number(),
     invoiceId: z.number(),
     invoiceItemId: z.number(),
   });
-  schema.parse({ productId, invoiceId, invoiceItemId });
+
   try {
+    // Validate the input
+    schema.parse({ productId, invoiceId, invoiceItemId });
+
     await sequelize.transaction(async (t) => {
       const invoice = await Invoice.findByPk(invoiceId, { transaction: t });
+      if (!invoice) {
+        throw new Error('Invoice not found');
+      }
+
       const invoiceItem = await InvoiceItem.findByPk(invoiceItemId, {
         transaction: t,
       });
+      if (!invoiceItem) {
+        throw new Error('Invoice item not found');
+      }
 
-      // update stock
-      const updateStock = Product.increment('stock', {
-        by: invoiceItem.quantity,
-        where: {
-          id: productId,
-        },
-        transaction: t,
-      });
+      // Update stock, ensuring it doesn't go negative
+      const product = await Product.findByPk(productId, { transaction: t });
+      if (!product) {
+        throw new Error('Product not found');
+      }
+      const newStock = product.stock + invoiceItem.quantity;
+      if (newStock < 0) {
+        throw new Error(
+          `Deleting this item would result in negative stock for product: ${product.title}`
+        );
+      }
 
-      // update total amount
-      // update total profit
-      const updateAmount = invoice.decrement(
+      await Product.update(
+        { stock: newStock },
         {
-          amount: invoiceItem.amount,
-          profit: invoiceItem.profit,
-        },
+          where: { id: productId },
+          transaction: t,
+        }
+      );
+
+      // Update total amount and profit for the invoice
+      const updatedAmount = invoice.amount - invoiceItem.amount;
+      const updatedProfit = invoice.profit - invoiceItem.profit;
+      await invoice.update(
+        { amount: updatedAmount, profit: updatedProfit },
         { transaction: t }
       );
 
-      // update customer balance
-      const updateBalance = async () => {
-        if (invoice.saleType === 'credit' || invoice.saleType === 'transfer') {
-          await Customer.decrement('balance', {
-            by: invoiceItem.amount,
-            where: {
-              id: invoice.customerId,
-            },
-            transaction: t,
-          });
-        }
-      };
+      // Update customer balance if the invoice is on credit or transfer
+      if (['credit', 'transfer'].includes(invoice.saleType)) {
+        await Customer.decrement('balance', {
+          by: invoiceItem.amount,
+          where: { id: invoice.customerId },
+          transaction: t,
+        });
+      }
 
-      // delete invoice
-      const deleteInvoice = invoiceItem.destroy({ transaction: t });
+      // Delete the invoice item
+      await invoiceItem.destroy({ transaction: t });
 
-      await Promise.all([
-        updateStock,
-        updateAmount,
-        updateBalance(),
-        deleteInvoice,
-      ]);
+      toast.success('Invoice item deleted successfully');
+      if (cb) {
+        cb();
+      }
     });
-    toast.success('Successfully removed item');
-
-    if (cb) {
-      cb();
-    }
   } catch (error) {
-    toast.error(error.message || '');
+    const errorMessage =
+      error instanceof Error
+        ? error.message
+        : 'An unknown error occurred while deleting the invoice item';
+    toast.error(errorMessage);
+    throw new Error(errorMessage); // Rethrow to allow specific error handling
   }
 };
 
@@ -309,105 +325,122 @@ export const addInvoiceItemFn = async (
   >,
   currentInvoiceItem: Partial<IInvoiceItem>
 ) => {
+  const schema = z.object({
+    invoiceId: z.number(),
+    productId: z.number(),
+    quantity: z.number().min(0),
+    unitPrice: z.number().min(0),
+    amount: z.number().min(0),
+    profit: z.number().min(0),
+  });
+
   try {
+    // Validate the input data
+    schema.parse({
+      invoiceId: currentInvoice.id,
+      productId: currentInvoiceItem.product?.id,
+      quantity: currentInvoiceItem.quantity,
+      unitPrice: currentInvoiceItem.unitPrice,
+      amount: currentInvoiceItem.amount,
+      profit: currentInvoiceItem.profit,
+    });
+
     await sequelize.transaction(async (t) => {
-      // find the Invoice
       const invoice = await Invoice.findByPk(currentInvoice.id, {
-        include: [Product],
+        transaction: t,
       });
-      if (!invoice)
-        throw new Error(`Invoice with id ${currentInvoice.id} not found`);
+      if (!invoice) {
+        throw new Error('Invoice not found');
+      }
 
-      // find the Product
-      const product = await Product.findByPk(currentInvoiceItem.product?.id);
-      if (!product)
-        throw new Error(
-          `Product with id ${currentInvoiceItem.product?.id} not found`
+      const product = await Product.findByPk(currentInvoiceItem.product?.id, {
+        transaction: t,
+      });
+      if (!product) {
+        throw new Error('Product not found');
+      }
+
+      // Check for existing InvoiceItem
+      const existingInvoiceItem = await InvoiceItem.findOne({
+        where: {
+          invoiceId: invoice.id,
+          productId: product.id,
+        },
+        transaction: t,
+      });
+
+      if (existingInvoiceItem) {
+        // Update the existing InvoiceItem
+        const updatedQuantity =
+          existingInvoiceItem.quantity + currentInvoiceItem.quantity;
+        const updatedAmount = updatedQuantity * existingInvoiceItem.unitPrice;
+        const updatedProfit =
+          updatedQuantity * (existingInvoiceItem.unitPrice - product.buyPrice);
+
+        await existingInvoiceItem.update(
+          {
+            quantity: updatedQuantity,
+            amount: updatedAmount,
+            profit: updatedProfit,
+          },
+          { transaction: t }
         );
-
-      // prepare the InvoiceItem data
-      const newInvoiceItem = {
-        quantity: currentInvoiceItem.quantity,
-        unitPrice: currentInvoiceItem.unitPrice,
-        amount: currentInvoiceItem.amount,
-        profit: currentInvoiceItem.profit,
-      };
-
-      // if the product is already in the invoice, update the quantity and amount
-      const existingInvoiceItem = await invoice.products.find(
-        (item) => item.id === product.id
-      );
-
-      const updateInvoiceItem = async () => {
-        if (existingInvoiceItem) {
-          // update the InvoiceItem
-          InvoiceItem.increment(
-            {
-              quantity: currentInvoiceItem.quantity,
-              amount: currentInvoiceItem.amount,
-              profit: currentInvoiceItem.profit,
-            },
-            {
-              transaction: t,
-              where: { id: existingInvoiceItem.invoiceItem?.id },
-            }
-          );
-        } else {
-          // Add product to invoice (this will create an InvoiceItem)
-          invoice.addProduct(product, {
-            through: newInvoiceItem,
-            transaction: t,
-          });
-        }
-      };
-
-      // update the Invoice
-      const updatedInvoice = Invoice.increment(
-        {
+      } else {
+        // Create new invoice item
+        const newInvoiceItem = {
+          invoiceId: invoice.id,
+          productId: product.id,
+          quantity: currentInvoiceItem.quantity,
+          unitPrice: currentInvoiceItem.unitPrice,
           amount: currentInvoiceItem.amount,
           profit: currentInvoiceItem.profit,
-        },
-        {
-          transaction: t,
-          where: { id: currentInvoice.id },
-        }
+        };
+
+        await InvoiceItem.create(newInvoiceItem, { transaction: t });
+      }
+
+      // Recalculate and update invoice totals
+      const updatedInvoiceItems = await InvoiceItem.findAll({
+        where: { invoiceId: invoice.id },
+        transaction: t,
+      });
+
+      const totalAmount = updatedInvoiceItems.reduce(
+        (acc, item) => acc + item.amount,
+        0
+      );
+      const totalProfit = updatedInvoiceItems.reduce(
+        (acc, item) => acc + item.profit,
+        0
       );
 
-      // update the Product
-      const updatedProduct = Product.decrement(
-        'stock',
+      await invoice.update(
         {
-          by: currentInvoiceItem.quantity,
-          where: { id: currentInvoiceItem.product?.id },
+          amount: totalAmount,
+          profit: totalProfit,
         },
         { transaction: t }
       );
 
-      // update customer balance
-      const updateBalance = async () => {
-        if (invoice.saleType === 'credit' || invoice.saleType === 'transfer') {
-          return Customer.increment('balance', {
-            by: currentInvoiceItem.amount,
-            where: {
-              id: invoice.customer.id,
-            },
-            transaction: t,
-          });
-        }
-      };
+      // Update product stock
+      const newStock = product.stock - currentInvoiceItem.quantity;
+      if (newStock < 0) {
+        throw new Error(
+          `Not enough stock for product: ${product.title}. Only ${product.stock} left in stock.`
+        );
+      }
 
-      await Promise.all([
-        updatedInvoice,
-        updatedProduct,
-        updateInvoiceItem(),
-        updateBalance(),
-      ]);
+      await product.update({ stock: newStock }, { transaction: t });
 
-      toast.success('Successfully added item');
+      toast.success('Successfully updated item in the invoice');
     });
   } catch (error) {
-    toast.error(error.message || '');
-    throw error;
+    const errorMessage =
+      error instanceof Error
+        ? error.message
+        : 'An unknown error occurred while adding/updating item in the invoice';
+    toast.error(errorMessage);
+    throw new Error(errorMessage); // Rethrow to allow specific error handling
   }
 };
 
@@ -420,22 +453,22 @@ export const createInvoiceFn = async (
   const schema = z.object({
     invoiceItems: z.array(
       z.object({
-        quantity: z.number(),
-        unitPrice: z.number(),
-        amount: z.number(),
+        quantity: z.number().min(0),
+        unitPrice: z.number().min(1),
+        amount: z.number().min(1),
         profit: z.number(),
       })
     ),
     invoice: z.object({
-      customerId: z.number(),
-      saleType: z.string(),
-      amount: z.number(),
+      customerId: z.number().min(1),
+      saleType: z.string().min(1),
+      amount: z.number().min(0),
       profit: z.number(),
     }),
   });
-  schema.parse({ invoiceItems, invoice });
 
   try {
+    schema.parse({ invoiceItems, invoice });
     createInvoiceValidation(invoiceItems, invoice);
     const user =
       localStorage.getItem('user') !== null
@@ -465,6 +498,15 @@ export const createInvoiceFn = async (
           const product = await Product.findByPk(item.product?.id, {
             transaction: t,
           });
+          if (!item.quantity) {
+            throw new Error(`Quantity missing for for ${product.title}`);
+          }
+          // if item quantity is higher than stock quantity, throw error
+          if (item.quantity > product.stock) {
+            throw new Error(
+              `Not enough in stock for ${product.title}. ${product.stock} remaining`
+            );
+          }
           await Product.decrement('stock', {
             by: item.quantity,
             where: { id: item.product?.id },
@@ -499,43 +541,6 @@ export const createInvoiceFn = async (
 
       return customerInvoice;
     });
-  } catch (error) {
-    toast.error(error.message);
-  }
-};
-
-export const updateInvoiceFn = async (
-  invoiceItems: Partial<IInvoiceItem>[],
-  invoice: IInvoice,
-  cb?: (id: number) => void
-) => {
-  // validate inputs with zod
-  const schema = z.object({
-    invoiceItems: z.array(
-      z.object({
-        quantity: z.number(),
-        unitPrice: z.number(),
-        amount: z.number(),
-        profit: z.number(),
-      })
-    ),
-    invoice: z.object({
-      id: z.number(),
-      customerId: z.number(),
-      saleType: z.string(),
-      amount: z.number(),
-      profit: z.number(),
-    }),
-  });
-  schema.parse({ invoiceItems, invoice });
-
-  const hasInvoiceItems = invoiceItems.length > 0;
-
-  try {
-    await deleteInvoiceFn(invoice.id);
-    if (hasInvoiceItems) {
-      await createInvoiceFn(invoiceItems, invoice, cb);
-    }
   } catch (error) {
     toast.error(error.message);
   }
