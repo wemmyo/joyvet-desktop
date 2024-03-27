@@ -49,7 +49,7 @@ const InvoiceScreen: React.FC = () => {
     setInvoiceItems(filteredItems);
   };
 
-  const updateInoviceItem = (updatedItem: InvoiceItem) => {
+  const updateInvoiceItem = (updatedItem: InvoiceItem) => {
     // check reorder level
     if (
       updatedItem.product?.stock < updatedItem.quantity ||
@@ -60,29 +60,32 @@ const InvoiceScreen: React.FC = () => {
       });
     }
 
-    // if updatedItem is in invoiceItems, update it
-    // else add it to invoiceItems
-    const itemIndex = invoiceItems.findIndex(
-      (item) => item.product?.title === updatedItem.product?.title
-    );
+    setInvoiceItems((currentItems) => {
+      const itemIndex = currentItems.findIndex(
+        (item) => item.product?.id === updatedItem.product.id
+      );
 
-    if (itemIndex !== -1) {
-      const updatedItems = [...invoiceItems];
-      const prevItem = updatedItems[itemIndex];
-      const updatedQuantity = prevItem.quantity + updatedItem.quantity;
-      updatedItems[itemIndex] = {
-        ...prevItem,
-        quantity: updatedQuantity,
-        unitPrice: updatedItem.unitPrice,
-        amount: updatedItem.unitPrice * updatedQuantity,
-        profit:
-          (updatedItem.unitPrice - updatedItem.product?.buyPrice) *
-          updatedQuantity,
-      };
-      setInvoiceItems(updatedItems);
-    } else {
-      setInvoiceItems([...invoiceItems, updatedItem]);
-    }
+      if (itemIndex !== -1) {
+        const updatedItems = [...currentItems];
+        const existingItem = updatedItems[itemIndex];
+        const updatedQuantity = existingItem.quantity + updatedItem.quantity;
+        const updatedAmount = updatedItem.unitPrice * updatedQuantity;
+        const updatedProfit =
+          (updatedItem.unitPrice - updatedItem.product.buyPrice) *
+          updatedQuantity;
+
+        updatedItems[itemIndex] = {
+          ...existingItem,
+          quantity: updatedQuantity,
+          amount: updatedAmount,
+          profit: updatedProfit,
+        };
+
+        return updatedItems;
+      }
+
+      return [...currentItems, updatedItem];
+    });
   };
 
   useEffect(() => {
@@ -161,6 +164,7 @@ const InvoiceScreen: React.FC = () => {
   };
 
   useEffect(() => {
+    // This effect only needs to track invoiceItems changes for recalculating totals
     const totalAmount = invoiceItems.reduce(
       (acc, item) => acc + item.amount,
       0
@@ -169,9 +173,13 @@ const InvoiceScreen: React.FC = () => {
       (acc, item) => acc + item.profit,
       0
     );
-    setInvoice({ ...invoice, amount: totalAmount, profit: totalProfit });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [JSON.stringify(invoiceItems), JSON.stringify(invoice)]);
+    // Directly updating invoice state with recalculated totals
+    setInvoice((prevInvoice) => ({
+      ...prevInvoice,
+      amount: totalAmount,
+      profit: totalProfit,
+    }));
+  }, [invoiceItems]); // Removed JSON.stringify to focus on the specific state dependency
 
   const renderOrders = invoiceItems.map((invoiceItem, index) => {
     return (
@@ -276,7 +284,7 @@ const InvoiceScreen: React.FC = () => {
                   const profit: number =
                     (unitPrice - product.buyPrice) * quantity;
 
-                  updateInoviceItem({
+                  updateInvoiceItem({
                     id: new Date().getUTCMilliseconds(),
                     quantity,
                     unitPrice,
