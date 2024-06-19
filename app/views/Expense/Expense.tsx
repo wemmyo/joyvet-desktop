@@ -56,7 +56,7 @@ const ExpensesScreen: React.FC = () => {
     return prev + next;
   };
 
-  const sumOfAmounts = (values) => {
+  const sumOfAmounts = (values: IExpense[] = []) => {
     if (values.length === 0) {
       return 0;
     }
@@ -67,8 +67,8 @@ const ExpensesScreen: React.FC = () => {
       .reduce(sum);
   };
 
-  const groupBy = (xs, key) => {
-    return xs.reduce((rv, x) => {
+  const groupBy = (xs: any[] = [], key: string) => {
+    return xs.reduce((rv: { [key: string]: any[] }, x) => {
       (rv[x[key]] = rv[x[key]] || []).push(x);
       return rv;
     }, {});
@@ -194,13 +194,13 @@ const ExpensesScreen: React.FC = () => {
               <Form.Input
                 label="Start Date"
                 type="date"
-                onChange={(e, { value }) => setStartDate(value)}
+                onChange={(_e, { value }) => setStartDate(value)}
                 value={startDate}
               />
               <Form.Input
                 label="End Date"
                 type="date"
-                onChange={(e, { value }) => setEndDate(value)}
+                onChange={(_e, { value }) => setEndDate(value)}
                 value={endDate}
               />
             </Form.Group>
