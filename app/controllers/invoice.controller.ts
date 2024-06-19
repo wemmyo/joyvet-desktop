@@ -323,7 +323,7 @@ export const addInvoiceItemFn = async (
     IInvoice,
     'id' | 'saleType' | 'amount' | 'profit' | 'customer'
   >,
-  currentInvoiceItem: Partial<IInvoiceItem>
+  currentInvoiceItem: Omit<IInvoiceItem, 'id' | 'createdAt' | 'updatedAt'>
 ) => {
   const schema = z.object({
     invoiceId: z.number(),
@@ -445,7 +445,7 @@ export const addInvoiceItemFn = async (
 };
 
 export const createInvoiceFn = async (
-  invoiceItems: Partial<IInvoiceItem>[],
+  invoiceItems: Omit<IInvoiceItem, 'id' | 'createdAt' | 'updatedAt'>[],
   invoice?: Partial<IInvoice>,
   cb?: (id: number) => void
 ) => {
@@ -467,8 +467,24 @@ export const createInvoiceFn = async (
     }),
   });
 
+  const calculatedTotalAmount = invoiceItems.reduce(
+    (acc, item) => acc + item.amount,
+    0
+  );
+
+  const extendedSchema = schema.refine(
+    (data) => data.invoice.amount === calculatedTotalAmount,
+    {
+      message:
+        "Invoice amount does not match the total of invoice items' amounts",
+    }
+  );
+
   try {
-    schema.parse({ invoiceItems, invoice });
+    extendedSchema.parse({
+      invoiceItems,
+      invoice: { ...invoice, amount: calculatedTotalAmount },
+    });
     createInvoiceValidation(invoiceItems, invoice);
     const user =
       localStorage.getItem('user') !== null
