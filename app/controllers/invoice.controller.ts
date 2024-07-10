@@ -432,6 +432,15 @@ export const addInvoiceItemFn = async (
 
       await product.update({ stock: newStock }, { transaction: t });
 
+      // Update customer balance if the invoice is on credit or transfer
+      if (['credit', 'transfer'].includes(invoice.saleType)) {
+        await Customer.increment('balance', {
+          by: currentInvoiceItem.amount,
+          where: { id: invoice.customerId },
+          transaction: t,
+        });
+      }
+
       toast.success('Successfully updated item in the invoice');
     });
   } catch (error) {
