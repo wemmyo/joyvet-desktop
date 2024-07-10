@@ -23,7 +23,7 @@ const ReceiptWrapper = React.forwardRef<HTMLDivElement, ReceiptWrapperProps>(
             <br />
             Gengento bus stop, Agege
             <br />
-            08095988235
+            08095988235, 08089615272, 07076224885
           </p>
           <p>
             <b>Sales Invoice!</b>
