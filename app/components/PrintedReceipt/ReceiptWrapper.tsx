@@ -91,6 +91,9 @@ const ReceiptWrapper = React.forwardRef<HTMLDivElement, ReceiptWrapperProps>(
             before leaving the counter.
           </b>
         </p>
+        <p>
+          <b>Products sold in good condition cannot be returned.</b>
+        </p>
       </div>
     );
   }
