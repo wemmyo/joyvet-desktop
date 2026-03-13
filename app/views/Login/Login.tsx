@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { useHistory } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 
 import LoginForm from './components/LoginForm/LoginForm';
 import routes from '../../routing/routes';
@@ -7,11 +7,14 @@ import routes from '../../routing/routes';
 // export interface LoginScreenProps {}
 
 const LoginScreen = () => {
-  const history = useHistory();
+  const navigate = useNavigate();
 
-  if (localStorage.getItem('user') !== null) {
-    history.push(routes.INVOICE);
-  }
+  React.useEffect(() => {
+    if (localStorage.getItem('user') !== null) {
+      navigate(routes.INVOICE);
+    }
+  }, [navigate]);
+
   return (
     <div style={{ backgroundColor: '#89b4fa' }}>
       <LoginForm />

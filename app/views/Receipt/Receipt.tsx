@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Table, Button, Icon, Form, Loader } from 'semantic-ui-react';
-import { useDispatch } from 'react-redux';
+import { useAppDispatch } from '../../hooks';
 import moment from 'moment';
 
 import DashboardLayout from '../../layouts/DashboardLayout/DashboardLayout';
@@ -29,7 +29,7 @@ const ReceiptsScreen: React.FC = () => {
   const [receipts, setReceipts] = useState<IReceipt[]>([]);
   const [loading, setLoading] = useState(false);
 
-  const dispatch = useDispatch();
+  const dispatch = useAppDispatch();
 
   const fetchReceipts = async () => {
     setLoading(true);

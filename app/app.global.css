@@ -2,9 +2,9 @@
  * @NOTE: Prepend a `~` to css file paths that are in your node_modules
  *        See https://github.com/webpack-contrib/sass-loader#imports
  */
-@import '~@fortawesome/fontawesome-free/css/all.css';
-@import '~semantic-ui-css/semantic.css';
-@import '~react-toastify/dist/ReactToastify.css';
+@import '@fortawesome/fontawesome-free/css/all.css';
+@import 'semantic-ui-css/semantic.css';
+@import 'react-toastify/dist/ReactToastify.css';
 
 :root {
   --black: #112b42;

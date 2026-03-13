@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { useDispatch } from 'react-redux';
+import { useAppDispatch } from '../../../../hooks';
 import { Table, Button } from 'semantic-ui-react';
 import {
   getSingleReceiptFn,
@@ -14,12 +14,12 @@ export interface ReceiptDetailProps {
   receiptId: string | number;
 }
 
-const ReceiptDetail: React.SFC<ReceiptDetailProps> = ({
+const ReceiptDetail: React.FC<ReceiptDetailProps> = ({
   receiptId,
 }: ReceiptDetailProps) => {
   const [singleReceipt, setSingleReceipt] = useState<IReceipt>({} as IReceipt);
   const [loading, setLoading] = useState<boolean>(false);
-  const dispatch = useDispatch();
+  const dispatch = useAppDispatch();
 
   useEffect(() => {
     const fetchData = async () => {
@@ -89,7 +89,7 @@ const ReceiptDetail: React.SFC<ReceiptDetailProps> = ({
           </Table.Row>
         </Table.Body>
       </Table>
-      <Button onClick={() => handleDelete()} type="Submit" negative>
+      <Button onClick={() => handleDelete()} type="submit" negative>
         Delete
       </Button>
     </>

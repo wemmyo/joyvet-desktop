@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Button, Form } from 'semantic-ui-react';
 import { Field, Formik } from 'formik';
-import { useDispatch } from 'react-redux';
+import { useAppDispatch } from '../../../../hooks';
 import { Link } from 'react-router-dom';
 
 import TextInput from '../../../../components/TextInput/TextInput';
@@ -25,7 +25,7 @@ const EditProduct: React.FC<EditProductProps> = ({
   refreshProducts,
 }: EditProductProps) => {
   const [product, setProduct] = useState<IProduct>({} as IProduct);
-  const dispatch = useDispatch();
+  const dispatch = useAppDispatch();
 
   useEffect(() => {
     const fetchData = async () => {
@@ -55,7 +55,7 @@ const EditProduct: React.FC<EditProductProps> = ({
         buyPrice: buyPrice || '',
       }}
       onSubmit={async (values) => {
-        await updateProductFn(values, productId);
+        await updateProductFn({ ...values, stock: Number(values.stock), sellPrice: Number(values.sellPrice), sellPrice2: Number(values.sellPrice2), sellPrice3: Number(values.sellPrice3), buyPrice: Number(values.buyPrice) }, Number(productId));
         dispatch(closeSideContentFn());
         refreshProducts();
       }}
@@ -106,7 +106,7 @@ const EditProduct: React.FC<EditProductProps> = ({
             component={TextInput}
           />
 
-          <Button onClick={() => handleSubmit()} type="Submit" fluid positive>
+          <Button onClick={() => handleSubmit()} type="submit" fluid positive>
             Update
           </Button>
           <Button

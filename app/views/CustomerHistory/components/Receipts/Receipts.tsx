@@ -7,7 +7,7 @@ export interface CustomerHistoryReceiptsProps {
   data: any[];
 }
 
-const CustomerHistoryReceipts: React.SFC<CustomerHistoryReceiptsProps> = ({
+const CustomerHistoryReceipts: React.FC<CustomerHistoryReceiptsProps> = ({
   data,
 }: CustomerHistoryReceiptsProps) => {
   const renderInvoices = () => {

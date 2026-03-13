@@ -134,7 +134,8 @@ const PurchaseScreen: React.FC = () => {
       supplierId: Number(values.supplierId),
       invoiceNumber: values.invoiceNumber,
       amount: sumOfOrders(),
-    });
+      products: orders,
+    } as any);
     resetForm();
     setOrders([]);
   };
@@ -286,7 +287,7 @@ const PurchaseScreen: React.FC = () => {
 
                       <Button
                         onClick={() => handleSubmit()}
-                        type="Submit"
+                        type="submit"
                         fluid
                         primary
                       >

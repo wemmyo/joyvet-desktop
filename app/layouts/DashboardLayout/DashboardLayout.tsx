@@ -1,13 +1,14 @@
 import React from 'react';
 import { Button } from 'semantic-ui-react';
-import { useDispatch, useSelector } from 'react-redux';
+import { useSelector } from 'react-redux';
+import { useAppDispatch } from '../../hooks';
 
 import {
   selectDashboardState,
   closeSideContentFn,
 } from '../../slices/dashboardSlice';
 import Sidebar from './SideNav/SideNav';
-import styles from './DashboardLayout.css';
+import styles from './DashboardLayout.module.css';
 
 export interface DashboardLayoutProps {
   children?: any;
@@ -22,7 +23,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
   rightSidebar,
   headerContent,
 }: DashboardLayoutProps) => {
-  const dispatch = useDispatch();
+  const dispatch = useAppDispatch();
   const dashboardState = useSelector(selectDashboardState);
 
   const { sideContentisOpen } = dashboardState;

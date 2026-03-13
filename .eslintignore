@@ -54,3 +54,7 @@ package.json
 *.css.d.ts
 *.sass.d.ts
 *.scss.d.ts
+
+# Sub-projects with their own ESLint config
+joyvet-modern/
+out/

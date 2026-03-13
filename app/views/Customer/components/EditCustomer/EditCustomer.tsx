@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Button, Form } from 'semantic-ui-react';
 import { Field, Formik } from 'formik';
-import { useDispatch } from 'react-redux';
+import { useAppDispatch } from '../../../../hooks';
 import { Link } from 'react-router-dom';
 
 // import * as Yup from 'yup';
@@ -27,7 +27,7 @@ const EditCustomer: React.FC<EditCustomerProps> = ({
 }: EditCustomerProps) => {
   const [customer, setCustomer] = useState<ICustomer>({} as ICustomer);
 
-  const dispatch = useDispatch();
+  const dispatch = useAppDispatch();
 
   useEffect(() => {
     const fetchData = async () => {
@@ -57,7 +57,7 @@ const EditCustomer: React.FC<EditCustomerProps> = ({
         maxPriceLevel: maxPriceLevel || '',
       }}
       onSubmit={async (values) => {
-        await updateCustomerFn(values, customerId);
+        await updateCustomerFn({ ...values, balance: Number(values.balance), maxPriceLevel: Number(values.maxPriceLevel) }, customerId);
         dispatch(closeSideContentFn());
         await getCustomersFn();
       }}
@@ -104,7 +104,7 @@ const EditCustomer: React.FC<EditCustomerProps> = ({
             />
           </Form>
           <div style={{ marginTop: '1rem' }}>
-            <Button onClick={() => handleSubmit()} type="Submit" positive>
+            <Button onClick={() => handleSubmit()} type="submit" positive>
               Update
             </Button>
             {isAdmin() ? (

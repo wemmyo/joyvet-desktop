@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Button, Form } from 'semantic-ui-react';
 import { Field, Formik } from 'formik';
-import { useDispatch } from 'react-redux';
+import { useAppDispatch } from '../../../../hooks';
 
 import TextInput from '../../../../components/TextInput/TextInput';
 
@@ -20,7 +20,7 @@ export interface EditUserProps {
 
 const EditUser: React.FC<EditUserProps> = ({ userId }: EditUserProps) => {
   const [user, setUser] = useState<IUser>({} as IUser);
-  const dispatch = useDispatch();
+  const dispatch = useAppDispatch();
 
   useEffect(() => {
     const fetchData = async () => {
@@ -86,13 +86,13 @@ const EditUser: React.FC<EditUserProps> = ({ userId }: EditUserProps) => {
               <option value="newbie">Newbie</option>
             </Field>
           </div>
-          <Button onClick={() => handleSubmit()} type="Submit" fluid primary>
+          <Button onClick={() => handleSubmit()} type="submit" fluid primary>
             Update
           </Button>
           <Button
             style={{ marginTop: '1rem' }}
             onClick={deleteUser}
-            type="Submit"
+            type="submit"
             fluid
             negative
           >

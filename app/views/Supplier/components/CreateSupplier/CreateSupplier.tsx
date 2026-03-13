@@ -61,7 +61,7 @@ const CreateSupplier: React.FC<CreateSupplierProps> = ({
             type="number"
             component={TextInput}
           />
-          <Button onClick={() => handleSubmit()} type="Submit" fluid primary>
+          <Button onClick={() => handleSubmit()} type="submit" fluid primary>
             Save
           </Button>
         </Form>

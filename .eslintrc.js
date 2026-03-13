@@ -1,11 +1,36 @@
 module.exports = {
-  extends: 'erb/typescript',
+  ignorePatterns: ['joyvet-modern/', 'out/'],
+  extends: [
+    'airbnb-typescript',
+    'plugin:react/recommended',
+    'plugin:import/typescript',
+    'plugin:@typescript-eslint/recommended',
+    'plugin:prettier/recommended',
+    'plugin:jest/recommended',
+    'plugin:promise/recommended',
+    'plugin:react-hooks/recommended',
+  ],
+  env: {
+    browser: true,
+    node: true,
+  },
+  parser: '@typescript-eslint/parser',
+  parserOptions: {
+    ecmaVersion: 2020,
+    sourceType: 'module',
+    project: './tsconfig.json',
+    tsconfigRootDir: __dirname,
+  },
   rules: {
     'consistent-return': 'off',
     'react/jsx-one-expression-per-line': 'off',
     // A temporary hack related to IDE not resolving correct package.json
     'import/no-extraneous-dependencies': 'off',
     'import/no-named-as-default': 'off',
+    '@typescript-eslint/explicit-function-return-type': 'off',
+    '@typescript-eslint/explicit-module-boundary-types': 'off',
+    '@typescript-eslint/no-var-requires': 'off',
+    'no-param-reassign': ['error', { props: false }],
     'jsx-a11y/label-has-associated-control': [
       'error',
       {
@@ -23,20 +48,9 @@ module.exports = {
       },
     ],
   },
-  parserOptions: {
-    ecmaVersion: 2020,
-    sourceType: 'module',
-    project: './tsconfig.json',
-    tsconfigRootDir: __dirname,
-    createDefaultProgram: true,
-  },
   settings: {
     'import/resolver': {
-      // See https://github.com/benmosher/eslint-plugin-import/issues/1396#issuecomment-575727774 for line below
       node: {},
-      webpack: {
-        config: require.resolve('./configs/webpack.config.eslint.js'),
-      },
     },
     'import/parsers': {
       '@typescript-eslint/parser': ['.ts', '.tsx'],

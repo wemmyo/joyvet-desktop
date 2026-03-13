@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Table, Button, Icon, Form, Loader } from 'semantic-ui-react';
-import { useDispatch } from 'react-redux';
+import { useAppDispatch } from '../../hooks';
 import { useReactToPrint } from 'react-to-print';
 
 import DashboardLayout from '../../layouts/DashboardLayout/DashboardLayout';
@@ -28,7 +28,7 @@ const CustomersScreen: React.FC = () => {
   const [customers, setCustomers] = useState<ICustomer[]>([]);
   const [loading, setLoading] = useState(false);
 
-  const dispatch = useDispatch();
+  const dispatch = useAppDispatch();
 
   const componentRef = useRef(null);
 

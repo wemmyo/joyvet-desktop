@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { Button, Form, Grid, Segment, Header } from 'semantic-ui-react';
-import { useHistory } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { Field, Formik } from 'formik';
 import * as Yup from 'yup';
 import routes from '../../../../routing/routes';
@@ -14,7 +14,7 @@ const CreateProductSchema = Yup.object().shape({
 // export interface LoginFormProps {}
 
 const LoginForm = () => {
-  const history = useHistory();
+  const navigate = useNavigate();
 
   return (
     <Grid centered style={{ height: '100vh' }} verticalAlign="middle">
@@ -30,7 +30,7 @@ const LoginForm = () => {
           validationSchema={CreateProductSchema}
           onSubmit={async (values, actions) => {
             await loginUserFn(values);
-            history.push(routes.INVOICE);
+            navigate(routes.INVOICE);
             actions.resetForm();
           }}
         >
@@ -53,7 +53,7 @@ const LoginForm = () => {
                 />
                 <Button
                   onClick={() => handleSubmit()}
-                  type="Submit"
+                  type="submit"
                   fluid
                   primary
                 >

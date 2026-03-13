@@ -75,7 +75,7 @@ const CreateUser: React.FC<CreateUserProps> = ({
             </Field>
           </div>
 
-          <Button onClick={() => handleSubmit()} type="Submit" fluid primary>
+          <Button onClick={() => handleSubmit()} type="submit" fluid primary>
             Save
           </Button>
         </Form>

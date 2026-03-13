@@ -3,13 +3,10 @@ import { Button, Form } from 'semantic-ui-react';
 import { Field, Formik } from 'formik';
 import * as Yup from 'yup';
 import TextInput from '../../../../components/TextInput/TextInput';
+import { IProduct } from '../../../../models/product';
 
 export interface CreateProductProps {
-  createProductFn: (values: {
-    title: string;
-    stock?: string;
-    unitPrice?: string | number;
-  }) => void;
+  createProductFn: (values: Partial<IProduct>) => void | Promise<void>;
   refreshProducts: () => void;
 }
 
@@ -32,7 +29,7 @@ const CreateProduct: React.FC<CreateProductProps> = ({
       }}
       validationSchema={CreateProductSchema}
       onSubmit={(values, actions) => {
-        createProductFn(values);
+        createProductFn({ ...values, sellPrice: Number(values.sellPrice), sellPrice2: Number(values.sellPrice2), sellPrice3: Number(values.sellPrice3), buyPrice: Number(values.buyPrice) });
         refreshProducts();
         actions.resetForm();
       }}
@@ -75,7 +72,7 @@ const CreateProduct: React.FC<CreateProductProps> = ({
             component={TextInput}
           />
 
-          <Button onClick={() => handleSubmit()} type="Submit" fluid primary>
+          <Button onClick={() => handleSubmit()} type="submit" fluid primary>
             Save
           </Button>
         </Form>

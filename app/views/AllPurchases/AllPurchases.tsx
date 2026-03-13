@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Table, Form, Loader, Button, Icon } from 'semantic-ui-react';
-import { useDispatch } from 'react-redux';
+import { useAppDispatch } from '../../hooks';
 import moment from 'moment';
 
 import DashboardLayout from '../../layouts/DashboardLayout/DashboardLayout';
@@ -20,7 +20,7 @@ import {
 const CONTENT_DETAIL = 'detail';
 
 const AllPurchasesScreen: React.FC = () => {
-  const dispatch = useDispatch();
+  const dispatch = useAppDispatch();
   const [sideContent, setSideContent] = useState('');
   const [purchaseId, setPurchasesId] = useState('');
   const [searchValue, setSearchValue] = useState('');

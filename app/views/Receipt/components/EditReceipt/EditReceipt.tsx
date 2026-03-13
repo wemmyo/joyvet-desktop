@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Button, Form } from 'semantic-ui-react';
 import { Field, Formik } from 'formik';
-import { useDispatch } from 'react-redux';
+import { useAppDispatch } from '../../../../hooks';
 
 // import * as Yup from 'yup';
 import TextInput from '../../../../components/TextInput/TextInput';
@@ -24,7 +24,7 @@ const EditReceipt: React.FC<EditReceiptProps> = ({
 }: EditReceiptProps) => {
   const [receipt, setReceipt] = useState<IReceipt>({} as IReceipt);
   const [customers, setCustomers] = useState<ICustomer[]>([] as ICustomer[]);
-  const dispatch = useDispatch();
+  const dispatch = useAppDispatch();
 
   useEffect(() => {
     const fetchData = async () => {
@@ -62,16 +62,10 @@ const EditReceipt: React.FC<EditReceiptProps> = ({
         note: note || '',
       }}
       // validationSchema={EditReceiptSchema}
-      onSubmit={(values) => {
-        //   submitForm(values);
-        // console.log(values);
-
-        dispatch(
-          updateReceiptFn(values, receiptId, () => {
-            dispatch(closeSideContentFn());
-            dispatch(getReceiptsFn());
-          })
-        );
+      onSubmit={async (values) => {
+        await dispatch(updateReceiptFn(values, receiptId));
+        dispatch(closeSideContentFn());
+        await getReceiptsFn();
       }}
     >
       {({ handleSubmit }) => (
@@ -106,7 +100,7 @@ const EditReceipt: React.FC<EditReceiptProps> = ({
             component={TextInput}
           />
 
-          <Button onClick={() => handleSubmit()} type="Submit" fluid primary>
+          <Button onClick={() => handleSubmit()} type="submit" fluid primary>
             Update
           </Button>
         </Form>

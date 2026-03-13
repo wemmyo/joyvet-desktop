@@ -1,8 +1,8 @@
 import * as React from 'react';
-import { NavLink, useHistory } from 'react-router-dom';
+import { NavLink, useNavigate } from 'react-router-dom';
 import { Button } from 'semantic-ui-react';
 
-import styles from './SideNav.css';
+import styles from './SideNav.module.css';
 // import NavItem from './components/NavItem/NavItem';
 import routes from '../../../routing/routes';
 import { isAdmin } from '../../../utils/helpers';
@@ -10,100 +10,87 @@ import { logoutFn } from '../../../controllers/user.controller';
 // export interface SideNavProps {}
 
 const SideNav = () => {
-  const history = useHistory();
+  const navigate = useNavigate();
 
   return (
     <section className={styles.sideNav}>
       <h4>Menu</h4>
       {/* <NavLink
-        activeClassName={styles.sideNav__mainItemActive}
-        className={styles.sideNav__mainItem}
+        className={({ isActive }) => isActive ? styles.sideNav__mainItemActive : styles.sideNav__mainItem}
         to={routes.OVERVIEW}
       >
         Overview
       </NavLink> */}
       <NavLink
-        activeClassName={styles.sideNav__mainItemActive}
-        className={styles.sideNav__mainItem}
+        className={({ isActive }) => isActive ? styles.sideNav__mainItemActive : styles.sideNav__mainItem}
         to={routes.INVOICE}
       >
         Invoices
       </NavLink>
       <NavLink
-        activeClassName={styles.sideNav__mainItemActive}
-        className={styles.sideNav__mainItem}
+        className={({ isActive }) => isActive ? styles.sideNav__mainItemActive : styles.sideNav__mainItem}
         to={routes.SALES}
       >
         Sales
       </NavLink>
       <NavLink
-        activeClassName={styles.sideNav__mainItemActive}
-        className={styles.sideNav__mainItem}
+        className={({ isActive }) => isActive ? styles.sideNav__mainItemActive : styles.sideNav__mainItem}
         to={routes.PRODUCT}
       >
         Products
       </NavLink>
 
       <NavLink
-        activeClassName={styles.sideNav__mainItemActive}
-        className={styles.sideNav__mainItem}
+        className={({ isActive }) => isActive ? styles.sideNav__mainItemActive : styles.sideNav__mainItem}
         to={routes.CUSTOMER}
       >
         Customers
       </NavLink>
       <NavLink
-        activeClassName={styles.sideNav__mainItemActive}
-        className={styles.sideNav__mainItem}
+        className={({ isActive }) => isActive ? styles.sideNav__mainItemActive : styles.sideNav__mainItem}
         to={routes.SUPPLIER}
       >
         Suppliers
       </NavLink>
       <NavLink
-        activeClassName={styles.sideNav__mainItemActive}
-        className={styles.sideNav__mainItem}
+        className={({ isActive }) => isActive ? styles.sideNav__mainItemActive : styles.sideNav__mainItem}
         to={routes.RECEIPT}
       >
         Receipt
       </NavLink>
       <NavLink
-        activeClassName={styles.sideNav__mainItemActive}
-        className={styles.sideNav__mainItem}
+        className={({ isActive }) => isActive ? styles.sideNav__mainItemActive : styles.sideNav__mainItem}
         to={routes.PAYMENT}
       >
         Payment
       </NavLink>
       <NavLink
-        activeClassName={styles.sideNav__mainItemActive}
-        className={styles.sideNav__mainItem}
+        className={({ isActive }) => isActive ? styles.sideNav__mainItemActive : styles.sideNav__mainItem}
         to={routes.PURCHASE}
       >
         Purchase
       </NavLink>
       <NavLink
-        activeClassName={styles.sideNav__mainItemActive}
-        className={styles.sideNav__mainItem}
+        className={({ isActive }) => isActive ? styles.sideNav__mainItemActive : styles.sideNav__mainItem}
         to={routes.ALL_PURCHASES}
       >
         All Purchases
       </NavLink>
       <NavLink
-        activeClassName={styles.sideNav__mainItemActive}
-        className={styles.sideNav__mainItem}
+        className={({ isActive }) => isActive ? styles.sideNav__mainItemActive : styles.sideNav__mainItem}
         to={routes.EXPENSE}
       >
         Expenditure
       </NavLink>
       {/* <NavLink
-        activeClassName={styles.sideNav__mainItemActive}
-        className={styles.sideNav__mainItem}
+        className={({ isActive }) => isActive ? styles.sideNav__mainItemActive : styles.sideNav__mainItem}
         to={routes.STORE_INFO}
       >
         Store Info
       </NavLink> */}
       {isAdmin() ? (
         <NavLink
-          activeClassName={styles.sideNav__mainItemActive}
-          className={styles.sideNav__mainItem}
+          className={({ isActive }) => isActive ? styles.sideNav__mainItemActive : styles.sideNav__mainItem}
           to={routes.USER}
         >
           Users
@@ -116,7 +103,7 @@ const SideNav = () => {
         className={styles.sideNav__mainItem}
         onClick={() => {
           logoutFn();
-          history.push(routes.LOGIN);
+          navigate(routes.LOGIN);
         }}
       >
         Log out

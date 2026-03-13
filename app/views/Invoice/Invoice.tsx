@@ -394,7 +394,7 @@ const InvoiceScreen: React.FC = () => {
 
                       <Button
                         onClick={() => handleSubmit()}
-                        type="Submit"
+                        type="submit"
                         fluid
                         primary
                       >

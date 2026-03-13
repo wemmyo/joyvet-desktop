@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Button, Form } from 'semantic-ui-react';
 import { Field, Formik } from 'formik';
-import { useDispatch } from 'react-redux';
+import { useAppDispatch } from '../../../../hooks';
 
 import TextInput from '../../../../components/TextInput/TextInput';
 
@@ -24,7 +24,7 @@ const EditPayment: React.FC<EditPaymentProps> = ({
 }: EditPaymentProps) => {
   const [payment, setPayment] = useState<IPayment>({} as IPayment);
   const [suppliers, setSuppliers] = useState<ISupplier[]>([]);
-  const dispatch = useDispatch();
+  const dispatch = useAppDispatch();
 
   useEffect(() => {
     const fetchData = async () => {
@@ -61,7 +61,7 @@ const EditPayment: React.FC<EditPaymentProps> = ({
       }}
       // validationSchema={EditPaymentSchema}
       onSubmit={async (values) => {
-        await updatePaymentFn(values, Number(paymentId));
+        await updatePaymentFn({ ...values, supplierId: Number(values.supplierId), amount: Number(values.amount) }, Number(paymentId));
         dispatch(closeSideContentFn());
         await getPaymentsFn();
       }}
@@ -91,7 +91,7 @@ const EditPayment: React.FC<EditPaymentProps> = ({
             component={TextInput}
           />
 
-          <Button onClick={() => handleSubmit()} type="Submit" fluid primary>
+          <Button onClick={() => handleSubmit()} type="submit" fluid primary>
             Update
           </Button>
         </Form>

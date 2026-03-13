@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Table, Button, Icon } from 'semantic-ui-react';
-import { useDispatch } from 'react-redux';
+import { useAppDispatch } from '../../hooks';
 import moment from 'moment';
 import DashboardLayout from '../../layouts/DashboardLayout/DashboardLayout';
 
@@ -22,7 +22,7 @@ const UserScreen: React.FC = () => {
   const [userId, setUserId] = useState('');
   const [users, setUsers] = useState<IUser[]>([]);
 
-  const dispatch = useDispatch();
+  const dispatch = useAppDispatch();
 
   const fetchUsers = async () => {
     const response = await getUsersFn();

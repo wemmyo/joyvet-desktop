@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Button, Form } from 'semantic-ui-react';
 import { Field, Formik } from 'formik';
-import { useDispatch } from 'react-redux';
+import { useAppDispatch } from '../../../../hooks';
 import { Link } from 'react-router-dom';
 
 import TextInput from '../../../../components/TextInput/TextInput';
@@ -25,7 +25,7 @@ const EditSupplier: React.FC<EditSupplierProps> = ({
 }: EditSupplierProps) => {
   const [supplier, setSupplier] = useState<ISupplier>({} as ISupplier);
 
-  const dispatch = useDispatch();
+  const dispatch = useAppDispatch();
 
   useEffect(() => {
     const fetchData = async () => {
@@ -90,7 +90,7 @@ const EditSupplier: React.FC<EditSupplierProps> = ({
             disabled={!isAdmin()}
           />
           <div style={{ marginTop: '1rem' }}>
-            <Button onClick={() => handleSubmit()} type="Submit" positive>
+            <Button onClick={() => handleSubmit()} type="submit" positive>
               Update
             </Button>
             {isAdmin() ? (

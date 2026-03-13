@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Button, Form } from 'semantic-ui-react';
 import { Field, Formik } from 'formik';
-import { useDispatch } from 'react-redux';
+import { useAppDispatch } from '../../../../hooks';
 
 import TextInput from '../../../../components/TextInput/TextInput';
 
@@ -22,7 +22,7 @@ const EditStoreInfo: React.FC<EditStoreInfoProps> = ({
   storeInfoId,
 }: EditStoreInfoProps) => {
   const [storeInfo, setStoreInfo] = useState<IStoreInfo>({} as IStoreInfo);
-  const dispatch = useDispatch();
+  const dispatch = useAppDispatch();
 
   useEffect(() => {
     const fetchData = async () => {
@@ -78,13 +78,13 @@ const EditStoreInfo: React.FC<EditStoreInfoProps> = ({
             component={TextInput}
           />
 
-          <Button onClick={() => handleSubmit()} type="Submit" fluid primary>
+          <Button onClick={() => handleSubmit()} type="submit" fluid primary>
             Update
           </Button>
           <Button
             style={{ marginTop: '1rem' }}
             onClick={deleteStoreInfo}
-            type="Submit"
+            type="submit"
             fluid
             negative
           >

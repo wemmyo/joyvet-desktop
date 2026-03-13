@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { Table, Form, Button } from 'semantic-ui-react';
-import { useDispatch } from 'react-redux';
+import { useAppDispatch } from '../../hooks';
 import moment from 'moment';
 import DashboardLayout from '../../layouts/DashboardLayout/DashboardLayout';
 import { numberWithCommas, isAdmin } from '../../utils/helpers';
@@ -28,7 +28,7 @@ const SalesScreen: React.FC = () => {
   const [endDate, setEndDate] = useState(TODAYS_DATE);
   const [invoices, setInvoices] = useState<IInvoice[]>([]);
 
-  const dispatch = useDispatch();
+  const dispatch = useAppDispatch();
 
   const openSideContent = (content: string) => {
     dispatch(openSideContentFn());

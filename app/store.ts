@@ -1,47 +1,36 @@
-import { configureStore, getDefaultMiddleware, Action } from '@reduxjs/toolkit';
-import { createHashHistory } from 'history';
-import { routerMiddleware } from 'connected-react-router';
+import { configureStore, Action } from '@reduxjs/toolkit';
 import { createLogger } from 'redux-logger';
 import { ThunkAction } from 'redux-thunk';
-// eslint-disable-next-line import/no-cycle
-import createRootReducer from './rootReducer';
+import dashboardReducer from './slices/dashboardSlice';
 
-export const history = createHashHistory();
-const rootReducer = createRootReducer(history);
-export type RootState = ReturnType<typeof rootReducer>;
-
-const router = routerMiddleware(history);
-const middleware = [...getDefaultMiddleware(), router];
+export type RootState = {
+  dashboard: ReturnType<typeof dashboardReducer>;
+};
 
 const excludeLoggerEnvs = ['test', 'production'];
 const shouldIncludeLogger = !excludeLoggerEnvs.includes(
   process.env.NODE_ENV || ''
 );
 
-if (shouldIncludeLogger) {
-  const logger = createLogger({
-    level: 'info',
-    collapsed: true,
-  });
-  middleware.push(logger);
-}
-
-export const configuredStore = (initialState?: RootState) => {
-  // Create Store
+export const configuredStore = (initialState?: Partial<RootState>) => {
   const store = configureStore({
-    reducer: rootReducer,
-    middleware,
+    reducer: {
+      dashboard: dashboardReducer,
+    },
+    middleware: (getDefaultMiddleware) => {
+      const middlewares = getDefaultMiddleware();
+      if (shouldIncludeLogger) {
+        const logger = createLogger({ level: 'info', collapsed: true });
+        return middlewares.concat(logger);
+      }
+      return middlewares;
+    },
     preloadedState: initialState,
   });
 
-  if (process.env.NODE_ENV === 'development' && module.hot) {
-    module.hot.accept(
-      './rootReducer',
-      // eslint-disable-next-line global-require
-      () => store.replaceReducer(require('./rootReducer').default)
-    );
-  }
   return store;
 };
+
 export type Store = ReturnType<typeof configuredStore>;
+export type AppDispatch = Store['dispatch'];
 export type AppThunk = ThunkAction<void, RootState, unknown, Action<string>>;

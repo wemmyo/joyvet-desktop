@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Table, Button, Icon } from 'semantic-ui-react';
-import { useDispatch } from 'react-redux';
+import { useAppDispatch } from '../../hooks';
 import DashboardLayout from '../../layouts/DashboardLayout/DashboardLayout';
 
 import EditStoreInfo from './components/EditStoreInfo/EditStoreInfo';
@@ -23,7 +23,7 @@ const StoreInfoScreen: React.FC = () => {
   const [storeInfoId, setStoreInfoId] = useState('');
   const [storeInfos, setStoreInfos] = useState<IStoreInfo[]>([]);
 
-  const dispatch = useDispatch();
+  const dispatch = useAppDispatch();
 
   const fetchStoreInfos = async () => {
     const response = await getStoreInfoFn();

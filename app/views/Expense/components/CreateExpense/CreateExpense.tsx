@@ -83,7 +83,7 @@ const CreateExpense: React.FC<CreateExpenseProps> = ({
             type="text"
             component={TextInput}
           />
-          <Button onClick={() => handleSubmit()} type="Submit" fluid primary>
+          <Button onClick={() => handleSubmit()} type="submit" fluid primary>
             Save
           </Button>
         </Form>

@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { useDispatch } from 'react-redux';
+import { useAppDispatch } from '../../../hooks';
 import { Table, Button } from 'semantic-ui-react';
 import { useReactToPrint } from 'react-to-print';
 import { Link } from 'react-router-dom';
@@ -23,7 +23,7 @@ interface SalesDetailProps {
 
 const SalesDetail = ({ salesId, onRefresh }: SalesDetailProps) => {
   const componentRef = useRef(null);
-  const dispatch = useDispatch();
+  const dispatch = useAppDispatch();
 
   const [printInvoice, setPrintInvoice] = useState(false);
   const [loading, setLoading] = useState(false);

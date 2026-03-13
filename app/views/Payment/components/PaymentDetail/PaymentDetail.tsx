@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { useDispatch } from 'react-redux';
+import { useAppDispatch } from '../../../../hooks';
 import { Table, Button } from 'semantic-ui-react';
 import moment from 'moment';
 
@@ -19,7 +19,7 @@ export interface PaymentDetailProps {
 const PaymentDetail = ({ paymentId, refreshPayments }: PaymentDetailProps) => {
   const [singlePayment, setSinglePayment] = useState<IPayment>({} as IPayment);
   const [loading, setLoading] = useState<boolean>(true);
-  const dispatch = useDispatch();
+  const dispatch = useAppDispatch();
 
   useEffect(() => {
     const fetchData = async () => {
@@ -89,7 +89,7 @@ const PaymentDetail = ({ paymentId, refreshPayments }: PaymentDetailProps) => {
           </Table.Row>
         </Table.Body>
       </Table>
-      <Button onClick={() => handleDelete()} type="Submit" negative>
+      <Button onClick={() => handleDelete()} type="submit" negative>
         Delete
       </Button>
     </>

@@ -4,7 +4,7 @@ import * as React from 'react';
 import { Table } from 'semantic-ui-react';
 import moment from 'moment';
 
-import styles from './PrintedReceipt.css';
+import styles from './PrintedReceipt.module.css';
 import { numberWithCommas } from '../../utils/helpers';
 import { IInvoice } from '../../models/invoice';
 

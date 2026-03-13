@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Table, Button } from 'semantic-ui-react';
-import { useDispatch } from 'react-redux';
+import { useAppDispatch } from '../../../hooks';
 import moment from 'moment';
 
 import { isAdmin, numberWithCommas } from '../../../utils/helpers';
@@ -22,7 +22,7 @@ const SalesDetail: React.FC<SalesDetailProps> = ({
   const [purchase, setPurchase] = useState<IPurchase>({} as IPurchase);
   const [loading, setLoading] = useState(false);
 
-  const dispatch = useDispatch();
+  const dispatch = useAppDispatch();
 
   useEffect(() => {
     const fetchData = async () => {
@@ -106,7 +106,7 @@ const SalesDetail: React.FC<SalesDetailProps> = ({
       <Button
         disabled={!isAdmin()}
         onClick={() => handleDelete()}
-        type="Submit"
+        type="submit"
         negative
       >
         Delete

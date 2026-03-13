@@ -1,71 +1,60 @@
 import fs from 'fs';
 import path from 'path';
-import { remote } from 'electron';
-
-const { app } = require('electron').remote;
+import { app, dialog } from 'electron';
 
 const Sequelize = require('sequelize');
 
 export const openDialog = () => {
-  const databasePath = remote.dialog.showOpenDialogSync({
+  const result = dialog.showOpenDialogSync({
     properties: ['openFile'],
-    filters: [{ name: 'Datbase', extensions: ['db', 'sqlite', 'sql'] }],
+    filters: [{ name: 'Database', extensions: ['db', 'sqlite', 'sql'] }],
   });
-  if (databasePath) {
-    return databasePath[0];
-  }
-  return databasePath;
+  if (result) return result[0];
+  return undefined;
 };
 
-const checkForDB = () => {
-  /*
-  userData The directory for storing your app's configuration files,
-  which by default it is the appData directory appended with your app's name.
-  */
+const checkForDB = (): string => {
   const userDataDir = app.getPath('userData');
   const absolutePath = path.join(userDataDir, 'pathToDB');
 
-  // if the database path is stored in app data, read the file path
   if (fs.existsSync(absolutePath)) {
     return fs.readFileSync(absolutePath, 'utf8');
   }
-  // Else open save dialog
-  const pathContent = remote.dialog.showSaveDialogSync({
-    title: 'Select folder',
+
+  const pathContent = dialog.showSaveDialogSync({
+    title: 'Select folder for database',
     defaultPath: 'joyvet.db',
     properties: ['createDirectory'],
   });
 
-  // Close app if path isn't given or cancel button pressed
   if (!pathContent) {
     app.quit();
-    return null;
+    return '';
   }
 
   fs.writeFileSync(absolutePath, pathContent);
   return fs.readFileSync(absolutePath, 'utf8');
 };
 
-const checkForTestDB = () => {
-  const testDatabasePath = openDialog();
-  if (!testDatabasePath) {
-    app.quit();
-  }
-  return testDatabasePath;
-};
-
 const database = (() => {
   if (process.env.NODE_ENV === 'development') {
+    const testPath = openDialog();
+    if (!testPath) {
+      app.quit();
+      return null;
+    }
     return new Sequelize({
       dialect: 'sqlite',
-      storage: checkForTestDB(),
+      storage: testPath,
       dialectOptions: { connectTimeout: 3000 },
+      logging: false,
     });
   }
   return new Sequelize({
     dialect: 'sqlite',
     storage: checkForDB(),
     dialectOptions: { connectTimeout: 3000 },
+    logging: false,
   });
 })();
 

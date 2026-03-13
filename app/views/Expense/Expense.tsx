@@ -6,7 +6,7 @@ import React, {
   useCallback,
 } from 'react';
 import { Table, Button, Icon, Form, Loader } from 'semantic-ui-react';
-import { useDispatch } from 'react-redux';
+import { useAppDispatch } from '../../hooks';
 import { useReactToPrint } from 'react-to-print';
 import moment from 'moment';
 
@@ -37,7 +37,7 @@ const ExpensesScreen: React.FC = () => {
   const [expenses, setExpenses] = useState<IExpense[]>([]);
   const [loading, setLoading] = useState(false);
 
-  const dispatch = useDispatch();
+  const dispatch = useAppDispatch();
 
   const componentRef = useRef(null);
 
@@ -67,11 +67,11 @@ const ExpensesScreen: React.FC = () => {
       .reduce(sum);
   };
 
-  const groupBy = (xs: any[] = [], key: string) => {
+  const groupBy = (xs: any[] = [], key: string): { [key: string]: any[] } => {
     return xs.reduce((rv: { [key: string]: any[] }, x) => {
       (rv[x[key]] = rv[x[key]] || []).push(x);
       return rv;
-    }, {});
+    }, {} as { [key: string]: any[] });
   };
 
   const openSideContent = (content: string) => {

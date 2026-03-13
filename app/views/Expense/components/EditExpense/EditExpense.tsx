@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Button, Form } from 'semantic-ui-react';
 import { Field, Formik } from 'formik';
-import { useDispatch } from 'react-redux';
+import { useAppDispatch } from '../../../../hooks';
 import moment from 'moment';
 
 // import * as Yup from 'yup';
@@ -26,7 +26,7 @@ const EditExpense: React.FC<EditExpenseProps> = ({
 }: EditExpenseProps) => {
   const [expense, setExpense] = useState<IExpense>({} as IExpense);
 
-  const dispatch = useDispatch();
+  const dispatch = useAppDispatch();
 
   useEffect(() => {
     const fetchData = async () => {
@@ -57,7 +57,7 @@ const EditExpense: React.FC<EditExpenseProps> = ({
       }}
       // validationSchema={EditExpenseSchema}
       onSubmit={async (values) => {
-        await updateExpenseFn(values, Number(expenseId));
+        await updateExpenseFn({ ...values, amount: Number(values.amount), date: new Date(values.date) }, Number(expenseId));
         refreshExpenses();
         dispatch(closeSideContentFn());
       }}
@@ -93,7 +93,7 @@ const EditExpense: React.FC<EditExpenseProps> = ({
             component={TextInput}
           />
 
-          <Button onClick={() => handleSubmit()} type="Submit" fluid primary>
+          <Button onClick={() => handleSubmit()} type="submit" fluid primary>
             Update
           </Button>
           <Button

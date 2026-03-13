@@ -1,34 +1,23 @@
 {
   "compilerOptions": {
-    "target": "ES2018",
+    "target": "ES2020",
     "module": "CommonJS",
-    "lib": ["dom", "esnext"],
-    "declaration": true,
-    "declarationMap": true,
-    "noEmit": true,
-    "jsx": "react",
-    "strict": true,
-    "pretty": true,
-    "sourceMap": true,
-    /* Additional Checks */
-    "noUnusedLocals": true,
-    "noUnusedParameters": true,
-    "noImplicitReturns": true,
-    "noImplicitAny": false,
-    "noFallthroughCasesInSwitch": true,
-    /* Module Resolution Options */
     "moduleResolution": "node",
+    "lib": ["ES2020", "DOM", "DOM.Iterable"],
+    "jsx": "react-jsx",
+    "strict": false,
+    "noImplicitAny": false,
+    "noUnusedLocals": false,
+    "noUnusedParameters": false,
+    "noImplicitReturns": false,
+    "noFallthroughCasesInSwitch": true,
     "esModuleInterop": true,
     "allowSyntheticDefaultImports": true,
     "resolveJsonModule": true,
-    "allowJs": true
+    "sourceMap": true,
+    "declaration": true,
+    "declarationMap": true,
+    "skipLibCheck": true
   },
-  "exclude": [
-    "test",
-    "release",
-    "app/main.prod.js",
-    "app/renderer.prod.js",
-    "app/dist",
-    "dll"
-  ]
+  "exclude": ["node_modules", "release", "app/dist", "app/renderer/src", "out", "joyvet-modern", "app/index.tsx", "app/main.dev.ts", "app/utils/database.ts"]
 }

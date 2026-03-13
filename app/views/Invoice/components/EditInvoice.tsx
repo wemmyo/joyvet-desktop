@@ -349,7 +349,7 @@ const InvoiceScreen: React.FC = ({ match }: any) => {
 
                       <Button
                         onClick={() => handleSubmit()}
-                        type="Submit"
+                        type="submit"
                         fluid
                         primary
                         disabled={disabledAdditem()}
