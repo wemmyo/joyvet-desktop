@@ -1,4 +1,4 @@
-import { toast } from 'react-toastify';
+import { toast } from 'sonner';
 import { ICustomer } from '../models/customer';
 import { IInvoice } from '../models/invoice';
 import { IReceipt } from '../models/receipt';
@@ -80,7 +80,11 @@ export const getCustomerInvoicesFn = async (
   endDate: string
 ): Promise<IInvoice[]> => {
   try {
-    return await window.api.customer.getInvoices(customerId, startDate, endDate);
+    return await window.api.customer.getInvoices(
+      customerId,
+      startDate,
+      endDate
+    );
   } catch (error: any) {
     toast.error(error.message || '');
     return [];
@@ -93,7 +97,11 @@ export const getCustomerReceiptsFn = async (
   endDate?: string
 ): Promise<IReceipt[]> => {
   try {
-    return await window.api.customer.getReceipts(customerId, startDate, endDate);
+    return await window.api.customer.getReceipts(
+      customerId,
+      startDate,
+      endDate
+    );
   } catch (error: any) {
     toast.error(error.message || '');
     return [];

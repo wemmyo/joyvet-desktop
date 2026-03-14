@@ -16,13 +16,18 @@ class AppUpdater {
 let mainWindow: BrowserWindow | null = null;
 
 const createWindow = async () => {
-  if (process.env.NODE_ENV === 'development' || process.env.DEBUG_PROD === 'true') {
+  if (
+    process.env.NODE_ENV === 'development' ||
+    process.env.DEBUG_PROD === 'true'
+  ) {
     try {
       const installer = require('electron-devtools-installer');
       const forceDownload = !!process.env.UPGRADE_EXTENSIONS;
       const extensions = ['REACT_DEVELOPER_TOOLS', 'REDUX_DEVTOOLS'];
       await Promise.all(
-        extensions.map((name) => installer.default(installer[name], forceDownload))
+        extensions.map((name) =>
+          installer.default(installer[name], forceDownload)
+        )
       ).catch(console.log);
     } catch (e) {
       console.log('DevTools extension error:', e);
@@ -41,7 +46,10 @@ const createWindow = async () => {
     },
   });
 
-  if (process.env.NODE_ENV === 'development' && process.env['ELECTRON_RENDERER_URL']) {
+  if (
+    process.env.NODE_ENV === 'development' &&
+    process.env['ELECTRON_RENDERER_URL']
+  ) {
     mainWindow.loadURL(process.env['ELECTRON_RENDERER_URL']);
   } else {
     mainWindow.loadFile(path.join(__dirname, '../renderer/index.html'));
@@ -128,7 +136,9 @@ app.whenReady().then(async () => {
   const { registerPaymentHandlers } = await import('./ipc/payment.handlers');
   const { registerReceiptHandlers } = await import('./ipc/receipt.handlers');
   const { registerExpenseHandlers } = await import('./ipc/expense.handlers');
-  const { registerStoreInfoHandlers } = await import('./ipc/storeInfo.handlers');
+  const { registerStoreInfoHandlers } = await import(
+    './ipc/storeInfo.handlers'
+  );
 
   registerInvoiceHandlers();
   registerCustomerHandlers();

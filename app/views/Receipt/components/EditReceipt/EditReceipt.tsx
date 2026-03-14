@@ -1,10 +1,7 @@
 import React, { useEffect, useState } from 'react';
-import { Button, Form } from 'semantic-ui-react';
-import { Field, Formik } from 'formik';
-import { useAppDispatch } from '../../../../hooks';
-
-// import * as Yup from 'yup';
-import TextInput from '../../../../components/TextInput/TextInput';
+import { useForm, Controller } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
 import {
   updateReceiptFn,
   getReceiptsFn,
@@ -12,8 +9,26 @@ import {
 } from '../../../../controllers/receipt.controller';
 import { ICustomer } from '../../../../models/customer';
 import { IReceipt } from '../../../../models/receipt';
-import { closeSideContentFn } from '../../../../slices/dashboardSlice';
+import { useSidebarContext } from '../../../../contexts/SidebarContext';
 import { getCustomersFn } from '../../../../controllers/customer.controller';
+import { Button } from '../../../../components/ui/button';
+import { Input } from '../../../../components/ui/input';
+import { Label } from '../../../../components/ui/label';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '../../../../components/ui/select';
+
+const schema = z.object({
+  customerId: z.string().optional().default(''),
+  amount: z.string().optional().default(''),
+  note: z.string().optional().default(''),
+});
+
+type FormValues = z.infer<typeof schema>;
 
 export interface EditReceiptProps {
   receiptId: string | number;
@@ -22,9 +37,12 @@ export interface EditReceiptProps {
 const EditReceipt: React.FC<EditReceiptProps> = ({
   receiptId,
 }: EditReceiptProps) => {
-  const [receipt, setReceipt] = useState<IReceipt>({} as IReceipt);
   const [customers, setCustomers] = useState<ICustomer[]>([] as ICustomer[]);
-  const dispatch = useAppDispatch();
+  const { closeSideContent } = useSidebarContext();
+
+  const { register, handleSubmit, control, reset } = useForm<FormValues>({
+    resolver: zodResolver(schema),
+  });
 
   useEffect(() => {
     const fetchData = async () => {
@@ -34,78 +52,65 @@ const EditReceipt: React.FC<EditReceiptProps> = ({
         getSingleReceipt,
         getCustomers,
       ]);
-      setReceipt(receiptResponse);
+      const receipt: IReceipt = receiptResponse;
+      reset({
+        customerId: receipt.customerId ? String(receipt.customerId) : '',
+        amount: receipt.amount ? String(receipt.amount) : '',
+        note: receipt.note || '',
+      });
       setCustomers(customersResponse);
     };
     fetchData();
-  }, [receiptId]);
+  }, [receiptId, reset]);
 
-  const renderCustomers = () => {
-    const customerList = customers.map((customer) => {
-      return (
-        <option key={customer.id} value={customer.id}>
-          {customer.fullName}
-        </option>
-      );
-    });
-    return customerList;
+  const onSubmit = async (values: FormValues) => {
+    await updateReceiptFn(values, receiptId);
+    closeSideContent();
+    await getReceiptsFn();
   };
 
-  const { customerId, amount, note } = receipt;
-
   return (
-    <Formik
-      enableReinitialize
-      initialValues={{
-        customerId: customerId || '',
-        amount: amount || '',
-        note: note || '',
-      }}
-      // validationSchema={EditReceiptSchema}
-      onSubmit={async (values) => {
-        await dispatch(updateReceiptFn(values, receiptId));
-        dispatch(closeSideContentFn());
-        await getReceiptsFn();
-      }}
-    >
-      {({ handleSubmit }) => (
-        <Form>
-          <div className="field">
-            <label htmlFor="customerId">Customer</label>
-            <Field
-              id="customerId"
-              name="customerId"
-              component="select"
-              className="ui dropdown"
-            >
-              <option value="" disabled hidden>
-                Select Customer
-              </option>
-              {renderCustomers()}
-            </Field>
-          </div>
+    <form onSubmit={handleSubmit(onSubmit)} className="space-y-3">
+      <div className="space-y-1">
+        <Label htmlFor="customerId">Customer</Label>
+        <Controller
+          name="customerId"
+          control={control}
+          render={({ field }) => (
+            <Select onValueChange={field.onChange} value={field.value}>
+              <SelectTrigger>
+                <SelectValue placeholder="Select Customer" />
+              </SelectTrigger>
+              <SelectContent>
+                {customers.map((c) => (
+                  <SelectItem key={c.id} value={String(c.id)}>
+                    {c.fullName}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          )}
+        />
+      </div>
 
-          <Field
-            name="amount"
-            placeholder="Amount Paid"
-            label="Amount Paid"
-            type="text"
-            component={TextInput}
-          />
-          <Field
-            name="note"
-            placeholder="Note"
-            label="Note"
-            type="text"
-            component={TextInput}
-          />
+      <div className="space-y-1">
+        <Label htmlFor="amount">Amount Paid</Label>
+        <Input
+          id="amount"
+          placeholder="Amount Paid"
+          type="text"
+          {...register('amount')}
+        />
+      </div>
+      <div className="space-y-1">
+        <Label htmlFor="note">Note</Label>
+        <Input id="note" placeholder="Note" type="text" {...register('note')} />
+      </div>
 
-          <Button onClick={() => handleSubmit()} type="submit" fluid primary>
-            Update
-          </Button>
-        </Form>
-      )}
-    </Formik>
+      <Button type="submit" className="w-full">
+        Update
+      </Button>
+    </form>
   );
 };
 export default EditReceipt;

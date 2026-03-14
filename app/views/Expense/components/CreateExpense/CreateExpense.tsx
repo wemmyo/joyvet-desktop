@@ -1,12 +1,26 @@
 import * as React from 'react';
-import { Button, Form } from 'semantic-ui-react';
-import { Field, Formik } from 'formik';
-import * as Yup from 'yup';
-import TextInput from '../../../../components/TextInput/TextInput';
+import { useForm, Controller } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
+import { Button } from '../../../../components/ui/button';
+import { Input } from '../../../../components/ui/input';
+import { Label } from '../../../../components/ui/label';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '../../../../components/ui/select';
 
-const CreateExpenseSchema = Yup.object().shape({
-  type: Yup.string().required('Required'),
+const schema = z.object({
+  type: z.string().min(1, 'Required'),
+  amount: z.string().optional().default(''),
+  date: z.string().optional().default(''),
+  note: z.string().optional().default(''),
 });
+
+type FormValues = z.infer<typeof schema>;
 
 export interface CreateExpenseProps {
   createExpenseFn: (values: any) => void;
@@ -15,80 +29,119 @@ export interface CreateExpenseProps {
 const CreateExpense: React.FC<CreateExpenseProps> = ({
   createExpenseFn,
 }: CreateExpenseProps) => {
+  const {
+    register,
+    handleSubmit,
+    control,
+    formState: { errors },
+    reset,
+  } = useForm<FormValues>({
+    resolver: zodResolver(schema),
+    defaultValues: {
+      type: '',
+      amount: '',
+      date: '',
+      note: '',
+    },
+  });
+
+  const onSubmit = (values: FormValues) => {
+    createExpenseFn(values);
+    reset();
+  };
+
   return (
-    <Formik
-      initialValues={{
-        type: '',
-        amount: '',
-        date: '',
-        note: '',
-      }}
-      validationSchema={CreateExpenseSchema}
-      onSubmit={(values, actions) => {
-        createExpenseFn(values);
-        actions.resetForm();
-      }}
-    >
-      {({ handleSubmit }) => (
-        <Form>
-          <div className="field">
-            <label htmlFor="type">Sale Type</label>
-            <Field
-              id="type"
-              name="type"
-              component="select"
-              className="ui dropdown"
-            >
-              <option value="" disabled hidden>
-                Select Type
-              </option>
-              <option>advertisement</option>
-              <option>bank charges & cto</option>
-              <option>diesel & fuel</option>
-              <option>generator maintenance</option>
-              <option>miscellaneous</option>
-              <option>office</option>
-              <option>pr/gifts</option>
-              <option>printing & stationary</option>
-              <option>rent</option>
-              <option>telephone</option>
-              <option>training</option>
-              <option>transport</option>
-              <option>salary</option>
-              <option>staff bonus</option>
-              <option>vehicle maintenance</option>
-              <option>vehicle fuel</option>
-              <option>water & gas</option>
-              <option>others</option>
-            </Field>
-          </div>
-          <Field
-            name="amount"
-            placeholder="Amount"
-            label="Amount"
-            type="number"
-            component={TextInput}
-          />
-          <Field
-            name="date"
-            placeholder="Date"
-            label="Date"
-            type="date"
-            component={TextInput}
-          />
-          <Field
-            name="note"
-            placeholder="Note"
-            label="Note"
-            type="text"
-            component={TextInput}
-          />
-          <Button onClick={() => handleSubmit()} type="submit" fluid primary>
-            Save
-          </Button>
-        </Form>
-      )}
-    </Formik>
+    <form onSubmit={handleSubmit(onSubmit)} className="space-y-3">
+      <div className="space-y-1">
+        <Label htmlFor="type">Sale Type</Label>
+        <Controller
+          name="type"
+          control={control}
+          render={({ field }) => (
+            <Select onValueChange={field.onChange} defaultValue={field.value}>
+              <SelectTrigger>
+                <SelectValue placeholder="Select Type" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="advertisement">advertisement</SelectItem>
+                <SelectItem value="bank charges & cto">
+                  bank charges &amp; cto
+                </SelectItem>
+                <SelectItem value="diesel & fuel">diesel &amp; fuel</SelectItem>
+                <SelectItem value="generator maintenance">
+                  generator maintenance
+                </SelectItem>
+                <SelectItem value="miscellaneous">miscellaneous</SelectItem>
+                <SelectItem value="office">office</SelectItem>
+                <SelectItem value="pr/gifts">pr/gifts</SelectItem>
+                <SelectItem value="printing & stationary">
+                  printing &amp; stationary
+                </SelectItem>
+                <SelectItem value="rent">rent</SelectItem>
+                <SelectItem value="telephone">telephone</SelectItem>
+                <SelectItem value="training">training</SelectItem>
+                <SelectItem value="transport">transport</SelectItem>
+                <SelectItem value="salary">salary</SelectItem>
+                <SelectItem value="staff bonus">staff bonus</SelectItem>
+                <SelectItem value="vehicle maintenance">
+                  vehicle maintenance
+                </SelectItem>
+                <SelectItem value="vehicle fuel">vehicle fuel</SelectItem>
+                <SelectItem value="water & gas">water &amp; gas</SelectItem>
+                <SelectItem value="others">others</SelectItem>
+              </SelectContent>
+            </Select>
+          )}
+        />
+        {errors.type && (
+          <p className="text-sm text-destructive mt-1">{errors.type.message}</p>
+        )}
+      </div>
+      <div className="space-y-1">
+        <Label htmlFor="amount">Amount</Label>
+        <Input
+          id="amount"
+          placeholder="Amount"
+          type="number"
+          {...register('amount')}
+          className={errors.amount ? 'border-destructive' : ''}
+        />
+        {errors.amount && (
+          <p className="text-sm text-destructive mt-1">
+            {errors.amount.message}
+          </p>
+        )}
+      </div>
+      <div className="space-y-1">
+        <Label htmlFor="date">Date</Label>
+        <Input
+          id="date"
+          placeholder="Date"
+          type="date"
+          {...register('date')}
+          className={errors.date ? 'border-destructive' : ''}
+        />
+        {errors.date && (
+          <p className="text-sm text-destructive mt-1">{errors.date.message}</p>
+        )}
+      </div>
+      <div className="space-y-1">
+        <Label htmlFor="note">Note</Label>
+        <Input
+          id="note"
+          placeholder="Note"
+          type="text"
+          {...register('note')}
+          className={errors.note ? 'border-destructive' : ''}
+        />
+        {errors.note && (
+          <p className="text-sm text-destructive mt-1">{errors.note.message}</p>
+        )}
+      </div>
+      <Button type="submit" className="w-full">
+        Save
+      </Button>
+    </form>
   );
 };
 export default CreateExpense;

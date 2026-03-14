@@ -1,12 +1,31 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useReactToPrint } from 'react-to-print';
-import { Table, Grid, Button, Form, Segment } from 'semantic-ui-react';
-import { Field, Formik } from 'formik';
-import moment from 'moment';
+import { useForm, Controller } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
+import dayjs from 'dayjs';
 
 import DashboardLayout from '../../../layouts/DashboardLayout/DashboardLayout';
+import { Button } from '../../../components/ui/button';
+import { Label } from '../../../components/ui/label';
+import { Input } from '../../../components/ui/input';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '../../../components/ui/select';
+import {
+  Table,
+  TableHeader,
+  TableBody,
+  TableRow,
+  TableHead,
+  TableCell,
+} from '../../../components/ui/table';
+
 import { numberWithCommas } from '../../../utils/helpers';
-import TextInput from '../../../components/TextInput/TextInput';
 import ComponentToPrint from '../../../components/PrintedReceipt/ReceiptWrapper';
 import { IProduct } from '../../../models/product';
 import { IInvoiceItem } from '../../../models/invoiceItem';
@@ -23,6 +42,14 @@ interface InvoiceItem extends IInvoiceItem {
   product: IProduct;
 }
 
+const invoiceItemSchema = z.object({
+  quantity: z.coerce.number().min(1, 'Quantity is required'),
+  unitPrice: z.coerce.number().min(0, 'Unit price is required'),
+  product: z.string().min(1, 'Product is required'),
+});
+
+type InvoiceItemFormValues = z.infer<typeof invoiceItemSchema>;
+
 const InvoiceScreen: React.FC = ({ match }: any) => {
   const invoiceId = match.params.id;
 
@@ -37,6 +64,21 @@ const InvoiceScreen: React.FC = ({ match }: any) => {
   const [printInvoice, setPrintInvoice] = useState(false);
   const [singleCustomer, setSingleCustomer] = useState({} as ICustomer);
   const [products, setProducts] = useState<IProduct[]>([]);
+
+  const {
+    register,
+    handleSubmit,
+    control,
+    formState: { errors },
+    reset,
+    watch,
+    setValue,
+  } = useForm<InvoiceItemFormValues>({
+    resolver: zodResolver(invoiceItemSchema),
+    defaultValues: { quantity: 0, unitPrice: 0, product: '' },
+  });
+
+  const watchedProduct = watch('product');
 
   const fetchData = useCallback(async () => {
     const getproducts = getProductsFn('inStock');
@@ -57,7 +99,6 @@ const InvoiceScreen: React.FC = ({ match }: any) => {
 
     const invoiceItemList: InvoiceItem[] = [];
 
-    // set invoice items
     singleInvoiceResponse.products.forEach((product) => {
       const { invoiceItem } = product;
       const item: InvoiceItem = {
@@ -120,46 +161,56 @@ const InvoiceScreen: React.FC = ({ match }: any) => {
     }
 
     return (
-      <div className="field">
-        <label htmlFor="unitPrice">Unit Price</label>
-        <Field
-          id="unitPrice"
+      <div className="space-y-1">
+        <Label htmlFor="unitPrice">Unit Price</Label>
+        <Controller
           name="unitPrice"
-          component="select"
-          className="ui dropdown"
-        >
-          <option value="" disabled hidden>
-            Select Price
-          </option>
-          {filteredPriceLevel.map((price) => (
-            <option key={price.label} value={price.value}>
-              {`${price.label}: ₦${numberWithCommas(price.value)}`}
-            </option>
-          ))}
-        </Field>
+          control={control}
+          render={({ field }) => (
+            <Select
+              onValueChange={(val) => field.onChange(Number(val))}
+              value={field.value ? String(field.value) : ''}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Select Price" />
+              </SelectTrigger>
+              <SelectContent>
+                {filteredPriceLevel.map((price) => (
+                  <SelectItem key={price.label} value={String(price.value)}>
+                    {`${price.label}: ₦${numberWithCommas(price.value)}`}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          )}
+        />
+        {errors.unitPrice && (
+          <p className="text-sm text-destructive">{errors.unitPrice.message}</p>
+        )}
       </div>
     );
   };
 
   const renderOrders = invoiceItems.map((invoiceItem, index) => {
     return (
-      <Table.Row key={invoiceItem.id}>
-        <Table.Cell>{index + 1}</Table.Cell>
-        <Table.Cell>{invoiceItem.product?.title}</Table.Cell>
-        <Table.Cell>{invoiceItem.quantity}</Table.Cell>
-        <Table.Cell>{numberWithCommas(invoiceItem.unitPrice)}</Table.Cell>
-        <Table.Cell>{numberWithCommas(invoiceItem.amount)}</Table.Cell>
-        <Table.Cell>
+      <TableRow key={invoiceItem.id}>
+        <TableCell>{index + 1}</TableCell>
+        <TableCell>{invoiceItem.product?.title}</TableCell>
+        <TableCell>{invoiceItem.quantity}</TableCell>
+        <TableCell>{numberWithCommas(invoiceItem.unitPrice)}</TableCell>
+        <TableCell>{numberWithCommas(invoiceItem.amount)}</TableCell>
+        <TableCell>
           <Button
             onClick={() => {
               removeInvoiceItem(invoiceItem.id, invoiceItem.product.id);
             }}
-            negative
+            variant="destructive"
+            size="sm"
           >
             Remove
           </Button>
-        </Table.Cell>
-      </Table.Row>
+        </TableCell>
+      </TableRow>
     );
   });
 
@@ -181,13 +232,13 @@ const InvoiceScreen: React.FC = ({ match }: any) => {
   useEffect(() => {
     if (printInvoice) {
       handlePrint?.();
-      setPrintInvoice(false); // set back to false after printing
+      setPrintInvoice(false);
     }
   }, [printInvoice, handlePrint]);
 
   const disabledAdditem = () => {
-    const invoiceDate = moment(invoice?.createdAt).format('DD/MM/YYYY');
-    const todaysDate = moment().format('DD/MM/YYYY');
+    const invoiceDate = dayjs(invoice?.createdAt).format('DD/MM/YYYY');
+    const todaysDate = dayjs().format('DD/MM/YYYY');
 
     if (invoiceDate === todaysDate) {
       return false;
@@ -195,184 +246,166 @@ const InvoiceScreen: React.FC = ({ match }: any) => {
     return true;
   };
 
-  const initialValues = {
-    quantity: '',
-    unitPrice: '',
-    product: '',
-    id: '',
-    amount: '',
-    profit: '',
+  const onSubmit = async (values: InvoiceItemFormValues) => {
+    const product: IProduct = JSON.parse(values.product as any);
+    const quantity = Number(values.quantity);
+    const unitPrice = Number(values.unitPrice);
+    const amount = unitPrice * quantity;
+    const profit: number = (unitPrice - product.buyPrice) * quantity;
+
+    const updatedItem = {
+      quantity,
+      unitPrice,
+      amount,
+      profit,
+      product,
+    };
+
+    await addInvoiceItemFn(invoice, updatedItem);
+    await fetchData();
+
+    reset({ quantity: 0, unitPrice: 0, product: '' });
   };
 
   return (
     <DashboardLayout screenTitle="Update Invoice">
-      <Grid>
-        <Grid.Row>
-          <Grid.Column width={11}>
-            <h1>
-              Total: ₦{invoice?.amount ? numberWithCommas(invoice.amount) : 0}
-            </h1>
-            <Table celled>
-              <Table.Header>
-                <Table.Row>
-                  <Table.HeaderCell>No</Table.HeaderCell>
-                  <Table.HeaderCell>Product</Table.HeaderCell>
-                  <Table.HeaderCell>Quantity</Table.HeaderCell>
-                  <Table.HeaderCell>Unit Price</Table.HeaderCell>
-                  <Table.HeaderCell>Amount</Table.HeaderCell>
-                  <Table.HeaderCell>Action</Table.HeaderCell>
-                </Table.Row>
-              </Table.Header>
+      <div className="flex gap-4">
+        <div className="flex-1">
+          <h1 className="text-xl font-bold mb-3">
+            Total: ₦{invoice?.amount ? numberWithCommas(invoice.amount) : 0}
+          </h1>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>No</TableHead>
+                <TableHead>Product</TableHead>
+                <TableHead>Quantity</TableHead>
+                <TableHead>Unit Price</TableHead>
+                <TableHead>Amount</TableHead>
+                <TableHead>Action</TableHead>
+              </TableRow>
+            </TableHeader>
 
-              <Table.Body>{renderOrders}</Table.Body>
-
-              <Table.Footer>
-                <Table.Row>
-                  <Table.HeaderCell />
-                  <Table.HeaderCell />
-                  <Table.HeaderCell />
-                  <Table.HeaderCell>Total</Table.HeaderCell>
-                  <Table.HeaderCell>
-                    ₦{invoice?.amount ? numberWithCommas(invoice.amount) : 0}
-                  </Table.HeaderCell>
-                  <Table.HeaderCell />
-                </Table.Row>
-              </Table.Footer>
-            </Table>
-            <p>
-              Note: Use same price level when updating exisiting product
-              quantity
-            </p>
-          </Grid.Column>
-          <Grid.Column width={5}>
-            <Segment>
-              <Formik
-                initialValues={initialValues}
-                onSubmit={async (values, { resetForm }) => {
-                  const product: IProduct = JSON.parse(values.product as any);
-                  const quantity = Number(values.quantity);
-                  const unitPrice = Number(values.unitPrice);
-                  const amount = unitPrice * quantity;
-                  const profit: number =
-                    (unitPrice - product.buyPrice) * quantity;
-
-                  const updatedItem = {
-                    quantity,
-                    unitPrice,
-                    amount,
-                    profit,
-                    product,
-                  };
-
-                  await addInvoiceItemFn(invoice, updatedItem);
-                  await fetchData();
-
-                  resetForm();
-                }}
-              >
-                {({ handleSubmit, handleChange, values, setFieldValue }) => (
-                  <Form>
-                    <div className="field">
-                      <label htmlFor="customer">Customer</label>
-                      <Field
-                        disabled
-                        id="customer"
-                        name="customerId"
-                        component="select"
-                        className="ui dropdown"
-                      >
-                        <option selected disabled hidden>
+            <TableBody>{renderOrders}</TableBody>
+          </Table>
+          <div className="mt-2 text-sm font-semibold text-right">
+            Total: ₦{invoice?.amount ? numberWithCommas(invoice.amount) : 0}
+          </div>
+          <p className="text-sm text-muted-foreground mt-2">
+            Note: Use same price level when updating existing product quantity
+          </p>
+        </div>
+        <div className="w-72 shrink-0">
+          <div className="border rounded p-4">
+            <form onSubmit={handleSubmit(onSubmit)}>
+              <div className="space-y-3">
+                <div className="space-y-1">
+                  <Label htmlFor="customer">Customer</Label>
+                  <Select disabled value={singleCustomer.fullName || ''}>
+                    <SelectTrigger>
+                      <SelectValue placeholder={singleCustomer.fullName} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {singleCustomer.fullName && (
+                        <SelectItem value={singleCustomer.fullName}>
                           {singleCustomer.fullName}
-                        </option>
-                      </Field>
-                    </div>
-                    <div className="field">
-                      <label htmlFor="saleType">Sale Type</label>
-                      <Field
-                        disabled
-                        id="saleType"
-                        name="saleType"
-                        component="select"
-                        className="ui dropdown"
-                        onChange={(e) => {
-                          setInvoice({
-                            ...invoice,
-                            saleType: e.target.value,
-                          });
-                        }}
-                      >
-                        <option selected disabled hidden>
-                          {invoice?.saleType}
-                        </option>
-                      </Field>
-                    </div>
-                    <Segment raised>
-                      <div className="field">
-                        <label htmlFor="product">Product</label>
-                        <Field
-                          id="product"
-                          name="product"
-                          component="select"
-                          className="ui dropdown"
-                          onChange={(e: React.ChangeEvent<any>) => {
-                            handleChange(e);
-                            // clear unit price field when product is changed
-                            setFieldValue('unitPrice', '');
+                        </SelectItem>
+                      )}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-1">
+                  <Label htmlFor="saleType">Sale Type</Label>
+                  <Select disabled value={invoice?.saleType || ''}>
+                    <SelectTrigger>
+                      <SelectValue placeholder={invoice?.saleType} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {invoice?.saleType && (
+                        <SelectItem value={invoice.saleType}>
+                          {invoice.saleType}
+                        </SelectItem>
+                      )}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="border rounded p-3 space-y-3">
+                  <div className="space-y-1">
+                    <Label htmlFor="product">Product</Label>
+                    <Controller
+                      name="product"
+                      control={control}
+                      render={({ field }) => (
+                        <Select
+                          onValueChange={(val) => {
+                            field.onChange(val);
+                            setValue('unitPrice', 0);
                           }}
+                          value={field.value}
                         >
-                          <option value="" selected disabled hidden>
-                            Select Product
-                          </option>
-                          {products.map((product) => (
-                            <option
-                              key={product.id}
-                              value={JSON.stringify(product)}
-                            >
-                              {product.title}
-                            </option>
-                          ))}
-                        </Field>
-                      </div>
-                      {values.product
-                        ? renderPrices(
-                            JSON.parse((values.product as unknown) as string)
-                          )
-                        : null}
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select Product" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {products.map((product) => (
+                              <SelectItem
+                                key={product.id}
+                                value={JSON.stringify(product)}
+                              >
+                                {product.title}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      )}
+                    />
+                    {errors.product && (
+                      <p className="text-sm text-destructive">
+                        {errors.product.message}
+                      </p>
+                    )}
+                  </div>
+                  {watchedProduct
+                    ? renderPrices(JSON.parse(watchedProduct as string))
+                    : null}
 
-                      <Field
-                        name="quantity"
-                        placeholder="Quantity"
-                        label="Quantity"
-                        type="number"
-                        component={TextInput}
-                      />
+                  <div className="space-y-1">
+                    <Label htmlFor="quantity">Quantity</Label>
+                    <Input
+                      id="quantity"
+                      type="number"
+                      placeholder="Quantity"
+                      {...register('quantity')}
+                    />
+                    {errors.quantity && (
+                      <p className="text-sm text-destructive">
+                        {errors.quantity.message}
+                      </p>
+                    )}
+                  </div>
 
-                      <Button
-                        onClick={() => handleSubmit()}
-                        type="submit"
-                        fluid
-                        primary
-                        disabled={disabledAdditem()}
-                      >
-                        Add Item
-                      </Button>
-                    </Segment>
-                    <Button
-                      onClick={handlePrintInvoice}
-                      type="button"
-                      fluid
-                      positive
-                    >
-                      Print
-                    </Button>
-                    {renderInvoiceToPrint()}
-                  </Form>
-                )}
-              </Formik>
-            </Segment>
-          </Grid.Column>
-        </Grid.Row>
-      </Grid>
+                  <Button
+                    type="submit"
+                    className="w-full"
+                    disabled={disabledAdditem()}
+                  >
+                    Add Item
+                  </Button>
+                </div>
+                <Button
+                  onClick={handlePrintInvoice}
+                  type="button"
+                  className="w-full"
+                  variant="outline"
+                >
+                  Print
+                </Button>
+                {renderInvoiceToPrint()}
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
     </DashboardLayout>
   );
 };

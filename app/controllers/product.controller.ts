@@ -1,4 +1,4 @@
-import { toast } from 'react-toastify';
+import { toast } from 'sonner';
 import type { IProduct } from '../models/product';
 
 export const getProductsFn = async (filter?: 'inStock') => {

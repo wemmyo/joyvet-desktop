@@ -1,8 +1,18 @@
 import React, { useEffect, useState } from 'react';
-import { Button, Form, Message } from 'semantic-ui-react';
-import { Field, Formik } from 'formik';
+import { useForm, Controller } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
 
-import TextInput from '../../../../components/TextInput/TextInput';
+import { Button } from '../../../../components/ui/button';
+import { Input } from '../../../../components/ui/input';
+import { Label } from '../../../../components/ui/label';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '../../../../components/ui/select';
 import { numberWithCommas } from '../../../../utils/helpers';
 import {
   getCustomersFn,
@@ -14,15 +24,45 @@ import {
 } from '../../../../controllers/receipt.controller';
 import { ICustomer } from '../../../../models/customer';
 
+const createReceiptSchema = z.object({
+  customerId: z.string().min(1, 'Customer is required'),
+  amount: z.coerce.number().min(1, 'Amount is required'),
+  paymentMethod: z.string().min(1, 'Payment method is required'),
+  bank: z.string().optional(),
+  note: z.string().optional(),
+});
+
+type CreateReceiptFormValues = z.infer<typeof createReceiptSchema>;
+
 const CreateReceipt: React.FC = () => {
   const [customers, setCustomers] = useState<ICustomer[]>([]);
   const [singleCustomer, setSingleCustomer] = useState<ICustomer>(
     {} as ICustomer
   );
 
+  const {
+    register,
+    handleSubmit,
+    control,
+    formState: { errors },
+    reset,
+    watch,
+  } = useForm<CreateReceiptFormValues>({
+    resolver: zodResolver(createReceiptSchema),
+    defaultValues: {
+      customerId: '',
+      amount: 0,
+      paymentMethod: '',
+      bank: '',
+      note: '',
+    },
+  });
+
+  const watchedPaymentMethod = watch('paymentMethod');
+
   const fetchCustomers = async () => {
-    const reponse = await getCustomersFn();
-    setCustomers(reponse);
+    const response = await getCustomersFn();
+    setCustomers(response);
   };
 
   const fetchReceipts = async () => {
@@ -33,30 +73,25 @@ const CreateReceipt: React.FC = () => {
     fetchCustomers();
   }, []);
 
-  const handleNewReceipt = (values) => {
-    createReceiptFn(values, () => {
-      fetchReceipts();
-    });
-  };
-
-  const renderCustomers = () => {
-    const customerList = customers.map((customer) => {
-      return (
-        <option key={customer.id} value={customer.id}>
-          {customer.fullName}
-        </option>
-      );
-    });
-    return customerList;
+  const handleNewReceipt = (values: CreateReceiptFormValues) => {
+    createReceiptFn(
+      {
+        ...values,
+        customerId: Number(values.customerId),
+        amount: Number(values.amount),
+      },
+      () => {
+        fetchReceipts();
+      }
+    );
   };
 
   const showCustomerBalance = () => {
     if (singleCustomer.balance) {
       return (
-        <Message>
-          {`Balance:
-          ${numberWithCommas(singleCustomer.balance)}`}
-        </Message>
+        <div className="rounded border bg-muted px-3 py-2 text-sm mb-3">
+          {`Balance: ${numberWithCommas(singleCustomer.balance)}`}
+        </div>
       );
     }
     return null;
@@ -65,113 +100,129 @@ const CreateReceipt: React.FC = () => {
   const renderBanks = (paymentMethod: string) => {
     if (paymentMethod === 'transfer') {
       return (
-        <div className="field">
-          <label htmlFor="bank">Bank</label>
-          <Field
-            id="bank"
+        <div className="space-y-1 mb-3">
+          <Label htmlFor="bank">Bank</Label>
+          <Controller
             name="bank"
-            component="select"
-            className="ui dropdown"
-          >
-            <option value="" disabled hidden>
-              Select Bank
-            </option>
-            <option>GTB</option>
-            <option>FCMB</option>
-            <option>First Bank</option>
-          </Field>
+            control={control}
+            render={({ field }) => (
+              <Select onValueChange={field.onChange} value={field.value}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select Bank" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="GTB">GTB</SelectItem>
+                  <SelectItem value="FCMB">FCMB</SelectItem>
+                  <SelectItem value="First Bank">First Bank</SelectItem>
+                </SelectContent>
+              </Select>
+            )}
+          />
         </div>
       );
     }
     return null;
   };
 
+  const onSubmit = (values: CreateReceiptFormValues) => {
+    handleNewReceipt(values);
+    reset();
+    setSingleCustomer({} as ICustomer);
+  };
+
   return (
-    <Formik
-      initialValues={{
-        customerId: '',
-        amount: '',
-        paymentMethod: '',
-        bank: '',
-        note: '',
-      }}
-      // validationSchema={CreateReceiptSchema}
-      onSubmit={(values, { resetForm }) => {
-        handleNewReceipt({
-          ...values,
-          customerId: Number(values.customerId),
-          amount: Number(values.amount),
-        });
-        resetForm();
-        setSingleCustomer({} as ICustomer);
-      }}
-    >
-      {({ handleSubmit, handleChange, values }) => (
-        <Form>
-          <div className="field">
-            <label htmlFor="customerId">Customer</label>
-            <Field
-              id="customerId"
-              name="customerId"
-              component="select"
-              className="ui dropdown"
-              onChange={async (e: { currentTarget: { value: any } }) => {
-                // call the built-in handleBur
-                handleChange(e);
-                // and do something about e
-                const customerId = e.currentTarget.value;
-                // console.log(someValue);
-                await getSingleCustomerFn(Number(customerId));
+    <form onSubmit={handleSubmit(onSubmit)}>
+      <div className="space-y-3">
+        <div className="space-y-1">
+          <Label htmlFor="customerId">Customer</Label>
+          <Controller
+            name="customerId"
+            control={control}
+            render={({ field }) => (
+              <Select
+                onValueChange={async (val) => {
+                  field.onChange(val);
+                  await getSingleCustomerFn(Number(val));
+                }}
+                value={field.value}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select Customer" />
+                </SelectTrigger>
+                <SelectContent>
+                  {customers.map((c) => (
+                    <SelectItem key={c.id} value={String(c.id)}>
+                      {c.fullName}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            )}
+          />
+          {errors.customerId && (
+            <p className="text-sm text-destructive">
+              {errors.customerId.message}
+            </p>
+          )}
+        </div>
 
-                // ...
-              }}
-            >
-              <option value="" disabled hidden>
-                Select Customer
-              </option>
-              {renderCustomers()}
-            </Field>
-          </div>
+        {showCustomerBalance()}
 
-          {showCustomerBalance()}
-
-          <Field
-            name="amount"
+        <div className="space-y-1">
+          <Label htmlFor="amount">Amount</Label>
+          <Input
+            id="amount"
+            type="text"
             placeholder="Amount"
-            label="Amount"
-            type="text"
-            component={TextInput}
+            {...register('amount')}
           />
+          {errors.amount && (
+            <p className="text-sm text-destructive">{errors.amount.message}</p>
+          )}
+        </div>
 
-          <div className="field">
-            <label htmlFor="paymentMethod">Payment Method</label>
-            <Field
-              id="paymentMethod"
-              name="paymentMethod"
-              component="select"
-              className="ui dropdown"
-            >
-              <option value="" disabled hidden>
-                Select option
-              </option>
-              <option value="cash">Cash</option>
-              <option value="transfer">Transfer</option>
-            </Field>
-          </div>
-          {renderBanks(values.paymentMethod)}
-          <Field
-            name="note"
-            placeholder="Note"
-            label="Note"
-            type="text"
-            component={TextInput}
+        <div className="space-y-1">
+          <Label htmlFor="paymentMethod">Payment Method</Label>
+          <Controller
+            name="paymentMethod"
+            control={control}
+            render={({ field }) => (
+              <Select onValueChange={field.onChange} value={field.value}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select option" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="cash">Cash</SelectItem>
+                  <SelectItem value="transfer">Transfer</SelectItem>
+                </SelectContent>
+              </Select>
+            )}
           />
-          <Button onClick={() => handleSubmit()} type="submit" fluid primary>
-            Save
-          </Button>
-        </Form>
-      )}
-    </Formik>
+          {errors.paymentMethod && (
+            <p className="text-sm text-destructive">
+              {errors.paymentMethod.message}
+            </p>
+          )}
+        </div>
+
+        {renderBanks(watchedPaymentMethod)}
+
+        <div className="space-y-1">
+          <Label htmlFor="note">Note</Label>
+          <Input
+            id="note"
+            type="text"
+            placeholder="Note"
+            {...register('note')}
+          />
+        </div>
+
+        <Button type="submit" className="w-full">
+          Save
+        </Button>
+      </div>
+    </form>
   );
 };
+
 export default CreateReceipt;

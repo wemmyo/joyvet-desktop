@@ -1,5 +1,5 @@
-import React from 'react';
-import { NavLink } from 'react-router-dom';
+import React from "react";
+import { NavLink } from "react-router-dom";
 import {
   Home,
   Users,
@@ -11,24 +11,24 @@ import {
   Receipt,
   DollarSign,
   Settings,
-  BarChart3
-} from 'lucide-react';
-import { cn } from '@/lib/utils';
+  BarChart3,
+} from "lucide-react";
+import { cn } from "@/lib/utils";
 
 const navigation = [
-  { name: 'Dashboard', href: '/dashboard', icon: Home },
-  { name: 'Customers', href: '/customers', icon: Users },
-  { name: 'Products', href: '/products', icon: Package },
-  { name: 'Invoices', href: '/invoices', icon: FileText },
-  { name: 'Payments', href: '/payments', icon: CreditCard },
-  { name: 'Purchases', href: '/purchases', icon: ShoppingCart },
-  { name: 'Suppliers', href: '/suppliers', icon: Truck },
-  { name: 'Receipts', href: '/receipts', icon: Receipt },
-  { name: 'Expenses', href: '/expenses', icon: DollarSign },
-  { name: 'Sales Report', href: '/sales', icon: BarChart3 },
-  { name: 'All Purchases', href: '/all-purchases', icon: ShoppingCart },
-  { name: 'Users', href: '/users', icon: Users },
-  { name: 'Store Info', href: '/store-info', icon: Settings },
+  { name: "Dashboard", href: "/dashboard", icon: Home },
+  { name: "Customers", href: "/customers", icon: Users },
+  { name: "Products", href: "/products", icon: Package },
+  { name: "Invoices", href: "/invoices", icon: FileText },
+  { name: "Payments", href: "/payments", icon: CreditCard },
+  { name: "Purchases", href: "/purchases", icon: ShoppingCart },
+  { name: "Suppliers", href: "/suppliers", icon: Truck },
+  { name: "Receipts", href: "/receipts", icon: Receipt },
+  { name: "Expenses", href: "/expenses", icon: DollarSign },
+  { name: "Sales Report", href: "/sales", icon: BarChart3 },
+  { name: "All Purchases", href: "/all-purchases", icon: ShoppingCart },
+  { name: "Users", href: "/users", icon: Users },
+  { name: "Store Info", href: "/store-info", icon: Settings },
 ];
 
 const Sidebar: React.FC = () => {
@@ -49,18 +49,21 @@ const Sidebar: React.FC = () => {
                     to={item.href}
                     className={({ isActive }) =>
                       cn(
-                        'group flex items-center px-2 py-2 text-sm font-medium rounded-md transition-colors',
+                        "group flex items-center px-2 py-2 text-sm font-medium rounded-md transition-colors",
                         isActive
-                          ? 'bg-blue-100 text-blue-700 border-r-2 border-blue-700'
-                          : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                          ? "bg-blue-100 text-blue-700 border-r-2 border-blue-700"
+                          : "text-gray-600 hover:bg-gray-50 hover:text-gray-900",
                       )
                     }
                   >
                     <Icon
+                      aria-hidden
                       className={({ isActive }) =>
                         cn(
-                          'mr-3 flex-shrink-0 h-5 w-5 transition-colors',
-                          isActive ? 'text-blue-700' : 'text-gray-400 group-hover:text-gray-500'
+                          "mr-3 flex-shrink-0 h-5 w-5 transition-colors",
+                          isActive
+                            ? "text-blue-700"
+                            : "text-gray-400 group-hover:text-gray-500",
                         )
                       }
                     />

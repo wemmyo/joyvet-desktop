@@ -5,19 +5,26 @@ import React, {
   useRef,
   useCallback,
 } from 'react';
-import { Table, Button, Icon, Form, Loader } from 'semantic-ui-react';
-import { useAppDispatch } from '../../hooks';
 import { useReactToPrint } from 'react-to-print';
-import moment from 'moment';
+import dayjs from 'dayjs';
+import { Plus, Printer } from 'lucide-react';
 
 import DashboardLayout from '../../layouts/DashboardLayout/DashboardLayout';
+import { Button } from '../../components/ui/button';
+import { Input } from '../../components/ui/input';
+import { Label } from '../../components/ui/label';
+import {
+  Table,
+  TableHeader,
+  TableBody,
+  TableRow,
+  TableHead,
+  TableCell,
+} from '../../components/ui/table';
 
 import CreateExpense from './components/CreateExpense/CreateExpense';
 import { numberWithCommas } from '../../utils/helpers';
-import {
-  openSideContentFn,
-  closeSideContentFn,
-} from '../../slices/dashboardSlice';
+import { useSidebarContext } from '../../contexts/SidebarContext';
 import EditExpense from './components/EditExpense/EditExpense';
 import { IExpense } from '../../models/expense';
 import {
@@ -27,7 +34,7 @@ import {
 
 const CONTENT_CREATE = 'create';
 const CONTENT_EDIT = 'edit';
-const TODAYS_DATE = `${moment().format('YYYY-MM-DD')}`;
+const TODAYS_DATE = `${dayjs().format('YYYY-MM-DD')}`;
 
 const ExpensesScreen: React.FC = () => {
   const [sideContent, setSideContent] = useState('');
@@ -37,7 +44,8 @@ const ExpensesScreen: React.FC = () => {
   const [expenses, setExpenses] = useState<IExpense[]>([]);
   const [loading, setLoading] = useState(false);
 
-  const dispatch = useAppDispatch();
+  const { openSideContent: openSideBar, closeSideContent: closeSideBar } =
+    useSidebarContext();
 
   const componentRef = useRef(null);
 
@@ -68,14 +76,17 @@ const ExpensesScreen: React.FC = () => {
   };
 
   const groupBy = (xs: any[] = [], key: string): { [key: string]: any[] } => {
-    return xs.reduce((rv: { [key: string]: any[] }, x) => {
-      (rv[x[key]] = rv[x[key]] || []).push(x);
-      return rv;
-    }, {} as { [key: string]: any[] });
+    return xs.reduce(
+      (rv: { [key: string]: any[] }, x) => {
+        (rv[x[key]] = rv[x[key]] || []).push(x);
+        return rv;
+      },
+      {} as { [key: string]: any[] }
+    );
   };
 
   const openSideContent = (content: string) => {
-    dispatch(openSideContentFn());
+    openSideBar();
     setSideContent(content);
   };
 
@@ -84,13 +95,13 @@ const ExpensesScreen: React.FC = () => {
 
     return () => {
       const closeSideContent = () => {
-        dispatch(closeSideContentFn());
+        closeSideBar();
         setSideContent('');
         setExpenseId('');
       };
       closeSideContent();
     };
-  }, [dispatch, filterExpenses]);
+  }, [filterExpenses]);
 
   const handleNewExpense = async (values) => {
     await createExpenseFn(values);
@@ -110,39 +121,43 @@ const ExpensesScreen: React.FC = () => {
         const itemSum = sumOfAmounts(itemArray);
         const itemSection = itemArray.map((each) => {
           return (
-            <Table.Row onClick={() => openSingleExpense(each.id)} key={each.id}>
-              <Table.Cell>{each.type}</Table.Cell>
-              <Table.Cell>{numberWithCommas(each.amount)}</Table.Cell>
-              <Table.Cell>
+            <TableRow
+              onClick={() => openSingleExpense(each.id)}
+              key={each.id}
+              className="cursor-pointer hover:bg-muted/50"
+            >
+              <TableCell>{each.type}</TableCell>
+              <TableCell>{numberWithCommas(each.amount)}</TableCell>
+              <TableCell>
                 {new Date(each.date).toLocaleDateString('en-gb')}
-              </Table.Cell>
-              <Table.Cell>{each.note}</Table.Cell>
-            </Table.Row>
+              </TableCell>
+              <TableCell>{each.note}</TableCell>
+            </TableRow>
           );
         });
         return (
           <Fragment key={title}>
-            <Table.Header>
-              <Table.Row>
-                <Table.HeaderCell>{title.toUpperCase()}</Table.HeaderCell>
-                <Table.HeaderCell>Amount</Table.HeaderCell>
-                <Table.HeaderCell>Date</Table.HeaderCell>
-                <Table.HeaderCell>Note</Table.HeaderCell>
-              </Table.Row>
-            </Table.Header>
+            <TableHeader>
+              <TableRow>
+                <TableHead>{title.toUpperCase()}</TableHead>
+                <TableHead>Amount</TableHead>
+                <TableHead>Date</TableHead>
+                <TableHead>Note</TableHead>
+              </TableRow>
+            </TableHeader>
 
-            <Table.Body>
+            <TableBody>
               {itemSection}
 
-              <Table.Row>
-                <Table.Cell />
-                <Table.Cell>
+              <TableRow>
+                <TableCell />
+                <TableCell>
                   <strong>₦{numberWithCommas(itemSum)}</strong>
-                </Table.Cell>
-                <Table.Cell />
-                <Table.Cell />
-              </Table.Row>
-            </Table.Body>
+                </TableCell>
+                <TableCell />
+                <TableCell />
+              </TableRow>
+            </TableBody>
           </Fragment>
         );
       }
@@ -168,45 +183,41 @@ const ExpensesScreen: React.FC = () => {
 
   const headerContent = () => {
     return (
-      <div
-        style={{
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          flex: 1,
-        }}
-      >
+      <div className="flex items-center justify-between flex-1 flex-wrap gap-2">
         <Button
-          color="blue"
-          icon
-          labelPosition="left"
           onClick={() => {
             openSideContent(CONTENT_CREATE);
           }}
         >
-          <Icon inverted color="grey" name="add" />
+          <Plus className="mr-1 h-4 w-4" />
           Create
         </Button>
-        <Button onClick={handlePrint} icon="print" />
-        <div style={{ display: 'flex', alignItems: 'flex-end' }}>
-          <Form>
-            <Form.Group style={{ marginBottom: 0 }}>
-              <Form.Input
-                label="Start Date"
+        <Button variant="outline" size="icon" onClick={handlePrint}>
+          <Printer className="h-4 w-4" />
+        </Button>
+        <div className="flex items-end gap-2 flex-wrap">
+          <div className="flex gap-2">
+            <div className="space-y-1">
+              <Label htmlFor="startDate">Start Date</Label>
+              <Input
+                id="startDate"
                 type="date"
-                onChange={(_e, { value }) => setStartDate(value)}
+                onChange={(e) => setStartDate(e.target.value)}
                 value={startDate}
               />
-              <Form.Input
-                label="End Date"
+            </div>
+            <div className="space-y-1">
+              <Label htmlFor="endDate">End Date</Label>
+              <Input
+                id="endDate"
                 type="date"
-                onChange={(_e, { value }) => setEndDate(value)}
+                onChange={(e) => setEndDate(e.target.value)}
                 value={endDate}
               />
-            </Form.Group>
-          </Form>
-          <div style={{ marginLeft: '1rem' }}>
-            <Button type="button" onClick={filterExpenses} primary>
+            </div>
+          </div>
+          <div className="flex gap-2">
+            <Button type="button" onClick={filterExpenses}>
               Filter
             </Button>
             <Button
@@ -218,6 +229,7 @@ const ExpensesScreen: React.FC = () => {
                 setExpenses(response);
               }}
               type="button"
+              variant="outline"
             >
               Reset
             </Button>
@@ -230,26 +242,19 @@ const ExpensesScreen: React.FC = () => {
   return (
     <DashboardLayout screenTitle="Expenses" rightSidebar={renderSideContent()}>
       {loading ? (
-        <Loader active inline="centered" />
+        <div className="flex items-center justify-center p-8">
+          <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+        </div>
       ) : (
         <div ref={componentRef}>
           {headerContent()}
-          <h1>Total: ₦{numberWithCommas(sumOfAmounts(expenses))}</h1>
-          <Table celled>
-            {renderRows()}
-            <Table.Footer>
-              <Table.Row>
-                <Table.HeaderCell />
-                <Table.HeaderCell>
-                  <strong>
-                    Total: ₦{numberWithCommas(sumOfAmounts(expenses))}
-                  </strong>
-                </Table.HeaderCell>
-                <Table.HeaderCell />
-                <Table.HeaderCell />
-              </Table.Row>
-            </Table.Footer>
-          </Table>
+          <h1 className="text-xl font-bold my-3">
+            Total: ₦{numberWithCommas(sumOfAmounts(expenses))}
+          </h1>
+          <Table>{renderRows()}</Table>
+          <div className="mt-2 text-sm font-semibold text-right">
+            Total: ₦{numberWithCommas(sumOfAmounts(expenses))}
+          </div>
         </div>
       )}
     </DashboardLayout>

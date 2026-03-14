@@ -1,15 +1,20 @@
 import React, { useEffect, useState } from 'react';
-import { useAppDispatch } from '../../../../hooks';
-import { Table, Button } from 'semantic-ui-react';
-import moment from 'moment';
+import dayjs from 'dayjs';
 
 import { numberWithCommas } from '../../../../utils/helpers';
-import { closeSideContentFn } from '../../../../slices/dashboardSlice';
+import { useSidebarContext } from '../../../../contexts/SidebarContext';
 import {
   getSinglePaymentFn,
   deletePaymentFn,
 } from '../../../../controllers/payment.controller';
 import { IPayment } from '../../../../models/payment';
+import { Button } from '../../../../components/ui/button';
+import {
+  Table,
+  TableBody,
+  TableRow,
+  TableCell,
+} from '../../../../components/ui/table';
 
 export interface PaymentDetailProps {
   paymentId: number;
@@ -19,7 +24,7 @@ export interface PaymentDetailProps {
 const PaymentDetail = ({ paymentId, refreshPayments }: PaymentDetailProps) => {
   const [singlePayment, setSinglePayment] = useState<IPayment>({} as IPayment);
   const [loading, setLoading] = useState<boolean>(true);
-  const dispatch = useAppDispatch();
+  const { closeSideContent } = useSidebarContext();
 
   useEffect(() => {
     const fetchData = async () => {
@@ -35,64 +40,56 @@ const PaymentDetail = ({ paymentId, refreshPayments }: PaymentDetailProps) => {
   const handleDelete = async () => {
     await deletePaymentFn(paymentId);
     refreshPayments();
-    dispatch(closeSideContentFn());
+    closeSideContent();
   };
 
-  const {
-    supplier,
-    amount,
-    note,
-    createdAt,
-    paymentMethod,
-    bank,
-  } = singlePayment;
+  const { supplier, amount, note, createdAt, paymentMethod, bank } =
+    singlePayment;
 
   if (loading) {
     return <p>Loading...</p>;
   }
 
   return (
-    <>
+    <div className="space-y-3">
       <Table>
-        <Table.Body>
-          <Table.Row>
-            <Table.Cell>Supplier</Table.Cell>
-            <Table.Cell>{supplier ? supplier.fullName : ''}</Table.Cell>
-          </Table.Row>
-          <Table.Row>
-            <Table.Cell>Supplier balance</Table.Cell>
-            <Table.Cell>
+        <TableBody>
+          <TableRow>
+            <TableCell className="font-medium">Supplier</TableCell>
+            <TableCell>{supplier ? supplier.fullName : ''}</TableCell>
+          </TableRow>
+          <TableRow>
+            <TableCell className="font-medium">Supplier balance</TableCell>
+            <TableCell>
               {supplier ? numberWithCommas(supplier.balance) : 0.0}
-            </Table.Cell>
-          </Table.Row>
-          <Table.Row>
-            <Table.Cell>Amount</Table.Cell>
-            <Table.Cell>{numberWithCommas(amount) || ''}</Table.Cell>
-          </Table.Row>
-          <Table.Row>
-            <Table.Cell>Payment Method</Table.Cell>
-            <Table.Cell>{paymentMethod || ''}</Table.Cell>
-          </Table.Row>
-          <Table.Row>
-            <Table.Cell>Bank</Table.Cell>
-            <Table.Cell>{bank || ''}</Table.Cell>
-          </Table.Row>
-          <Table.Row>
-            <Table.Cell>Note</Table.Cell>
-            <Table.Cell>{note || ''}</Table.Cell>
-          </Table.Row>
-          <Table.Row>
-            <Table.Cell>Date</Table.Cell>
-            <Table.Cell>
-              {moment(createdAt).format('DD/MM/YYYY') || ''}
-            </Table.Cell>
-          </Table.Row>
-        </Table.Body>
+            </TableCell>
+          </TableRow>
+          <TableRow>
+            <TableCell className="font-medium">Amount</TableCell>
+            <TableCell>{numberWithCommas(amount) || ''}</TableCell>
+          </TableRow>
+          <TableRow>
+            <TableCell className="font-medium">Payment Method</TableCell>
+            <TableCell>{paymentMethod || ''}</TableCell>
+          </TableRow>
+          <TableRow>
+            <TableCell className="font-medium">Bank</TableCell>
+            <TableCell>{bank || ''}</TableCell>
+          </TableRow>
+          <TableRow>
+            <TableCell className="font-medium">Note</TableCell>
+            <TableCell>{note || ''}</TableCell>
+          </TableRow>
+          <TableRow>
+            <TableCell className="font-medium">Date</TableCell>
+            <TableCell>{dayjs(createdAt).format('DD/MM/YYYY') || ''}</TableCell>
+          </TableRow>
+        </TableBody>
       </Table>
-      <Button onClick={() => handleDelete()} type="submit" negative>
+      <Button onClick={() => handleDelete()} variant="destructive">
         Delete
       </Button>
-    </>
+    </div>
   );
 };
 

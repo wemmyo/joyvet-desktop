@@ -1,4 +1,4 @@
-import { toast } from 'react-toastify';
+import { toast } from 'sonner';
 import { IUser } from '../models/user';
 
 export const loginUserFn = async (

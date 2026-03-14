@@ -1,10 +1,28 @@
 import React, { useState, useEffect } from 'react';
-import { Table, Grid, Button, Form, Segment } from 'semantic-ui-react';
-import { Field, Formik } from 'formik';
+import { useForm, Controller } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
 
 import DashboardLayout from '../../layouts/DashboardLayout/DashboardLayout';
+import { Button } from '../../components/ui/button';
+import { Label } from '../../components/ui/label';
+import { Input } from '../../components/ui/input';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '../../components/ui/select';
+import {
+  Table,
+  TableHeader,
+  TableBody,
+  TableRow,
+  TableHead,
+  TableCell,
+} from '../../components/ui/table';
 
-import TextInput from '../../components/TextInput/TextInput';
 import { getSuppliersFn } from '../../controllers/supplier.controller';
 import { getProductsFn } from '../../controllers/product.controller';
 import { ISupplier } from '../../models/supplier';
@@ -13,10 +31,47 @@ import { numberWithCommas } from '../../utils/helpers';
 import { createPurchaseFn } from '../../controllers/purchase.controller';
 import { IPurchaseItem } from '../../models/purchaseItem';
 
+const itemSchema = z.object({
+  supplierId: z.string().min(1, 'Supplier is required'),
+  invoiceNumber: z.string().min(1, 'Invoice number is required'),
+  product: z.string().min(1, 'Product is required'),
+  unitPrice: z.coerce.number().min(0, 'Unit price is required'),
+  quantity: z.coerce.number().min(1, 'Quantity is required'),
+  newSellPrice: z.coerce.number().min(0),
+  newSellPrice2: z.coerce.number().min(0),
+  newSellPrice3: z.coerce.number().min(0),
+});
+
+type ItemFormValues = z.infer<typeof itemSchema>;
+
 const PurchaseScreen: React.FC = () => {
   const [orders, setOrders] = useState([]);
   const [suppliers, setSuppliers] = useState<ISupplier[]>([]);
   const [products, setProducts] = useState<IProduct[]>([]);
+
+  const {
+    register,
+    handleSubmit,
+    control,
+    formState: { errors },
+    reset,
+    setValue,
+    watch,
+  } = useForm<ItemFormValues>({
+    resolver: zodResolver(itemSchema),
+    defaultValues: {
+      supplierId: '',
+      invoiceNumber: '',
+      product: '',
+      unitPrice: 0,
+      quantity: 0,
+      newSellPrice: 0,
+      newSellPrice2: 0,
+      newSellPrice3: 0,
+    },
+  });
+
+  const watchedValues = watch();
 
   useEffect(() => {
     const fetchData = async () => {
@@ -32,44 +87,15 @@ const PurchaseScreen: React.FC = () => {
     fetchData();
   }, []);
 
-  const renderProducts = () => {
-    const productList = products.map((product) => {
-      return (
-        <option key={product.id} value={JSON.stringify(product)}>
-          {product.title}
-        </option>
-      );
-    });
-    return productList;
-  };
-
-  const renderSuppliers = () => {
-    const supplierList = suppliers.map((supplier) => {
-      return (
-        <option key={supplier.id} value={supplier.id}>
-          {supplier.fullName}
-        </option>
-      );
-    });
-    return supplierList;
-  };
-
-  const amount = (item: any) => {
-    return item.amount;
-  };
-
-  const sum = (prev: number, next: number) => {
-    return prev + next;
-  };
+  const amount = (item: any) => item.amount;
+  const sum = (prev: number, next: number) => prev + next;
 
   const addToOrders = (value: IPurchaseItem) => {
     setOrders([...orders, value]);
   };
 
   const sumOfOrders = () => {
-    if (orders.length === 0) {
-      return 0;
-    }
+    if (orders.length === 0) return 0;
     return orders.map(amount).reduce(sum);
   };
 
@@ -81,31 +107,27 @@ const PurchaseScreen: React.FC = () => {
   };
 
   const renderOrders = () => {
-    const orderList = orders.map((order: any, index) => {
-      return (
-        <Table.Row key={order.orderId}>
-          <Table.Cell>{index + 1}</Table.Cell>
-          <Table.Cell>{order.title}</Table.Cell>
-          <Table.Cell>{order.quantity}</Table.Cell>
-          <Table.Cell>{numberWithCommas(order.unitPrice)}</Table.Cell>
-          <Table.Cell>{numberWithCommas(order.amount)}</Table.Cell>
-          <Table.Cell>
-            <Button
-              onClick={() => {
-                removeOrder(order.orderId);
-              }}
-              negative
-            >
-              Remove
-            </Button>
-          </Table.Cell>
-        </Table.Row>
-      );
-    });
-    return orderList;
+    return orders.map((order: any, index) => (
+      <TableRow key={order.orderId}>
+        <TableCell>{index + 1}</TableCell>
+        <TableCell>{order.title}</TableCell>
+        <TableCell>{order.quantity}</TableCell>
+        <TableCell>{numberWithCommas(order.unitPrice)}</TableCell>
+        <TableCell>{numberWithCommas(order.amount)}</TableCell>
+        <TableCell>
+          <Button
+            onClick={() => removeOrder(order.orderId)}
+            variant="destructive"
+            size="sm"
+          >
+            Remove
+          </Button>
+        </TableCell>
+      </TableRow>
+    ));
   };
 
-  const addItemToOrder = (values, { resetForm }) => {
+  const onAddItem = (values: ItemFormValues) => {
     addToOrders({
       ...JSON.parse(values.product),
       quantity: values.quantity,
@@ -116,199 +138,219 @@ const PurchaseScreen: React.FC = () => {
       newSellPrice3: values.newSellPrice3,
       orderId: new Date().getUTCMilliseconds(),
     });
-    resetForm({
-      values: {
-        ...values,
-        unitPrice: '',
-        product: '',
-        quantity: '',
-        newSellPrice: '',
-        newSellPrice2: '',
-        newSellPrice3: '',
-      },
+    reset({
+      supplierId: values.supplierId,
+      invoiceNumber: values.invoiceNumber,
+      product: '',
+      unitPrice: 0,
+      quantity: 0,
+      newSellPrice: 0,
+      newSellPrice2: 0,
+      newSellPrice3: 0,
     });
   };
 
-  const createPurchase = async ({ values, resetForm }) => {
+  const createPurchase = async () => {
     await createPurchaseFn(orders, {
-      supplierId: Number(values.supplierId),
-      invoiceNumber: values.invoiceNumber,
+      supplierId: Number(watchedValues.supplierId),
+      invoiceNumber: watchedValues.invoiceNumber,
       amount: sumOfOrders(),
       products: orders,
     } as any);
-    resetForm();
+    reset();
     setOrders([]);
-  };
-
-  const onProductChange = ({ handleChange, setFieldValue, e }) => {
-    handleChange(e);
-    setFieldValue('newSellPrice', JSON.parse(e.target.value).sellPrice);
-    setFieldValue('newSellPrice2', JSON.parse(e.target.value).sellPrice2);
-    setFieldValue('newSellPrice3', JSON.parse(e.target.value).sellPrice3);
   };
 
   return (
     <DashboardLayout screenTitle="Create Purchase">
-      <Grid>
-        <Grid.Row>
-          <Grid.Column width={11}>
-            <h1>Total: ₦{numberWithCommas(sumOfOrders())}</h1>
-            <Table celled>
-              <Table.Header>
-                <Table.Row>
-                  <Table.HeaderCell>No</Table.HeaderCell>
-                  <Table.HeaderCell>Product</Table.HeaderCell>
-                  <Table.HeaderCell>Quantity</Table.HeaderCell>
-                  <Table.HeaderCell>Rate</Table.HeaderCell>
-                  <Table.HeaderCell>Amount</Table.HeaderCell>
-                  <Table.HeaderCell>Action</Table.HeaderCell>
-                </Table.Row>
-              </Table.Header>
+      <div className="flex gap-4">
+        <div className="flex-1">
+          <h1 className="text-xl font-bold mb-3">
+            Total: ₦{numberWithCommas(sumOfOrders())}
+          </h1>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>No</TableHead>
+                <TableHead>Product</TableHead>
+                <TableHead>Quantity</TableHead>
+                <TableHead>Rate</TableHead>
+                <TableHead>Amount</TableHead>
+                <TableHead>Action</TableHead>
+              </TableRow>
+            </TableHeader>
 
-              <Table.Body>{renderOrders()}</Table.Body>
-
-              <Table.Footer>
-                <Table.Row>
-                  <Table.HeaderCell />
-                  <Table.HeaderCell />
-                  <Table.HeaderCell />
-                  <Table.HeaderCell>Total</Table.HeaderCell>
-                  <Table.HeaderCell>
-                    ₦{numberWithCommas(sumOfOrders())}
-                  </Table.HeaderCell>
-                  <Table.HeaderCell />
-                </Table.Row>
-              </Table.Footer>
-            </Table>
-          </Grid.Column>
-          <Grid.Column width={5}>
-            <Segment>
-              <Formik
-                // enableReinitialize
-                initialValues={{
-                  supplierId: '',
-                  invoiceNumber: '',
-                  unitPrice: '',
-                  product: '',
-                  quantity: '',
-                  newSellPrice: '',
-                  newSellPrice2: '',
-                  newSellPrice3: '',
-                }}
-                // validationSchema={CreatePaymentSchema}
-                onSubmit={addItemToOrder}
-              >
-                {({
-                  handleSubmit,
-                  values,
-                  resetForm,
-                  setFieldValue,
-                  handleChange,
-                }) => (
-                  <Form>
-                    <div className="field">
-                      <label htmlFor="supplier">Supplier</label>
-                      <Field
-                        id="supplier"
-                        name="supplierId"
-                        component="select"
-                        className="ui dropdown"
+            <TableBody>{renderOrders()}</TableBody>
+          </Table>
+          <div className="mt-2 text-sm font-semibold text-right">
+            Total: ₦{numberWithCommas(sumOfOrders())}
+          </div>
+        </div>
+        <div className="w-72 shrink-0">
+          <div className="border rounded p-4">
+            <form onSubmit={handleSubmit(onAddItem)}>
+              <div className="space-y-3">
+                <div className="space-y-1">
+                  <Label htmlFor="supplierId">Supplier</Label>
+                  <Controller
+                    name="supplierId"
+                    control={control}
+                    render={({ field }) => (
+                      <Select
+                        onValueChange={field.onChange}
+                        value={field.value}
                       >
-                        <option value="" disabled hidden>
-                          Select Supplier
-                        </option>
-                        {renderSuppliers()}
-                      </Field>
-                    </div>
-                    <Field
-                      name="invoiceNumber"
-                      placeholder="Invoice Number"
-                      label="Invoice Number"
-                      component={TextInput}
-                    />
-                    <Segment raised>
-                      <div className="field">
-                        <label htmlFor="product">Item</label>
-                        <Field
-                          id="product"
-                          name="product"
-                          component="select"
-                          className="ui dropdown"
-                          onChange={(e) => {
-                            onProductChange({
-                              handleChange,
-                              setFieldValue,
-                              e,
-                            });
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select Supplier" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {suppliers.map((s) => (
+                            <SelectItem key={s.id} value={String(s.id)}>
+                              {s.fullName}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    )}
+                  />
+                  {errors.supplierId && (
+                    <p className="text-sm text-destructive">
+                      {errors.supplierId.message}
+                    </p>
+                  )}
+                </div>
+
+                <div className="space-y-1">
+                  <Label htmlFor="invoiceNumber">Invoice Number</Label>
+                  <Input
+                    id="invoiceNumber"
+                    placeholder="Invoice Number"
+                    {...register('invoiceNumber')}
+                  />
+                  {errors.invoiceNumber && (
+                    <p className="text-sm text-destructive">
+                      {errors.invoiceNumber.message}
+                    </p>
+                  )}
+                </div>
+
+                <div className="border rounded p-3 space-y-3">
+                  <div className="space-y-1">
+                    <Label htmlFor="product">Item</Label>
+                    <Controller
+                      name="product"
+                      control={control}
+                      render={({ field }) => (
+                        <Select
+                          onValueChange={(val) => {
+                            field.onChange(val);
+                            if (val) {
+                              const parsed = JSON.parse(val);
+                              setValue('newSellPrice', parsed.sellPrice);
+                              setValue('newSellPrice2', parsed.sellPrice2);
+                              setValue('newSellPrice3', parsed.sellPrice3);
+                            }
                           }}
+                          value={field.value}
                         >
-                          <option value="" disabled hidden>
-                            Select Item
-                          </option>
-                          {renderProducts()}
-                        </Field>
-                      </div>
-                      <Field
-                        name="unitPrice"
-                        placeholder="Unit Price"
-                        label="Unit Price"
-                        type="number"
-                        component={TextInput}
-                      />
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select Item" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {products.map((p) => (
+                              <SelectItem key={p.id} value={JSON.stringify(p)}>
+                                {p.title}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      )}
+                    />
+                    {errors.product && (
+                      <p className="text-sm text-destructive">
+                        {errors.product.message}
+                      </p>
+                    )}
+                  </div>
 
-                      <Field
-                        name="quantity"
-                        placeholder="Quantity"
-                        label="Quantity"
-                        type="number"
-                        component={TextInput}
-                      />
-                      <Field
-                        name="newSellPrice"
-                        placeholder="Selling Price"
-                        label="Selling Price"
-                        type="number"
-                        component={TextInput}
-                      />
-                      <Field
-                        name="newSellPrice2"
-                        placeholder="Selling Price 2"
-                        label="Selling Price 2"
-                        type="number"
-                        component={TextInput}
-                      />
-                      <Field
-                        name="newSellPrice3"
-                        placeholder="Selling Price 3"
-                        label="Selling Price 3"
-                        type="number"
-                        component={TextInput}
-                      />
+                  <div className="space-y-1">
+                    <Label htmlFor="unitPrice">Unit Price</Label>
+                    <Input
+                      id="unitPrice"
+                      type="number"
+                      placeholder="Unit Price"
+                      {...register('unitPrice')}
+                    />
+                    {errors.unitPrice && (
+                      <p className="text-sm text-destructive">
+                        {errors.unitPrice.message}
+                      </p>
+                    )}
+                  </div>
 
-                      <Button
-                        onClick={() => handleSubmit()}
-                        type="submit"
-                        fluid
-                        primary
-                      >
-                        Add Item
-                      </Button>
-                    </Segment>
-                    <Button
-                      onClick={() => createPurchase({ values, resetForm })}
-                      type="button"
-                      fluid
-                      positive
-                    >
-                      Save
-                    </Button>
-                  </Form>
-                )}
-              </Formik>
-            </Segment>
-          </Grid.Column>
-        </Grid.Row>
-      </Grid>
+                  <div className="space-y-1">
+                    <Label htmlFor="quantity">Quantity</Label>
+                    <Input
+                      id="quantity"
+                      type="number"
+                      placeholder="Quantity"
+                      {...register('quantity')}
+                    />
+                    {errors.quantity && (
+                      <p className="text-sm text-destructive">
+                        {errors.quantity.message}
+                      </p>
+                    )}
+                  </div>
+
+                  <div className="space-y-1">
+                    <Label htmlFor="newSellPrice">Selling Price</Label>
+                    <Input
+                      id="newSellPrice"
+                      type="number"
+                      placeholder="Selling Price"
+                      {...register('newSellPrice')}
+                    />
+                  </div>
+
+                  <div className="space-y-1">
+                    <Label htmlFor="newSellPrice2">Selling Price 2</Label>
+                    <Input
+                      id="newSellPrice2"
+                      type="number"
+                      placeholder="Selling Price 2"
+                      {...register('newSellPrice2')}
+                    />
+                  </div>
+
+                  <div className="space-y-1">
+                    <Label htmlFor="newSellPrice3">Selling Price 3</Label>
+                    <Input
+                      id="newSellPrice3"
+                      type="number"
+                      placeholder="Selling Price 3"
+                      {...register('newSellPrice3')}
+                    />
+                  </div>
+
+                  <Button type="submit" className="w-full">
+                    Add Item
+                  </Button>
+                </div>
+
+                <Button
+                  onClick={createPurchase}
+                  type="button"
+                  className="w-full"
+                  variant="default"
+                >
+                  Save
+                </Button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
     </DashboardLayout>
   );
 };

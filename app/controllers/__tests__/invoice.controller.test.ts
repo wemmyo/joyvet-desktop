@@ -1,18 +1,18 @@
-jest.mock('react-toastify', () => ({
-  toast: { success: jest.fn(), error: jest.fn() },
+vi.mock('sonner', () => ({
+  toast: { success: vi.fn(), error: vi.fn() },
 }));
 
 const mockApi = {
   invoice: {
-    getAll: jest.fn(),
-    getById: jest.fn(),
-    create: jest.fn(),
-    delete: jest.fn(),
-    deleteItem: jest.fn(),
-    addItem: jest.fn(),
-    filter: jest.fn(),
-    filterById: jest.fn(),
-    getSingle: jest.fn(),
+    getAll: vi.fn(),
+    getById: vi.fn(),
+    create: vi.fn(),
+    delete: vi.fn(),
+    deleteItem: vi.fn(),
+    addItem: vi.fn(),
+    filter: vi.fn(),
+    filterById: vi.fn(),
+    getSingle: vi.fn(),
   },
 };
 Object.defineProperty(global, 'window', {
@@ -20,7 +20,7 @@ Object.defineProperty(global, 'window', {
   writable: true,
 });
 
-import { toast } from 'react-toastify';
+import { toast } from 'sonner';
 import {
   getInvoicesFn,
   filterInvoiceFn,
@@ -40,8 +40,11 @@ const mockInvoice = {
 
 describe('invoice controller', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
-    localStorage.setItem('user', JSON.stringify({ fullName: 'admin', role: 'admin' }));
+    vi.clearAllMocks();
+    localStorage.setItem(
+      'user',
+      JSON.stringify({ fullName: 'admin', role: 'admin' })
+    );
   });
 
   describe('getInvoicesFn', () => {
@@ -72,8 +75,12 @@ describe('invoice controller', () => {
     });
 
     it('calls toast.error and rethrows on failure', async () => {
-      mockApi.invoice.filter.mockRejectedValue(new Error('Date range too large'));
-      await expect(filterInvoiceFn('2024-01-01', '2024-06-01', 'all')).rejects.toThrow('Date range too large');
+      mockApi.invoice.filter.mockRejectedValue(
+        new Error('Date range too large')
+      );
+      await expect(
+        filterInvoiceFn('2024-01-01', '2024-06-01', 'all')
+      ).rejects.toThrow('Date range too large');
       expect(toast.error).toHaveBeenCalled();
     });
   });
@@ -81,9 +88,11 @@ describe('invoice controller', () => {
   describe('deleteInvoiceFn', () => {
     it('deletes invoice and calls toast.success', async () => {
       mockApi.invoice.delete.mockResolvedValue(undefined);
-      const cb = jest.fn();
+      const cb = vi.fn();
       await deleteInvoiceFn(1, cb);
-      expect(toast.success).toHaveBeenCalledWith('Invoice deleted successfully.');
+      expect(toast.success).toHaveBeenCalledWith(
+        'Invoice deleted successfully.'
+      );
       expect(cb).toHaveBeenCalled();
     });
   });
@@ -91,9 +100,21 @@ describe('invoice controller', () => {
   describe('createInvoiceFn', () => {
     it('creates invoice and calls toast.success', async () => {
       mockApi.invoice.create.mockResolvedValue({ id: 2 });
-      const cb = jest.fn();
-      const invoiceItems = [{ quantity: 1, unitPrice: 500, amount: 500, profit: 200, product: { id: 1 } }];
-      await createInvoiceFn(invoiceItems as any, { customerId: 1, saleType: 'cash', amount: 500, profit: 200 } as any, cb);
+      const cb = vi.fn();
+      const invoiceItems = [
+        {
+          quantity: 1,
+          unitPrice: 500,
+          amount: 500,
+          profit: 200,
+          product: { id: 1 },
+        },
+      ];
+      await createInvoiceFn(
+        invoiceItems as any,
+        { customerId: 1, saleType: 'cash', amount: 500, profit: 200 } as any,
+        cb
+      );
       expect(toast.success).toHaveBeenCalledWith('Invoice created');
     });
   });

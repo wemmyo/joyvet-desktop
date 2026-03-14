@@ -1,15 +1,21 @@
 import React, { useEffect, useState } from 'react';
-import { Table, Form, Loader, Button, Icon } from 'semantic-ui-react';
-import { useAppDispatch } from '../../hooks';
-import moment from 'moment';
+import dayjs from 'dayjs';
+import { RefreshCw } from 'lucide-react';
 
 import DashboardLayout from '../../layouts/DashboardLayout/DashboardLayout';
+import { Button } from '../../components/ui/button';
+import { Input } from '../../components/ui/input';
+import {
+  Table,
+  TableHeader,
+  TableBody,
+  TableRow,
+  TableHead,
+  TableCell,
+} from '../../components/ui/table';
 
 import { numberWithCommas } from '../../utils/helpers';
-import {
-  openSideContentFn,
-  closeSideContentFn,
-} from '../../slices/dashboardSlice';
+import { useSidebarContext } from '../../contexts/SidebarContext';
 import PurchaseDetail from './components/PurchaseDetail';
 import { IPurchase } from '../../models/purchase';
 import {
@@ -20,7 +26,8 @@ import {
 const CONTENT_DETAIL = 'detail';
 
 const AllPurchasesScreen: React.FC = () => {
-  const dispatch = useAppDispatch();
+  const { openSideContent: openSideBar, closeSideContent: closeSideBar } =
+    useSidebarContext();
   const [sideContent, setSideContent] = useState('');
   const [purchaseId, setPurchasesId] = useState('');
   const [searchValue, setSearchValue] = useState('');
@@ -28,7 +35,7 @@ const AllPurchasesScreen: React.FC = () => {
   const [purchases, setPurchases] = useState<IPurchase[]>([]);
 
   const openSideContent = (content: string) => {
-    dispatch(openSideContentFn());
+    openSideBar();
     setSideContent(content);
   };
 
@@ -41,11 +48,11 @@ const AllPurchasesScreen: React.FC = () => {
     fetchPurchases();
 
     return () => {
-      dispatch(closeSideContentFn());
+      closeSideBar();
       setSideContent('');
       setPurchasesId('');
     };
-  }, [dispatch]);
+  }, []);
 
   const openSinglePurchase = (id) => {
     setPurchasesId(id);
@@ -55,12 +62,16 @@ const AllPurchasesScreen: React.FC = () => {
   const renderRows = () => {
     const rows = purchases.map((each) => {
       return (
-        <Table.Row onClick={() => openSinglePurchase(each.id)} key={each.id}>
-          <Table.Cell>{each.invoiceNumber}</Table.Cell>
-          <Table.Cell>{each?.supplier?.fullName}</Table.Cell>
-          <Table.Cell>{numberWithCommas(each.amount)}</Table.Cell>
-          <Table.Cell>{moment(each.createdAt).format('DD-MM-YYYY')}</Table.Cell>
-        </Table.Row>
+        <TableRow
+          onClick={() => openSinglePurchase(each.id)}
+          key={each.id}
+          className="cursor-pointer hover:bg-muted/50"
+        >
+          <TableCell>{each.invoiceNumber}</TableCell>
+          <TableCell>{each?.supplier?.fullName}</TableCell>
+          <TableCell>{numberWithCommas(each.amount)}</TableCell>
+          <TableCell>{dayjs(each.createdAt).format('DD-MM-YYYY')}</TableCell>
+        </TableRow>
       );
     });
     return rows;
@@ -80,7 +91,8 @@ const AllPurchasesScreen: React.FC = () => {
     return null;
   };
 
-  const handleSearchChange = (e, { value }: { value: string }) => {
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { value } = e.target;
     setSearchValue(value);
     if (value.length > 0) {
       searchPurchase(value);
@@ -91,17 +103,17 @@ const AllPurchasesScreen: React.FC = () => {
 
   const headerContent = () => {
     return (
-      <>
-        <Form.Input
+      <div className="flex items-center gap-2 flex-wrap">
+        <Input
           placeholder="Search Invoice Number"
           onChange={handleSearchChange}
           value={searchValue}
         />
-        <Button icon labelPosition="left" onClick={fetchPurchases}>
-          <Icon name="redo" />
+        <Button variant="outline" onClick={fetchPurchases}>
+          <RefreshCw className="mr-1 h-4 w-4" />
           Refresh
         </Button>
-      </>
+      </div>
     );
   };
 
@@ -112,19 +124,21 @@ const AllPurchasesScreen: React.FC = () => {
       headerContent={headerContent()}
     >
       {loading ? (
-        <Loader active inline="centered" />
+        <div className="flex items-center justify-center p-8">
+          <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+        </div>
       ) : (
-        <Table celled striped>
-          <Table.Header>
-            <Table.Row>
-              <Table.HeaderCell>Invoice Number</Table.HeaderCell>
-              <Table.HeaderCell>Supplier</Table.HeaderCell>
-              <Table.HeaderCell>Amount</Table.HeaderCell>
-              <Table.HeaderCell>Date</Table.HeaderCell>
-            </Table.Row>
-          </Table.Header>
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Invoice Number</TableHead>
+              <TableHead>Supplier</TableHead>
+              <TableHead>Amount</TableHead>
+              <TableHead>Date</TableHead>
+            </TableRow>
+          </TableHeader>
 
-          <Table.Body>{renderRows()}</Table.Body>
+          <TableBody>{renderRows()}</TableBody>
         </Table>
       )}
     </DashboardLayout>

@@ -1,22 +1,28 @@
 import React, { useEffect, useState } from 'react';
-import { Table, Button, Icon, Form, Loader } from 'semantic-ui-react';
-import { useAppDispatch } from '../../hooks';
-import moment from 'moment';
+import dayjs from 'dayjs';
+import { Plus, RefreshCw } from 'lucide-react';
 
 import DashboardLayout from '../../layouts/DashboardLayout/DashboardLayout';
 import CreatePayment from './components/CreatePayment/CreatePayment';
 import { numberWithCommas } from '../../utils/helpers';
 import PaymentDetail from './components/PaymentDetail/PaymentDetail';
-import {
-  openSideContentFn,
-  closeSideContentFn,
-} from '../../slices/dashboardSlice';
+import { useSidebarContext } from '../../contexts/SidebarContext';
 import EditPayment from './components/EditPayment/EditPayment';
 import {
   getPaymentsFn,
   searchPaymentFn,
 } from '../../controllers/payment.controller';
 import { IPayment } from '../../models/payment';
+import { Button } from '../../components/ui/button';
+import { Input } from '../../components/ui/input';
+import {
+  Table,
+  TableHeader,
+  TableBody,
+  TableRow,
+  TableHead,
+  TableCell,
+} from '../../components/ui/table';
 
 const CONTENT_CREATE = 'create';
 const CONTENT_DETAIL = 'detail';
@@ -29,7 +35,8 @@ const PaymentsScreen: React.FC = () => {
   const [payments, setPayments] = useState<IPayment[]>([]);
   const [loading, setLoading] = useState(false);
 
-  const dispatch = useAppDispatch();
+  const { openSideContent: openSideBar, closeSideContent: closeSideBar } =
+    useSidebarContext();
 
   const fetchPayments = async () => {
     setLoading(true);
@@ -39,7 +46,7 @@ const PaymentsScreen: React.FC = () => {
   };
 
   const openSideContent = (content: string) => {
-    dispatch(openSideContentFn());
+    openSideBar();
     setSideContent(content);
   };
 
@@ -48,13 +55,13 @@ const PaymentsScreen: React.FC = () => {
 
     return () => {
       const closeSideContent = () => {
-        dispatch(closeSideContentFn());
+        closeSideBar();
         setSideContent('');
         setPaymentId('');
       };
       closeSideContent();
     };
-  }, [dispatch]);
+  }, []);
 
   const viewPaymentReceipt = (id) => {
     setPaymentId(id);
@@ -64,13 +71,17 @@ const PaymentsScreen: React.FC = () => {
   const renderRows = () => {
     const rows = payments.map((each) => {
       return (
-        <Table.Row key={each.id} onClick={() => viewPaymentReceipt(each.id)}>
-          <Table.Cell>{each.id}</Table.Cell>
-          <Table.Cell>{numberWithCommas(each.amount)}</Table.Cell>
-          <Table.Cell>{each.paymentMethod}</Table.Cell>
-          <Table.Cell>{each.bank}</Table.Cell>
-          <Table.Cell>{moment(each.createdAt).format('DD/MM/YYYY')}</Table.Cell>
-        </Table.Row>
+        <TableRow
+          key={each.id}
+          onClick={() => viewPaymentReceipt(each.id)}
+          className="cursor-pointer hover:bg-muted/50"
+        >
+          <TableCell>{each.id}</TableCell>
+          <TableCell>{numberWithCommas(each.amount)}</TableCell>
+          <TableCell>{each.paymentMethod}</TableCell>
+          <TableCell>{each.bank}</TableCell>
+          <TableCell>{dayjs(each.createdAt).format('DD/MM/YYYY')}</TableCell>
+        </TableRow>
       );
     });
     return rows;
@@ -94,8 +105,8 @@ const PaymentsScreen: React.FC = () => {
     return null;
   };
 
-  const handleSearchChange = async (e, { value }: { value: string }) => {
-    setSearchValue(value);
+  const handleSearchChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchValue(e.target.value);
   };
 
   useEffect(() => {
@@ -106,37 +117,35 @@ const PaymentsScreen: React.FC = () => {
 
   const headerContent = () => {
     return (
-      <>
+      <div className="flex items-center gap-2 flex-wrap">
         <Button
-          color="blue"
-          icon
-          labelPosition="left"
           onClick={() => {
             openSideContent(CONTENT_CREATE);
           }}
         >
-          <Icon inverted color="grey" name="add" />
+          <Plus className="mr-1 h-4 w-4" />
           Create
         </Button>
-        <Button icon labelPosition="left" onClick={fetchPayments}>
-          <Icon name="redo" />
+        <Button variant="outline" onClick={fetchPayments}>
+          <RefreshCw className="mr-1 h-4 w-4" />
           Refresh
         </Button>
-        <Form
-          onSubmit={async () => {
+        <form
+          onSubmit={async (e) => {
+            e.preventDefault();
             setLoading(true);
             const response = await searchPaymentFn(searchValue);
             setPayments(response);
             setLoading(false);
           }}
         >
-          <Form.Input
+          <Input
             placeholder="Search Payment"
             onChange={handleSearchChange}
             value={searchValue}
           />
-        </Form>
-      </>
+        </form>
+      </div>
     );
   };
 
@@ -147,19 +156,21 @@ const PaymentsScreen: React.FC = () => {
       headerContent={headerContent()}
     >
       {loading ? (
-        <Loader active inline="centered" />
+        <div className="flex items-center justify-center p-8">
+          <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+        </div>
       ) : (
-        <Table celled striped>
-          <Table.Header>
-            <Table.Row>
-              <Table.HeaderCell>Payment no</Table.HeaderCell>
-              <Table.HeaderCell>Amount</Table.HeaderCell>
-              <Table.HeaderCell>Payment Method</Table.HeaderCell>
-              <Table.HeaderCell>Bank</Table.HeaderCell>
-              <Table.HeaderCell>Date</Table.HeaderCell>
-            </Table.Row>
-          </Table.Header>
-          <Table.Body>{renderRows()}</Table.Body>
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Payment no</TableHead>
+              <TableHead>Amount</TableHead>
+              <TableHead>Payment Method</TableHead>
+              <TableHead>Bank</TableHead>
+              <TableHead>Date</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>{renderRows()}</TableBody>
         </Table>
       )}
     </DashboardLayout>

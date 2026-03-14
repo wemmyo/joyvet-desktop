@@ -1,6 +1,6 @@
 import { ipcMain } from 'electron';
 import { Op } from 'sequelize';
-import moment from 'moment';
+import dayjs from 'dayjs';
 import { z } from 'zod';
 import ExpenseType from '../../models/expenseType';
 import {
@@ -47,8 +47,8 @@ export function registerExpenseHandlers(): void {
         where: {
           date: {
             [Op.between]: [
-              `${moment(startDate).format('YYYY-MM-DD')} 00:00:00`,
-              `${moment(endDate).format('YYYY-MM-DD')} 23:00:00`,
+              `${dayjs(startDate).format('YYYY-MM-DD')} 00:00:00`,
+              `${dayjs(endDate).format('YYYY-MM-DD')} 23:00:00`,
             ],
           },
         },

@@ -19,8 +19,18 @@ const api = {
     update: (id, values) => electron.ipcRenderer.invoke("customer:update", id, values),
     delete: (id) => electron.ipcRenderer.invoke("customer:delete", id),
     search: (value) => electron.ipcRenderer.invoke("customer:search", value),
-    getInvoices: (customerId, startDate, endDate) => electron.ipcRenderer.invoke("customer:getInvoices", customerId, startDate, endDate),
-    getReceipts: (customerId, startDate, endDate) => electron.ipcRenderer.invoke("customer:getReceipts", customerId, startDate, endDate)
+    getInvoices: (customerId, startDate, endDate) => electron.ipcRenderer.invoke(
+      "customer:getInvoices",
+      customerId,
+      startDate,
+      endDate
+    ),
+    getReceipts: (customerId, startDate, endDate) => electron.ipcRenderer.invoke(
+      "customer:getReceipts",
+      customerId,
+      startDate,
+      endDate
+    )
   },
   product: {
     getAll: (filter) => electron.ipcRenderer.invoke("product:getAll", filter),
@@ -54,14 +64,24 @@ const api = {
     create: (purchaseItems, purchase) => electron.ipcRenderer.invoke("purchase:create", purchaseItems, purchase),
     delete: (id) => electron.ipcRenderer.invoke("purchase:delete", id),
     filter: (startDate, endDate, supplierId) => electron.ipcRenderer.invoke("purchase:filter", startDate, endDate, supplierId),
-    getBySupplier: (supplierId, startDate, endDate) => electron.ipcRenderer.invoke("purchase:getBySupplier", supplierId, startDate, endDate)
+    getBySupplier: (supplierId, startDate, endDate) => electron.ipcRenderer.invoke(
+      "purchase:getBySupplier",
+      supplierId,
+      startDate,
+      endDate
+    )
   },
   payment: {
     getAll: () => electron.ipcRenderer.invoke("payment:getAll"),
     create: (values) => electron.ipcRenderer.invoke("payment:create", values),
     delete: (id) => electron.ipcRenderer.invoke("payment:delete", id),
     filter: (startDate, endDate, supplierId) => electron.ipcRenderer.invoke("payment:filter", startDate, endDate, supplierId),
-    getBySupplier: (supplierId, startDate, endDate) => electron.ipcRenderer.invoke("payment:getBySupplier", supplierId, startDate, endDate)
+    getBySupplier: (supplierId, startDate, endDate) => electron.ipcRenderer.invoke(
+      "payment:getBySupplier",
+      supplierId,
+      startDate,
+      endDate
+    )
   },
   receipt: {
     getAll: () => electron.ipcRenderer.invoke("receipt:getAll"),

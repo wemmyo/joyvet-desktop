@@ -1,11 +1,7 @@
 import React, { useEffect, useState } from 'react';
-import { Button, Form } from 'semantic-ui-react';
-import { Field, Formik } from 'formik';
-import { useAppDispatch } from '../../../../hooks';
 import { Link } from 'react-router-dom';
 
-import TextInput from '../../../../components/TextInput/TextInput';
-import { closeSideContentFn } from '../../../../slices/dashboardSlice';
+import { useSidebarContext } from '../../../../contexts/SidebarContext';
 import routes from '../../../../routing/routes';
 import { isAdmin } from '../../../../utils/helpers';
 import {
@@ -15,6 +11,9 @@ import {
   updateSupplierFn,
 } from '../../../../controllers/supplier.controller';
 import { ISupplier } from '../../../../models/supplier';
+import { Button } from '../../../../components/ui/button';
+import { Input } from '../../../../components/ui/input';
+import { Label } from '../../../../components/ui/label';
 
 export interface EditSupplierProps {
   supplierId: number;
@@ -24,87 +23,105 @@ const EditSupplier: React.FC<EditSupplierProps> = ({
   supplierId,
 }: EditSupplierProps) => {
   const [supplier, setSupplier] = useState<ISupplier>({} as ISupplier);
+  const [values, setValues] = useState({
+    fullName: '',
+    address: '',
+    phoneNumber: '',
+    balance: '',
+  });
 
-  const dispatch = useAppDispatch();
+  const { closeSideContent } = useSidebarContext();
 
   useEffect(() => {
     const fetchData = async () => {
       const response = await getSingleSupplierFn(supplierId);
       setSupplier(response);
+      setValues({
+        fullName: response.fullName || '',
+        address: response.address || '',
+        phoneNumber: response.phoneNumber || '',
+        balance: String(response.balance || ''),
+      });
     };
     fetchData();
   }, [supplierId]);
 
-  const { fullName, address, phoneNumber, balance } = supplier;
-
   const handleDeleteSupplier = async () => {
     await deleteSupplierFn(supplierId);
-    dispatch(closeSideContentFn());
+    closeSideContent();
+    await getSuppliersFn();
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    await updateSupplierFn(values, supplierId);
+    closeSideContent();
     await getSuppliersFn();
   };
 
   return (
-    <Formik
-      enableReinitialize
-      initialValues={{
-        fullName: fullName || '',
-        address: address || '',
-        phoneNumber: phoneNumber || '',
-        balance: balance || '',
-      }}
-      onSubmit={async (values) => {
-        await updateSupplierFn(values, supplierId);
-        dispatch(closeSideContentFn());
-        await getSuppliersFn();
-      }}
-    >
-      {({ handleSubmit }) => (
-        <Form>
-          <Field
-            name="fullName"
-            placeholder="Full Name"
-            label="Full Name"
-            type="text"
-            component={TextInput}
-          />
-          <Field
-            name="address"
-            placeholder="Address"
-            label="Address"
-            type="text"
-            component={TextInput}
-          />
-          <Field
-            name="phoneNumber"
-            placeholder="Phone Number"
-            label="Phone Number"
-            type="tel"
-            component={TextInput}
-          />
-          <Field
-            name="balance"
-            placeholder="Balance"
-            label="Balance"
-            type="number"
-            component={TextInput}
-            disabled={!isAdmin()}
-          />
-          <div style={{ marginTop: '1rem' }}>
-            <Button onClick={() => handleSubmit()} type="submit" positive>
-              Update
-            </Button>
-            {isAdmin() ? (
-              <Button onClick={handleDeleteSupplier} type="button" negative>
-                Delete
-              </Button>
-            ) : null}
-            <Button as={Link} to={`${routes.SUPPLIER}/${supplierId}`}>
-              History
-            </Button>
-          </div>
-        </Form>
-      )}
-    </Formik>
+    <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+      <div className="flex flex-col gap-1">
+        <Label htmlFor="fullName">Full Name</Label>
+        <Input
+          id="fullName"
+          placeholder="Full Name"
+          type="text"
+          value={values.fullName}
+          onChange={(e) => setValues({ ...values, fullName: e.target.value })}
+        />
+      </div>
+      <div className="flex flex-col gap-1">
+        <Label htmlFor="address">Address</Label>
+        <Input
+          id="address"
+          placeholder="Address"
+          type="text"
+          value={values.address}
+          onChange={(e) => setValues({ ...values, address: e.target.value })}
+        />
+      </div>
+      <div className="flex flex-col gap-1">
+        <Label htmlFor="phoneNumber">Phone Number</Label>
+        <Input
+          id="phoneNumber"
+          placeholder="Phone Number"
+          type="tel"
+          value={values.phoneNumber}
+          onChange={(e) =>
+            setValues({ ...values, phoneNumber: e.target.value })
+          }
+        />
+      </div>
+      <div className="flex flex-col gap-1">
+        <Label htmlFor="balance">Balance</Label>
+        <Input
+          id="balance"
+          placeholder="Balance"
+          type="number"
+          value={values.balance}
+          onChange={(e) => setValues({ ...values, balance: e.target.value })}
+          disabled={!isAdmin()}
+        />
+      </div>
+      <div className="mt-2 flex gap-2">
+        <Button type="submit" variant="default">
+          Update
+        </Button>
+        {isAdmin() ? (
+          <Button
+            onClick={handleDeleteSupplier}
+            type="button"
+            variant="destructive"
+          >
+            Delete
+          </Button>
+        ) : null}
+        <Button asChild variant="outline">
+          <Link to={`${routes.SUPPLIER}/${supplierId}`}>History</Link>
+        </Button>
+      </div>
+    </form>
   );
 };
 export default EditSupplier;

@@ -1,15 +1,15 @@
-jest.mock('react-toastify', () => ({
-  toast: { success: jest.fn(), error: jest.fn() },
+vi.mock('sonner', () => ({
+  toast: { success: vi.fn(), error: vi.fn() },
 }));
 
 const mockApi = {
   user: {
-    getAll: jest.fn(),
-    getById: jest.fn(),
-    create: jest.fn(),
-    update: jest.fn(),
-    delete: jest.fn(),
-    login: jest.fn(),
+    getAll: vi.fn(),
+    getById: vi.fn(),
+    create: vi.fn(),
+    update: vi.fn(),
+    delete: vi.fn(),
+    login: vi.fn(),
   },
 };
 Object.defineProperty(global, 'window', {
@@ -17,7 +17,7 @@ Object.defineProperty(global, 'window', {
   writable: true,
 });
 
-import { toast } from 'react-toastify';
+import { toast } from 'sonner';
 import {
   loginUserFn,
   getUsersFn,
@@ -35,21 +35,23 @@ const mockUser = {
 
 describe('user controller', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
     localStorage.clear();
   });
 
   describe('loginUserFn', () => {
     it('logs in successfully and stores user in localStorage', async () => {
       mockApi.user.login.mockResolvedValue(mockUser);
-      const cb = jest.fn();
+      const cb = vi.fn();
       await loginUserFn({ username: 'admin', password: 'admin' }, cb);
       expect(localStorage.getItem('user')).toBeTruthy();
       expect(cb).toHaveBeenCalled();
     });
 
     it('calls toast.error when login fails', async () => {
-      mockApi.user.login.mockRejectedValue(new Error('A user with this username could not be found'));
+      mockApi.user.login.mockRejectedValue(
+        new Error('A user with this username could not be found')
+      );
       await loginUserFn({ username: 'nobody', password: 'pass' });
       expect(toast.error).toHaveBeenCalled();
     });
@@ -72,8 +74,16 @@ describe('user controller', () => {
   describe('createUserFn', () => {
     it('creates a user via IPC and calls cb', async () => {
       mockApi.user.create.mockResolvedValue(undefined);
-      const cb = jest.fn();
-      await createUserFn({ fullName: 'New User', username: 'newuser', password: 'pass123', role: 'cashier' }, cb);
+      const cb = vi.fn();
+      await createUserFn(
+        {
+          fullName: 'New User',
+          username: 'newuser',
+          password: 'pass123',
+          role: 'cashier',
+        },
+        cb
+      );
       expect(mockApi.user.create).toHaveBeenCalled();
       expect(cb).toHaveBeenCalled();
     });
@@ -82,7 +92,7 @@ describe('user controller', () => {
   describe('deleteUserFn', () => {
     it('deletes user and shows success toast', async () => {
       mockApi.user.delete.mockResolvedValue(undefined);
-      const cb = jest.fn();
+      const cb = vi.fn();
       await deleteUserFn(1, cb);
       expect(toast.success).toHaveBeenCalledWith('User successfully deleted');
       expect(cb).toHaveBeenCalled();

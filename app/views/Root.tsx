@@ -1,19 +1,14 @@
 import React from 'react';
-import { Provider } from 'react-redux';
 import { HashRouter } from 'react-router-dom';
-import { Store } from '../store';
+import { RightPanelProvider } from '../contexts/SidebarContext';
 import Routes from '../routing/Routing';
 
-type Props = {
-  store: Store;
-};
-
-const Root = ({ store }: Props) => (
-  <Provider store={store}>
+const Root = () => (
+  <RightPanelProvider>
     <HashRouter>
       <Routes />
     </HashRouter>
-  </Provider>
+  </RightPanelProvider>
 );
 
 export default Root;

@@ -1,4 +1,4 @@
-import { toast } from 'react-toastify';
+import { toast } from 'sonner';
 import { IExpense } from '../models/expense';
 
 export const searchExpenseFn = async (value: string) => {

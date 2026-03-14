@@ -1,11 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Button, Form } from 'semantic-ui-react';
-import { Field, Formik } from 'formik';
-import { useAppDispatch } from '../../../../hooks';
-
-import TextInput from '../../../../components/TextInput/TextInput';
-
-import { closeSideContentFn } from '../../../../slices/dashboardSlice';
+import { useSidebarContext } from '../../../../contexts/SidebarContext';
 import { IStoreInfo } from '../../../../models/storeInfo';
 import {
   deleteStoreInfoFn,
@@ -13,6 +7,9 @@ import {
   getStoreInfoFn,
   updateStoreInfoFn,
 } from '../../../../controllers/storeInfo.controller';
+import { Button } from '../../../../components/ui/button';
+import { Input } from '../../../../components/ui/input';
+import { Label } from '../../../../components/ui/label';
 
 export interface EditStoreInfoProps {
   storeInfoId: string | number;
@@ -22,12 +19,22 @@ const EditStoreInfo: React.FC<EditStoreInfoProps> = ({
   storeInfoId,
 }: EditStoreInfoProps) => {
   const [storeInfo, setStoreInfo] = useState<IStoreInfo>({} as IStoreInfo);
-  const dispatch = useAppDispatch();
+  const [values, setValues] = useState({
+    storeName: '',
+    address: '',
+    phoneNumber: '',
+  });
+  const { closeSideContent } = useSidebarContext();
 
   useEffect(() => {
     const fetchData = async () => {
       const response = await getSingleStoreInfoFn(Number(storeInfoId));
       setStoreInfo(response);
+      setValues({
+        storeName: response.storeName || '',
+        address: response.address || '',
+        phoneNumber: response.phoneNumber || '',
+      });
     };
     fetchData();
   }, [storeInfoId]);
@@ -35,64 +42,62 @@ const EditStoreInfo: React.FC<EditStoreInfoProps> = ({
   const deleteStoreInfo = async () => {
     await deleteStoreInfoFn(Number(storeInfoId));
     await getStoreInfoFn();
-    dispatch(closeSideContentFn());
+    closeSideContent();
   };
 
-  const { address, storeName, phoneNumber } = storeInfo;
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    await updateStoreInfoFn(values, Number(storeInfoId));
+    closeSideContent();
+    await getStoreInfoFn();
+  };
 
   return (
-    <Formik
-      enableReinitialize
-      initialValues={{
-        storeName: storeName || '',
-        address: address || '',
-        phoneNumber: phoneNumber || '',
-      }}
-      onSubmit={async (values) => {
-        await updateStoreInfoFn(values, Number(storeInfoId));
-        dispatch(closeSideContentFn());
-        await getStoreInfoFn();
-      }}
-    >
-      {({ handleSubmit }) => (
-        <Form>
-          <Field
-            name="storeName"
-            placeholder="Store name"
-            label="Store name"
-            type="text"
-            component={TextInput}
-          />
-          <Field
-            name="address"
-            placeholder="Adress"
-            label="Adress"
-            type="text"
-            component={TextInput}
-          />
-          <Field
-            name="phoneNumber"
-            placeholder="Phone number"
-            label="Phone number"
-            type="text"
-            component={TextInput}
-          />
-
-          <Button onClick={() => handleSubmit()} type="submit" fluid primary>
-            Update
-          </Button>
-          <Button
-            style={{ marginTop: '1rem' }}
-            onClick={deleteStoreInfo}
-            type="submit"
-            fluid
-            negative
-          >
-            Delete
-          </Button>
-        </Form>
-      )}
-    </Formik>
+    <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+      <div className="flex flex-col gap-1">
+        <Label htmlFor="storeName">Store name</Label>
+        <Input
+          id="storeName"
+          placeholder="Store name"
+          type="text"
+          value={values.storeName}
+          onChange={(e) => setValues({ ...values, storeName: e.target.value })}
+        />
+      </div>
+      <div className="flex flex-col gap-1">
+        <Label htmlFor="address">Address</Label>
+        <Input
+          id="address"
+          placeholder="Address"
+          type="text"
+          value={values.address}
+          onChange={(e) => setValues({ ...values, address: e.target.value })}
+        />
+      </div>
+      <div className="flex flex-col gap-1">
+        <Label htmlFor="phoneNumber">Phone number</Label>
+        <Input
+          id="phoneNumber"
+          placeholder="Phone number"
+          type="text"
+          value={values.phoneNumber}
+          onChange={(e) =>
+            setValues({ ...values, phoneNumber: e.target.value })
+          }
+        />
+      </div>
+      <Button type="submit" className="w-full">
+        Update
+      </Button>
+      <Button
+        className="w-full mt-2"
+        onClick={deleteStoreInfo}
+        type="button"
+        variant="destructive"
+      >
+        Delete
+      </Button>
+    </form>
   );
 };
 export default EditStoreInfo;

@@ -1,11 +1,19 @@
 import React, { useEffect, useState } from 'react';
-import { Button, Form } from 'semantic-ui-react';
-import { Field, Formik } from 'formik';
-import { useAppDispatch } from '../../../../hooks';
+import { useForm, Controller } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
 
-import TextInput from '../../../../components/TextInput/TextInput';
-
-import { closeSideContentFn } from '../../../../slices/dashboardSlice';
+import { Button } from '../../../../components/ui/button';
+import { Input } from '../../../../components/ui/input';
+import { Label } from '../../../../components/ui/label';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '../../../../components/ui/select';
+import { useSidebarContext } from '../../../../contexts/SidebarContext';
 import {
   getPaymentsFn,
   getSinglePaymentFn,
@@ -19,12 +27,35 @@ export interface EditPaymentProps {
   paymentId: string | number;
 }
 
+const editPaymentSchema = z.object({
+  supplierId: z.string().min(1, 'Supplier is required'),
+  amount: z.coerce.number().min(0, 'Amount is required'),
+  note: z.string().optional(),
+});
+
+type EditPaymentFormValues = z.infer<typeof editPaymentSchema>;
+
 const EditPayment: React.FC<EditPaymentProps> = ({
   paymentId,
 }: EditPaymentProps) => {
   const [payment, setPayment] = useState<IPayment>({} as IPayment);
   const [suppliers, setSuppliers] = useState<ISupplier[]>([]);
-  const dispatch = useAppDispatch();
+  const { closeSideContent } = useSidebarContext();
+
+  const {
+    register,
+    handleSubmit,
+    control,
+    formState: { errors },
+    reset,
+  } = useForm<EditPaymentFormValues>({
+    resolver: zodResolver(editPaymentSchema),
+    defaultValues: {
+      supplierId: '',
+      amount: 0,
+      note: '',
+    },
+  });
 
   useEffect(() => {
     const fetchData = async () => {
@@ -34,69 +65,89 @@ const EditPayment: React.FC<EditPaymentProps> = ({
       ]);
       setPayment(paymentResponse);
       setSuppliers(suppliersResponse);
+      reset({
+        supplierId: paymentResponse.supplierId
+          ? String(paymentResponse.supplierId)
+          : '',
+        amount: paymentResponse.amount || 0,
+        note: paymentResponse.note || '',
+      });
     };
     fetchData();
-  }, [paymentId]);
+  }, [paymentId, reset]);
 
-  const renderSuppliers = () => {
-    const supplierList = suppliers.map((eachSupplier: any) => {
-      return (
-        <option key={eachSupplier.id} value={eachSupplier.id}>
-          {eachSupplier.fullName}
-        </option>
-      );
-    });
-    return supplierList;
+  const onSubmit = async (values: EditPaymentFormValues) => {
+    await updatePaymentFn(
+      {
+        ...values,
+        supplierId: Number(values.supplierId),
+        amount: Number(values.amount),
+      },
+      Number(paymentId)
+    );
+    closeSideContent();
+    await getPaymentsFn();
   };
 
-  const { supplierId, amount, note } = payment;
-
   return (
-    <Formik
-      enableReinitialize
-      initialValues={{
-        supplierId: supplierId || '',
-        amount: amount || '',
-        note: note || '',
-      }}
-      // validationSchema={EditPaymentSchema}
-      onSubmit={async (values) => {
-        await updatePaymentFn({ ...values, supplierId: Number(values.supplierId), amount: Number(values.amount) }, Number(paymentId));
-        dispatch(closeSideContentFn());
-        await getPaymentsFn();
-      }}
-    >
-      {({ handleSubmit }) => (
-        <Form>
-          <div className="field">
-            <label htmlFor="supplierId">Supplier</label>
-            <Field
-              id="supplierId"
-              name="supplierId"
-              component="select"
-              className="ui dropdown"
-            >
-              <option value="" disabled hidden>
-                Select Supplier
-              </option>
-              {renderSuppliers()}
-            </Field>
-          </div>
-
-          <Field
-            name="note"
-            placeholder="Note"
-            label="Note"
-            type="text"
-            component={TextInput}
+    <form onSubmit={handleSubmit(onSubmit)}>
+      <div className="space-y-3">
+        <div className="space-y-1">
+          <Label htmlFor="supplierId">Supplier</Label>
+          <Controller
+            name="supplierId"
+            control={control}
+            render={({ field }) => (
+              <Select onValueChange={field.onChange} value={field.value}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select Supplier" />
+                </SelectTrigger>
+                <SelectContent>
+                  {suppliers.map((s: any) => (
+                    <SelectItem key={s.id} value={String(s.id)}>
+                      {s.fullName}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            )}
           />
+          {errors.supplierId && (
+            <p className="text-sm text-destructive">
+              {errors.supplierId.message}
+            </p>
+          )}
+        </div>
 
-          <Button onClick={() => handleSubmit()} type="submit" fluid primary>
-            Update
-          </Button>
-        </Form>
-      )}
-    </Formik>
+        <div className="space-y-1">
+          <Label htmlFor="amount">Amount</Label>
+          <Input
+            id="amount"
+            type="number"
+            placeholder="Amount"
+            {...register('amount')}
+          />
+          {errors.amount && (
+            <p className="text-sm text-destructive">{errors.amount.message}</p>
+          )}
+        </div>
+
+        <div className="space-y-1">
+          <Label htmlFor="note">Note</Label>
+          <Input
+            id="note"
+            type="text"
+            placeholder="Note"
+            {...register('note')}
+          />
+        </div>
+
+        <Button type="submit" className="w-full">
+          Update
+        </Button>
+      </div>
+    </form>
   );
 };
+
 export default EditPayment;

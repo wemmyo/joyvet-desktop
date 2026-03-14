@@ -23,7 +23,8 @@ export function registerUserHandlers(): void {
       const user = await findOneUser({
         where: { username: credentials.username },
       });
-      if (!user) throw new Error('A user with this username could not be found');
+      if (!user)
+        throw new Error('A user with this username could not be found');
 
       const validPassword = await bcrypt.compare(
         credentials.password,

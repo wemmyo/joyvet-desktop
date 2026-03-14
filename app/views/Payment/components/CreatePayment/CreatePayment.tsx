@@ -1,7 +1,18 @@
 import React, { useEffect, useState } from 'react';
-import { Button, Form, Message } from 'semantic-ui-react';
-import { Field, Formik } from 'formik';
-import TextInput from '../../../../components/TextInput/TextInput';
+import { useForm, Controller } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
+
+import { Button } from '../../../../components/ui/button';
+import { Input } from '../../../../components/ui/input';
+import { Label } from '../../../../components/ui/label';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '../../../../components/ui/select';
 import { numberWithCommas } from '../../../../utils/helpers';
 import { createPaymentFn } from '../../../../controllers/payment.controller';
 import {
@@ -14,11 +25,41 @@ interface ICreatePayment {
   refreshPayments: () => void;
 }
 
+const createPaymentSchema = z.object({
+  supplierId: z.string().min(1, 'Supplier is required'),
+  amount: z.coerce.number().min(1, 'Amount is required'),
+  paymentMethod: z.string().min(1, 'Payment method is required'),
+  bank: z.string().optional(),
+  note: z.string().optional(),
+});
+
+type CreatePaymentFormValues = z.infer<typeof createPaymentSchema>;
+
 const CreatePayment = ({ refreshPayments }: ICreatePayment) => {
   const [suppliers, setSuppliers] = useState<ISupplier[]>([]);
   const [singleSupplier, setSingleSupplier] = useState<ISupplier>(
     {} as ISupplier
   );
+
+  const {
+    register,
+    handleSubmit,
+    control,
+    formState: { errors },
+    reset,
+    watch,
+  } = useForm<CreatePaymentFormValues>({
+    resolver: zodResolver(createPaymentSchema),
+    defaultValues: {
+      supplierId: '',
+      amount: 0,
+      paymentMethod: '',
+      bank: '',
+      note: '',
+    },
+  });
+
+  const watchedPaymentMethod = watch('paymentMethod');
 
   useEffect(() => {
     const fetchSuppliers = async () => {
@@ -28,24 +69,12 @@ const CreatePayment = ({ refreshPayments }: ICreatePayment) => {
     fetchSuppliers();
   }, []);
 
-  const renderSuppliers = () => {
-    const supplierList = suppliers.map((eachSupplier) => {
-      return (
-        <option key={eachSupplier.id} value={Number(eachSupplier.id)}>
-          {eachSupplier.fullName}
-        </option>
-      );
-    });
-    return supplierList;
-  };
-
   const showSupplierBalance = () => {
     if (singleSupplier.balance) {
       return (
-        <Message>
-          {`Balance:
-          ${numberWithCommas(singleSupplier.balance)}`}
-        </Message>
+        <div className="rounded border bg-muted px-3 py-2 text-sm mb-3">
+          {`Balance: ${numberWithCommas(singleSupplier.balance)}`}
+        </div>
       );
     }
     return null;
@@ -54,114 +83,137 @@ const CreatePayment = ({ refreshPayments }: ICreatePayment) => {
   const renderBanks = (paymentMethod: string) => {
     if (paymentMethod === 'transfer') {
       return (
-        <div className="field">
-          <label htmlFor="bank">Bank</label>
-          <Field
-            id="bank"
+        <div className="space-y-1">
+          <Label htmlFor="bank">Bank</Label>
+          <Controller
             name="bank"
-            component="select"
-            className="ui dropdown"
-          >
-            <option value="" disabled hidden>
-              Select Bank
-            </option>
-            <option>GTB</option>
-            <option>FCMB</option>
-            <option>First Bank</option>
-            <option>UBA</option>
-            <option>Zenith</option>
-          </Field>
+            control={control}
+            render={({ field }) => (
+              <Select onValueChange={field.onChange} value={field.value}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select Bank" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="GTB">GTB</SelectItem>
+                  <SelectItem value="FCMB">FCMB</SelectItem>
+                  <SelectItem value="First Bank">First Bank</SelectItem>
+                  <SelectItem value="UBA">UBA</SelectItem>
+                  <SelectItem value="Zenith">Zenith</SelectItem>
+                </SelectContent>
+              </Select>
+            )}
+          />
         </div>
       );
     }
     return null;
   };
 
+  const onSubmit = async (values: CreatePaymentFormValues) => {
+    await createPaymentFn({
+      ...values,
+      supplierId: Number(values.supplierId),
+      amount: Number(values.amount),
+    });
+    refreshPayments();
+    reset();
+    setSingleSupplier({} as ISupplier);
+  };
+
   return (
-    <Formik
-      initialValues={{
-        supplierId: '',
-        amount: '',
-        paymentMethod: '',
-        bank: '',
-        note: '',
-      }}
-      // validationSchema={CreatePaymentSchema}
-      onSubmit={async (values, actions) => {
-        await createPaymentFn({
-          ...values,
-          supplierId: Number(values.supplierId),
-          amount: Number(values.amount),
-        });
-        refreshPayments();
-        actions.resetForm();
-        setSingleSupplier({} as ISupplier);
-      }}
-    >
-      {({ handleSubmit, handleChange, values }) => (
-        <Form>
-          <div className="field">
-            <label htmlFor="supplierId">Supplier</label>
-            <Field
-              id="supplierId"
-              name="supplierId"
-              component="select"
-              className="ui dropdown"
-              onChange={async (e: { currentTarget: { value: any } }) => {
-                // call the built-in handleBur
-                handleChange(e);
-                // and do something about e
-                const supplierId = e.currentTarget.value;
-                // console.log(someValue);
-                await getSingleSupplierFn(Number(supplierId));
-              }}
-            >
-              <option value="" disabled hidden>
-                Select Supplier
-              </option>
-              {renderSuppliers()}
-            </Field>
-          </div>
+    <form onSubmit={handleSubmit(onSubmit)}>
+      <div className="space-y-3">
+        <div className="space-y-1">
+          <Label htmlFor="supplierId">Supplier</Label>
+          <Controller
+            name="supplierId"
+            control={control}
+            render={({ field }) => (
+              <Select
+                onValueChange={async (val) => {
+                  field.onChange(val);
+                  const supplier = await getSingleSupplierFn(Number(val));
+                  if (supplier) setSingleSupplier(supplier);
+                }}
+                value={field.value}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select Supplier" />
+                </SelectTrigger>
+                <SelectContent>
+                  {suppliers.map((s) => (
+                    <SelectItem key={s.id} value={String(s.id)}>
+                      {s.fullName}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            )}
+          />
+          {errors.supplierId && (
+            <p className="text-sm text-destructive">
+              {errors.supplierId.message}
+            </p>
+          )}
+        </div>
 
-          {showSupplierBalance()}
+        {showSupplierBalance()}
 
-          <Field
-            name="amount"
-            placeholder="Amount"
-            label="Amount"
+        <div className="space-y-1">
+          <Label htmlFor="amount">Amount</Label>
+          <Input
+            id="amount"
             type="number"
-            component={TextInput}
+            placeholder="Amount"
+            {...register('amount')}
           />
+          {errors.amount && (
+            <p className="text-sm text-destructive">{errors.amount.message}</p>
+          )}
+        </div>
 
-          <div className="field">
-            <label htmlFor="paymentMethod">Payment Method</label>
-            <Field
-              id="paymentMethod"
-              name="paymentMethod"
-              component="select"
-              className="ui dropdown"
-            >
-              <option value="" disabled hidden>
-                Select option
-              </option>
-              <option value="cash">Cash</option>
-              <option value="transfer">Transfer</option>
-            </Field>
-          </div>
-          {renderBanks(values.paymentMethod)}
-          <Field
-            name="note"
-            placeholder="Note"
-            label="Note"
-            type="text"
-            component={TextInput}
+        <div className="space-y-1">
+          <Label htmlFor="paymentMethod">Payment Method</Label>
+          <Controller
+            name="paymentMethod"
+            control={control}
+            render={({ field }) => (
+              <Select onValueChange={field.onChange} value={field.value}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select option" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="cash">Cash</SelectItem>
+                  <SelectItem value="transfer">Transfer</SelectItem>
+                </SelectContent>
+              </Select>
+            )}
           />
-          <Button onClick={() => handleSubmit()} type="submit" fluid primary>
-            Save
-          </Button>
-        </Form>
-      )}
-    </Formik>
+          {errors.paymentMethod && (
+            <p className="text-sm text-destructive">
+              {errors.paymentMethod.message}
+            </p>
+          )}
+        </div>
+
+        {renderBanks(watchedPaymentMethod)}
+
+        <div className="space-y-1">
+          <Label htmlFor="note">Note</Label>
+          <Input
+            id="note"
+            type="text"
+            placeholder="Note"
+            {...register('note')}
+          />
+        </div>
+
+        <Button type="submit" className="w-full">
+          Save
+        </Button>
+      </div>
+    </form>
   );
 };
+
 export default CreatePayment;

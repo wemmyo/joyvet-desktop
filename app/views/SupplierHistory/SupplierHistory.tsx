@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Form, Button, Tab } from 'semantic-ui-react';
-import moment from 'moment';
+import dayjs from 'dayjs';
 
 import DashboardLayout from '../../layouts/DashboardLayout/DashboardLayout';
 import SuppplierHistoryPayments from './components/Payments/Payments';
@@ -9,16 +8,20 @@ import {
   getSupplierPaymentsFn,
   getSupplierPurchasesFn,
 } from '../../controllers/supplier.controller';
+import { Button } from '../../components/ui/button';
+import { Input } from '../../components/ui/input';
+import { Label } from '../../components/ui/label';
 
 // export interface SuppplierHistoryProps {}
 
-const TODAYS_DATE = `${moment().format('YYYY-MM-DD')}`;
+const TODAYS_DATE = `${dayjs().format('YYYY-MM-DD')}`;
 
 const SuppplierHistory: React.FC = ({ match }: any) => {
   const [startDate, setStartDate] = useState(TODAYS_DATE);
   const [endDate, setEndDate] = useState(TODAYS_DATE);
   const [payments, setPayments] = useState([]);
   const [purchases, setPurchases] = useState([]);
+  const [activeTab, setActiveTab] = useState('Purchases');
 
   const supplierId = match.params.id;
 
@@ -49,65 +52,60 @@ const SuppplierHistory: React.FC = ({ match }: any) => {
     setEndDate(TODAYS_DATE);
   };
 
-  const panes = [
-    // {
-    //   menuItem: 'All',
-    //   render: function AllTab() {
-    //     return <Tab.Pane>Tab 1 Content</Tab.Pane>;
-    //   },
-    // },
-    {
-      menuItem: 'Purchases',
-      render: function PurchasesTab() {
-        return (
-          <Tab.Pane>
-            <SuppplierHistoryPurchases data={purchases} />
-          </Tab.Pane>
-        );
-      },
-    },
-    {
-      menuItem: 'Payments',
-      render: function PaymentsTab() {
-        return (
-          <Tab.Pane>
-            <SuppplierHistoryPayments data={payments} />
-          </Tab.Pane>
-        );
-      },
-    },
-  ];
+  const tabs = ['Purchases', 'Payments'];
 
   return (
     <DashboardLayout screenTitle="Supplier History">
-      <div
-        style={{
-          display: 'flex',
-          justifyContent: 'flex-start',
-          alignItems: 'center',
-        }}
-      >
-        <Form>
-          <Form.Group>
-            <Form.Input
-              label="Start Date"
-              type="date"
-              onChange={(e, { value }) => setStartDate(value)}
-              value={startDate}
-            />
-            <Form.Input
-              label="End Date"
-              type="date"
-              onChange={(e, { value }) => setEndDate(value)}
-              value={endDate}
-            />
-          </Form.Group>
-        </Form>
-        <Button style={{ marginLeft: 10 }} onClick={resetFilters}>
+      <div className="flex items-end gap-3 mb-4">
+        <div className="flex flex-col gap-1">
+          <Label htmlFor="startDate">Start Date</Label>
+          <Input
+            id="startDate"
+            type="date"
+            value={startDate}
+            onChange={(e) => setStartDate(e.target.value)}
+          />
+        </div>
+        <div className="flex flex-col gap-1">
+          <Label htmlFor="endDate">End Date</Label>
+          <Input
+            id="endDate"
+            type="date"
+            value={endDate}
+            onChange={(e) => setEndDate(e.target.value)}
+          />
+        </div>
+        <Button variant="outline" onClick={resetFilters}>
           Reset
         </Button>
       </div>
-      <Tab panes={panes} />
+
+      <div>
+        <div className="flex border-b mb-4">
+          {tabs.map((tab) => (
+            <button
+              key={tab}
+              type="button"
+              onClick={() => setActiveTab(tab)}
+              className={`px-4 py-2 text-sm font-medium border-b-2 -mb-px transition-colors ${
+                activeTab === tab
+                  ? 'border-primary text-primary'
+                  : 'border-transparent text-muted-foreground hover:text-foreground'
+              }`}
+            >
+              {tab}
+            </button>
+          ))}
+        </div>
+        <div>
+          {activeTab === 'Purchases' && (
+            <SuppplierHistoryPurchases data={purchases} />
+          )}
+          {activeTab === 'Payments' && (
+            <SuppplierHistoryPayments data={payments} />
+          )}
+        </div>
+      </div>
     </DashboardLayout>
   );
 };

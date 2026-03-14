@@ -1,8 +1,10 @@
 import React, { useEffect, useState } from 'react';
-import { Form, Button, Tab } from 'semantic-ui-react';
-import moment from 'moment';
+import dayjs from 'dayjs';
 
 import DashboardLayout from '../../layouts/DashboardLayout/DashboardLayout';
+import { Button } from '../../components/ui/button';
+import { Input } from '../../components/ui/input';
+import { Label } from '../../components/ui/label';
 
 import ProductHistoryInvoices from './components/Invoices/Invoices';
 import ProductHistoryPurchases from './components/Purchases/Purchases';
@@ -13,11 +15,14 @@ import {
 
 // export interface ProductHistoryProps {}
 
-const TODAYS_DATE = `${moment().format('YYYY-MM-DD')}`;
+const TODAYS_DATE = `${dayjs().format('YYYY-MM-DD')}`;
 
 const ProductHistory: React.FC = ({ match }: any) => {
   const [startDate, setStartDate] = useState(TODAYS_DATE);
   const [endDate, setEndDate] = useState(TODAYS_DATE);
+  const [activeTab, setActiveTab] = useState<'purchases' | 'invoices'>(
+    'purchases'
+  );
 
   const productId = match.params.id;
 
@@ -52,65 +57,65 @@ const ProductHistory: React.FC = ({ match }: any) => {
     setEndDate(TODAYS_DATE);
   };
 
-  const panes = [
-    // {
-    //   menuItem: 'All',
-    //   render: function AllTab() {
-    //     return <Tab.Pane>Tab 1 Content</Tab.Pane>;
-    //   },
-    // },
-    {
-      menuItem: 'Purchases',
-      render: function PurchasesTab() {
-        return (
-          <Tab.Pane>
-            <ProductHistoryPurchases data={purchases} />
-          </Tab.Pane>
-        );
-      },
-    },
-    {
-      menuItem: 'Invoices',
-      render: function InvoicesTab() {
-        return (
-          <Tab.Pane>
-            <ProductHistoryInvoices data={invoices} />
-          </Tab.Pane>
-        );
-      },
-    },
-  ];
-
   return (
     <DashboardLayout screenTitle="Product History">
-      <div
-        style={{
-          display: 'flex',
-          justifyContent: 'flex-start',
-          alignItems: 'center',
-        }}
-      >
-        <Form>
-          <Form.Group>
-            <Form.Input
-              label="Start Date"
+      <div className="flex items-center gap-4 flex-wrap mb-4">
+        <div className="flex items-center gap-4">
+          <div className="space-y-1">
+            <Label htmlFor="startDate">Start Date</Label>
+            <Input
+              id="startDate"
               type="date"
-              onChange={(e, { value }) => setStartDate(value)}
+              onChange={(e) => setStartDate(e.target.value)}
               value={startDate}
             />
-            <Form.Input
-              label="End Date"
+          </div>
+          <div className="space-y-1">
+            <Label htmlFor="endDate">End Date</Label>
+            <Input
+              id="endDate"
               type="date"
-              onChange={(e, { value }) => setEndDate(value)}
+              onChange={(e) => setEndDate(e.target.value)}
               value={endDate}
             />
-          </Form.Group>
-        </Form>
-        <Button style={{ marginLeft: 10 }} onClick={resetFilters}>
+          </div>
+        </div>
+        <Button variant="outline" onClick={resetFilters} className="mt-5">
           Reset
         </Button>
       </div>
-      <Tab panes={panes} />
+
+      <div>
+        <div className="flex border-b mb-4">
+          <button
+            type="button"
+            onClick={() => setActiveTab('purchases')}
+            className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
+              activeTab === 'purchases'
+                ? 'border-primary text-primary'
+                : 'border-transparent text-muted-foreground hover:text-foreground'
+            }`}
+          >
+            Purchases
+          </button>
+          <button
+            type="button"
+            onClick={() => setActiveTab('invoices')}
+            className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
+              activeTab === 'invoices'
+                ? 'border-primary text-primary'
+                : 'border-transparent text-muted-foreground hover:text-foreground'
+            }`}
+          >
+            Invoices
+          </button>
+        </div>
+
+        {activeTab === 'purchases' && (
+          <ProductHistoryPurchases data={purchases} />
+        )}
+        {activeTab === 'invoices' && <ProductHistoryInvoices data={invoices} />}
+      </div>
     </DashboardLayout>
   );
 };

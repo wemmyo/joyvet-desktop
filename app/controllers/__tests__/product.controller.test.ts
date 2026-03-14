@@ -1,17 +1,17 @@
-jest.mock('react-toastify', () => ({
-  toast: { success: jest.fn(), error: jest.fn() },
+vi.mock('sonner', () => ({
+  toast: { success: vi.fn(), error: vi.fn() },
 }));
 
 const mockApi = {
   product: {
-    getAll: jest.fn(),
-    getById: jest.fn(),
-    create: jest.fn(),
-    update: jest.fn(),
-    delete: jest.fn(),
-    search: jest.fn(),
-    getInvoices: jest.fn(),
-    getPurchases: jest.fn(),
+    getAll: vi.fn(),
+    getById: vi.fn(),
+    create: vi.fn(),
+    update: vi.fn(),
+    delete: vi.fn(),
+    search: vi.fn(),
+    getInvoices: vi.fn(),
+    getPurchases: vi.fn(),
   },
 };
 Object.defineProperty(global, 'window', {
@@ -19,7 +19,7 @@ Object.defineProperty(global, 'window', {
   writable: true,
 });
 
-import { toast } from 'react-toastify';
+import { toast } from 'sonner';
 import {
   getProductsFn,
   createProductFn,
@@ -45,8 +45,11 @@ const mockProduct = {
 
 describe('product controller', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
-    localStorage.setItem('user', JSON.stringify({ fullName: 'admin', role: 'admin' }));
+    vi.clearAllMocks();
+    localStorage.setItem(
+      'user',
+      JSON.stringify({ fullName: 'admin', role: 'admin' })
+    );
   });
 
   describe('getProductsFn', () => {
@@ -66,9 +69,15 @@ describe('product controller', () => {
   describe('createProductFn', () => {
     it('creates a product and shows success toast', async () => {
       mockApi.product.create.mockResolvedValue(undefined);
-      const cb = jest.fn();
+      const cb = vi.fn();
       await createProductFn(
-        { title: 'Test', sellPrice: 500, sellPrice2: 480, sellPrice3: 460, buyPrice: 300 },
+        {
+          title: 'Test',
+          sellPrice: 500,
+          sellPrice2: 480,
+          sellPrice3: 460,
+          buyPrice: 300,
+        },
         cb
       );
       expect(toast.success).toHaveBeenCalledWith('Successfully created');
@@ -85,7 +94,7 @@ describe('product controller', () => {
   describe('deleteProductFn', () => {
     it('deletes a product and shows success toast', async () => {
       mockApi.product.delete.mockResolvedValue(undefined);
-      const cb = jest.fn();
+      const cb = vi.fn();
       await deleteProductFn(1, cb);
       expect(toast.success).toHaveBeenCalledWith('Successfully deleted');
       expect(cb).toHaveBeenCalled();

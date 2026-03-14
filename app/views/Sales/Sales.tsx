@@ -1,13 +1,26 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import { Table, Form, Button } from 'semantic-ui-react';
-import { useAppDispatch } from '../../hooks';
-import moment from 'moment';
+import dayjs from 'dayjs';
 import DashboardLayout from '../../layouts/DashboardLayout/DashboardLayout';
-import { numberWithCommas, isAdmin } from '../../utils/helpers';
+import { Button } from '../../components/ui/button';
+import { Input } from '../../components/ui/input';
+import { Label } from '../../components/ui/label';
 import {
-  openSideContentFn,
-  closeSideContentFn,
-} from '../../slices/dashboardSlice';
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '../../components/ui/select';
+import {
+  Table,
+  TableHeader,
+  TableBody,
+  TableRow,
+  TableHead,
+  TableCell,
+} from '../../components/ui/table';
+import { numberWithCommas, isAdmin } from '../../utils/helpers';
+import { useSidebarContext } from '../../contexts/SidebarContext';
 import SalesDetail from './components/SalesDetail';
 import {
   filterInvoiceFn,
@@ -16,7 +29,7 @@ import {
 } from '../../controllers/invoice.controller';
 import { IInvoice } from '../../models/invoice';
 
-const TODAYS_DATE = `${moment().format('YYYY-MM-DD')}`;
+const TODAYS_DATE = `${dayjs().format('YYYY-MM-DD')}`;
 const CONTENT_DETAIL = 'detail';
 
 const SalesScreen: React.FC = () => {
@@ -28,10 +41,11 @@ const SalesScreen: React.FC = () => {
   const [endDate, setEndDate] = useState(TODAYS_DATE);
   const [invoices, setInvoices] = useState<IInvoice[]>([]);
 
-  const dispatch = useAppDispatch();
+  const { openSideContent: openSideBar, closeSideContent: closeSideBar } =
+    useSidebarContext();
 
   const openSideContent = (content: string) => {
-    dispatch(openSideContentFn());
+    openSideBar();
     setSideContent(content);
   };
 
@@ -44,11 +58,11 @@ const SalesScreen: React.FC = () => {
     fetchInvoices();
 
     return () => {
-      dispatch(closeSideContentFn());
+      closeSideBar();
       setSideContent('');
       setSalesId(undefined);
     };
-  }, [fetchInvoices, dispatch]);
+  }, [fetchInvoices]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -67,16 +81,20 @@ const SalesScreen: React.FC = () => {
 
   const renderRows = invoices.map((each) => {
     return (
-      <Table.Row onClick={() => openSingleSale(each.id)} key={each.id}>
-        <Table.Cell>{each.customer?.fullName}</Table.Cell>
-        <Table.Cell>{each.id}</Table.Cell>
-        <Table.Cell>{each.saleType}</Table.Cell>
-        <Table.Cell>₦{numberWithCommas(each.amount)}</Table.Cell>
+      <TableRow
+        onClick={() => openSingleSale(each.id)}
+        key={each.id}
+        className="cursor-pointer hover:bg-muted/50"
+      >
+        <TableCell>{each.customer?.fullName}</TableCell>
+        <TableCell>{each.id}</TableCell>
+        <TableCell>{each.saleType}</TableCell>
+        <TableCell>₦{numberWithCommas(each.amount)}</TableCell>
         {isAdmin() ? (
-          <Table.Cell>₦{numberWithCommas(each.profit)}</Table.Cell>
+          <TableCell>₦{numberWithCommas(each.profit)}</TableCell>
         ) : null}
-        <Table.Cell>{moment(each.createdAt).format('DD/MM/YYYY')}</Table.Cell>
-      </Table.Row>
+        <TableCell>{dayjs(each.createdAt).format('DD/MM/YYYY')}</TableCell>
+      </TableRow>
     );
   });
 
@@ -89,13 +107,6 @@ const SalesScreen: React.FC = () => {
     return null;
   };
 
-  const options = [
-    { key: 1, text: 'All', value: 'all' },
-    { key: 2, text: 'Transfer', value: 'transfer' },
-    { key: 3, text: 'Cash', value: 'cash' },
-    { key: 4, text: 'Credit', value: 'credit' },
-  ];
-
   const resetFilters = async () => {
     setStartDate(TODAYS_DATE);
     setEndDate(TODAYS_DATE);
@@ -106,39 +117,55 @@ const SalesScreen: React.FC = () => {
 
   const headerContent = () => {
     return (
-      <>
-        <Button onClick={resetFilters}>Reset</Button>
+      <div className="flex items-end gap-2 flex-wrap">
+        <Button variant="outline" onClick={resetFilters}>
+          Reset
+        </Button>
 
-        <Form>
-          <Form.Group widths="equal">
-            <Form.Input
-              label="Start Date"
+        <div className="flex items-end gap-2 flex-wrap">
+          <div className="space-y-1">
+            <Label htmlFor="startDate">Start Date</Label>
+            <Input
+              id="startDate"
               type="date"
-              onChange={(e, { value }) => setStartDate(value)}
+              onChange={(e) => setStartDate(e.target.value)}
               value={startDate}
             />
-            <Form.Input
-              label="End Date"
+          </div>
+          <div className="space-y-1">
+            <Label htmlFor="endDate">End Date</Label>
+            <Input
+              id="endDate"
               type="date"
-              onChange={(e, { value }) => setEndDate(value)}
+              onChange={(e) => setEndDate(e.target.value)}
               value={endDate}
             />
-            <Form.Select
-              label="Type"
-              options={options}
-              placeholder="Choose type"
-              onChange={(e, { value }) => setSaleType(value as string)}
-              value={saleType}
-            />
-            <Form.Input
-              label="Search"
+          </div>
+          <div className="space-y-1">
+            <Label htmlFor="saleType">Type</Label>
+            <Select value={saleType} onValueChange={setSaleType}>
+              <SelectTrigger className="w-[130px]">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All</SelectItem>
+                <SelectItem value="transfer">Transfer</SelectItem>
+                <SelectItem value="cash">Cash</SelectItem>
+                <SelectItem value="credit">Credit</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-1">
+            <Label htmlFor="search">Search</Label>
+            <Input
+              id="search"
               placeholder="Invoice number"
-              onChange={(e, { value }) => setSearchValue(value)}
+              onChange={(e) => setSearchValue(e.target.value)}
               value={searchValue}
             />
-          </Form.Group>
-        </Form>
-      </>
+          </div>
+        </div>
+      </div>
     );
   };
 
@@ -173,37 +200,26 @@ const SalesScreen: React.FC = () => {
       rightSidebar={renderSideContent()}
       headerContent={headerContent()}
     >
-      <Table celled striped>
-        <Table.Header>
-          <Table.Row>
-            <Table.HeaderCell>Customer</Table.HeaderCell>
-            <Table.HeaderCell>Invoice Number</Table.HeaderCell>
-            <Table.HeaderCell>Type</Table.HeaderCell>
-            <Table.HeaderCell>Amount</Table.HeaderCell>
-            {isAdmin() ? <Table.HeaderCell>Profit</Table.HeaderCell> : null}
-            <Table.HeaderCell>Date</Table.HeaderCell>
-          </Table.Row>
-        </Table.Header>
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead>Customer</TableHead>
+            <TableHead>Invoice Number</TableHead>
+            <TableHead>Type</TableHead>
+            <TableHead>Amount</TableHead>
+            {isAdmin() ? <TableHead>Profit</TableHead> : null}
+            <TableHead>Date</TableHead>
+          </TableRow>
+        </TableHeader>
 
-        <Table.Body>{renderRows}</Table.Body>
-
-        <Table.Footer>
-          <Table.Row>
-            <Table.HeaderCell />
-            <Table.HeaderCell />
-            <Table.HeaderCell />
-            <Table.HeaderCell style={{ fontWeight: 'bold' }}>
-              Total: ₦{numberWithCommas(sumOfAmount())}
-            </Table.HeaderCell>
-            {isAdmin() ? (
-              <Table.HeaderCell style={{ fontWeight: 'bold' }}>
-                Total: ₦{numberWithCommas(sumOfProfit())}
-              </Table.HeaderCell>
-            ) : null}
-            <Table.HeaderCell />
-          </Table.Row>
-        </Table.Footer>
+        <TableBody>{renderRows}</TableBody>
       </Table>
+      <div className="mt-2 text-sm font-semibold flex gap-8 justify-end">
+        <span>Total: ₦{numberWithCommas(sumOfAmount())}</span>
+        {isAdmin() ? (
+          <span>Profit Total: ₦{numberWithCommas(sumOfProfit())}</span>
+        ) : null}
+      </div>
     </DashboardLayout>
   );
 };

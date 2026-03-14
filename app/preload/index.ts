@@ -24,9 +24,19 @@ const api = {
     delete: (id: number) => ipcRenderer.invoke('customer:delete', id),
     search: (value: string) => ipcRenderer.invoke('customer:search', value),
     getInvoices: (customerId: number, startDate: string, endDate: string) =>
-      ipcRenderer.invoke('customer:getInvoices', customerId, startDate, endDate),
+      ipcRenderer.invoke(
+        'customer:getInvoices',
+        customerId,
+        startDate,
+        endDate
+      ),
     getReceipts: (customerId: number, startDate?: string, endDate?: string) =>
-      ipcRenderer.invoke('customer:getReceipts', customerId, startDate, endDate),
+      ipcRenderer.invoke(
+        'customer:getReceipts',
+        customerId,
+        startDate,
+        endDate
+      ),
   },
   product: {
     getAll: (filter?: string) => ipcRenderer.invoke('product:getAll', filter),
@@ -69,7 +79,12 @@ const api = {
     filter: (startDate: string, endDate: string, supplierId?: number) =>
       ipcRenderer.invoke('purchase:filter', startDate, endDate, supplierId),
     getBySupplier: (supplierId: number, startDate: string, endDate: string) =>
-      ipcRenderer.invoke('purchase:getBySupplier', supplierId, startDate, endDate),
+      ipcRenderer.invoke(
+        'purchase:getBySupplier',
+        supplierId,
+        startDate,
+        endDate
+      ),
   },
   payment: {
     getAll: () => ipcRenderer.invoke('payment:getAll'),
@@ -78,7 +93,12 @@ const api = {
     filter: (startDate: string, endDate: string, supplierId?: number) =>
       ipcRenderer.invoke('payment:filter', startDate, endDate, supplierId),
     getBySupplier: (supplierId: number, startDate: string, endDate: string) =>
-      ipcRenderer.invoke('payment:getBySupplier', supplierId, startDate, endDate),
+      ipcRenderer.invoke(
+        'payment:getBySupplier',
+        supplierId,
+        startDate,
+        endDate
+      ),
   },
   receipt: {
     getAll: () => ipcRenderer.invoke('receipt:getAll'),
@@ -94,7 +114,8 @@ const api = {
     filter: (startDate: string, endDate: string) =>
       ipcRenderer.invoke('expense:filter', startDate, endDate),
     getTypes: () => ipcRenderer.invoke('expense:getTypes'),
-    createType: (values: any) => ipcRenderer.invoke('expense:createType', values),
+    createType: (values: any) =>
+      ipcRenderer.invoke('expense:createType', values),
   },
   storeInfo: {
     get: () => ipcRenderer.invoke('storeInfo:get'),

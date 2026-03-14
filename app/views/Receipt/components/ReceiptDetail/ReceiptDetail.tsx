@@ -1,6 +1,4 @@
 import React, { useEffect, useState } from 'react';
-import { useAppDispatch } from '../../../../hooks';
-import { Table, Button } from 'semantic-ui-react';
 import {
   getSingleReceiptFn,
   deleteReceiptFn,
@@ -8,7 +6,14 @@ import {
 } from '../../../../controllers/receipt.controller';
 import { IReceipt } from '../../../../models/receipt';
 
-import { closeSideContentFn } from '../../../../slices/dashboardSlice';
+import { useSidebarContext } from '../../../../contexts/SidebarContext';
+import { Button } from '../../../../components/ui/button';
+import {
+  Table,
+  TableBody,
+  TableRow,
+  TableCell,
+} from '../../../../components/ui/table';
 
 export interface ReceiptDetailProps {
   receiptId: string | number;
@@ -19,7 +24,7 @@ const ReceiptDetail: React.FC<ReceiptDetailProps> = ({
 }: ReceiptDetailProps) => {
   const [singleReceipt, setSingleReceipt] = useState<IReceipt>({} as IReceipt);
   const [loading, setLoading] = useState<boolean>(false);
-  const dispatch = useAppDispatch();
+  const { closeSideContent } = useSidebarContext();
 
   useEffect(() => {
     const fetchData = async () => {
@@ -35,7 +40,7 @@ const ReceiptDetail: React.FC<ReceiptDetailProps> = ({
   const handleDelete = async () => {
     await deleteReceiptFn(receiptId);
     await getReceiptsFn();
-    dispatch(closeSideContentFn());
+    closeSideContent();
   };
 
   const {
@@ -53,46 +58,45 @@ const ReceiptDetail: React.FC<ReceiptDetailProps> = ({
   }
 
   return (
-    <>
+    <div className="space-y-3">
       <Table>
-        <Table.Body>
-          <Table.Row>
-            <Table.Cell>Customer</Table.Cell>
-            <Table.Cell>{customer ? customer.fullName : ''}</Table.Cell>
-          </Table.Row>
-          <Table.Row>
-            <Table.Cell>Customer balance</Table.Cell>
-            <Table.Cell>{customer ? customer.balance : 0.0}</Table.Cell>
-          </Table.Row>
-          <Table.Row>
-            <Table.Cell>Amount</Table.Cell>
-            <Table.Cell>{amount || ''}</Table.Cell>
-          </Table.Row>
-
-          <Table.Row>
-            <Table.Cell>Payment Method</Table.Cell>
-            <Table.Cell>{paymentMethod || ''}</Table.Cell>
-          </Table.Row>
-          <Table.Row>
-            <Table.Cell>Bank</Table.Cell>
-            <Table.Cell>{bank || ''}</Table.Cell>
-          </Table.Row>
-          <Table.Row>
-            <Table.Cell>Note</Table.Cell>
-            <Table.Cell>{note || ''}</Table.Cell>
-          </Table.Row>
-          <Table.Row>
-            <Table.Cell>Date</Table.Cell>
-            <Table.Cell>
+        <TableBody>
+          <TableRow>
+            <TableCell className="font-medium">Customer</TableCell>
+            <TableCell>{customer ? customer.fullName : ''}</TableCell>
+          </TableRow>
+          <TableRow>
+            <TableCell className="font-medium">Customer balance</TableCell>
+            <TableCell>{customer ? customer.balance : 0.0}</TableCell>
+          </TableRow>
+          <TableRow>
+            <TableCell className="font-medium">Amount</TableCell>
+            <TableCell>{amount || ''}</TableCell>
+          </TableRow>
+          <TableRow>
+            <TableCell className="font-medium">Payment Method</TableCell>
+            <TableCell>{paymentMethod || ''}</TableCell>
+          </TableRow>
+          <TableRow>
+            <TableCell className="font-medium">Bank</TableCell>
+            <TableCell>{bank || ''}</TableCell>
+          </TableRow>
+          <TableRow>
+            <TableCell className="font-medium">Note</TableCell>
+            <TableCell>{note || ''}</TableCell>
+          </TableRow>
+          <TableRow>
+            <TableCell className="font-medium">Date</TableCell>
+            <TableCell>
               {new Date(createdAt).toLocaleDateString('en-gb') || ''}
-            </Table.Cell>
-          </Table.Row>
-        </Table.Body>
+            </TableCell>
+          </TableRow>
+        </TableBody>
       </Table>
-      <Button onClick={() => handleDelete()} type="submit" negative>
+      <Button onClick={() => handleDelete()} variant="destructive">
         Delete
       </Button>
-    </>
+    </div>
   );
 };
 

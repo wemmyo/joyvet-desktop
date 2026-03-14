@@ -1,38 +1,42 @@
 const handlers: Record<string, Function> = {};
 
-jest.mock('electron', () => ({
+vi.mock('electron', () => ({
   ipcMain: {
-    handle: jest.fn((channel: string, handler: Function) => {
+    handle: vi.fn((channel: string, handler: Function) => {
       handlers[channel] = handler;
     }),
-    on: jest.fn(),
+    on: vi.fn(),
   },
-  app: { getPath: () => '/tmp/test', quit: jest.fn() },
+  app: { getPath: () => '/tmp/test', quit: vi.fn() },
   dialog: {
-    showOpenDialogSync: jest.fn(() => ['/tmp/test.db']),
-    showSaveDialogSync: jest.fn(() => '/tmp/test.db'),
+    showOpenDialogSync: vi.fn(() => ['/tmp/test.db']),
+    showSaveDialogSync: vi.fn(() => '/tmp/test.db'),
   },
 }));
 
-jest.mock('../../database', () => ({
+vi.mock('../../database', () => ({
   default: {
-    transaction: jest.fn((cb: Function) => cb({})),
-    sync: jest.fn(),
+    transaction: vi.fn((cb: Function) => cb({})),
+    sync: vi.fn(),
   },
 }));
 
-jest.mock('../../../services/user.service', () => ({
-  getUsers: jest.fn(),
-  getUserById: jest.fn(),
-  updateUser: jest.fn(),
-  createUser: jest.fn(),
-  findOneUser: jest.fn(),
-  deleteUser: jest.fn(),
+vi.mock('../../../services/user.service', () => ({
+  getUsers: vi.fn(),
+  getUserById: vi.fn(),
+  updateUser: vi.fn(),
+  createUser: vi.fn(),
+  findOneUser: vi.fn(),
+  deleteUser: vi.fn(),
 }));
 
-jest.mock('bcryptjs', () => ({
-  hash: jest.fn().mockResolvedValue('hashedPassword'),
-  compare: jest.fn().mockResolvedValue(true),
+vi.mock('bcryptjs', () => ({
+  default: {
+    hash: vi.fn().mockResolvedValue('hashedPassword'),
+    compare: vi.fn().mockResolvedValue(true),
+  },
+  hash: vi.fn().mockResolvedValue('hashedPassword'),
+  compare: vi.fn().mockResolvedValue(true),
 }));
 
 import * as userService from '../../../services/user.service';
@@ -61,17 +65,17 @@ describe('user IPC handlers', () => {
   });
 
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
     // Restore default mock behaviour after clearAllMocks resets return values
-    (bcrypt.hash as jest.Mock).mockResolvedValue('hashedPassword');
-    (bcrypt.compare as jest.Mock).mockResolvedValue(true);
+    (bcrypt.hash as any).mockResolvedValue('hashedPassword');
+    (bcrypt.compare as any).mockResolvedValue(true);
   });
 
   // ------------------------------------------------------------------ login
   describe('user:login', () => {
     it('logs in successfully and returns serialized user', async () => {
-      (userService.findOneUser as jest.Mock).mockResolvedValue(mockUser);
-      (bcrypt.compare as jest.Mock).mockResolvedValue(true);
+      (userService.findOneUser as any).mockResolvedValue(mockUser);
+      (bcrypt.compare as any).mockResolvedValue(true);
       const result = await handlers['user:login'](mockEvent, {
         username: 'admin',
         password: 'admin123',
@@ -80,7 +84,7 @@ describe('user IPC handlers', () => {
     });
 
     it('throws when user is not found', async () => {
-      (userService.findOneUser as jest.Mock).mockResolvedValue(null);
+      (userService.findOneUser as any).mockResolvedValue(null);
       await expect(
         handlers['user:login'](mockEvent, {
           username: 'nobody',
@@ -90,8 +94,8 @@ describe('user IPC handlers', () => {
     });
 
     it('throws when password is invalid', async () => {
-      (userService.findOneUser as jest.Mock).mockResolvedValue(mockUser);
-      (bcrypt.compare as jest.Mock).mockResolvedValue(false);
+      (userService.findOneUser as any).mockResolvedValue(mockUser);
+      (bcrypt.compare as any).mockResolvedValue(false);
       await expect(
         handlers['user:login'](mockEvent, {
           username: 'admin',
@@ -102,7 +106,10 @@ describe('user IPC handlers', () => {
 
     it('throws on validation error when username is too short (< 3 chars)', async () => {
       await expect(
-        handlers['user:login'](mockEvent, { username: 'ab', password: 'pass123' })
+        handlers['user:login'](mockEvent, {
+          username: 'ab',
+          password: 'pass123',
+        })
       ).rejects.toThrow();
     });
 
@@ -116,15 +123,13 @@ describe('user IPC handlers', () => {
   // ------------------------------------------------------------------ getAll
   describe('user:getAll', () => {
     it('returns all users serialized', async () => {
-      (userService.getUsers as jest.Mock).mockResolvedValue([mockUser]);
+      (userService.getUsers as any).mockResolvedValue([mockUser]);
       const result = await handlers['user:getAll'](mockEvent);
       expect(result).toEqual([mockUser.toJSON()]);
     });
 
     it('throws on service error', async () => {
-      (userService.getUsers as jest.Mock).mockRejectedValue(
-        new Error('DB error')
-      );
+      (userService.getUsers as any).mockRejectedValue(new Error('DB error'));
       await expect(handlers['user:getAll'](mockEvent)).rejects.toThrow(
         'DB error'
       );
@@ -134,7 +139,7 @@ describe('user IPC handlers', () => {
   // --------------------------------------------------------------- getById
   describe('user:getById', () => {
     it('returns single user serialized', async () => {
-      (userService.getUserById as jest.Mock).mockResolvedValue(mockUser);
+      (userService.getUserById as any).mockResolvedValue(mockUser);
       const result = await handlers['user:getById'](mockEvent, 1);
       expect(result).toEqual(mockUser.toJSON());
     });
@@ -143,8 +148,8 @@ describe('user IPC handlers', () => {
   // ------------------------------------------------------------------ create
   describe('user:create', () => {
     it('creates user with hashed password', async () => {
-      (userService.createUser as jest.Mock).mockResolvedValue(mockUser);
-      (bcrypt.hash as jest.Mock).mockResolvedValue('hashedPassword');
+      (userService.createUser as any).mockResolvedValue(mockUser);
+      (bcrypt.hash as any).mockResolvedValue('hashedPassword');
       await handlers['user:create'](mockEvent, {
         fullName: 'New User',
         username: 'newuser',
@@ -158,15 +163,15 @@ describe('user IPC handlers', () => {
     });
 
     it('does not store the plain-text password', async () => {
-      (userService.createUser as jest.Mock).mockResolvedValue(mockUser);
-      (bcrypt.hash as jest.Mock).mockResolvedValue('hashedPassword');
+      (userService.createUser as any).mockResolvedValue(mockUser);
+      (bcrypt.hash as any).mockResolvedValue('hashedPassword');
       await handlers['user:create'](mockEvent, {
         fullName: 'New User',
         username: 'newuser',
         password: 'plain123',
         role: 'cashier',
       });
-      const callArg = (userService.createUser as jest.Mock).mock.calls[0][0];
+      const callArg = (userService.createUser as any).mock.calls[0][0];
       expect(callArg.password).not.toBe('plain123');
     });
 
@@ -207,7 +212,7 @@ describe('user IPC handlers', () => {
   // ------------------------------------------------------------------ update
   describe('user:update', () => {
     it('updates a user', async () => {
-      (userService.updateUser as jest.Mock).mockResolvedValue([1]);
+      (userService.updateUser as any).mockResolvedValue([1]);
       await handlers['user:update'](mockEvent, 1, { fullName: 'Updated Name' });
       expect(userService.updateUser).toHaveBeenCalledWith(1, {
         fullName: 'Updated Name',
@@ -220,16 +225,16 @@ describe('user IPC handlers', () => {
     it('deletes a user when found', async () => {
       const mockDestroyUser = {
         ...mockUser,
-        destroy: jest.fn().mockResolvedValue(undefined),
+        destroy: vi.fn().mockResolvedValue(undefined),
       };
-      (userService.deleteUser as jest.Mock).mockResolvedValue(mockDestroyUser);
+      (userService.deleteUser as any).mockResolvedValue(mockDestroyUser);
       await handlers['user:delete'](mockEvent, 1);
       expect(userService.deleteUser).toHaveBeenCalledWith(1);
       expect(mockDestroyUser.destroy).toHaveBeenCalled();
     });
 
     it('does not call destroy when user is not found', async () => {
-      (userService.deleteUser as jest.Mock).mockResolvedValue(null);
+      (userService.deleteUser as any).mockResolvedValue(null);
       await handlers['user:delete'](mockEvent, 999);
       expect(userService.deleteUser).toHaveBeenCalledWith(999);
       // No error should be thrown

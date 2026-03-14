@@ -1,4 +1,4 @@
-import { toast } from 'react-toastify';
+import { toast } from 'sonner';
 import { IPayment } from '../models/payment';
 
 export const searchPaymentFn = async (value: string) => {

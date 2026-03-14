@@ -1,16 +1,22 @@
 import React, { useEffect, useState, useRef } from 'react';
-import { Table, Button, Icon, Form, Loader } from 'semantic-ui-react';
-import { useAppDispatch } from '../../hooks';
 import { useReactToPrint } from 'react-to-print';
+import { Plus, RefreshCw, Printer } from 'lucide-react';
 
 import DashboardLayout from '../../layouts/DashboardLayout/DashboardLayout';
+import { Button } from '../../components/ui/button';
+import { Input } from '../../components/ui/input';
+import {
+  Table,
+  TableHeader,
+  TableBody,
+  TableRow,
+  TableHead,
+  TableCell,
+} from '../../components/ui/table';
 
 import CreateProduct from './components/CreateProduct/CreateProduct';
 import { numberWithCommas } from '../../utils/helpers';
-import {
-  openSideContentFn,
-  closeSideContentFn,
-} from '../../slices/dashboardSlice';
+import { useSidebarContext } from '../../contexts/SidebarContext';
 import EditProduct from './components/EditProduct/EditProduct';
 import {
   createProductFn,
@@ -29,7 +35,8 @@ const ProductsScreen: React.FC = () => {
   const [products, setProducts] = useState<IProduct[]>([]);
   const [loading, setLoading] = useState(false);
 
-  const dispatch = useAppDispatch();
+  const { openSideContent: openSideBar, closeSideContent: closeSideBar } =
+    useSidebarContext();
 
   const componentRef = useRef(null);
 
@@ -45,7 +52,7 @@ const ProductsScreen: React.FC = () => {
   };
 
   const openSideContent = (content: string) => {
-    dispatch(openSideContentFn());
+    openSideBar();
     setSideContent(content);
   };
 
@@ -54,13 +61,13 @@ const ProductsScreen: React.FC = () => {
 
     return () => {
       const closeSideContent = () => {
-        dispatch(closeSideContentFn());
+        closeSideBar();
         setSideContent('');
         setProductId('');
       };
       closeSideContent();
     };
-  }, [dispatch]);
+  }, []);
 
   const handleNewProduct = async (values: Partial<IProduct>) => {
     await createProductFn(values);
@@ -90,18 +97,20 @@ const ProductsScreen: React.FC = () => {
   const renderRows = () => {
     const rows = products.map((each, index) => {
       return (
-        <Table.Row onClick={() => openSingleProduct(each.id)} key={each.id}>
-          <Table.Cell>{index + 1}</Table.Cell>
-          <Table.Cell>{each.title}</Table.Cell>
-          <Table.Cell>{each.stock}</Table.Cell>
-          <Table.Cell>{numberWithCommas(each.buyPrice)}</Table.Cell>
-          <Table.Cell>{numberWithCommas(each.sellPrice)}</Table.Cell>
-          <Table.Cell>{numberWithCommas(each.sellPrice2)}</Table.Cell>
-          <Table.Cell>{numberWithCommas(each.sellPrice3)}</Table.Cell>
-          <Table.Cell>
-            {numberWithCommas(each.stock * each.buyPrice)}
-          </Table.Cell>
-        </Table.Row>
+        <TableRow
+          onClick={() => openSingleProduct(each.id)}
+          key={each.id}
+          className="cursor-pointer hover:bg-muted/50"
+        >
+          <TableCell>{index + 1}</TableCell>
+          <TableCell>{each.title}</TableCell>
+          <TableCell>{each.stock}</TableCell>
+          <TableCell>{numberWithCommas(each.buyPrice)}</TableCell>
+          <TableCell>{numberWithCommas(each.sellPrice)}</TableCell>
+          <TableCell>{numberWithCommas(each.sellPrice2)}</TableCell>
+          <TableCell>{numberWithCommas(each.sellPrice3)}</TableCell>
+          <TableCell>{numberWithCommas(each.stock * each.buyPrice)}</TableCell>
+        </TableRow>
       );
     });
     return rows;
@@ -124,8 +133,8 @@ const ProductsScreen: React.FC = () => {
     return null;
   };
 
-  const handleSearchChange = (e, { value }: { value: string }) => {
-    setSearchValue(value);
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchValue(e.target.value);
   };
 
   useEffect(() => {
@@ -136,36 +145,36 @@ const ProductsScreen: React.FC = () => {
 
   const headerContent = () => {
     return (
-      <>
+      <div className="flex items-center gap-2 flex-wrap">
         <Button
-          color="blue"
-          icon
-          labelPosition="left"
           onClick={() => {
             openSideContent(CONTENT_CREATE);
           }}
         >
-          <Icon inverted color="grey" name="add" />
+          <Plus className="mr-1 h-4 w-4" />
           Create
         </Button>
-        <Button onClick={handlePrint} icon="print" />
-        <Button icon labelPosition="left" onClick={fetchProducts}>
-          <Icon name="redo" />
+        <Button variant="outline" size="icon" onClick={handlePrint}>
+          <Printer className="h-4 w-4" />
+        </Button>
+        <Button variant="outline" onClick={fetchProducts}>
+          <RefreshCw className="mr-1 h-4 w-4" />
           Refresh
         </Button>
-        <Form
-          onSubmit={async () => {
+        <form
+          onSubmit={async (e) => {
+            e.preventDefault();
             const response = await searchProductFn(searchValue);
             setProducts(response);
           }}
         >
-          <Form.Input
+          <Input
             placeholder="Search Product"
             onChange={handleSearchChange}
             value={searchValue}
           />
-        </Form>
-      </>
+        </form>
+      </div>
     );
   };
 
@@ -176,40 +185,30 @@ const ProductsScreen: React.FC = () => {
       headerContent={headerContent()}
     >
       {loading ? (
-        <Loader active inline="centered" />
+        <div className="flex items-center justify-center p-8">
+          <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+        </div>
       ) : (
         <div ref={componentRef}>
-          <Table celled striped>
-            <Table.Header>
-              <Table.Row>
-                <Table.HeaderCell>No</Table.HeaderCell>
-                <Table.HeaderCell>Title</Table.HeaderCell>
-                <Table.HeaderCell>Quantity</Table.HeaderCell>
-                <Table.HeaderCell>Buy Price</Table.HeaderCell>
-                <Table.HeaderCell>Sell Price</Table.HeaderCell>
-                <Table.HeaderCell>Sell Price 2</Table.HeaderCell>
-                <Table.HeaderCell>Sell Price 3</Table.HeaderCell>
-                <Table.HeaderCell>Stock Value</Table.HeaderCell>
-              </Table.Row>
-            </Table.Header>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>No</TableHead>
+                <TableHead>Title</TableHead>
+                <TableHead>Quantity</TableHead>
+                <TableHead>Buy Price</TableHead>
+                <TableHead>Sell Price</TableHead>
+                <TableHead>Sell Price 2</TableHead>
+                <TableHead>Sell Price 3</TableHead>
+                <TableHead>Stock Value</TableHead>
+              </TableRow>
+            </TableHeader>
 
-            <Table.Body>{renderRows()}</Table.Body>
-
-            <Table.Footer>
-              <Table.Row>
-                <Table.HeaderCell />
-                <Table.HeaderCell />
-                <Table.HeaderCell />
-                <Table.HeaderCell />
-                <Table.HeaderCell />
-                <Table.HeaderCell />
-                <Table.HeaderCell />
-                <Table.HeaderCell style={{ fontWeight: 'bold' }}>
-                  Total: ₦{numberWithCommas(sumOfStockValue())}
-                </Table.HeaderCell>
-              </Table.Row>
-            </Table.Footer>
+            <TableBody>{renderRows()}</TableBody>
           </Table>
+          <div className="mt-2 text-sm font-semibold text-right">
+            Total: ₦{numberWithCommas(sumOfStockValue())}
+          </div>
         </div>
       )}
     </DashboardLayout>

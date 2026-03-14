@@ -16,7 +16,7 @@ const LoginScreen = () => {
   }, [navigate]);
 
   return (
-    <div style={{ backgroundColor: '#89b4fa' }}>
+    <div className="min-h-screen flex items-center justify-center bg-background">
       <LoginForm />
     </div>
   );

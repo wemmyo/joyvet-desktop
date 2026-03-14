@@ -1,13 +1,12 @@
 import React from 'react';
-import { Button } from 'semantic-ui-react';
-import { useSelector } from 'react-redux';
-import { useAppDispatch } from '../../hooks';
-
+import { Button } from '../../components/ui/button';
 import {
-  selectDashboardState,
-  closeSideContentFn,
-} from '../../slices/dashboardSlice';
-import Sidebar from './SideNav/SideNav';
+  SidebarProvider,
+  SidebarInset,
+  SidebarTrigger,
+} from '../../components/ui/sidebar';
+import { useSidebarContext } from '../../contexts/SidebarContext';
+import SideNav from './SideNav/SideNav';
 import styles from './DashboardLayout.module.css';
 
 export interface DashboardLayoutProps {
@@ -23,10 +22,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
   rightSidebar,
   headerContent,
 }: DashboardLayoutProps) => {
-  const dispatch = useAppDispatch();
-  const dashboardState = useSelector(selectDashboardState);
-
-  const { sideContentisOpen } = dashboardState;
+  const { sideContentisOpen, closeSideContent } = useSidebarContext();
 
   const user =
     localStorage.getItem('user') !== null
@@ -34,13 +30,18 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
       : '';
 
   return (
-    <div style={{ display: 'flex', flex: 1 }}>
-      <Sidebar />
-      <div style={{ display: 'flex', flex: 1, overflow: 'auto' }}>
+    <SidebarProvider>
+      <SideNav />
+      <SidebarInset>
         <div className={styles.mainContainer}>
           <header>
             <div className={styles.headerSection1}>
-              <h2 className={styles.headerSection1__title}>{screenTitle}</h2>
+              <div
+                style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}
+              >
+                <SidebarTrigger />
+                <h2 className={styles.headerSection1__title}>{screenTitle}</h2>
+              </div>
               <div className={styles.headerSection1__user}>
                 <div className={styles.headerSection1__avatar}>
                   {user.fullName.slice(0, 2)}
@@ -54,7 +55,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
           </header>
           <main className={styles.main}>{children}</main>
         </div>
-      </div>
+      </SidebarInset>
       <div
         className={`${styles.rightSidebar} ${
           sideContentisOpen
@@ -65,17 +66,20 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
         <div style={{ position: 'sticky', left: 0, top: 20 }}>
           <div style={{ marginBottom: '2rem' }}>
             <Button
-              content="Close"
+              variant="outline"
+              size="sm"
               onClick={() => {
-                dispatch(closeSideContentFn());
+                closeSideContent();
               }}
-            />
+            >
+              Close
+            </Button>
           </div>
 
           {rightSidebar}
         </div>
       </div>
-    </div>
+    </SidebarProvider>
   );
 };
 

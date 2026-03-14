@@ -1,17 +1,22 @@
 import React, { useEffect, useState } from 'react';
-import { Table, Button, Icon } from 'semantic-ui-react';
-import { useAppDispatch } from '../../hooks';
-import moment from 'moment';
-import DashboardLayout from '../../layouts/DashboardLayout/DashboardLayout';
+import dayjs from 'dayjs';
+import { Plus, RefreshCw } from 'lucide-react';
 
+import DashboardLayout from '../../layouts/DashboardLayout/DashboardLayout';
 import EditUser from './components/EditUser/EditUser';
 import { IUser } from '../../models/user';
 import { getUsersFn, createUserFn } from '../../controllers/user.controller';
-import {
-  openSideContentFn,
-  closeSideContentFn,
-} from '../../slices/dashboardSlice';
+import { useSidebarContext } from '../../contexts/SidebarContext';
 import CreateUser from './components/CreateUser/CreateUser';
+import { Button } from '../../components/ui/button';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '../../components/ui/table';
 // import { createStoreInfoTable } from '../../controllers/storeInfo.controller';
 
 const CONTENT_CREATE = 'create';
@@ -22,7 +27,8 @@ const UserScreen: React.FC = () => {
   const [userId, setUserId] = useState('');
   const [users, setUsers] = useState<IUser[]>([]);
 
-  const dispatch = useAppDispatch();
+  const { openSideContent: openSideBar, closeSideContent: closeSideBar } =
+    useSidebarContext();
 
   const fetchUsers = async () => {
     const response = await getUsersFn();
@@ -30,7 +36,7 @@ const UserScreen: React.FC = () => {
   };
 
   const openSideContent = (content: string) => {
-    dispatch(openSideContentFn());
+    openSideBar();
     setSideContent(content);
   };
 
@@ -39,13 +45,13 @@ const UserScreen: React.FC = () => {
 
     return () => {
       const closeSideContent = () => {
-        dispatch(closeSideContentFn());
+        closeSideBar();
         setSideContent('');
         setUserId('');
       };
       closeSideContent();
     };
-  }, [dispatch]);
+  }, []);
 
   const handleNewUser = (values) => {
     createUserFn(values, () => {
@@ -72,18 +78,17 @@ const UserScreen: React.FC = () => {
     return (
       <>
         <Button
-          color="blue"
-          icon
-          labelPosition="left"
+          variant="default"
+          size="sm"
           onClick={() => {
             openSideContent(CONTENT_CREATE);
           }}
         >
-          <Icon inverted color="grey" name="add" />
+          <Plus className="mr-2 h-4 w-4" />
           Create
         </Button>
-        <Button icon labelPosition="left" onClick={fetchUsers}>
-          <Icon name="redo" />
+        <Button variant="outline" size="sm" onClick={fetchUsers}>
+          <RefreshCw className="mr-2 h-4 w-4" />
           Refresh
         </Button>
       </>
@@ -96,30 +101,33 @@ const UserScreen: React.FC = () => {
       rightSidebar={renderSideContent()}
       headerContent={headerContent()}
     >
-      <Table celled striped>
-        <Table.Header>
-          <Table.Row>
-            <Table.HeaderCell>Full Name</Table.HeaderCell>
-            <Table.HeaderCell>Username</Table.HeaderCell>
-            <Table.HeaderCell>Role</Table.HeaderCell>
-            <Table.HeaderCell>Created</Table.HeaderCell>
-          </Table.Row>
-        </Table.Header>
-
-        <Table.Body>
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead>Full Name</TableHead>
+            <TableHead>Username</TableHead>
+            <TableHead>Role</TableHead>
+            <TableHead>Created</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
           {users.map((each) => {
             return (
-              <Table.Row onClick={() => openSingleUser(each.id)} key={each.id}>
-                <Table.Cell>{each.fullName}</Table.Cell>
-                <Table.Cell>{each.username}</Table.Cell>
-                <Table.Cell>{each.role}</Table.Cell>
-                <Table.Cell>
-                  {moment(each.createdAt).format('DD/MM/YYYY')}
-                </Table.Cell>
-              </Table.Row>
+              <TableRow
+                onClick={() => openSingleUser(each.id)}
+                key={each.id}
+                className="cursor-pointer"
+              >
+                <TableCell>{each.fullName}</TableCell>
+                <TableCell>{each.username}</TableCell>
+                <TableCell>{each.role}</TableCell>
+                <TableCell>
+                  {dayjs(each.createdAt).format('DD/MM/YYYY')}
+                </TableCell>
+              </TableRow>
             );
           })}
-        </Table.Body>
+        </TableBody>
       </Table>
     </DashboardLayout>
   );

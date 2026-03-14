@@ -1,9 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { useAppDispatch } from '../../../hooks';
-import { Table, Button } from 'semantic-ui-react';
 import { useReactToPrint } from 'react-to-print';
 import { Link } from 'react-router-dom';
-import moment from 'moment';
+import dayjs from 'dayjs';
 
 import {
   deleteInvoiceFn,
@@ -11,9 +9,18 @@ import {
 } from '../../../controllers/invoice.controller';
 import { numberWithCommas, isAdmin } from '../../../utils/helpers';
 import ComponentToPrint from '../../../components/PrintedReceipt/ReceiptWrapper';
-import { closeSideContentFn } from '../../../slices/dashboardSlice';
+import { useSidebarContext } from '../../../contexts/SidebarContext';
 import routes from '../../../routing/routes';
 import { IInvoice } from '../../../models/invoice';
+import { Button } from '../../../components/ui/button';
+import {
+  Table,
+  TableHeader,
+  TableBody,
+  TableRow,
+  TableHead,
+  TableCell,
+} from '../../../components/ui/table';
 
 interface SalesDetailProps {
   salesId: number;
@@ -23,7 +30,7 @@ interface SalesDetailProps {
 
 const SalesDetail = ({ salesId, onRefresh }: SalesDetailProps) => {
   const componentRef = useRef(null);
-  const dispatch = useAppDispatch();
+  const { closeSideContent } = useSidebarContext();
 
   const [printInvoice, setPrintInvoice] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -60,7 +67,7 @@ const SalesDetail = ({ salesId, onRefresh }: SalesDetailProps) => {
 
   const handleDeleteInvoice = async () => {
     await deleteInvoiceFn(Number(salesId));
-    dispatch(closeSideContentFn());
+    closeSideContent();
     onRefresh?.();
   };
 
@@ -80,98 +87,97 @@ const SalesDetail = ({ salesId, onRefresh }: SalesDetailProps) => {
   }
 
   return (
-    <>
-      <Table striped>
-        <Table.Body>
-          <Table.Row>
-            <Table.Cell>Invoice ID</Table.Cell>
-            <Table.Cell>{sales.id}</Table.Cell>
-          </Table.Row>
-          <Table.Row>
-            <Table.Cell>Customer</Table.Cell>
-            <Table.Cell>{sales.customer?.fullName}</Table.Cell>
-          </Table.Row>
-          <Table.Row>
-            <Table.Cell>Type</Table.Cell>
-            <Table.Cell>{sales.saleType}</Table.Cell>
-          </Table.Row>
-          <Table.Row>
-            <Table.Cell>Date</Table.Cell>
-            <Table.Cell>
-              {moment(sales.createdAt).format('DD/MM/YYYY')}
-            </Table.Cell>
-          </Table.Row>
-          <Table.Row>
-            <Table.Cell>Time</Table.Cell>
-            <Table.Cell>{moment(sales.createdAt).format('h:mm a')}</Table.Cell>
-          </Table.Row>
-          <Table.Row>
-            <Table.Cell>Amount</Table.Cell>
-            <Table.Cell>₦{numberWithCommas(sales.amount)}</Table.Cell>
-          </Table.Row>
-          <Table.Row>
-            <Table.Cell>Profit</Table.Cell>
-            <Table.Cell>₦{numberWithCommas(sales.profit)}</Table.Cell>
-          </Table.Row>
-          <Table.Row>
-            <Table.Cell>Posted By</Table.Cell>
-            <Table.Cell>{sales.postedBy}</Table.Cell>
-          </Table.Row>
-        </Table.Body>
+    <div className="space-y-3">
+      <Table>
+        <TableBody>
+          <TableRow>
+            <TableCell className="font-medium">Invoice ID</TableCell>
+            <TableCell>{sales.id}</TableCell>
+          </TableRow>
+          <TableRow>
+            <TableCell className="font-medium">Customer</TableCell>
+            <TableCell>{sales.customer?.fullName}</TableCell>
+          </TableRow>
+          <TableRow>
+            <TableCell className="font-medium">Type</TableCell>
+            <TableCell>{sales.saleType}</TableCell>
+          </TableRow>
+          <TableRow>
+            <TableCell className="font-medium">Date</TableCell>
+            <TableCell>{dayjs(sales.createdAt).format('DD/MM/YYYY')}</TableCell>
+          </TableRow>
+          <TableRow>
+            <TableCell className="font-medium">Time</TableCell>
+            <TableCell>{dayjs(sales.createdAt).format('h:mm a')}</TableCell>
+          </TableRow>
+          <TableRow>
+            <TableCell className="font-medium">Amount</TableCell>
+            <TableCell>₦{numberWithCommas(sales.amount)}</TableCell>
+          </TableRow>
+          <TableRow>
+            <TableCell className="font-medium">Profit</TableCell>
+            <TableCell>₦{numberWithCommas(sales.profit)}</TableCell>
+          </TableRow>
+          <TableRow>
+            <TableCell className="font-medium">Posted By</TableCell>
+            <TableCell>{sales.postedBy}</TableCell>
+          </TableRow>
+        </TableBody>
       </Table>
 
-      <Table celled>
-        <Table.Header>
-          <Table.Row>
-            <Table.HeaderCell>No</Table.HeaderCell>
-            <Table.HeaderCell>Product</Table.HeaderCell>
-            <Table.HeaderCell>Quantity</Table.HeaderCell>
-            <Table.HeaderCell>Unit Price</Table.HeaderCell>
-            <Table.HeaderCell>Amount</Table.HeaderCell>
-          </Table.Row>
-        </Table.Header>
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead>No</TableHead>
+            <TableHead>Product</TableHead>
+            <TableHead>Quantity</TableHead>
+            <TableHead>Unit Price</TableHead>
+            <TableHead>Amount</TableHead>
+          </TableRow>
+        </TableHeader>
 
-        <Table.Body>
+        <TableBody>
           {sales.products?.map((order, index) => (
-            <Table.Row key={order.id}>
-              <Table.Cell>{index + 1}</Table.Cell>
-              <Table.Cell>{order.title}</Table.Cell>
-              <Table.Cell>{order.invoiceItem?.quantity}</Table.Cell>
-              <Table.Cell>
+            <TableRow key={order.id}>
+              <TableCell>{index + 1}</TableCell>
+              <TableCell>{order.title}</TableCell>
+              <TableCell>{order.invoiceItem?.quantity}</TableCell>
+              <TableCell>
                 ₦
                 {order.invoiceItem?.unitPrice
                   ? numberWithCommas(order.invoiceItem?.unitPrice)
                   : 'N/A'}
-              </Table.Cell>
-              <Table.Cell>
+              </TableCell>
+              <TableCell>
                 ₦
                 {order.invoiceItem?.amount
                   ? numberWithCommas(order.invoiceItem?.amount)
                   : 'N/A'}
-              </Table.Cell>
-            </Table.Row>
+              </TableCell>
+            </TableRow>
           ))}
-        </Table.Body>
+        </TableBody>
       </Table>
-      <Button color="green" type="button" onClick={handlePrintFn}>
-        Print
-      </Button>
-
-      <Button color="yellow" as={Link} to={`${routes.INVOICE}/${salesId}`}>
-        Edit
-      </Button>
-      {isAdmin() ? (
-        <Button
-          style={{ marginTop: '1rem' }}
-          onClick={handleDeleteInvoice}
-          type="button"
-          negative
-        >
-          Delete
+      <div className="flex gap-2 flex-wrap">
+        <Button variant="outline" type="button" onClick={handlePrintFn}>
+          Print
         </Button>
-      ) : null}
+
+        <Button variant="secondary" asChild>
+          <Link to={`${routes.INVOICE}/${salesId}`}>Edit</Link>
+        </Button>
+        {isAdmin() ? (
+          <Button
+            onClick={handleDeleteInvoice}
+            type="button"
+            variant="destructive"
+          >
+            Delete
+          </Button>
+        ) : null}
+      </div>
       {renderInvoiceToPrint()}
-    </>
+    </div>
   );
 };
 

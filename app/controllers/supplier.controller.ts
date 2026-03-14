@@ -1,4 +1,4 @@
-import { toast } from 'react-toastify';
+import { toast } from 'sonner';
 import { ISupplier } from '../models/supplier';
 
 export const getSupplierPaymentsFn = async (
@@ -7,7 +7,11 @@ export const getSupplierPaymentsFn = async (
   endDate?: string
 ) => {
   try {
-    return await window.api.supplier.getPayments(supplierId, startDate, endDate);
+    return await window.api.supplier.getPayments(
+      supplierId,
+      startDate,
+      endDate
+    );
   } catch (error: any) {
     toast.error(error.message || '');
   }
@@ -19,7 +23,11 @@ export const getSupplierPurchasesFn = async (
   endDate: string
 ) => {
   try {
-    return await window.api.supplier.getPurchases(supplierId, startDate, endDate);
+    return await window.api.supplier.getPurchases(
+      supplierId,
+      startDate,
+      endDate
+    );
   } catch (error: any) {
     toast.error(error.message || '');
   }

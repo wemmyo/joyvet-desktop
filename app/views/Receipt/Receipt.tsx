@@ -1,15 +1,11 @@
 import React, { useEffect, useState } from 'react';
-import { Table, Button, Icon, Form, Loader } from 'semantic-ui-react';
-import { useAppDispatch } from '../../hooks';
-import moment from 'moment';
+import dayjs from 'dayjs';
+import { Plus, RefreshCw } from 'lucide-react';
 
 import DashboardLayout from '../../layouts/DashboardLayout/DashboardLayout';
 import CreateReceipt from './components/CreateReceipt/CreateReceipt';
 import { numberWithCommas } from '../../utils/helpers';
-import {
-  openSideContentFn,
-  closeSideContentFn,
-} from '../../slices/dashboardSlice';
+import { useSidebarContext } from '../../contexts/SidebarContext';
 import EditReceipt from './components/EditReceipt/EditReceipt';
 import ReceiptDetail from './components/ReceiptDetail/ReceiptDetail';
 import { IReceipt } from '../../models/receipt';
@@ -17,6 +13,16 @@ import {
   getReceiptsFn,
   searchReceiptFn,
 } from '../../controllers/receipt.controller';
+import { Button } from '../../components/ui/button';
+import { Input } from '../../components/ui/input';
+import {
+  Table,
+  TableHeader,
+  TableBody,
+  TableRow,
+  TableHead,
+  TableCell,
+} from '../../components/ui/table';
 
 const CONTENT_CREATE = 'create';
 const CONTENT_EDIT = 'edit';
@@ -29,7 +35,8 @@ const ReceiptsScreen: React.FC = () => {
   const [receipts, setReceipts] = useState<IReceipt[]>([]);
   const [loading, setLoading] = useState(false);
 
-  const dispatch = useAppDispatch();
+  const { openSideContent: openSideBar, closeSideContent: closeSideBar } =
+    useSidebarContext();
 
   const fetchReceipts = async () => {
     setLoading(true);
@@ -39,7 +46,7 @@ const ReceiptsScreen: React.FC = () => {
   };
 
   const openSideContent = (content: string) => {
-    dispatch(openSideContentFn());
+    openSideBar();
     setSideContent(content);
   };
 
@@ -48,14 +55,14 @@ const ReceiptsScreen: React.FC = () => {
 
     return () => {
       const closeSideContent = () => {
-        dispatch(closeSideContentFn());
+        closeSideBar();
         setSideContent('');
         setReceiptId('');
       };
 
       closeSideContent();
     };
-  }, [dispatch]);
+  }, []);
 
   const viewSingleReceipt = (id) => {
     setReceiptId(id);
@@ -65,13 +72,17 @@ const ReceiptsScreen: React.FC = () => {
   const renderRows = () => {
     const rows = receipts.map((each) => {
       return (
-        <Table.Row key={each.id} onClick={() => viewSingleReceipt(each.id)}>
-          <Table.Cell>{each.id}</Table.Cell>
-          <Table.Cell>{each.customer?.fullName}</Table.Cell>
-          <Table.Cell>{numberWithCommas(each.amount)}</Table.Cell>
-          <Table.Cell>{each.paymentMethod}</Table.Cell>
-          <Table.Cell>{moment(each.createdAt).format('DD/MM/YYYY')}</Table.Cell>
-        </Table.Row>
+        <TableRow
+          key={each.id}
+          onClick={() => viewSingleReceipt(each.id)}
+          className="cursor-pointer hover:bg-muted/50"
+        >
+          <TableCell>{each.id}</TableCell>
+          <TableCell>{each.customer?.fullName}</TableCell>
+          <TableCell>{numberWithCommas(each.amount)}</TableCell>
+          <TableCell>{each.paymentMethod}</TableCell>
+          <TableCell>{dayjs(each.createdAt).format('DD/MM/YYYY')}</TableCell>
+        </TableRow>
       );
     });
     return rows;
@@ -90,8 +101,8 @@ const ReceiptsScreen: React.FC = () => {
     return null;
   };
 
-  const handleSearchChange = (e, { value }: { value: string }) => {
-    setSearchValue(value);
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchValue(e.target.value);
   };
 
   useEffect(() => {
@@ -102,37 +113,35 @@ const ReceiptsScreen: React.FC = () => {
 
   const headerContent = () => {
     return (
-      <>
+      <div className="flex items-center gap-2 flex-wrap">
         <Button
-          color="blue"
-          icon
-          labelPosition="left"
           onClick={() => {
             openSideContent(CONTENT_CREATE);
           }}
         >
-          <Icon inverted color="grey" name="add" />
+          <Plus className="mr-1 h-4 w-4" />
           Create
         </Button>
-        <Button icon labelPosition="left" onClick={fetchReceipts}>
-          <Icon name="redo" />
+        <Button variant="outline" onClick={fetchReceipts}>
+          <RefreshCw className="mr-1 h-4 w-4" />
           Refresh
         </Button>
-        <Form
-          onSubmit={async () => {
+        <form
+          onSubmit={async (e) => {
+            e.preventDefault();
             setLoading(true);
             const response = await searchReceiptFn(searchValue);
             setReceipts(response);
             setLoading(false);
           }}
         >
-          <Form.Input
+          <Input
             placeholder="Search Receipt No"
             onChange={handleSearchChange}
             value={searchValue}
           />
-        </Form>
-      </>
+        </form>
+      </div>
     );
   };
 
@@ -143,20 +152,22 @@ const ReceiptsScreen: React.FC = () => {
       headerContent={headerContent()}
     >
       {loading ? (
-        <Loader active inline="centered" />
+        <div className="flex items-center justify-center p-8">
+          <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+        </div>
       ) : (
-        <Table celled striped>
-          <Table.Header>
-            <Table.Row>
-              <Table.HeaderCell>Receipt no</Table.HeaderCell>
-              <Table.HeaderCell>Customer</Table.HeaderCell>
-              <Table.HeaderCell>Amount</Table.HeaderCell>
-              <Table.HeaderCell>Payment Method</Table.HeaderCell>
-              <Table.HeaderCell>Date</Table.HeaderCell>
-            </Table.Row>
-          </Table.Header>
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Receipt no</TableHead>
+              <TableHead>Customer</TableHead>
+              <TableHead>Amount</TableHead>
+              <TableHead>Payment Method</TableHead>
+              <TableHead>Date</TableHead>
+            </TableRow>
+          </TableHeader>
 
-          <Table.Body>{renderRows()}</Table.Body>
+          <TableBody>{renderRows()}</TableBody>
         </Table>
       )}
     </DashboardLayout>

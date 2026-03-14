@@ -269,7 +269,9 @@ const createWindow = async () => {
       const forceDownload = !!process.env.UPGRADE_EXTENSIONS;
       const extensions = ["REACT_DEVELOPER_TOOLS", "REDUX_DEVTOOLS"];
       await Promise.all(
-        extensions.map((name) => installer.default(installer[name], forceDownload))
+        extensions.map(
+          (name) => installer.default(installer[name], forceDownload)
+        )
       ).catch(console.log);
     } catch (e) {
       console.log("DevTools extension error:", e);
@@ -347,15 +349,15 @@ electron.app.whenReady().then(async () => {
       role: "admin"
     });
   }
-  const { registerInvoiceHandlers } = await Promise.resolve().then(() => require("./chunks/invoice.handlers-y4OpzlGl.js"));
-  const { registerCustomerHandlers } = await Promise.resolve().then(() => require("./chunks/customer.handlers-f1HZObyI.js"));
-  const { registerProductHandlers } = await Promise.resolve().then(() => require("./chunks/product.handlers-Cfs_sFA5.js"));
-  const { registerUserHandlers } = await Promise.resolve().then(() => require("./chunks/user.handlers-Caa-9qrd.js"));
-  const { registerSupplierHandlers } = await Promise.resolve().then(() => require("./chunks/supplier.handlers-BQcAOmJZ.js"));
-  const { registerPurchaseHandlers } = await Promise.resolve().then(() => require("./chunks/purchase.handlers-B83QKX49.js"));
-  const { registerPaymentHandlers } = await Promise.resolve().then(() => require("./chunks/payment.handlers-B5g3iv6C.js"));
-  const { registerReceiptHandlers } = await Promise.resolve().then(() => require("./chunks/receipt.handlers-BLESBz7T.js"));
-  const { registerExpenseHandlers } = await Promise.resolve().then(() => require("./chunks/expense.handlers-DWNkmOcX.js"));
+  const { registerInvoiceHandlers } = await Promise.resolve().then(() => require("./chunks/invoice.handlers-bwHI08w7.js"));
+  const { registerCustomerHandlers } = await Promise.resolve().then(() => require("./chunks/customer.handlers-CLbkXNn-.js"));
+  const { registerProductHandlers } = await Promise.resolve().then(() => require("./chunks/product.handlers-zqbljPh_.js"));
+  const { registerUserHandlers } = await Promise.resolve().then(() => require("./chunks/user.handlers-qERNHyuZ.js"));
+  const { registerSupplierHandlers } = await Promise.resolve().then(() => require("./chunks/supplier.handlers-CKqfOFR3.js"));
+  const { registerPurchaseHandlers } = await Promise.resolve().then(() => require("./chunks/purchase.handlers-B6HpbW4Z.js"));
+  const { registerPaymentHandlers } = await Promise.resolve().then(() => require("./chunks/payment.handlers-CSzkYmA4.js"));
+  const { registerReceiptHandlers } = await Promise.resolve().then(() => require("./chunks/receipt.handlers-B3iaECqJ.js"));
+  const { registerExpenseHandlers } = await Promise.resolve().then(() => require("./chunks/expense.handlers-BpaZmlXw.js"));
   const { registerStoreInfoHandlers } = await Promise.resolve().then(() => require("./chunks/storeInfo.handlers-DsI117IS.js"));
   registerInvoiceHandlers();
   registerCustomerHandlers();

@@ -1,7 +1,14 @@
 import * as React from 'react';
-import { Table } from 'semantic-ui-react';
-import moment from 'moment';
+import dayjs from 'dayjs';
 import { numberWithCommas, isAdmin, sum } from '../../../../utils/helpers';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '../../../../components/ui/table';
 
 export interface CustomerHistoryPaymentsProps {
   data: any[];
@@ -13,16 +20,16 @@ const CustomerHistoryPayments: React.FC<CustomerHistoryPaymentsProps> = ({
   const renderPayments = () => {
     const allPayments = data.map((payment) => {
       return (
-        <Table.Row key={payment.id}>
-          <Table.Cell>{payment.id}</Table.Cell>
-          <Table.Cell>₦{numberWithCommas(payment.amount)}</Table.Cell>
-          <Table.Cell>{payment.paymentMethod}</Table.Cell>
-          <Table.Cell>{payment.bank}</Table.Cell>
-          <Table.Cell>
-            {moment(payment.createdAt).format('DD/MM/YY, h:mm a')}
-          </Table.Cell>
-          <Table.Cell>{payment.note}</Table.Cell>
-        </Table.Row>
+        <TableRow key={payment.id}>
+          <TableCell>{payment.id}</TableCell>
+          <TableCell>₦{numberWithCommas(payment.amount)}</TableCell>
+          <TableCell>{payment.paymentMethod}</TableCell>
+          <TableCell>{payment.bank}</TableCell>
+          <TableCell>
+            {dayjs(payment.createdAt).format('DD/MM/YY, h:mm a')}
+          </TableCell>
+          <TableCell>{payment.note}</TableCell>
+        </TableRow>
       );
     });
     return allPayments;
@@ -40,34 +47,26 @@ const CustomerHistoryPayments: React.FC<CustomerHistoryPaymentsProps> = ({
   };
 
   return (
-    <Table singleLine>
-      <Table.Header>
-        <Table.Row>
-          <Table.HeaderCell>Payment ID</Table.HeaderCell>
-          <Table.HeaderCell>Amount</Table.HeaderCell>
-          <Table.HeaderCell>Payment Method</Table.HeaderCell>
-          <Table.HeaderCell>Bank</Table.HeaderCell>
-          <Table.HeaderCell>Date & Time</Table.HeaderCell>
-          <Table.HeaderCell>Note</Table.HeaderCell>
-        </Table.Row>
-      </Table.Header>
-      <Table.Body>{renderPayments()}</Table.Body>
-
+    <>
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead>Payment ID</TableHead>
+            <TableHead>Amount</TableHead>
+            <TableHead>Payment Method</TableHead>
+            <TableHead>Bank</TableHead>
+            <TableHead>Date &amp; Time</TableHead>
+            <TableHead>Note</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>{renderPayments()}</TableBody>
+      </Table>
       {isAdmin() ? (
-        <Table.Footer>
-          <Table.Row>
-            <Table.HeaderCell />
-            <Table.HeaderCell style={{ fontWeight: 'bold' }}>
-              Total: ₦{numberWithCommas(sumOfAmounts())}
-            </Table.HeaderCell>
-            <Table.HeaderCell />
-            <Table.HeaderCell />
-            <Table.HeaderCell />
-            <Table.HeaderCell />
-          </Table.Row>
-        </Table.Footer>
+        <div className="mt-2 text-right font-semibold">
+          Total: ₦{numberWithCommas(sumOfAmounts())}
+        </div>
       ) : null}
-    </Table>
+    </>
   );
 };
 

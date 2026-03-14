@@ -1,15 +1,12 @@
 import { ipcMain } from 'electron';
 import { Op } from 'sequelize';
-import moment from 'moment';
+import dayjs from 'dayjs';
 import { z } from 'zod';
 import Purchase from '../../models/purchase';
 import Supplier from '../../models/supplier';
 import Product from '../../models/product';
 import database from '../database';
-import {
-  getPurchases,
-  getPurchaseById,
-} from '../../services/purchase.service';
+import { getPurchases, getPurchaseById } from '../../services/purchase.service';
 
 export function registerPurchaseHandlers(): void {
   ipcMain.handle('purchase:getAll', async () => {
@@ -24,9 +21,7 @@ export function registerPurchaseHandlers(): void {
     const purchase = await getPurchaseById(id, {
       include: [{ model: Supplier }, { model: Product }],
     });
-    return (purchase as any).toJSON
-      ? (purchase as any).toJSON()
-      : purchase;
+    return (purchase as any).toJSON ? (purchase as any).toJSON() : purchase;
   });
 
   ipcMain.handle(
@@ -147,19 +142,14 @@ export function registerPurchaseHandlers(): void {
 
   ipcMain.handle(
     'purchase:filter',
-    async (
-      _event,
-      startDate: string,
-      endDate: string,
-      supplierId?: number
-    ) => {
+    async (_event, startDate: string, endDate: string, supplierId?: number) => {
       const whereClause: any = {};
 
       if (startDate && endDate) {
         whereClause.createdAt = {
           [Op.between]: [
-            `${moment(startDate).format('YYYY-MM-DD')} 00:00:00`,
-            `${moment(endDate).format('YYYY-MM-DD')} 23:59:59`,
+            `${dayjs(startDate).format('YYYY-MM-DD')} 00:00:00`,
+            `${dayjs(endDate).format('YYYY-MM-DD')} 23:59:59`,
           ],
         };
       }

@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useRef } from 'react';
-import { Form, Button, Tab } from 'semantic-ui-react';
-import moment from 'moment';
+import dayjs from 'dayjs';
 import { useReactToPrint } from 'react-to-print';
+import { Printer } from 'lucide-react';
 
 import DashboardLayout from '../../layouts/DashboardLayout/DashboardLayout';
 import CustomerHistoryInvoices from './components/Invoices/Invoices';
@@ -12,14 +12,18 @@ import {
 } from '../../controllers/customer.controller';
 import { IReceipt } from '../../models/receipt';
 import { IInvoice } from '../../models/invoice';
+import { Button } from '../../components/ui/button';
+import { Input } from '../../components/ui/input';
+import { Label } from '../../components/ui/label';
 
-const TODAYS_DATE = `${moment().format('YYYY-MM-DD')}`;
+const TODAYS_DATE = `${dayjs().format('YYYY-MM-DD')}`;
 
 const CustomerHistory: React.FC = ({ match }: any) => {
   const [startDate, setStartDate] = useState(TODAYS_DATE);
   const [endDate, setEndDate] = useState(TODAYS_DATE);
   const [receipts, setReceipts] = useState<IReceipt[]>([]);
   const [invoices, setInvoices] = useState<IInvoice[]>([]);
+  const [activeTab, setActiveTab] = useState('Receipts');
 
   const customerId = match.params.id;
 
@@ -58,62 +62,66 @@ const CustomerHistory: React.FC = ({ match }: any) => {
     setEndDate(TODAYS_DATE);
   };
 
-  const panes = [
-    {
-      menuItem: 'Receipts',
-      render: function ReceiptsTab() {
-        return (
-          <Tab.Pane>
-            <CustomerHistoryReceipts data={receipts} />
-          </Tab.Pane>
-        );
-      },
-    },
-    {
-      menuItem: 'Invoices',
-      render: function InvoicesTab() {
-        return (
-          <Tab.Pane>
-            <CustomerHistoryInvoices data={invoices} />
-          </Tab.Pane>
-        );
-      },
-    },
-  ];
+  const tabs = ['Receipts', 'Invoices'];
 
   return (
     <DashboardLayout screenTitle="Customer History">
       <div ref={componentRef}>
-        <div
-          style={{
-            display: 'flex',
-            justifyContent: 'flex-start',
-            alignItems: 'center',
-          }}
-        >
-          <Button onClick={handlePrint} icon="print" />
-          <Form>
-            <Form.Group>
-              <Form.Input
-                label="Start Date"
+        <div className="flex items-center gap-3 mb-4">
+          <Button variant="outline" size="icon" onClick={handlePrint}>
+            <Printer className="h-4 w-4" />
+          </Button>
+          <div className="flex items-end gap-3">
+            <div className="flex flex-col gap-1">
+              <Label htmlFor="startDate">Start Date</Label>
+              <Input
+                id="startDate"
                 type="date"
-                onChange={(e, { value }) => setStartDate(value)}
                 value={startDate}
+                onChange={(e) => setStartDate(e.target.value)}
               />
-              <Form.Input
-                label="End Date"
+            </div>
+            <div className="flex flex-col gap-1">
+              <Label htmlFor="endDate">End Date</Label>
+              <Input
+                id="endDate"
                 type="date"
-                onChange={(e, { value }) => setEndDate(value)}
                 value={endDate}
+                onChange={(e) => setEndDate(e.target.value)}
               />
-            </Form.Group>
-          </Form>
-          <Button style={{ marginLeft: 10 }} onClick={resetFilters}>
+            </div>
+          </div>
+          <Button variant="outline" onClick={resetFilters} className="self-end">
             Reset
           </Button>
         </div>
 
-        <Tab panes={panes} />
+        <div>
+          <div className="flex border-b mb-4">
+            {tabs.map((tab) => (
+              <button
+                key={tab}
+                type="button"
+                onClick={() => setActiveTab(tab)}
+                className={`px-4 py-2 text-sm font-medium border-b-2 -mb-px transition-colors ${
+                  activeTab === tab
+                    ? 'border-primary text-primary'
+                    : 'border-transparent text-muted-foreground hover:text-foreground'
+                }`}
+              >
+                {tab}
+              </button>
+            ))}
+          </div>
+          <div>
+            {activeTab === 'Receipts' && (
+              <CustomerHistoryReceipts data={receipts} />
+            )}
+            {activeTab === 'Invoices' && (
+              <CustomerHistoryInvoices data={invoices} />
+            )}
+          </div>
+        </div>
       </div>
     </DashboardLayout>
   );

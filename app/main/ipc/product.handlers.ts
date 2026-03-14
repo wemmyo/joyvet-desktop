@@ -1,6 +1,6 @@
 import { ipcMain } from 'electron';
 import { Op } from 'sequelize';
-import moment from 'moment';
+import dayjs from 'dayjs';
 import { z } from 'zod';
 import {
   getProducts,
@@ -69,8 +69,8 @@ export function registerProductHandlers(): void {
           productId,
           createdAt: {
             [Op.between]: [
-              `${moment(startDate).format('YYYY-MM-DD')} 00:00:00`,
-              `${moment(endDate).format('YYYY-MM-DD')} 23:00:00`,
+              `${dayjs(startDate).format('YYYY-MM-DD')} 00:00:00`,
+              `${dayjs(endDate).format('YYYY-MM-DD')} 23:00:00`,
             ],
           },
         },
@@ -88,8 +88,8 @@ export function registerProductHandlers(): void {
           productId,
           createdAt: {
             [Op.between]: [
-              `${moment(startDate).format('YYYY-MM-DD')} 00:00:00`,
-              `${moment(endDate).format('YYYY-MM-DD')} 23:00:00`,
+              `${dayjs(startDate).format('YYYY-MM-DD')} 00:00:00`,
+              `${dayjs(endDate).format('YYYY-MM-DD')} 23:00:00`,
             ],
           },
         },

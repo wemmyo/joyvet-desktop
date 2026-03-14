@@ -1,7 +1,14 @@
 import * as React from 'react';
-import { Table } from 'semantic-ui-react';
-import moment from 'moment';
+import dayjs from 'dayjs';
 import { numberWithCommas, isAdmin, sum } from '../../../../utils/helpers';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '../../../../components/ui/table';
 
 export interface CustomerHistoryPurchasesProps {
   data: any[];
@@ -13,14 +20,14 @@ const CustomerHistoryPurchases: React.FC<CustomerHistoryPurchasesProps> = ({
   const renderPurchases = () => {
     const allPurchases = data.map((invoice) => {
       return (
-        <Table.Row key={invoice.id}>
-          <Table.Cell>{invoice.id}</Table.Cell>
-          <Table.Cell>{invoice.invoiceNumber}</Table.Cell>
-          <Table.Cell>₦{numberWithCommas(invoice.amount)}</Table.Cell>
-          <Table.Cell>
-            {moment(invoice.createdAt).format('DD/MM/YY, h:mm a')}
-          </Table.Cell>
-        </Table.Row>
+        <TableRow key={invoice.id}>
+          <TableCell>{invoice.id}</TableCell>
+          <TableCell>{invoice.invoiceNumber}</TableCell>
+          <TableCell>₦{numberWithCommas(invoice.amount)}</TableCell>
+          <TableCell>
+            {dayjs(invoice.createdAt).format('DD/MM/YY, h:mm a')}
+          </TableCell>
+        </TableRow>
       );
     });
     return allPurchases;
@@ -38,30 +45,24 @@ const CustomerHistoryPurchases: React.FC<CustomerHistoryPurchasesProps> = ({
   };
 
   return (
-    <Table singleLine>
-      <Table.Header>
-        <Table.Row>
-          <Table.HeaderCell>Purchase ID</Table.HeaderCell>
-          <Table.HeaderCell>Invoice Number</Table.HeaderCell>
-          <Table.HeaderCell>Amount</Table.HeaderCell>
-          <Table.HeaderCell>Date & Time</Table.HeaderCell>
-        </Table.Row>
-      </Table.Header>
-      <Table.Body>{renderPurchases()}</Table.Body>
-
+    <>
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead>Purchase ID</TableHead>
+            <TableHead>Invoice Number</TableHead>
+            <TableHead>Amount</TableHead>
+            <TableHead>Date &amp; Time</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>{renderPurchases()}</TableBody>
+      </Table>
       {isAdmin() ? (
-        <Table.Footer>
-          <Table.Row>
-            <Table.HeaderCell />
-            <Table.HeaderCell />
-            <Table.HeaderCell style={{ fontWeight: 'bold' }}>
-              Total: ₦{numberWithCommas(sumOfAmounts())}
-            </Table.HeaderCell>
-            <Table.HeaderCell />
-          </Table.Row>
-        </Table.Footer>
+        <div className="mt-2 text-right font-semibold">
+          Total: ₦{numberWithCommas(sumOfAmounts())}
+        </div>
       ) : null}
-    </Table>
+    </>
   );
 };
 

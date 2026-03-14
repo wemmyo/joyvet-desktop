@@ -35,8 +35,11 @@ export default defineConfig({
     plugins: [react()],
     resolve: {
       alias: {
-        '@': join(__dirname, 'app/renderer/src'),
+        '@': join(__dirname, 'app'),
       },
+    },
+    optimizeDeps: {
+      exclude: ['@reduxjs/toolkit', 'react-redux', 'redux', 'redux-logger'],
     },
   },
 });

@@ -1,18 +1,18 @@
-jest.mock('react-toastify', () => ({
-  toast: { success: jest.fn(), error: jest.fn() },
+vi.mock('sonner', () => ({
+  toast: { success: vi.fn(), error: vi.fn() },
 }));
 
 // Mock window.api (provided by contextBridge in production)
 const mockApi = {
   customer: {
-    getAll: jest.fn(),
-    getById: jest.fn(),
-    create: jest.fn(),
-    update: jest.fn(),
-    delete: jest.fn(),
-    search: jest.fn(),
-    getInvoices: jest.fn(),
-    getReceipts: jest.fn(),
+    getAll: vi.fn(),
+    getById: vi.fn(),
+    create: vi.fn(),
+    update: vi.fn(),
+    delete: vi.fn(),
+    search: vi.fn(),
+    getInvoices: vi.fn(),
+    getReceipts: vi.fn(),
   },
 };
 Object.defineProperty(global, 'window', {
@@ -20,7 +20,7 @@ Object.defineProperty(global, 'window', {
   writable: true,
 });
 
-import { toast } from 'react-toastify';
+import { toast } from 'sonner';
 import {
   getCustomersFn,
   createCustomerFn,
@@ -42,8 +42,11 @@ const mockCustomer = {
 
 describe('customer controller', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
-    localStorage.setItem('user', JSON.stringify({ fullName: 'admin', role: 'admin' }));
+    vi.clearAllMocks();
+    localStorage.setItem(
+      'user',
+      JSON.stringify({ fullName: 'admin', role: 'admin' })
+    );
   });
 
   describe('getCustomersFn', () => {
@@ -64,8 +67,11 @@ describe('customer controller', () => {
   describe('createCustomerFn', () => {
     it('creates a customer and calls toast.success', async () => {
       mockApi.customer.create.mockResolvedValue(mockCustomer);
-      const cb = jest.fn();
-      await createCustomerFn({ fullName: 'Test Customer', phoneNumber: '123', address: 'Addr' }, cb);
+      const cb = vi.fn();
+      await createCustomerFn(
+        { fullName: 'Test Customer', phoneNumber: '123', address: 'Addr' },
+        cb
+      );
       expect(mockApi.customer.create).toHaveBeenCalled();
       expect(toast.success).toHaveBeenCalledWith('Successfully created');
       expect(cb).toHaveBeenCalled();
@@ -81,8 +87,12 @@ describe('customer controller', () => {
   describe('updateCustomerFn', () => {
     it('updates a customer and calls toast.success', async () => {
       mockApi.customer.update.mockResolvedValue(undefined);
-      const cb = jest.fn();
-      await updateCustomerFn({ fullName: 'Updated', phoneNumber: '123', address: 'Addr' }, 1, cb);
+      const cb = vi.fn();
+      await updateCustomerFn(
+        { fullName: 'Updated', phoneNumber: '123', address: 'Addr' },
+        1,
+        cb
+      );
       expect(toast.success).toHaveBeenCalled();
       expect(cb).toHaveBeenCalled();
     });
@@ -91,7 +101,7 @@ describe('customer controller', () => {
   describe('deleteCustomerFn', () => {
     it('deletes a customer and calls toast.success', async () => {
       mockApi.customer.delete.mockResolvedValue(undefined);
-      const cb = jest.fn();
+      const cb = vi.fn();
       await deleteCustomerFn(1, cb);
       expect(toast.success).toHaveBeenCalledWith('Successfully deleted');
       expect(cb).toHaveBeenCalled();

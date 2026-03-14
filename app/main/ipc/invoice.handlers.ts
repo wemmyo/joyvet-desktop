@@ -1,6 +1,6 @@
 import { ipcMain } from 'electron';
 import { Op } from 'sequelize';
-import moment from 'moment';
+import dayjs from 'dayjs';
 import { z } from 'zod';
 import database from '../database';
 import Invoice from '../../models/invoice';
@@ -42,7 +42,7 @@ export function registerInvoiceHandlers(): void {
       const MAX_DATE_RANGE = 90;
 
       if (startDate && endDate) {
-        const dateDifference = moment(endDate).diff(moment(startDate), 'days');
+        const dateDifference = dayjs(endDate).diff(dayjs(startDate), 'days');
         if (dateDifference > MAX_DATE_RANGE) {
           throw new Error(
             `Date range too large. Please select a range smaller than ${MAX_DATE_RANGE} days.`
@@ -55,8 +55,8 @@ export function registerInvoiceHandlers(): void {
       if (startDate && endDate) {
         whereClause.createdAt = {
           [Op.between]: [
-            `${moment(startDate).format('YYYY-MM-DD')} 00:00:00`,
-            `${moment(endDate).format('YYYY-MM-DD')} 23:59:59`,
+            `${dayjs(startDate).format('YYYY-MM-DD')} 00:00:00`,
+            `${dayjs(endDate).format('YYYY-MM-DD')} 23:59:59`,
           ],
         };
       }
@@ -110,9 +110,7 @@ export function registerInvoiceHandlers(): void {
               transaction: t,
             });
             if (!item.quantity) {
-              throw new Error(
-                `Quantity missing for ${(product as any).title}`
-              );
+              throw new Error(`Quantity missing for ${(product as any).title}`);
             }
             if (item.quantity > (product as any).stock) {
               throw new Error(
@@ -208,8 +206,7 @@ export function registerInvoiceHandlers(): void {
         const product = await Product.findByPk(productId, { transaction: t });
         if (!product) throw new Error('Product not found');
 
-        const newStock =
-          (product as any).stock + (invoiceItem as any).quantity;
+        const newStock = (product as any).stock + (invoiceItem as any).quantity;
         if (newStock < 0) {
           throw new Error(
             `Deleting this item would result in negative stock for: ${
@@ -233,9 +230,7 @@ export function registerInvoiceHandlers(): void {
           { transaction: t }
         );
 
-        if (
-          ['credit', 'transfer'].includes((invoice as any).saleType)
-        ) {
+        if (['credit', 'transfer'].includes((invoice as any).saleType)) {
           await Customer.decrement('balance', {
             by: (invoiceItem as any).amount,
             where: { id: (invoice as any).customerId },
@@ -257,10 +252,9 @@ export function registerInvoiceHandlers(): void {
         });
         if (!invoice) throw new Error('Invoice not found');
 
-        const product = await Product.findByPk(
-          currentInvoiceItem.product?.id,
-          { transaction: t }
-        );
+        const product = await Product.findByPk(currentInvoiceItem.product?.id, {
+          transaction: t,
+        });
         if (!product) throw new Error('Product not found');
 
         const existingItem = await InvoiceItem.findOne({
@@ -321,8 +315,7 @@ export function registerInvoiceHandlers(): void {
           { transaction: t }
         );
 
-        const newStock =
-          (product as any).stock - currentInvoiceItem.quantity;
+        const newStock = (product as any).stock - currentInvoiceItem.quantity;
         if (newStock < 0) {
           throw new Error(
             `Not enough stock for: ${(product as any).title}. Only ${
@@ -333,9 +326,7 @@ export function registerInvoiceHandlers(): void {
 
         await (product as any).update({ stock: newStock }, { transaction: t });
 
-        if (
-          ['credit', 'transfer'].includes(currentInvoice.saleType)
-        ) {
+        if (['credit', 'transfer'].includes(currentInvoice.saleType)) {
           await Customer.increment('balance', {
             by: currentInvoiceItem.amount,
             where: { id: (invoice as any).customerId },

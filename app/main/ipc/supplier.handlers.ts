@@ -1,6 +1,6 @@
 import { ipcMain } from 'electron';
 import { Op } from 'sequelize';
-import moment from 'moment';
+import dayjs from 'dayjs';
 import { z } from 'zod';
 import Payment from '../../models/payment';
 import Purchase from '../../models/purchase';
@@ -20,9 +20,7 @@ export function registerSupplierHandlers(): void {
 
   ipcMain.handle('supplier:getById', async (_event, id: number) => {
     const supplier = await getSupplierById(id);
-    return (supplier as any).toJSON
-      ? (supplier as any).toJSON()
-      : supplier;
+    return (supplier as any).toJSON ? (supplier as any).toJSON() : supplier;
   });
 
   ipcMain.handle('supplier:create', async (_event, values: any) => {
@@ -36,19 +34,16 @@ export function registerSupplierHandlers(): void {
     return (supplier as any).toJSON ? (supplier as any).toJSON() : supplier;
   });
 
-  ipcMain.handle(
-    'supplier:update',
-    async (_event, id: number, values: any) => {
-      const schema = z.object({
-        id: z.number(),
-        fullName: z.string().min(1),
-        phoneNumber: z.string(),
-        address: z.string(),
-      });
-      schema.parse({ ...values, id });
-      await updateSupplier(id, values);
-    }
-  );
+  ipcMain.handle('supplier:update', async (_event, id: number, values: any) => {
+    const schema = z.object({
+      id: z.number(),
+      fullName: z.string().min(1),
+      phoneNumber: z.string(),
+      address: z.string(),
+    });
+    schema.parse({ ...values, id });
+    await updateSupplier(id, values);
+  });
 
   ipcMain.handle('supplier:delete', async (_event, id: number) => {
     await deleteSupplier(id);
@@ -78,8 +73,8 @@ export function registerSupplierHandlers(): void {
           supplierId,
           createdAt: {
             [Op.between]: [
-              `${moment(startDate).format('YYYY-MM-DD')} 00:00:00`,
-              `${moment(endDate).format('YYYY-MM-DD')} 23:00:00`,
+              `${dayjs(startDate).format('YYYY-MM-DD')} 00:00:00`,
+              `${dayjs(endDate).format('YYYY-MM-DD')} 23:00:00`,
             ],
           },
         },
@@ -104,8 +99,8 @@ export function registerSupplierHandlers(): void {
           supplierId,
           createdAt: {
             [Op.between]: [
-              `${moment(startDate).format('YYYY-MM-DD')} 00:00:00`,
-              `${moment(endDate).format('YYYY-MM-DD')} 23:00:00`,
+              `${dayjs(startDate).format('YYYY-MM-DD')} 00:00:00`,
+              `${dayjs(endDate).format('YYYY-MM-DD')} 23:00:00`,
             ],
           },
         },

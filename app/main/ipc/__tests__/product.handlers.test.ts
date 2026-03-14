@@ -1,40 +1,40 @@
 const handlers: Record<string, Function> = {};
 
-jest.mock('electron', () => ({
+vi.mock('electron', () => ({
   ipcMain: {
-    handle: jest.fn((channel: string, handler: Function) => {
+    handle: vi.fn((channel: string, handler: Function) => {
       handlers[channel] = handler;
     }),
-    on: jest.fn(),
+    on: vi.fn(),
   },
-  app: { getPath: () => '/tmp/test', quit: jest.fn() },
+  app: { getPath: () => '/tmp/test', quit: vi.fn() },
   dialog: {
-    showOpenDialogSync: jest.fn(() => ['/tmp/test.db']),
-    showSaveDialogSync: jest.fn(() => '/tmp/test.db'),
+    showOpenDialogSync: vi.fn(() => ['/tmp/test.db']),
+    showSaveDialogSync: vi.fn(() => '/tmp/test.db'),
   },
 }));
 
-jest.mock('../../database', () => ({
+vi.mock('../../database', () => ({
   default: {
-    transaction: jest.fn((cb: Function) => cb({})),
-    sync: jest.fn(),
+    transaction: vi.fn((cb: Function) => cb({})),
+    sync: vi.fn(),
   },
 }));
 
-jest.mock('../../../services/product.service', () => ({
-  getProducts: jest.fn(),
-  getProductById: jest.fn(),
-  createProduct: jest.fn(),
-  updateProduct: jest.fn(),
-  deleteProduct: jest.fn(),
+vi.mock('../../../services/product.service', () => ({
+  getProducts: vi.fn(),
+  getProductById: vi.fn(),
+  createProduct: vi.fn(),
+  updateProduct: vi.fn(),
+  deleteProduct: vi.fn(),
 }));
 
-jest.mock('../../../services/purchaseItem.service', () => ({
-  getPurchaseItems: jest.fn(),
+vi.mock('../../../services/purchaseItem.service', () => ({
+  getPurchaseItems: vi.fn(),
 }));
 
-jest.mock('../../../services/invoiceItem.service', () => ({
-  getInvoiceItems: jest.fn(),
+vi.mock('../../../services/invoiceItem.service', () => ({
+  getInvoiceItems: vi.fn(),
 }));
 
 import * as productService from '../../../services/product.service';
@@ -69,19 +69,19 @@ describe('product IPC handlers', () => {
   });
 
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   // ------------------------------------------------------------------ getAll
   describe('product:getAll', () => {
     it('returns all products serialized', async () => {
-      (productService.getProducts as jest.Mock).mockResolvedValue([mockProduct]);
+      (productService.getProducts as any).mockResolvedValue([mockProduct]);
       const result = await handlers['product:getAll'](mockEvent);
       expect(result).toEqual([mockProduct.toJSON()]);
     });
 
     it('orders by title ASC', async () => {
-      (productService.getProducts as jest.Mock).mockResolvedValue([]);
+      (productService.getProducts as any).mockResolvedValue([]);
       await handlers['product:getAll'](mockEvent);
       expect(productService.getProducts).toHaveBeenCalledWith(
         expect.objectContaining({ order: [['title', 'ASC']] })
@@ -89,7 +89,7 @@ describe('product IPC handlers', () => {
     });
 
     it('filters in-stock products when filter is "inStock"', async () => {
-      (productService.getProducts as jest.Mock).mockResolvedValue([mockProduct]);
+      (productService.getProducts as any).mockResolvedValue([mockProduct]);
       await handlers['product:getAll'](mockEvent, 'inStock');
       expect(productService.getProducts).toHaveBeenCalledWith(
         expect.objectContaining({ where: expect.any(Object) })
@@ -97,14 +97,14 @@ describe('product IPC handlers', () => {
     });
 
     it('does not add a where clause when no filter is provided', async () => {
-      (productService.getProducts as jest.Mock).mockResolvedValue([]);
+      (productService.getProducts as any).mockResolvedValue([]);
       await handlers['product:getAll'](mockEvent);
-      const callArg = (productService.getProducts as jest.Mock).mock.calls[0][0];
+      const callArg = (productService.getProducts as any).mock.calls[0][0];
       expect(callArg.where).toBeUndefined();
     });
 
     it('throws on service error', async () => {
-      (productService.getProducts as jest.Mock).mockRejectedValue(
+      (productService.getProducts as any).mockRejectedValue(
         new Error('DB error')
       );
       await expect(handlers['product:getAll'](mockEvent)).rejects.toThrow(
@@ -116,9 +116,7 @@ describe('product IPC handlers', () => {
   // --------------------------------------------------------------- getById
   describe('product:getById', () => {
     it('returns single product serialized', async () => {
-      (productService.getProductById as jest.Mock).mockResolvedValue(
-        mockProduct
-      );
+      (productService.getProductById as any).mockResolvedValue(mockProduct);
       const result = await handlers['product:getById'](mockEvent, 1);
       expect(result).toEqual(mockProduct.toJSON());
     });
@@ -127,7 +125,7 @@ describe('product IPC handlers', () => {
   // ------------------------------------------------------------------ create
   describe('product:create', () => {
     it('creates a product with valid data', async () => {
-      (productService.createProduct as jest.Mock).mockResolvedValue(undefined);
+      (productService.createProduct as any).mockResolvedValue(undefined);
       await handlers['product:create'](mockEvent, {
         title: 'New Product',
         sellPrice: 500,
@@ -162,7 +160,7 @@ describe('product IPC handlers', () => {
   // ------------------------------------------------------------------ update
   describe('product:update', () => {
     it('updates a product', async () => {
-      (productService.updateProduct as jest.Mock).mockResolvedValue([1]);
+      (productService.updateProduct as any).mockResolvedValue([1]);
       await handlers['product:update'](mockEvent, 1, { sellPrice: 600 });
       expect(productService.updateProduct).toHaveBeenCalledWith(1, {
         sellPrice: 600,
@@ -173,7 +171,7 @@ describe('product IPC handlers', () => {
   // ------------------------------------------------------------------ delete
   describe('product:delete', () => {
     it('deletes a product', async () => {
-      (productService.deleteProduct as jest.Mock).mockResolvedValue(1);
+      (productService.deleteProduct as any).mockResolvedValue(1);
       await handlers['product:delete'](mockEvent, 1);
       expect(productService.deleteProduct).toHaveBeenCalledWith(1);
     });
@@ -182,24 +180,22 @@ describe('product IPC handlers', () => {
   // ------------------------------------------------------------------ search
   describe('product:search', () => {
     it('returns matching products', async () => {
-      (productService.getProducts as jest.Mock).mockResolvedValue([mockProduct]);
+      (productService.getProducts as any).mockResolvedValue([mockProduct]);
       const result = await handlers['product:search'](mockEvent, 'Test');
       expect(Array.isArray(result)).toBe(true);
       expect(result).toEqual([mockProduct.toJSON()]);
     });
 
     it('passes a substring where clause on title', async () => {
-      (productService.getProducts as jest.Mock).mockResolvedValue([]);
+      (productService.getProducts as any).mockResolvedValue([]);
       await handlers['product:search'](mockEvent, 'Query');
-      const callArg = (productService.getProducts as jest.Mock).mock.calls[0][0];
+      const callArg = (productService.getProducts as any).mock.calls[0][0];
       expect(callArg.where).toBeDefined();
       expect(callArg.where.title).toBeDefined();
     });
 
     it('throws on empty search string', async () => {
-      await expect(
-        handlers['product:search'](mockEvent, '')
-      ).rejects.toThrow();
+      await expect(handlers['product:search'](mockEvent, '')).rejects.toThrow();
     });
   });
 
@@ -207,9 +203,7 @@ describe('product IPC handlers', () => {
   describe('product:getInvoices', () => {
     it('returns invoice items for a product in date range', async () => {
       const mockItem = { toJSON: () => ({ id: 10, productId: 1 }) };
-      (invoiceItemService.getInvoiceItems as jest.Mock).mockResolvedValue([
-        mockItem,
-      ]);
+      (invoiceItemService.getInvoiceItems as any).mockResolvedValue([mockItem]);
       const result = await handlers['product:getInvoices'](
         mockEvent,
         1,
@@ -224,7 +218,7 @@ describe('product IPC handlers', () => {
   describe('product:getPurchases', () => {
     it('returns purchase items for a product in date range', async () => {
       const mockItem = { toJSON: () => ({ id: 20, productId: 1 }) };
-      (purchaseItemService.getPurchaseItems as jest.Mock).mockResolvedValue([
+      (purchaseItemService.getPurchaseItems as any).mockResolvedValue([
         mockItem,
       ]);
       const result = await handlers['product:getPurchases'](

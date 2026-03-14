@@ -1,44 +1,44 @@
 const handlers: Record<string, Function> = {};
 
-jest.mock('electron', () => ({
+vi.mock('electron', () => ({
   ipcMain: {
-    handle: jest.fn((channel: string, handler: Function) => {
+    handle: vi.fn((channel: string, handler: Function) => {
       handlers[channel] = handler;
     }),
-    on: jest.fn(),
+    on: vi.fn(),
   },
-  app: { getPath: () => '/tmp/test', quit: jest.fn() },
+  app: { getPath: () => '/tmp/test', quit: vi.fn() },
   dialog: {
-    showOpenDialogSync: jest.fn(() => ['/tmp/test.db']),
-    showSaveDialogSync: jest.fn(() => '/tmp/test.db'),
+    showOpenDialogSync: vi.fn(() => ['/tmp/test.db']),
+    showSaveDialogSync: vi.fn(() => '/tmp/test.db'),
   },
 }));
 
-jest.mock('../../database', () => ({
+vi.mock('../../database', () => ({
   default: {
-    transaction: jest.fn((cb: Function) => cb({})),
-    sync: jest.fn(),
+    transaction: vi.fn((cb: Function) => cb({})),
+    sync: vi.fn(),
   },
 }));
 
-jest.mock('../../../services/customer.service', () => ({
-  getCustomers: jest.fn(),
-  getCustomerById: jest.fn(),
-  createCustomer: jest.fn(),
-  updateCustomer: jest.fn(),
-  deleteCustomer: jest.fn(),
+vi.mock('../../../services/customer.service', () => ({
+  getCustomers: vi.fn(),
+  getCustomerById: vi.fn(),
+  createCustomer: vi.fn(),
+  updateCustomer: vi.fn(),
+  deleteCustomer: vi.fn(),
 }));
 
-jest.mock('../../../services/receipt.service', () => ({
-  getReceipts: jest.fn(),
+vi.mock('../../../services/receipt.service', () => ({
+  getReceipts: vi.fn(),
 }));
 
-jest.mock('../../../services/invoice.service', () => ({
-  getInvoices: jest.fn(),
-  getInvoiceById: jest.fn(),
-  createInvoice: jest.fn(),
-  updateInvoice: jest.fn(),
-  deleteInvoice: jest.fn(),
+vi.mock('../../../services/invoice.service', () => ({
+  getInvoices: vi.fn(),
+  getInvoiceById: vi.fn(),
+  createInvoice: vi.fn(),
+  updateInvoice: vi.fn(),
+  deleteInvoice: vi.fn(),
 }));
 
 import * as customerService from '../../../services/customer.service';
@@ -70,21 +70,19 @@ describe('customer IPC handlers', () => {
   });
 
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   // ------------------------------------------------------------------ getAll
   describe('customer:getAll', () => {
     it('returns all customers serialized', async () => {
-      (customerService.getCustomers as jest.Mock).mockResolvedValue([
-        mockCustomer,
-      ]);
+      (customerService.getCustomers as any).mockResolvedValue([mockCustomer]);
       const result = await handlers['customer:getAll'](mockEvent);
       expect(result).toEqual([mockCustomer.toJSON()]);
     });
 
     it('orders by fullName ASC', async () => {
-      (customerService.getCustomers as jest.Mock).mockResolvedValue([]);
+      (customerService.getCustomers as any).mockResolvedValue([]);
       await handlers['customer:getAll'](mockEvent);
       expect(customerService.getCustomers).toHaveBeenCalledWith(
         expect.objectContaining({ order: [['fullName', 'ASC']] })
@@ -92,7 +90,7 @@ describe('customer IPC handlers', () => {
     });
 
     it('throws on service error', async () => {
-      (customerService.getCustomers as jest.Mock).mockRejectedValue(
+      (customerService.getCustomers as any).mockRejectedValue(
         new Error('DB error')
       );
       await expect(handlers['customer:getAll'](mockEvent)).rejects.toThrow(
@@ -104,9 +102,7 @@ describe('customer IPC handlers', () => {
   // --------------------------------------------------------------- getById
   describe('customer:getById', () => {
     it('returns single customer serialized', async () => {
-      (customerService.getCustomerById as jest.Mock).mockResolvedValue(
-        mockCustomer
-      );
+      (customerService.getCustomerById as any).mockResolvedValue(mockCustomer);
       const result = await handlers['customer:getById'](mockEvent, 1);
       expect(result).toEqual(mockCustomer.toJSON());
     });
@@ -115,9 +111,7 @@ describe('customer IPC handlers', () => {
   // ------------------------------------------------------------------ create
   describe('customer:create', () => {
     it('creates a customer and returns serialized result', async () => {
-      (customerService.createCustomer as jest.Mock).mockResolvedValue(
-        mockCustomer
-      );
+      (customerService.createCustomer as any).mockResolvedValue(mockCustomer);
       const result = await handlers['customer:create'](mockEvent, {
         fullName: 'Test Customer',
         phoneNumber: '123456789',
@@ -128,9 +122,7 @@ describe('customer IPC handlers', () => {
     });
 
     it('accepts optional phoneNumber and address', async () => {
-      (customerService.createCustomer as jest.Mock).mockResolvedValue(
-        mockCustomer
-      );
+      (customerService.createCustomer as any).mockResolvedValue(mockCustomer);
       await handlers['customer:create'](mockEvent, { fullName: 'Name Only' });
       expect(customerService.createCustomer).toHaveBeenCalledWith(
         expect.objectContaining({ fullName: 'Name Only' })
@@ -153,7 +145,7 @@ describe('customer IPC handlers', () => {
   // ------------------------------------------------------------------ update
   describe('customer:update', () => {
     it('updates a customer', async () => {
-      (customerService.updateCustomer as jest.Mock).mockResolvedValue([1]);
+      (customerService.updateCustomer as any).mockResolvedValue([1]);
       await handlers['customer:update'](mockEvent, 1, {
         fullName: 'Updated Name',
       });
@@ -166,7 +158,7 @@ describe('customer IPC handlers', () => {
   // ------------------------------------------------------------------ delete
   describe('customer:delete', () => {
     it('deletes a customer', async () => {
-      (customerService.deleteCustomer as jest.Mock).mockResolvedValue(1);
+      (customerService.deleteCustomer as any).mockResolvedValue(1);
       await handlers['customer:delete'](mockEvent, 1);
       expect(customerService.deleteCustomer).toHaveBeenCalledWith(1);
     });
@@ -175,19 +167,16 @@ describe('customer IPC handlers', () => {
   // ------------------------------------------------------------------ search
   describe('customer:search', () => {
     it('returns matching customers', async () => {
-      (customerService.getCustomers as jest.Mock).mockResolvedValue([
-        mockCustomer,
-      ]);
+      (customerService.getCustomers as any).mockResolvedValue([mockCustomer]);
       const result = await handlers['customer:search'](mockEvent, 'Test');
       expect(Array.isArray(result)).toBe(true);
       expect(result).toEqual([mockCustomer.toJSON()]);
     });
 
     it('passes a substring where clause', async () => {
-      (customerService.getCustomers as jest.Mock).mockResolvedValue([]);
+      (customerService.getCustomers as any).mockResolvedValue([]);
       await handlers['customer:search'](mockEvent, 'Query');
-      const callArg = (customerService.getCustomers as jest.Mock).mock
-        .calls[0][0];
+      const callArg = (customerService.getCustomers as any).mock.calls[0][0];
       expect(callArg.where).toBeDefined();
       expect(callArg.where.fullName).toBeDefined();
     });
@@ -203,7 +192,7 @@ describe('customer IPC handlers', () => {
   describe('customer:getInvoices', () => {
     it('returns invoices for a customer in date range', async () => {
       const mockInv = { toJSON: () => ({ id: 10, customerId: 1 }) };
-      (invoiceService.getInvoices as jest.Mock).mockResolvedValue([mockInv]);
+      (invoiceService.getInvoices as any).mockResolvedValue([mockInv]);
       const result = await handlers['customer:getInvoices'](
         mockEvent,
         1,
@@ -218,7 +207,7 @@ describe('customer IPC handlers', () => {
   describe('customer:getReceipts', () => {
     it('returns receipts for a customer in date range', async () => {
       const mockReceipt = { toJSON: () => ({ id: 5, customerId: 1 }) };
-      (receiptService.getReceipts as jest.Mock).mockResolvedValue([mockReceipt]);
+      (receiptService.getReceipts as any).mockResolvedValue([mockReceipt]);
       const result = await handlers['customer:getReceipts'](
         mockEvent,
         1,

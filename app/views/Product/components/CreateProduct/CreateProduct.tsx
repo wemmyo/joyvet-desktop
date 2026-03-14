@@ -1,83 +1,141 @@
 import * as React from 'react';
-import { Button, Form } from 'semantic-ui-react';
-import { Field, Formik } from 'formik';
-import * as Yup from 'yup';
-import TextInput from '../../../../components/TextInput/TextInput';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
 import { IProduct } from '../../../../models/product';
+import { Button } from '../../../../components/ui/button';
+import { Input } from '../../../../components/ui/input';
+import { Label } from '../../../../components/ui/label';
+
+const schema = z.object({
+  title: z.string().min(1, 'Required'),
+  sellPrice: z.string().optional().default(''),
+  sellPrice2: z.string().optional().default(''),
+  sellPrice3: z.string().optional().default(''),
+  buyPrice: z.string().optional().default(''),
+});
+
+type FormValues = z.infer<typeof schema>;
 
 export interface CreateProductProps {
   createProductFn: (values: Partial<IProduct>) => void | Promise<void>;
   refreshProducts: () => void;
 }
 
-const CreateProductSchema = Yup.object().shape({
-  title: Yup.string().required('Required'),
-});
-
 const CreateProduct: React.FC<CreateProductProps> = ({
   createProductFn,
   refreshProducts,
 }: CreateProductProps) => {
-  return (
-    <Formik
-      initialValues={{
-        title: '',
-        sellPrice: '',
-        sellPrice2: '',
-        sellPrice3: '',
-        buyPrice: '',
-      }}
-      validationSchema={CreateProductSchema}
-      onSubmit={(values, actions) => {
-        createProductFn({ ...values, sellPrice: Number(values.sellPrice), sellPrice2: Number(values.sellPrice2), sellPrice3: Number(values.sellPrice3), buyPrice: Number(values.buyPrice) });
-        refreshProducts();
-        actions.resetForm();
-      }}
-    >
-      {({ handleSubmit }) => (
-        <Form>
-          <Field
-            name="title"
-            placeholder="Product Name"
-            label="Product Name"
-            type="text"
-            component={TextInput}
-          />
-          <Field
-            name="buyPrice"
-            placeholder="Buy Price"
-            label="Buy Price"
-            type="number"
-            component={TextInput}
-          />
-          <Field
-            name="sellPrice"
-            placeholder="Sell Price"
-            label="Sell Price"
-            type="number"
-            component={TextInput}
-          />
-          <Field
-            name="sellPrice2"
-            placeholder="Sell Price 2"
-            label="Sell Price 2"
-            type="number"
-            component={TextInput}
-          />
-          <Field
-            name="sellPrice3"
-            placeholder="Sell Price 3"
-            label="Sell Price 3"
-            type="number"
-            component={TextInput}
-          />
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+    reset,
+  } = useForm<FormValues>({
+    resolver: zodResolver(schema),
+    defaultValues: {
+      title: '',
+      sellPrice: '',
+      sellPrice2: '',
+      sellPrice3: '',
+      buyPrice: '',
+    },
+  });
 
-          <Button onClick={() => handleSubmit()} type="submit" fluid primary>
-            Save
-          </Button>
-        </Form>
-      )}
-    </Formik>
+  const onSubmit = (values: FormValues) => {
+    createProductFn({
+      ...values,
+      sellPrice: Number(values.sellPrice),
+      sellPrice2: Number(values.sellPrice2),
+      sellPrice3: Number(values.sellPrice3),
+      buyPrice: Number(values.buyPrice),
+    });
+    refreshProducts();
+    reset();
+  };
+
+  return (
+    <form onSubmit={handleSubmit(onSubmit)} className="space-y-3">
+      <div className="space-y-1">
+        <Label htmlFor="title">Product Name</Label>
+        <Input
+          id="title"
+          placeholder="Product Name"
+          type="text"
+          {...register('title')}
+          className={errors.title ? 'border-destructive' : ''}
+        />
+        {errors.title && (
+          <p className="text-sm text-destructive mt-1">
+            {errors.title.message}
+          </p>
+        )}
+      </div>
+      <div className="space-y-1">
+        <Label htmlFor="buyPrice">Buy Price</Label>
+        <Input
+          id="buyPrice"
+          placeholder="Buy Price"
+          type="number"
+          {...register('buyPrice')}
+          className={errors.buyPrice ? 'border-destructive' : ''}
+        />
+        {errors.buyPrice && (
+          <p className="text-sm text-destructive mt-1">
+            {errors.buyPrice.message}
+          </p>
+        )}
+      </div>
+      <div className="space-y-1">
+        <Label htmlFor="sellPrice">Sell Price</Label>
+        <Input
+          id="sellPrice"
+          placeholder="Sell Price"
+          type="number"
+          {...register('sellPrice')}
+          className={errors.sellPrice ? 'border-destructive' : ''}
+        />
+        {errors.sellPrice && (
+          <p className="text-sm text-destructive mt-1">
+            {errors.sellPrice.message}
+          </p>
+        )}
+      </div>
+      <div className="space-y-1">
+        <Label htmlFor="sellPrice2">Sell Price 2</Label>
+        <Input
+          id="sellPrice2"
+          placeholder="Sell Price 2"
+          type="number"
+          {...register('sellPrice2')}
+          className={errors.sellPrice2 ? 'border-destructive' : ''}
+        />
+        {errors.sellPrice2 && (
+          <p className="text-sm text-destructive mt-1">
+            {errors.sellPrice2.message}
+          </p>
+        )}
+      </div>
+      <div className="space-y-1">
+        <Label htmlFor="sellPrice3">Sell Price 3</Label>
+        <Input
+          id="sellPrice3"
+          placeholder="Sell Price 3"
+          type="number"
+          {...register('sellPrice3')}
+          className={errors.sellPrice3 ? 'border-destructive' : ''}
+        />
+        {errors.sellPrice3 && (
+          <p className="text-sm text-destructive mt-1">
+            {errors.sellPrice3.message}
+          </p>
+        )}
+      </div>
+
+      <Button type="submit" className="w-full">
+        Save
+      </Button>
+    </form>
   );
 };
 export default CreateProduct;

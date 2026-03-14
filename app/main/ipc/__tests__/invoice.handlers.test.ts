@@ -1,68 +1,68 @@
 const handlers: Record<string, Function> = {};
 
-jest.mock('electron', () => ({
+vi.mock('electron', () => ({
   ipcMain: {
-    handle: jest.fn((channel: string, handler: Function) => {
+    handle: vi.fn((channel: string, handler: Function) => {
       handlers[channel] = handler;
     }),
-    on: jest.fn(),
+    on: vi.fn(),
   },
-  app: { getPath: () => '/tmp/test', quit: jest.fn() },
+  app: { getPath: () => '/tmp/test', quit: vi.fn() },
   dialog: {
-    showOpenDialogSync: jest.fn(() => ['/tmp/test.db']),
-    showSaveDialogSync: jest.fn(() => '/tmp/test.db'),
+    showOpenDialogSync: vi.fn(() => ['/tmp/test.db']),
+    showSaveDialogSync: vi.fn(() => '/tmp/test.db'),
   },
 }));
 
 // Mock database before it is imported by the handler module
-jest.mock('../../database', () => ({
+vi.mock('../../database', () => ({
   default: {
-    transaction: jest.fn((cb: Function) => cb({})),
-    sync: jest.fn(),
+    transaction: vi.fn((cb: Function) => cb({})),
+    sync: vi.fn(),
   },
 }));
 
 // Mock services so models/sequelize are never loaded
-jest.mock('../../../services/invoice.service', () => ({
-  getInvoices: jest.fn(),
-  getInvoiceById: jest.fn(),
+vi.mock('../../../services/invoice.service', () => ({
+  getInvoices: vi.fn(),
+  getInvoiceById: vi.fn(),
 }));
 
 // Mock every model the handler imports directly
-jest.mock('../../../models/invoice', () => ({
+vi.mock('../../../models/invoice', () => ({
   default: {
-    findByPk: jest.fn(),
-    findAll: jest.fn(),
-    create: jest.fn(),
-    update: jest.fn(),
-    destroy: jest.fn(),
+    findByPk: vi.fn(),
+    findAll: vi.fn(),
+    create: vi.fn(),
+    update: vi.fn(),
+    destroy: vi.fn(),
   },
 }));
-jest.mock('../../../models/customer', () => ({
+vi.mock('../../../models/customer', () => ({
   default: {
-    findByPk: jest.fn(),
-    increment: jest.fn(),
-    decrement: jest.fn(),
+    findByPk: vi.fn(),
+    increment: vi.fn(),
+    decrement: vi.fn(),
   },
 }));
-jest.mock('../../../models/product', () => ({
+vi.mock('../../../models/product', () => ({
   default: {
-    findByPk: jest.fn(),
-    update: jest.fn(),
-    decrement: jest.fn(),
-    increment: jest.fn(),
+    findByPk: vi.fn(),
+    update: vi.fn(),
+    decrement: vi.fn(),
+    increment: vi.fn(),
   },
 }));
-jest.mock('../../../models/invoiceItem', () => ({
+vi.mock('../../../models/invoiceItem', () => ({
   default: {
-    findByPk: jest.fn(),
-    findOne: jest.fn(),
-    findAll: jest.fn(),
-    create: jest.fn(),
+    findByPk: vi.fn(),
+    findOne: vi.fn(),
+    findAll: vi.fn(),
+    create: vi.fn(),
   },
 }));
-jest.mock('../../../sliceValidation/index', () => ({
-  createInvoiceValidation: jest.fn(),
+vi.mock('../../../sliceValidation/index', () => ({
+  createInvoiceValidation: vi.fn(),
 }));
 
 import * as invoiceService from '../../../services/invoice.service';
@@ -93,19 +93,19 @@ describe('invoice IPC handlers', () => {
   });
 
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   // ------------------------------------------------------------------ getAll
   describe('invoice:getAll', () => {
     it('returns serialized invoices', async () => {
-      (invoiceService.getInvoices as jest.Mock).mockResolvedValue([mockInvoice]);
+      (invoiceService.getInvoices as any).mockResolvedValue([mockInvoice]);
       const result = await handlers['invoice:getAll'](mockEvent);
       expect(result).toEqual([mockInvoice.toJSON()]);
     });
 
     it('throws on service error', async () => {
-      (invoiceService.getInvoices as jest.Mock).mockRejectedValue(
+      (invoiceService.getInvoices as any).mockRejectedValue(
         new Error('DB error')
       );
       await expect(handlers['invoice:getAll'](mockEvent)).rejects.toThrow(
@@ -117,15 +117,13 @@ describe('invoice IPC handlers', () => {
   // --------------------------------------------------------------- getSingle
   describe('invoice:getSingle', () => {
     it('returns single invoice', async () => {
-      (invoiceService.getInvoiceById as jest.Mock).mockResolvedValue(
-        mockInvoice
-      );
+      (invoiceService.getInvoiceById as any).mockResolvedValue(mockInvoice);
       const result = await handlers['invoice:getSingle'](mockEvent, 1);
       expect(result).toEqual(mockInvoice.toJSON());
     });
 
     it('throws when invoice is not found', async () => {
-      (invoiceService.getInvoiceById as jest.Mock).mockResolvedValue(null);
+      (invoiceService.getInvoiceById as any).mockResolvedValue(null);
       // toJSON() on null will throw a TypeError
       await expect(
         handlers['invoice:getSingle'](mockEvent, 999)
@@ -136,7 +134,7 @@ describe('invoice IPC handlers', () => {
   // ------------------------------------------------------------------ filter
   describe('invoice:filter', () => {
     it('filters by date range and saleType "all"', async () => {
-      (invoiceService.getInvoices as jest.Mock).mockResolvedValue([mockInvoice]);
+      (invoiceService.getInvoices as any).mockResolvedValue([mockInvoice]);
       const result = await handlers['invoice:filter'](
         mockEvent,
         '2024-01-01',
@@ -147,7 +145,7 @@ describe('invoice IPC handlers', () => {
     });
 
     it('filters by saleType only when no dates provided', async () => {
-      (invoiceService.getInvoices as jest.Mock).mockResolvedValue([mockInvoice]);
+      (invoiceService.getInvoices as any).mockResolvedValue([mockInvoice]);
       const result = await handlers['invoice:filter'](
         mockEvent,
         '',
@@ -156,14 +154,14 @@ describe('invoice IPC handlers', () => {
       );
       expect(result).toEqual([mockInvoice.toJSON()]);
       // When no dates, no where clause should be added for createdAt
-      const callArg = (invoiceService.getInvoices as jest.Mock).mock.calls[0][0];
+      const callArg = (invoiceService.getInvoices as any).mock.calls[0][0];
       expect(callArg.where?.createdAt).toBeUndefined();
     });
 
     it('passes saleType where clause when not "all"', async () => {
-      (invoiceService.getInvoices as jest.Mock).mockResolvedValue([]);
+      (invoiceService.getInvoices as any).mockResolvedValue([]);
       await handlers['invoice:filter'](mockEvent, '', '', 'credit');
-      const callArg = (invoiceService.getInvoices as jest.Mock).mock.calls[0][0];
+      const callArg = (invoiceService.getInvoices as any).mock.calls[0][0];
       expect(callArg.where).toEqual({ saleType: 'credit' });
     });
 
@@ -174,8 +172,7 @@ describe('invoice IPC handlers', () => {
     });
 
     it('does not throw when date range is exactly 90 days', async () => {
-      (invoiceService.getInvoices as jest.Mock).mockResolvedValue([]);
-      // 2024-01-01 → 2024-04-01 is 91 days; use a 90-day span instead
+      (invoiceService.getInvoices as any).mockResolvedValue([]);
       await expect(
         handlers['invoice:filter'](mockEvent, '2024-01-01', '2024-03-31', 'all')
       ).resolves.not.toThrow();
@@ -185,7 +182,7 @@ describe('invoice IPC handlers', () => {
   // --------------------------------------------------------------- filterById
   describe('invoice:filterById', () => {
     it('filters invoices by id prefix', async () => {
-      (invoiceService.getInvoices as jest.Mock).mockResolvedValue([mockInvoice]);
+      (invoiceService.getInvoices as any).mockResolvedValue([mockInvoice]);
       const result = await handlers['invoice:filterById'](mockEvent, 1);
       expect(result).toEqual([mockInvoice.toJSON()]);
       expect(invoiceService.getInvoices).toHaveBeenCalledWith(

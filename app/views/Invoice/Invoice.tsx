@@ -1,13 +1,31 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useReactToPrint } from 'react-to-print';
-import { Table, Grid, Button, Form, Segment } from 'semantic-ui-react';
-import { Field, Formik } from 'formik';
-import { toast } from 'react-toastify';
+import { useForm, Controller } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
+import { toast } from 'sonner';
 
 import DashboardLayout from '../../layouts/DashboardLayout/DashboardLayout';
+import { Button } from '../../components/ui/button';
+import { Input } from '../../components/ui/input';
+import { Label } from '../../components/ui/label';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '../../components/ui/select';
+import {
+  Table,
+  TableHeader,
+  TableBody,
+  TableRow,
+  TableHead,
+  TableCell,
+} from '../../components/ui/table';
 
 import { numberWithCommas } from '../../utils/helpers';
-import TextInput from '../../components/TextInput/TextInput';
 import ComponentToPrint from '../../components/PrintedReceipt/ReceiptWrapper';
 import { IProduct } from '../../models/product';
 import { IInvoiceItem } from '../../models/invoiceItem';
@@ -27,6 +45,17 @@ interface InvoiceItem extends IInvoiceItem {
   product: IProduct;
 }
 
+const schema = z.object({
+  quantity: z.string().optional().default(''),
+  unitPrice: z.string().optional().default(''),
+  product: z.string().optional().default(''),
+  id: z.string().optional().default(''),
+  amount: z.string().optional().default(''),
+  profit: z.string().optional().default(''),
+});
+
+type FormValues = z.infer<typeof schema>;
+
 const InvoiceScreen: React.FC = () => {
   const componentRef = useRef(null);
 
@@ -43,6 +72,21 @@ const InvoiceScreen: React.FC = () => {
   const [createdInvoice, setCreatedInvoice] = useState<IInvoice>(
     {} as IInvoice
   );
+
+  const { register, handleSubmit, control, reset, watch, setValue } =
+    useForm<FormValues>({
+      resolver: zodResolver(schema),
+      defaultValues: {
+        quantity: '',
+        unitPrice: '',
+        product: '',
+        id: '',
+        amount: '',
+        profit: '',
+      },
+    });
+
+  const watchedProduct = watch('product');
 
   const removeInvoiceItem = (id: number) => {
     const filteredItems = invoiceItems.filter((item) => item.id !== id);
@@ -131,36 +175,28 @@ const InvoiceScreen: React.FC = () => {
     }
 
     return (
-      <div className="field">
-        <label htmlFor="unitPrice">Unit Price</label>
-        <Field
-          id="unitPrice"
+      <div className="space-y-1">
+        <Label htmlFor="unitPrice">Unit Price</Label>
+        <Controller
           name="unitPrice"
-          component="select"
-          className="ui dropdown"
-        >
-          <option value="" disabled hidden>
-            Select Price
-          </option>
-          {filteredPriceLevel.map((price) => (
-            <option key={price.label} value={price.value}>
-              {`${price.label}: ₦${numberWithCommas(price.value)}`}
-            </option>
-          ))}
-        </Field>
+          control={control}
+          render={({ field }) => (
+            <Select onValueChange={field.onChange} value={field.value}>
+              <SelectTrigger>
+                <SelectValue placeholder="Select Price" />
+              </SelectTrigger>
+              <SelectContent>
+                {filteredPriceLevel.map((price) => (
+                  <SelectItem key={price.label} value={String(price.value)}>
+                    {`${price.label}: ₦${numberWithCommas(price.value)}`}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          )}
+        />
       </div>
     );
-  };
-
-  const renderCustomers = () => {
-    const customerList = customers.map((customer: ICustomer) => {
-      return (
-        <option key={customer.id} value={customer.id}>
-          {customer.fullName}
-        </option>
-      );
-    });
-    return customerList;
   };
 
   useEffect(() => {
@@ -183,23 +219,24 @@ const InvoiceScreen: React.FC = () => {
 
   const renderOrders = invoiceItems.map((invoiceItem, index) => {
     return (
-      <Table.Row key={invoiceItem.id}>
-        <Table.Cell>{index + 1}</Table.Cell>
-        <Table.Cell>{invoiceItem.product?.title}</Table.Cell>
-        <Table.Cell>{invoiceItem.quantity}</Table.Cell>
-        <Table.Cell>{numberWithCommas(invoiceItem.unitPrice)}</Table.Cell>
-        <Table.Cell>{numberWithCommas(invoiceItem.amount)}</Table.Cell>
-        <Table.Cell>
+      <TableRow key={invoiceItem.id}>
+        <TableCell>{index + 1}</TableCell>
+        <TableCell>{invoiceItem.product?.title}</TableCell>
+        <TableCell>{invoiceItem.quantity}</TableCell>
+        <TableCell>{numberWithCommas(invoiceItem.unitPrice)}</TableCell>
+        <TableCell>{numberWithCommas(invoiceItem.amount)}</TableCell>
+        <TableCell>
           <Button
             onClick={() => {
               removeInvoiceItem(invoiceItem.id);
             }}
-            negative
+            variant="destructive"
+            size="sm"
           >
             Remove
           </Button>
-        </Table.Cell>
-      </Table.Row>
+        </TableCell>
+      </TableRow>
     );
   });
 
@@ -214,210 +251,169 @@ const InvoiceScreen: React.FC = () => {
     return null;
   };
 
-  const createInvoice = async (resetForm) => {
+  const createInvoice = async () => {
     await createInvoiceFn(invoiceItems, invoice, async (id) => {
       const response = await getSingleInvoiceFn(id);
       setCreatedInvoice(response);
       setPrintInvoice(true);
       handlePrint?.();
-      resetForm();
+      reset();
       setInvoiceItems([]);
       setInvoice(undefined);
       setCreatedInvoice({} as IInvoice);
     });
   };
 
-  const initialValues = {
-    quantity: '',
-    unitPrice: '',
-    product: '',
-    id: '',
-    amount: '',
-    profit: '',
+  const onSubmit = (values: FormValues) => {
+    const product: IProduct = JSON.parse(values.product as any);
+    const quantity = Number(values.quantity);
+    const unitPrice = Number(values.unitPrice);
+    const amount = unitPrice * quantity;
+    const profit: number = (unitPrice - product.buyPrice) * quantity;
+
+    updateInvoiceItem({
+      id: new Date().getUTCMilliseconds(),
+      quantity,
+      unitPrice,
+      amount,
+      profit,
+      product,
+    });
+    reset();
   };
 
   return (
     <DashboardLayout screenTitle="Create Invoice">
-      <Grid>
-        <Grid.Row>
-          <Grid.Column width={11}>
-            <h1>
-              Total: ₦{invoice?.amount ? numberWithCommas(invoice.amount) : 0}
-            </h1>
-            <Table celled>
-              <Table.Header>
-                <Table.Row>
-                  <Table.HeaderCell>No</Table.HeaderCell>
-                  <Table.HeaderCell>Product</Table.HeaderCell>
-                  <Table.HeaderCell>Quantity</Table.HeaderCell>
-                  <Table.HeaderCell>Unit Price</Table.HeaderCell>
-                  <Table.HeaderCell>Amount</Table.HeaderCell>
-                  <Table.HeaderCell>Action</Table.HeaderCell>
-                </Table.Row>
-              </Table.Header>
+      <div className="flex gap-4">
+        <div className="flex-1">
+          <h1 className="text-xl font-bold mb-3">
+            Total: ₦{invoice?.amount ? numberWithCommas(invoice.amount) : 0}
+          </h1>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>No</TableHead>
+                <TableHead>Product</TableHead>
+                <TableHead>Quantity</TableHead>
+                <TableHead>Unit Price</TableHead>
+                <TableHead>Amount</TableHead>
+                <TableHead>Action</TableHead>
+              </TableRow>
+            </TableHeader>
 
-              <Table.Body>{renderOrders}</Table.Body>
-
-              <Table.Footer>
-                <Table.Row>
-                  <Table.HeaderCell />
-                  <Table.HeaderCell />
-                  <Table.HeaderCell />
-                  <Table.HeaderCell>Total</Table.HeaderCell>
-                  <Table.HeaderCell>
-                    ₦{invoice?.amount ? numberWithCommas(invoice.amount) : 0}
-                  </Table.HeaderCell>
-                  <Table.HeaderCell />
-                </Table.Row>
-              </Table.Footer>
-            </Table>
-          </Grid.Column>
-          <Grid.Column width={5}>
-            <Segment>
-              <Formik
-                initialValues={initialValues}
-                onSubmit={(values, { resetForm }) => {
-                  const product: IProduct = JSON.parse(values.product as any);
-                  const quantity = Number(values.quantity);
-                  const unitPrice = Number(values.unitPrice);
-                  const amount = unitPrice * quantity;
-                  const profit: number =
-                    (unitPrice - product.buyPrice) * quantity;
-
-                  updateInvoiceItem({
-                    id: new Date().getUTCMilliseconds(),
-                    quantity,
-                    unitPrice,
-                    amount,
-                    profit,
-                    product,
-                  });
-                  resetForm();
-                }}
-              >
-                {({
-                  handleSubmit,
-                  handleChange,
-                  values,
-                  resetForm,
-                  setFieldValue,
-                }) => (
-                  <Form>
-                    <div className="field">
-                      <label htmlFor="customer">Customer</label>
-                      <Field
-                        id="customer"
-                        name="customerId"
-                        component="select"
-                        className="ui dropdown"
-                        onChange={async (e) => {
-                          const customerId = Number(e.target.value);
-                          handleChange(e);
-                          setInvoice({
-                            ...invoice,
-                            customerId,
-                          });
-                          const response = await getSingleCustomerFn(
-                            customerId
-                          );
-                          setSingleCustomer(response);
+            <TableBody>{renderOrders}</TableBody>
+          </Table>
+          <div className="mt-2 text-sm font-semibold text-right">
+            Total: ₦{invoice?.amount ? numberWithCommas(invoice.amount) : 0}
+          </div>
+        </div>
+        <div className="w-72 shrink-0">
+          <div className="border rounded p-4 space-y-3">
+            <form onSubmit={handleSubmit(onSubmit)} className="space-y-3">
+              <div className="space-y-1">
+                <Label htmlFor="customer">Customer</Label>
+                <Select
+                  onValueChange={async (val) => {
+                    const customerId = Number(val);
+                    setInvoice({ ...invoice, customerId });
+                    const response = await getSingleCustomerFn(customerId);
+                    setSingleCustomer(response);
+                  }}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select Customer" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {customers.map((customer: ICustomer) => (
+                      <SelectItem key={customer.id} value={String(customer.id)}>
+                        {customer.fullName}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-1">
+                <Label htmlFor="saleType">Sale Type</Label>
+                <Select
+                  onValueChange={(val) =>
+                    setInvoice({ ...invoice, saleType: val })
+                  }
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select Sale" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="cash">Cash Sales</SelectItem>
+                    <SelectItem value="credit">Credit Sales</SelectItem>
+                    <SelectItem value="transfer">Transfer</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="border rounded p-3 space-y-3">
+                <div className="space-y-1">
+                  <Label htmlFor="product">Product</Label>
+                  <Controller
+                    name="product"
+                    control={control}
+                    render={({ field }) => (
+                      <Select
+                        onValueChange={(val) => {
+                          field.onChange(val);
+                          setValue('unitPrice', '');
                         }}
+                        value={field.value}
                       >
-                        <option value="" selected disabled hidden>
-                          Select Customer
-                        </option>
-                        {renderCustomers()}
-                      </Field>
-                    </div>
-                    <div className="field">
-                      <label htmlFor="saleType">Sale Type</label>
-                      <Field
-                        id="saleType"
-                        name="saleType"
-                        component="select"
-                        className="ui dropdown"
-                        onChange={(e) => {
-                          setInvoice({
-                            ...invoice,
-                            saleType: e.target.value,
-                          });
-                        }}
-                      >
-                        <option value="" selected disabled hidden>
-                          Select Sale
-                        </option>
-                        <option value="cash">Cash Sales</option>
-                        <option value="credit">Credit Sales</option>
-                        <option value="transfer">Transfer</option>
-                      </Field>
-                    </div>
-                    <Segment raised>
-                      <div className="field">
-                        <label htmlFor="product">Product</label>
-                        <Field
-                          id="product"
-                          name="product"
-                          component="select"
-                          className="ui dropdown"
-                          onChange={(e: React.ChangeEvent<any>) => {
-                            handleChange(e);
-                            // clear unit price field when product is changed
-                            setFieldValue('unitPrice', '');
-                          }}
-                        >
-                          <option value="" selected disabled hidden>
-                            Select Product
-                          </option>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select Product" />
+                        </SelectTrigger>
+                        <SelectContent>
                           {products.map((product) => (
-                            <option
+                            <SelectItem
                               key={product.id}
                               value={JSON.stringify(product)}
                             >
                               {product.title}
-                            </option>
+                            </SelectItem>
                           ))}
-                        </Field>
-                      </div>
-                      {values.product
-                        ? renderPrices(
-                            JSON.parse((values.product as unknown) as string)
-                          )
-                        : null}
+                        </SelectContent>
+                      </Select>
+                    )}
+                  />
+                </div>
+                {watchedProduct
+                  ? renderPrices(
+                      JSON.parse(watchedProduct as unknown as string)
+                    )
+                  : null}
 
-                      <Field
-                        name="quantity"
-                        placeholder="Quantity"
-                        label="Quantity"
-                        type="number"
-                        component={TextInput}
-                      />
+                <div className="space-y-1">
+                  <Label htmlFor="quantity">Quantity</Label>
+                  <Input
+                    id="quantity"
+                    placeholder="Quantity"
+                    type="number"
+                    {...register('quantity')}
+                  />
+                </div>
 
-                      <Button
-                        onClick={() => handleSubmit()}
-                        type="submit"
-                        fluid
-                        primary
-                      >
-                        Add Item
-                      </Button>
-                    </Segment>
-                    <Button
-                      disabled={invoiceItems.length < 1}
-                      onClick={() => createInvoice(resetForm)}
-                      type="button"
-                      fluid
-                      positive
-                    >
-                      Save
-                    </Button>
-                    {renderInvoiceToPrint()}
-                  </Form>
-                )}
-              </Formik>
-            </Segment>
-          </Grid.Column>
-        </Grid.Row>
-      </Grid>
+                <Button type="submit" className="w-full">
+                  Add Item
+                </Button>
+              </div>
+              <Button
+                disabled={invoiceItems.length < 1}
+                onClick={createInvoice}
+                type="button"
+                className="w-full"
+                variant="default"
+              >
+                Save
+              </Button>
+              {renderInvoiceToPrint()}
+            </form>
+          </div>
+        </div>
+      </div>
     </DashboardLayout>
   );
 };

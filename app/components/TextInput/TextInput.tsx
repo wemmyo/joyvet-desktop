@@ -1,5 +1,6 @@
 import * as React from 'react';
-import { Form } from 'semantic-ui-react';
+import { Input } from '../ui/input';
+import { Label } from '../ui/label';
 
 export interface TextInputProps
   extends React.InputHTMLAttributes<HTMLInputElement> {
@@ -17,15 +18,24 @@ const TextInput: React.FC<TextInputProps> = ({
   field: any;
   form: any;
 }) => {
+  const hasError = touched[field.name] && errors[field.name];
   return (
-    <Form.Input
-      error={
-        touched[field.name] && errors[field.name] ? errors[field.name] : false
-      }
-      label={props.label}
-    >
-      <input {...field} {...props} />
-    </Form.Input>
+    <div className="mb-3">
+      {props.label && (
+        <Label htmlFor={field.name} className="mb-1 block">
+          {props.label}
+        </Label>
+      )}
+      <Input
+        id={field.name}
+        {...field}
+        {...props}
+        className={hasError ? 'border-destructive' : ''}
+      />
+      {hasError && (
+        <p className="text-sm text-destructive mt-1">{errors[field.name]}</p>
+      )}
+    </div>
   );
 };
 

@@ -21,9 +21,7 @@ export function registerStoreInfoHandlers(): void {
     schema.parse(values);
 
     const storeInfo = await createStoreInfo(values);
-    return (storeInfo as any).toJSON
-      ? (storeInfo as any).toJSON()
-      : storeInfo;
+    return (storeInfo as any).toJSON ? (storeInfo as any).toJSON() : storeInfo;
   });
 
   ipcMain.handle('storeInfo:update', async (_event, values: any) => {

@@ -1,19 +1,24 @@
 import React, { useEffect, useState } from 'react';
-import { Table, Button, Icon } from 'semantic-ui-react';
-import { useAppDispatch } from '../../hooks';
-import DashboardLayout from '../../layouts/DashboardLayout/DashboardLayout';
+import { Plus } from 'lucide-react';
 
+import DashboardLayout from '../../layouts/DashboardLayout/DashboardLayout';
 import EditStoreInfo from './components/EditStoreInfo/EditStoreInfo';
-import {
-  openSideContentFn,
-  closeSideContentFn,
-} from '../../slices/dashboardSlice';
+import { useSidebarContext } from '../../contexts/SidebarContext';
 import CreateStoreInfo from './components/CreateStoreInfo/CreateStoreInfo';
 import {
   createStoreInfoFn,
   getStoreInfoFn,
 } from '../../controllers/storeInfo.controller';
 import { IStoreInfo } from '../../models/storeInfo';
+import { Button } from '../../components/ui/button';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '../../components/ui/table';
 
 const CONTENT_CREATE = 'create';
 const CONTENT_EDIT = 'edit';
@@ -23,7 +28,8 @@ const StoreInfoScreen: React.FC = () => {
   const [storeInfoId, setStoreInfoId] = useState('');
   const [storeInfos, setStoreInfos] = useState<IStoreInfo[]>([]);
 
-  const dispatch = useAppDispatch();
+  const { openSideContent: openSideBar, closeSideContent: closeSideBar } =
+    useSidebarContext();
 
   const fetchStoreInfos = async () => {
     const response = await getStoreInfoFn();
@@ -31,7 +37,7 @@ const StoreInfoScreen: React.FC = () => {
   };
 
   const openSideContent = (content: string) => {
-    dispatch(openSideContentFn());
+    openSideBar();
     setSideContent(content);
   };
 
@@ -40,13 +46,13 @@ const StoreInfoScreen: React.FC = () => {
 
     return () => {
       const closeSideContent = () => {
-        dispatch(closeSideContentFn());
+        closeSideBar();
         setSideContent('');
         setStoreInfoId('');
       };
       closeSideContent();
     };
-  }, [dispatch]);
+  }, []);
 
   const handleNewStoreInfo = (values) => {
     createStoreInfoFn(values, () => {
@@ -72,14 +78,13 @@ const StoreInfoScreen: React.FC = () => {
   const headerContent = () => {
     return (
       <Button
-        color="blue"
-        icon
-        labelPosition="left"
+        variant="default"
+        size="sm"
         onClick={() => {
           openSideContent(CONTENT_CREATE);
         }}
       >
-        <Icon inverted color="grey" name="add" />
+        <Plus className="mr-2 h-4 w-4" />
         Create
       </Button>
     );
@@ -91,29 +96,29 @@ const StoreInfoScreen: React.FC = () => {
       rightSidebar={renderSideContent()}
       headerContent={headerContent()}
     >
-      <Table celled striped>
-        <Table.Header>
-          <Table.Row>
-            <Table.HeaderCell>Store Name</Table.HeaderCell>
-            <Table.HeaderCell>Address</Table.HeaderCell>
-            <Table.HeaderCell>Phone Number</Table.HeaderCell>
-          </Table.Row>
-        </Table.Header>
-
-        <Table.Body>
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead>Store Name</TableHead>
+            <TableHead>Address</TableHead>
+            <TableHead>Phone Number</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
           {/* {storeInfos.map((each) => {
             return (
-              <Table.Row
+              <TableRow
                 onClick={() => openSingleStoreInfo(each.id)}
                 key={each.id}
+                className="cursor-pointer"
               >
-                <Table.Cell>{each.storeName}</Table.Cell>
-                <Table.Cell>{each.address}</Table.Cell>
-                <Table.Cell>{each.phoneNumber}</Table.Cell>
-              </Table.Row>
+                <TableCell>{each.storeName}</TableCell>
+                <TableCell>{each.address}</TableCell>
+                <TableCell>{each.phoneNumber}</TableCell>
+              </TableRow>
             );
           })} */}
-        </Table.Body>
+        </TableBody>
       </Table>
     </DashboardLayout>
   );

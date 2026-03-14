@@ -5,11 +5,11 @@
     "moduleResolution": "node",
     "lib": ["ES2020", "DOM", "DOM.Iterable"],
     "jsx": "react-jsx",
-    "strict": false,
-    "noImplicitAny": false,
-    "noUnusedLocals": false,
-    "noUnusedParameters": false,
-    "noImplicitReturns": false,
+    "strict": true,
+    "noImplicitAny": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noImplicitReturns": true,
     "noFallthroughCasesInSwitch": true,
     "esModuleInterop": true,
     "allowSyntheticDefaultImports": true,
@@ -17,7 +17,18 @@
     "sourceMap": true,
     "declaration": true,
     "declarationMap": true,
-    "skipLibCheck": true
+    "skipLibCheck": true,
+    "types": ["vitest/globals"]
   },
-  "exclude": ["node_modules", "release", "app/dist", "app/renderer/src", "out", "joyvet-modern", "app/index.tsx", "app/main.dev.ts", "app/utils/database.ts"]
+  "exclude": [
+    "node_modules",
+    "release",
+    "app/dist",
+    "app/renderer/src",
+    "out",
+    "joyvet-modern",
+    "app/index.tsx",
+    "app/main.dev.ts",
+    "app/utils/database.ts"
+  ]
 }

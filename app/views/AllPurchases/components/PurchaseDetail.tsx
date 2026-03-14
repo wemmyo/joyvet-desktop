@@ -1,16 +1,23 @@
 import React, { useEffect, useState } from 'react';
-import { Table, Button } from 'semantic-ui-react';
-import { useAppDispatch } from '../../../hooks';
-import moment from 'moment';
+import dayjs from 'dayjs';
 
 import { isAdmin, numberWithCommas } from '../../../utils/helpers';
-import { closeSideContentFn } from '../../../slices/dashboardSlice';
+import { useSidebarContext } from '../../../contexts/SidebarContext';
 import { IPurchase } from '../../../models/purchase';
 import {
   deletePurchaseFn,
   getPurchasesFn,
   getSinglePurchaseFn,
 } from '../../../controllers/purchase.controller';
+import { Button } from '../../../components/ui/button';
+import {
+  Table,
+  TableHeader,
+  TableBody,
+  TableRow,
+  TableHead,
+  TableCell,
+} from '../../../components/ui/table';
 
 interface SalesDetailProps {
   purchaseId: string | number;
@@ -22,7 +29,7 @@ const SalesDetail: React.FC<SalesDetailProps> = ({
   const [purchase, setPurchase] = useState<IPurchase>({} as IPurchase);
   const [loading, setLoading] = useState(false);
 
-  const dispatch = useAppDispatch();
+  const { closeSideContent } = useSidebarContext();
 
   useEffect(() => {
     const fetchData = async () => {
@@ -37,7 +44,7 @@ const SalesDetail: React.FC<SalesDetailProps> = ({
   const handleDelete = async () => {
     await deletePurchaseFn(purchaseId);
     await getPurchasesFn();
-    dispatch(closeSideContentFn());
+    closeSideContent();
   };
 
   const renderOrders = () => {
@@ -45,17 +52,15 @@ const SalesDetail: React.FC<SalesDetailProps> = ({
     const orderList = purchase.products?.map((order: any) => {
       serialNumber += 1;
       return (
-        <Table.Row key={order.id}>
-          <Table.Cell>{serialNumber}</Table.Cell>
-          <Table.Cell>{order.title}</Table.Cell>
-          <Table.Cell>{order.purchaseItem.quantity}</Table.Cell>
-          <Table.Cell>
+        <TableRow key={order.id}>
+          <TableCell>{serialNumber}</TableCell>
+          <TableCell>{order.title}</TableCell>
+          <TableCell>{order.purchaseItem.quantity}</TableCell>
+          <TableCell>
             ₦{numberWithCommas(order.purchaseItem.unitPrice)}
-          </Table.Cell>
-          <Table.Cell>
-            ₦{numberWithCommas(order.purchaseItem.amount)}
-          </Table.Cell>
-        </Table.Row>
+          </TableCell>
+          <TableCell>₦{numberWithCommas(order.purchaseItem.amount)}</TableCell>
+        </TableRow>
       );
     });
     return orderList;
@@ -66,52 +71,51 @@ const SalesDetail: React.FC<SalesDetailProps> = ({
   }
 
   return (
-    <>
-      <Table striped>
-        <Table.Body>
-          <Table.Row>
-            <Table.Cell>Invoice Number</Table.Cell>
-            <Table.Cell>{purchase.invoiceNumber}</Table.Cell>
-          </Table.Row>
-          <Table.Row>
-            <Table.Cell>Supplier</Table.Cell>
-            <Table.Cell>{purchase.supplier?.fullName}</Table.Cell>
-          </Table.Row>
-          <Table.Row>
-            <Table.Cell>Amount</Table.Cell>
-            <Table.Cell>{numberWithCommas(purchase.amount)}</Table.Cell>
-          </Table.Row>
-          <Table.Row>
-            <Table.Cell>Date Posted</Table.Cell>
-            <Table.Cell>
-              {moment(purchase.createdAt).format('DD/MM/YYYY')}
-            </Table.Cell>
-          </Table.Row>
-        </Table.Body>
+    <div className="space-y-3">
+      <Table>
+        <TableBody>
+          <TableRow>
+            <TableCell className="font-medium">Invoice Number</TableCell>
+            <TableCell>{purchase.invoiceNumber}</TableCell>
+          </TableRow>
+          <TableRow>
+            <TableCell className="font-medium">Supplier</TableCell>
+            <TableCell>{purchase.supplier?.fullName}</TableCell>
+          </TableRow>
+          <TableRow>
+            <TableCell className="font-medium">Amount</TableCell>
+            <TableCell>{numberWithCommas(purchase.amount)}</TableCell>
+          </TableRow>
+          <TableRow>
+            <TableCell className="font-medium">Date Posted</TableCell>
+            <TableCell>
+              {dayjs(purchase.createdAt).format('DD/MM/YYYY')}
+            </TableCell>
+          </TableRow>
+        </TableBody>
       </Table>
 
-      <Table celled>
-        <Table.Header>
-          <Table.Row>
-            <Table.HeaderCell>No</Table.HeaderCell>
-            <Table.HeaderCell>Product</Table.HeaderCell>
-            <Table.HeaderCell>Quantity</Table.HeaderCell>
-            <Table.HeaderCell>Unit Price</Table.HeaderCell>
-            <Table.HeaderCell>Amount</Table.HeaderCell>
-          </Table.Row>
-        </Table.Header>
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead>No</TableHead>
+            <TableHead>Product</TableHead>
+            <TableHead>Quantity</TableHead>
+            <TableHead>Unit Price</TableHead>
+            <TableHead>Amount</TableHead>
+          </TableRow>
+        </TableHeader>
 
-        <Table.Body>{renderOrders()}</Table.Body>
+        <TableBody>{renderOrders()}</TableBody>
       </Table>
       <Button
         disabled={!isAdmin()}
         onClick={() => handleDelete()}
-        type="submit"
-        negative
+        variant="destructive"
       >
         Delete
       </Button>
-    </>
+    </div>
   );
 };
 

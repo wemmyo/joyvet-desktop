@@ -1,15 +1,11 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Table, Button, Icon, Form, Loader } from 'semantic-ui-react';
-import { useAppDispatch } from '../../hooks';
 import { useReactToPrint } from 'react-to-print';
+import { Plus, RefreshCw, Printer } from 'lucide-react';
 
 import DashboardLayout from '../../layouts/DashboardLayout/DashboardLayout';
 import CreateCustomer from './components/CreateCustomer/CreateCustomer';
 import { numberWithCommas, isAdmin, sum } from '../../utils/helpers';
-import {
-  openSideContentFn,
-  closeSideContentFn,
-} from '../../slices/dashboardSlice';
+import { useSidebarContext } from '../../contexts/SidebarContext';
 import EditCustomer from './components/EditCustomer/EditCustomer';
 import {
   createCustomerFn,
@@ -17,6 +13,16 @@ import {
   searchCustomerFn,
 } from '../../controllers/customer.controller';
 import { ICustomer } from '../../models/customer';
+import { Button } from '../../components/ui/button';
+import { Input } from '../../components/ui/input';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '../../components/ui/table';
 
 const CONTENT_CREATE = 'create';
 const CONTENT_EDIT = 'edit';
@@ -28,7 +34,8 @@ const CustomersScreen: React.FC = () => {
   const [customers, setCustomers] = useState<ICustomer[]>([]);
   const [loading, setLoading] = useState(false);
 
-  const dispatch = useAppDispatch();
+  const { openSideContent: openSideBar, closeSideContent: closeSideBar } =
+    useSidebarContext();
 
   const componentRef = useRef(null);
 
@@ -44,7 +51,7 @@ const CustomersScreen: React.FC = () => {
   };
 
   const openSideContent = (content: string) => {
-    dispatch(openSideContentFn());
+    openSideBar();
     setSideContent(content);
   };
 
@@ -53,13 +60,13 @@ const CustomersScreen: React.FC = () => {
 
     return () => {
       const closeSideContent = () => {
-        dispatch(closeSideContentFn());
+        closeSideBar();
         setSideContent('');
         setCustomerId('');
       };
       closeSideContent();
     };
-  }, [dispatch]);
+  }, []);
 
   const handleNewCustomer = async (values) => {
     await createCustomerFn(values);
@@ -74,12 +81,16 @@ const CustomersScreen: React.FC = () => {
   const renderRows = () => {
     const rows = customers.map((each) => {
       return (
-        <Table.Row key={each.id} onClick={() => openSingleCustomer(each.id)}>
-          <Table.Cell>{each.fullName}</Table.Cell>
-          <Table.Cell>{each.address}</Table.Cell>
-          <Table.Cell>{each.phoneNumber}</Table.Cell>
-          <Table.Cell>{numberWithCommas(each.balance)}</Table.Cell>
-        </Table.Row>
+        <TableRow
+          key={each.id}
+          className="cursor-pointer"
+          onClick={() => openSingleCustomer(each.id)}
+        >
+          <TableCell>{each.fullName}</TableCell>
+          <TableCell>{each.address}</TableCell>
+          <TableCell>{each.phoneNumber}</TableCell>
+          <TableCell>{numberWithCommas(each.balance)}</TableCell>
+        </TableRow>
       );
     });
     return rows;
@@ -93,10 +104,6 @@ const CustomersScreen: React.FC = () => {
       return <EditCustomer customerId={Number(customerId)} />;
     }
     return null;
-  };
-
-  const handleSearchChange = (e, { value }: { value: string }) => {
-    setSearchValue(value);
   };
 
   useEffect(() => {
@@ -120,33 +127,35 @@ const CustomersScreen: React.FC = () => {
     return (
       <>
         <Button
-          color="blue"
-          icon
-          labelPosition="left"
+          variant="default"
+          size="sm"
           onClick={() => {
             openSideContent(CONTENT_CREATE);
           }}
         >
-          <Icon inverted color="grey" name="add" />
+          <Plus className="mr-2 h-4 w-4" />
           Create
         </Button>
-        <Button icon labelPosition="left" onClick={fetchCustomers}>
-          <Icon name="redo" />
+        <Button variant="outline" size="sm" onClick={fetchCustomers}>
+          <RefreshCw className="mr-2 h-4 w-4" />
           Refresh
         </Button>
-        <Button onClick={handlePrint} icon="print" />
-        <Form
-          onSubmit={async () => {
-            const response = await searchCustomerFn(searchValue);
-            setCustomers(response);
-          }}
-        >
-          <Form.Input
+        <Button variant="outline" size="icon" onClick={handlePrint}>
+          <Printer className="h-4 w-4" />
+        </Button>
+        <div className="flex gap-2">
+          <Input
             placeholder="Search Customer"
-            onChange={handleSearchChange}
             value={searchValue}
+            onChange={(e) => setSearchValue(e.target.value)}
+            onKeyDown={async (e) => {
+              if (e.key === 'Enter') {
+                const response = await searchCustomerFn(searchValue);
+                setCustomers(response);
+              }
+            }}
           />
-        </Form>
+        </div>
       </>
     );
   };
@@ -158,34 +167,27 @@ const CustomersScreen: React.FC = () => {
       headerContent={headerContent()}
     >
       {loading ? (
-        <Loader active inline="centered" />
+        <div className="flex items-center justify-center p-8">
+          <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+        </div>
       ) : (
         <div ref={componentRef}>
-          <Table celled striped>
-            <Table.Header>
-              <Table.Row>
-                <Table.HeaderCell>Full Name</Table.HeaderCell>
-                <Table.HeaderCell>Address</Table.HeaderCell>
-                <Table.HeaderCell>Phone Number</Table.HeaderCell>
-                <Table.HeaderCell>Balance</Table.HeaderCell>
-              </Table.Row>
-            </Table.Header>
-
-            <Table.Body>{renderRows()}</Table.Body>
-
-            {isAdmin() ? (
-              <Table.Footer>
-                <Table.Row>
-                  <Table.HeaderCell />
-                  <Table.HeaderCell />
-                  <Table.HeaderCell />
-                  <Table.HeaderCell style={{ fontWeight: 'bold' }}>
-                    Total: ₦{numberWithCommas(sumOfBalances())}
-                  </Table.HeaderCell>
-                </Table.Row>
-              </Table.Footer>
-            ) : null}
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Full Name</TableHead>
+                <TableHead>Address</TableHead>
+                <TableHead>Phone Number</TableHead>
+                <TableHead>Balance</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>{renderRows()}</TableBody>
           </Table>
+          {isAdmin() ? (
+            <div className="mt-2 text-right font-semibold">
+              Total: ₦{numberWithCommas(sumOfBalances())}
+            </div>
+          ) : null}
         </div>
       )}
     </DashboardLayout>

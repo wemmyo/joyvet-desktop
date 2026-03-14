@@ -1,6 +1,6 @@
 import { ipcMain } from 'electron';
 import { Op } from 'sequelize';
-import moment from 'moment';
+import dayjs from 'dayjs';
 import { z } from 'zod';
 import {
   getCustomers,
@@ -20,9 +20,7 @@ export function registerCustomerHandlers(): void {
 
   ipcMain.handle('customer:getById', async (_event, id: number) => {
     const customer = await getCustomerById(id);
-    return (customer as any).toJSON
-      ? (customer as any).toJSON()
-      : customer;
+    return (customer as any).toJSON ? (customer as any).toJSON() : customer;
   });
 
   ipcMain.handle('customer:create', async (_event, values: any) => {
@@ -63,8 +61,8 @@ export function registerCustomerHandlers(): void {
           customerId,
           createdAt: {
             [Op.between]: [
-              `${moment(startDate).format('YYYY-MM-DD')} 00:00:00`,
-              `${moment(endDate).format('YYYY-MM-DD')} 23:00:00`,
+              `${dayjs(startDate).format('YYYY-MM-DD')} 00:00:00`,
+              `${dayjs(endDate).format('YYYY-MM-DD')} 23:00:00`,
             ],
           },
         },
@@ -87,8 +85,8 @@ export function registerCustomerHandlers(): void {
           customerId,
           createdAt: {
             [Op.between]: [
-              `${moment(startDate).format('YYYY-MM-DD')} 00:00:00`,
-              `${moment(endDate).format('YYYY-MM-DD')} 23:00:00`,
+              `${dayjs(startDate).format('YYYY-MM-DD')} 00:00:00`,
+              `${dayjs(endDate).format('YYYY-MM-DD')} 23:00:00`,
             ],
           },
         },

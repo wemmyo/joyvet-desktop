@@ -1,4 +1,4 @@
-import { toast } from 'react-toastify';
+import { toast } from 'sonner';
 import { IInvoice } from '../models/invoice';
 import { IInvoiceItem } from '../models/invoiceItem';
 
@@ -17,7 +17,11 @@ export const filterInvoiceFn = async (
   saleType: string
 ) => {
   try {
-    const invoices = await window.api.invoice.filter(startDate, endDate, saleType);
+    const invoices = await window.api.invoice.filter(
+      startDate,
+      endDate,
+      saleType
+    );
     return invoices;
   } catch (error: any) {
     toast.error(error.message || '');
@@ -63,7 +67,11 @@ export const deleteInvoiceItemFn = async ({
   cb,
 }: any) => {
   try {
-    await window.api.invoice.deleteItem({ productId, invoiceId, invoiceItemId });
+    await window.api.invoice.deleteItem({
+      productId,
+      invoiceId,
+      invoiceItemId,
+    });
     toast.success('Invoice item deleted successfully');
     if (cb) cb();
   } catch (error: any) {

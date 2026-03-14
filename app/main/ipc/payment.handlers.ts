@@ -1,6 +1,6 @@
 import { ipcMain } from 'electron';
 import { Op } from 'sequelize';
-import moment from 'moment';
+import dayjs from 'dayjs';
 import { z } from 'zod';
 import Payment from '../../models/payment';
 import Supplier from '../../models/supplier';
@@ -66,19 +66,14 @@ export function registerPaymentHandlers(): void {
 
   ipcMain.handle(
     'payment:filter',
-    async (
-      _event,
-      startDate: string,
-      endDate: string,
-      supplierId?: number
-    ) => {
+    async (_event, startDate: string, endDate: string, supplierId?: number) => {
       const whereClause: any = {};
 
       if (startDate && endDate) {
         whereClause.createdAt = {
           [Op.between]: [
-            `${moment(startDate).format('YYYY-MM-DD')} 00:00:00`,
-            `${moment(endDate).format('YYYY-MM-DD')} 23:59:59`,
+            `${dayjs(startDate).format('YYYY-MM-DD')} 00:00:00`,
+            `${dayjs(endDate).format('YYYY-MM-DD')} 23:59:59`,
           ],
         };
       }
