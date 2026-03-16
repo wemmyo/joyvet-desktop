@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { useParams } from 'react-router-dom';
 import dayjs from 'dayjs';
 
 import DashboardLayout from '../../layouts/DashboardLayout/DashboardLayout';
@@ -16,14 +17,13 @@ import { Label } from '../../components/ui/label';
 
 const TODAYS_DATE = `${dayjs().format('YYYY-MM-DD')}`;
 
-const SuppplierHistory: React.FC = ({ match }: any) => {
+const SuppplierHistory: React.FC = () => {
+  const { id: supplierId } = useParams<{ id: string }>();
   const [startDate, setStartDate] = useState(TODAYS_DATE);
   const [endDate, setEndDate] = useState(TODAYS_DATE);
   const [payments, setPayments] = useState([]);
   const [purchases, setPurchases] = useState([]);
   const [activeTab, setActiveTab] = useState('Purchases');
-
-  const supplierId = match.params.id;
 
   useEffect(() => {
     const fetchData = async () => {

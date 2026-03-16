@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { useParams } from 'react-router-dom';
 import { useReactToPrint } from 'react-to-print';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -50,8 +51,8 @@ const invoiceItemSchema = z.object({
 
 type InvoiceItemFormValues = z.infer<typeof invoiceItemSchema>;
 
-const InvoiceScreen: React.FC = ({ match }: any) => {
-  const invoiceId = match.params.id;
+const InvoiceScreen: React.FC = () => {
+  const { id: invoiceId } = useParams<{ id: string }>();
 
   const componentRef = useRef(null);
 

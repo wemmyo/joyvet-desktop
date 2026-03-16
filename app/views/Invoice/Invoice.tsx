@@ -100,7 +100,7 @@ const InvoiceScreen: React.FC = () => {
       updatedItem.product?.reorderLevel < updatedItem.quantity
     ) {
       toast.error(`${updatedItem.product?.title}: Re-order level`, {
-        autoClose: 5000,
+        duration: 5000,
       });
     }
 

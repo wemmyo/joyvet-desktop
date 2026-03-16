@@ -59,7 +59,7 @@ export const updateSupplierFn = async (
   try {
     await window.api.supplier.update(id, values);
     toast.success('Successfully updated, refresh to see changes', {
-      autoClose: 5000,
+      duration: 5000,
     });
     if (cb) cb();
   } catch (error: any) {

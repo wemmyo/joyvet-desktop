@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useRef } from 'react';
+import { useParams } from 'react-router-dom';
 import dayjs from 'dayjs';
 import { useReactToPrint } from 'react-to-print';
 import { Printer } from 'lucide-react';
@@ -18,14 +19,13 @@ import { Label } from '../../components/ui/label';
 
 const TODAYS_DATE = `${dayjs().format('YYYY-MM-DD')}`;
 
-const CustomerHistory: React.FC = ({ match }: any) => {
+const CustomerHistory: React.FC = () => {
+  const { id: customerId } = useParams<{ id: string }>();
   const [startDate, setStartDate] = useState(TODAYS_DATE);
   const [endDate, setEndDate] = useState(TODAYS_DATE);
   const [receipts, setReceipts] = useState<IReceipt[]>([]);
   const [invoices, setInvoices] = useState<IInvoice[]>([]);
   const [activeTab, setActiveTab] = useState('Receipts');
-
-  const customerId = match.params.id;
 
   const componentRef = useRef(null);
 

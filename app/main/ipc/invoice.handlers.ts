@@ -85,9 +85,9 @@ export function registerInvoiceHandlers(): void {
 
   ipcMain.handle(
     'invoice:create',
-    async (_event, invoiceItems: any[], invoice: any, postedBy?: string) => {
+    async (_event, invoiceItems: any[], invoice: any) => {
       createInvoiceValidation(invoiceItems, invoice);
-      await database.transaction(async (t: any) => {
+      return database.transaction(async (t: any) => {
         const customer = await Customer.findByPk(invoice?.customerId, {
           transaction: t,
         });
@@ -97,7 +97,7 @@ export function registerInvoiceHandlers(): void {
             saleType: invoice?.saleType,
             amount: invoice?.amount,
             profit: invoice?.profit,
-            postedBy,
+            postedBy: invoice?.postedBy,
           },
           { transaction: t }
         );

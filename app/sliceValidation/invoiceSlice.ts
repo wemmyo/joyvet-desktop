@@ -51,7 +51,7 @@ import { sum } from '../utils/helpers';
 
 export const createInvoiceValidation = (values, meta) => {
   //  If an item is out of stock
-  if (values.length < 0) {
+  if (values.length === 0) {
     throw new Error('Products validation failed');
   }
   //  If quantity * unitPrice !== Amount

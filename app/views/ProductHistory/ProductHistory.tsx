@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { useParams } from 'react-router-dom';
 import dayjs from 'dayjs';
 
 import DashboardLayout from '../../layouts/DashboardLayout/DashboardLayout';
@@ -17,14 +18,13 @@ import {
 
 const TODAYS_DATE = `${dayjs().format('YYYY-MM-DD')}`;
 
-const ProductHistory: React.FC = ({ match }: any) => {
+const ProductHistory: React.FC = () => {
+  const { id: productId } = useParams<{ id: string }>();
   const [startDate, setStartDate] = useState(TODAYS_DATE);
   const [endDate, setEndDate] = useState(TODAYS_DATE);
   const [activeTab, setActiveTab] = useState<'purchases' | 'invoices'>(
     'purchases'
   );
-
-  const productId = match.params.id;
 
   const [invoices, setInvoices] = useState([]);
   const [purchases, setPurchases] = useState([]);
