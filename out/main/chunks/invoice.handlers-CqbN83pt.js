@@ -16,7 +16,7 @@ const sum = (prev, next) => {
   return prev + next;
 };
 const createInvoiceValidation = (values, meta) => {
-  if (values.length < 0) {
+  if (values.length === 0) {
     throw new Error("Products validation failed");
   }
   const sumOfOrders = (orders) => {
@@ -102,9 +102,9 @@ function registerInvoiceHandlers() {
   });
   electron.ipcMain.handle(
     "invoice:create",
-    async (_event, invoiceItems, invoice2, postedBy) => {
+    async (_event, invoiceItems, invoice2) => {
       createInvoiceValidation(invoiceItems, invoice2);
-      await database.database.transaction(async (t) => {
+      return database.database.transaction(async (t) => {
         const customer$1 = await customer.default.findByPk(invoice2?.customerId, {
           transaction: t
         });
@@ -113,7 +113,7 @@ function registerInvoiceHandlers() {
             saleType: invoice2?.saleType,
             amount: invoice2?.amount,
             profit: invoice2?.profit,
-            postedBy
+            postedBy: invoice2?.postedBy
           },
           { transaction: t }
         );

@@ -349,7 +349,7 @@ electron.app.whenReady().then(async () => {
       role: "admin"
     });
   }
-  const { registerInvoiceHandlers } = await Promise.resolve().then(() => require("./chunks/invoice.handlers-bwHI08w7.js"));
+  const { registerInvoiceHandlers } = await Promise.resolve().then(() => require("./chunks/invoice.handlers-CqbN83pt.js"));
   const { registerCustomerHandlers } = await Promise.resolve().then(() => require("./chunks/customer.handlers-CLbkXNn-.js"));
   const { registerProductHandlers } = await Promise.resolve().then(() => require("./chunks/product.handlers-zqbljPh_.js"));
   const { registerUserHandlers } = await Promise.resolve().then(() => require("./chunks/user.handlers-qERNHyuZ.js"));
