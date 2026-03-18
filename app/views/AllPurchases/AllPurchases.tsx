@@ -3,6 +3,7 @@ import dayjs from 'dayjs';
 import { RefreshCw } from 'lucide-react';
 
 import DashboardLayout from '../../layouts/DashboardLayout/DashboardLayout';
+import PaginationControls from '../../components/PaginationControls/PaginationControls';
 import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
 import {
@@ -13,6 +14,10 @@ import {
   TableHead,
   TableCell,
 } from '../../components/ui/table';
+import {
+  TableEmptyRow,
+  TableFrame,
+} from '../../components/ui/table-helpers';
 
 import { numberWithCommas } from '../../utils/helpers';
 import { useSidebarContext } from '../../contexts/SidebarContext';
@@ -22,6 +27,7 @@ import {
   getPurchasesFn,
   searchPurchaseFn,
 } from '../../controllers/purchase.controller';
+import { DEFAULT_PAGE, DEFAULT_PAGE_SIZE } from '../../types/pagination';
 
 const CONTENT_DETAIL = 'detail';
 
@@ -31,28 +37,43 @@ const AllPurchasesScreen: React.FC = () => {
   const [sideContent, setSideContent] = useState('');
   const [purchaseId, setPurchasesId] = useState('');
   const [searchValue, setSearchValue] = useState('');
+  const [appliedSearch, setAppliedSearch] = useState('');
   const [loading, setLoading] = useState(false);
   const [purchases, setPurchases] = useState<IPurchase[]>([]);
+  const [page, setPage] = useState(DEFAULT_PAGE);
+  const [total, setTotal] = useState(0);
 
   const openSideContent = (content: string) => {
     openSideBar();
     setSideContent(content);
   };
 
-  const fetchPurchases = async () => {
-    const response = await getPurchasesFn();
-    setPurchases(response);
+  const fetchPurchases = async (nextPage = page, search = appliedSearch) => {
+    setLoading(true);
+    const paginatedResponse = search
+      ? await searchPurchaseFn({
+          page: nextPage,
+          pageSize: DEFAULT_PAGE_SIZE,
+          search,
+        })
+      : await getPurchasesFn({
+          page: nextPage,
+          pageSize: DEFAULT_PAGE_SIZE,
+        });
+    setPurchases(paginatedResponse.rows ?? []);
+    setTotal(paginatedResponse.total ?? 0);
+    setLoading(false);
   };
 
   useEffect(() => {
-    fetchPurchases();
+    void fetchPurchases(page, appliedSearch);
 
     return () => {
       closeSideBar();
       setSideContent('');
       setPurchasesId('');
     };
-  }, []);
+  }, [appliedSearch, page]);
 
   const openSinglePurchase = (id) => {
     setPurchasesId(id);
@@ -65,11 +86,13 @@ const AllPurchasesScreen: React.FC = () => {
         <TableRow
           onClick={() => openSinglePurchase(each.id)}
           key={each.id}
-          className="cursor-pointer hover:bg-muted/50"
+          className="cursor-pointer"
         >
           <TableCell>{each.invoiceNumber}</TableCell>
           <TableCell>{each?.supplier?.fullName}</TableCell>
-          <TableCell>{numberWithCommas(each.amount)}</TableCell>
+          <TableCell className="text-right">
+            {numberWithCommas(each.amount)}
+          </TableCell>
           <TableCell>{dayjs(each.createdAt).format('DD-MM-YYYY')}</TableCell>
         </TableRow>
       );
@@ -77,16 +100,9 @@ const AllPurchasesScreen: React.FC = () => {
     return rows;
   };
 
-  const searchPurchase = async (value) => {
-    setLoading(true);
-    const response = await searchPurchaseFn(value);
-    setPurchases(response);
-    setLoading(false);
-  };
-
   const renderSideContent = () => {
     if (sideContent === CONTENT_DETAIL) {
-      return <PurchaseDetail purchaseId={purchaseId} />;
+      return <PurchaseDetail purchaseId={purchaseId} onRefresh={fetchPurchases} />;
     }
     return null;
   };
@@ -94,22 +110,34 @@ const AllPurchasesScreen: React.FC = () => {
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { value } = e.target;
     setSearchValue(value);
-    if (value.length > 0) {
-      searchPurchase(value);
-    } else {
-      fetchPurchases();
+    if (value.trim() === '' && appliedSearch !== '') {
+      setAppliedSearch('');
+      setPage(DEFAULT_PAGE);
     }
   };
 
   const headerContent = () => {
     return (
       <div className="flex items-center gap-2 flex-wrap">
-        <Input
-          placeholder="Search Invoice Number"
-          onChange={handleSearchChange}
-          value={searchValue}
-        />
-        <Button variant="outline" onClick={fetchPurchases}>
+        <form
+          onSubmit={(event) => {
+            event.preventDefault();
+            setAppliedSearch(searchValue.trim());
+            setPage(DEFAULT_PAGE);
+          }}
+        >
+          <Input
+            placeholder="Search Invoice Number"
+            onChange={handleSearchChange}
+            value={searchValue}
+          />
+        </form>
+        <Button
+          variant="outline"
+          onClick={() => {
+            void fetchPurchases(page, appliedSearch);
+          }}
+        >
           <RefreshCw className="mr-1 h-4 w-4" />
           Refresh
         </Button>
@@ -128,18 +156,34 @@ const AllPurchasesScreen: React.FC = () => {
           <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
         </div>
       ) : (
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Invoice Number</TableHead>
-              <TableHead>Supplier</TableHead>
-              <TableHead>Amount</TableHead>
-              <TableHead>Date</TableHead>
-            </TableRow>
-          </TableHeader>
+        <>
+          <TableFrame>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Invoice Number</TableHead>
+                  <TableHead>Supplier</TableHead>
+                  <TableHead className="text-right">Amount</TableHead>
+                  <TableHead>Date</TableHead>
+                </TableRow>
+              </TableHeader>
 
-          <TableBody>{renderRows()}</TableBody>
-        </Table>
+              <TableBody>
+                {purchases.length > 0 ? (
+                  renderRows()
+                ) : (
+                  <TableEmptyRow colSpan={4} message="No purchases found." />
+                )}
+              </TableBody>
+            </Table>
+          </TableFrame>
+          <PaginationControls
+            page={page}
+            pageSize={DEFAULT_PAGE_SIZE}
+            total={total}
+            onPageChange={setPage}
+          />
+        </>
       )}
     </DashboardLayout>
   );

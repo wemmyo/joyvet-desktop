@@ -1,38 +1,45 @@
 import { toast } from 'sonner';
 import { IInvoice } from '../models/invoice';
 import { IInvoiceItem } from '../models/invoiceItem';
+import type {
+  InvoiceListQuery,
+  PaginatedResult,
+  PaginationQuery,
+} from '../types/pagination';
+import { getUserSession } from '../utils/session';
 
-export const getInvoicesFn = async () => {
+const emptyPaginatedInvoices = (
+  query?: PaginationQuery
+): PaginatedResult<IInvoice> => ({
+  rows: [],
+  total: 0,
+  page: query?.page ?? 1,
+  pageSize: query?.pageSize ?? 25,
+});
+
+export const getInvoicesFn = async (
+  query?: PaginationQuery
+): Promise<PaginatedResult<IInvoice>> => {
   try {
-    const invoices = await window.api.invoice.getAll();
-    return invoices;
+    return await window.api.invoice.getAll(query);
   } catch (error: any) {
     toast.error(error.message || '');
+    return emptyPaginatedInvoices(query);
   }
 };
 
-export const filterInvoiceFn = async (
-  startDate: string,
-  endDate: string,
-  saleType: string
-) => {
+export const filterInvoiceFn = async (query: InvoiceListQuery) => {
   try {
-    const invoices = await window.api.invoice.filter(
-      startDate,
-      endDate,
-      saleType
-    );
-    return invoices;
+    return await window.api.invoice.filter(query);
   } catch (error: any) {
     toast.error(error.message || '');
     throw error;
   }
 };
 
-export const filterInvoiceById = async (id: number) => {
+export const filterInvoiceById = async (query: InvoiceListQuery) => {
   try {
-    const invoices = await window.api.invoice.filterById(id);
-    return invoices;
+    return await window.api.invoice.filterById(query);
   } catch (error: any) {
     toast.error(error.message || '');
     throw error;
@@ -93,22 +100,38 @@ export const addInvoiceItemFn = async (
   }
 };
 
+export const updateInvoiceItemFn = async (args: {
+  invoiceItemId: number;
+  invoiceId: number;
+  productId: number;
+  newQuantity: number;
+}) => {
+  try {
+    const user = getUserSession();
+    await window.api.invoice.updateItem({
+      ...args,
+      postedBy: user?.fullName ?? '',
+    });
+    toast.success('Item quantity updated');
+  } catch (error: any) {
+    toast.error(error.message || '');
+    throw error;
+  }
+};
+
 export const createInvoiceFn = async (
   invoiceItems: Omit<IInvoiceItem, 'id' | 'createdAt' | 'updatedAt'>[],
   invoice?: Partial<IInvoice>,
-  cb?: (id: number) => void
+  cb?: (id: number) => void | Promise<void>
 ) => {
   try {
-    const user =
-      localStorage.getItem('user') !== null
-        ? JSON.parse(localStorage.getItem('user') || '')
-        : '';
+    const user = getUserSession();
     const result = await window.api.invoice.create(invoiceItems, {
       ...invoice,
-      postedBy: user.fullName,
+      postedBy: user?.fullName ?? '',
     });
     toast.success('Invoice created');
-    if (cb && result?.id) cb(result.id);
+    if (cb && result?.id) await cb(result.id);
   } catch (error: any) {
     toast.error(error.message || '');
   }

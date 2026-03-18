@@ -6,7 +6,6 @@ import { useSidebarContext } from '../../../contexts/SidebarContext';
 import { IPurchase } from '../../../models/purchase';
 import {
   deletePurchaseFn,
-  getPurchasesFn,
   getSinglePurchaseFn,
 } from '../../../controllers/purchase.controller';
 import { Button } from '../../../components/ui/button';
@@ -18,33 +17,43 @@ import {
   TableHead,
   TableCell,
 } from '../../../components/ui/table';
+import {
+  TableEmptyRow,
+  TableFrame,
+} from '../../../components/ui/table-helpers';
+import EditPurchase from './EditPurchase';
 
 interface SalesDetailProps {
   purchaseId: string | number;
+  onRefresh?: () => void;
 }
 
 const SalesDetail: React.FC<SalesDetailProps> = ({
   purchaseId,
+  onRefresh,
 }: SalesDetailProps) => {
   const [purchase, setPurchase] = useState<IPurchase>({} as IPurchase);
   const [loading, setLoading] = useState(false);
+  const [mode, setMode] = useState<'view' | 'edit'>('view');
 
   const { closeSideContent } = useSidebarContext();
 
+  const fetchPurchase = async () => {
+    setLoading(true);
+    const response = await getSinglePurchaseFn(Number(purchaseId));
+    setPurchase(response);
+    setLoading(false);
+  };
+
   useEffect(() => {
-    const fetchData = async () => {
-      setLoading(true);
-      const response = await getSinglePurchaseFn(Number(purchaseId));
-      setPurchase(response);
-      setLoading(false);
-    };
-    fetchData();
+    fetchPurchase();
+    setMode('view');
   }, [purchaseId]);
 
   const handleDelete = async () => {
     await deletePurchaseFn(purchaseId);
-    await getPurchasesFn();
     closeSideContent();
+    onRefresh?.();
   };
 
   const renderOrders = () => {
@@ -55,11 +64,15 @@ const SalesDetail: React.FC<SalesDetailProps> = ({
         <TableRow key={order.id}>
           <TableCell>{serialNumber}</TableCell>
           <TableCell>{order.title}</TableCell>
-          <TableCell>{order.purchaseItem.quantity}</TableCell>
-          <TableCell>
+          <TableCell className="text-right">
+            {order.purchaseItem.quantity}
+          </TableCell>
+          <TableCell className="text-right">
             ₦{numberWithCommas(order.purchaseItem.unitPrice)}
           </TableCell>
-          <TableCell>₦{numberWithCommas(order.purchaseItem.amount)}</TableCell>
+          <TableCell className="text-right">
+            ₦{numberWithCommas(order.purchaseItem.amount)}
+          </TableCell>
         </TableRow>
       );
     });
@@ -70,51 +83,82 @@ const SalesDetail: React.FC<SalesDetailProps> = ({
     return <p>Loading...</p>;
   }
 
+  if (mode === 'edit') {
+    return (
+      <EditPurchase
+        purchase={purchase}
+        onCancel={() => setMode('view')}
+        onSuccess={() => {
+          setMode('view');
+          fetchPurchase();
+        }}
+      />
+    );
+  }
+
   return (
     <div className="space-y-3">
-      <Table>
-        <TableBody>
-          <TableRow>
-            <TableCell className="font-medium">Invoice Number</TableCell>
-            <TableCell>{purchase.invoiceNumber}</TableCell>
-          </TableRow>
-          <TableRow>
-            <TableCell className="font-medium">Supplier</TableCell>
-            <TableCell>{purchase.supplier?.fullName}</TableCell>
-          </TableRow>
-          <TableRow>
-            <TableCell className="font-medium">Amount</TableCell>
-            <TableCell>{numberWithCommas(purchase.amount)}</TableCell>
-          </TableRow>
-          <TableRow>
-            <TableCell className="font-medium">Date Posted</TableCell>
-            <TableCell>
-              {dayjs(purchase.createdAt).format('DD/MM/YYYY')}
-            </TableCell>
-          </TableRow>
-        </TableBody>
-      </Table>
+      <TableFrame>
+        <Table>
+          <TableBody>
+            <TableRow>
+              <TableCell className="font-medium">Invoice Number</TableCell>
+              <TableCell>{purchase.invoiceNumber}</TableCell>
+            </TableRow>
+            <TableRow>
+              <TableCell className="font-medium">Supplier</TableCell>
+              <TableCell>{purchase.supplier?.fullName}</TableCell>
+            </TableRow>
+            <TableRow>
+              <TableCell className="font-medium">Amount</TableCell>
+              <TableCell>{numberWithCommas(purchase.amount)}</TableCell>
+            </TableRow>
+            <TableRow>
+              <TableCell className="font-medium">Date Posted</TableCell>
+              <TableCell>
+                {dayjs(purchase.createdAt).format('DD/MM/YYYY')}
+              </TableCell>
+            </TableRow>
+          </TableBody>
+        </Table>
+      </TableFrame>
 
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>No</TableHead>
-            <TableHead>Product</TableHead>
-            <TableHead>Quantity</TableHead>
-            <TableHead>Unit Price</TableHead>
-            <TableHead>Amount</TableHead>
-          </TableRow>
-        </TableHeader>
+      <TableFrame>
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>No</TableHead>
+              <TableHead>Product</TableHead>
+              <TableHead className="text-right">Quantity</TableHead>
+              <TableHead className="text-right">Unit Price</TableHead>
+              <TableHead className="text-right">Amount</TableHead>
+            </TableRow>
+          </TableHeader>
 
-        <TableBody>{renderOrders()}</TableBody>
-      </Table>
-      <Button
-        disabled={!isAdmin()}
-        onClick={() => handleDelete()}
-        variant="destructive"
-      >
-        Delete
-      </Button>
+          <TableBody>
+            {purchase.products?.length ? (
+              renderOrders()
+            ) : (
+              <TableEmptyRow colSpan={5} message="No purchase items found." />
+            )}
+          </TableBody>
+        </Table>
+      </TableFrame>
+
+      <div className="flex gap-2">
+        {isAdmin() && (
+          <Button onClick={() => setMode('edit')} variant="outline">
+            Edit
+          </Button>
+        )}
+        <Button
+          disabled={!isAdmin()}
+          onClick={() => handleDelete()}
+          variant="destructive"
+        >
+          Delete
+        </Button>
+      </div>
     </div>
   );
 };

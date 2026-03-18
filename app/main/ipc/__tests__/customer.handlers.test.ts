@@ -14,6 +14,11 @@ vi.mock('electron', () => ({
   },
 }));
 
+vi.mock('../../runtime', () => ({
+  withAppReady: (fn: Function) => fn,
+  ensureAuthReady: vi.fn(),
+}));
+
 vi.mock('../../database', () => ({
   default: {
     transaction: vi.fn((cb: Function) => cb({})),
@@ -29,6 +34,15 @@ vi.mock('../../../services/customer.service', () => ({
   deleteCustomer: vi.fn(),
 }));
 
+vi.mock('../../../models/customer', () => ({
+  default: {
+    findAndCountAll: vi.fn(),
+    findByPk: vi.fn(),
+    increment: vi.fn(),
+    decrement: vi.fn(),
+  },
+}));
+
 vi.mock('../../../services/receipt.service', () => ({
   getReceipts: vi.fn(),
 }));
@@ -41,6 +55,7 @@ vi.mock('../../../services/invoice.service', () => ({
   deleteInvoice: vi.fn(),
 }));
 
+import CustomerModel from '../../../models/customer';
 import * as customerService from '../../../services/customer.service';
 import * as invoiceService from '../../../services/invoice.service';
 import * as receiptService from '../../../services/receipt.service';
@@ -75,27 +90,38 @@ describe('customer IPC handlers', () => {
 
   // ------------------------------------------------------------------ getAll
   describe('customer:getAll', () => {
-    it('returns all customers serialized', async () => {
-      (customerService.getCustomers as any).mockResolvedValue([mockCustomer]);
-      const result = await handlers['customer:getAll'](mockEvent);
-      expect(result).toEqual([mockCustomer.toJSON()]);
+    it('returns paginated customers', async () => {
+      (CustomerModel.findAndCountAll as any).mockResolvedValue({
+        rows: [mockCustomer],
+        count: 1,
+      });
+      const result = await handlers['customer:getAll'](mockEvent, {});
+      expect(result).toEqual({
+        rows: [mockCustomer.toJSON()],
+        total: 1,
+        page: 1,
+        pageSize: 25,
+      });
     });
 
     it('orders by fullName ASC', async () => {
-      (customerService.getCustomers as any).mockResolvedValue([]);
-      await handlers['customer:getAll'](mockEvent);
-      expect(customerService.getCustomers).toHaveBeenCalledWith(
+      (CustomerModel.findAndCountAll as any).mockResolvedValue({
+        rows: [],
+        count: 0,
+      });
+      await handlers['customer:getAll'](mockEvent, {});
+      expect(CustomerModel.findAndCountAll).toHaveBeenCalledWith(
         expect.objectContaining({ order: [['fullName', 'ASC']] })
       );
     });
 
-    it('throws on service error', async () => {
-      (customerService.getCustomers as any).mockRejectedValue(
+    it('throws on db error', async () => {
+      (CustomerModel.findAndCountAll as any).mockRejectedValue(
         new Error('DB error')
       );
-      await expect(handlers['customer:getAll'](mockEvent)).rejects.toThrow(
-        'DB error'
-      );
+      await expect(
+        handlers['customer:getAll'](mockEvent, {})
+      ).rejects.toThrow('DB error');
     });
   });
 
@@ -167,24 +193,37 @@ describe('customer IPC handlers', () => {
   // ------------------------------------------------------------------ search
   describe('customer:search', () => {
     it('returns matching customers', async () => {
-      (customerService.getCustomers as any).mockResolvedValue([mockCustomer]);
-      const result = await handlers['customer:search'](mockEvent, 'Test');
-      expect(Array.isArray(result)).toBe(true);
-      expect(result).toEqual([mockCustomer.toJSON()]);
+      (CustomerModel.findAndCountAll as any).mockResolvedValue({
+        rows: [mockCustomer],
+        count: 1,
+      });
+      const result = await handlers['customer:search'](mockEvent, {
+        search: 'Test',
+      });
+      expect(result).toEqual({
+        rows: [mockCustomer.toJSON()],
+        total: 1,
+        page: 1,
+        pageSize: 25,
+      });
     });
 
     it('passes a substring where clause', async () => {
-      (customerService.getCustomers as any).mockResolvedValue([]);
-      await handlers['customer:search'](mockEvent, 'Query');
-      const callArg = (customerService.getCustomers as any).mock.calls[0][0];
+      (CustomerModel.findAndCountAll as any).mockResolvedValue({
+        rows: [],
+        count: 0,
+      });
+      await handlers['customer:search'](mockEvent, { search: 'Query' });
+      const callArg = (CustomerModel.findAndCountAll as any).mock.calls[0][0];
       expect(callArg.where).toBeDefined();
       expect(callArg.where.fullName).toBeDefined();
     });
 
-    it('throws on empty search string', async () => {
-      await expect(
-        handlers['customer:search'](mockEvent, '')
-      ).rejects.toThrow();
+    it('returns empty paginated result for empty search string', async () => {
+      const result = await handlers['customer:search'](mockEvent, {
+        search: '',
+      });
+      expect(result).toEqual({ rows: [], total: 0, page: 1, pageSize: 25 });
     });
   });
 

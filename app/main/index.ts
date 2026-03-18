@@ -3,7 +3,8 @@ import { app, BrowserWindow, dialog, ipcMain } from 'electron';
 import { autoUpdater } from 'electron-updater';
 import log from 'electron-log';
 import MenuBuilder from '../menu';
-import bcrypt from 'bcryptjs';
+import { ensureAppReady } from './runtime';
+import { registerAuthHandlers } from './ipc/auth.handlers';
 
 class AppUpdater {
   constructor() {
@@ -42,7 +43,7 @@ const createWindow = async () => {
       preload: path.join(__dirname, '../preload/index.js'),
       contextIsolation: true,
       nodeIntegration: false,
-      sandbox: false,
+      sandbox: true,
     },
   });
 
@@ -71,9 +72,6 @@ const createWindow = async () => {
 
   const menuBuilder = new MenuBuilder(mainWindow);
   menuBuilder.buildMenu();
-
-  // eslint-disable-next-line
-  new AppUpdater();
 };
 
 app.on('window-all-closed', () => {
@@ -83,73 +81,7 @@ app.on('window-all-closed', () => {
 });
 
 app.whenReady().then(async () => {
-  // All database-dependent imports are deferred here so dialog/app are ready
-  const { default: database } = await import('./database');
-
-  // Models (imported after db is ready so sequelize.define() works)
-  const Customer = (await import('../models/customer')).default;
-  const Invoice = (await import('../models/invoice')).default;
-  const Payment = (await import('../models/payment')).default;
-  const Product = (await import('../models/product')).default;
-  const Purchase = (await import('../models/purchase')).default;
-  const Receipt = (await import('../models/receipt')).default;
-  const Supplier = (await import('../models/supplier')).default;
-  const InvoiceItem = (await import('../models/invoiceItem')).default;
-  const PurchaseItem = (await import('../models/purchaseItem')).default;
-  const User = (await import('../models/user')).default;
-
-  // Associations
-  Invoice.belongsToMany(Product, { through: InvoiceItem });
-  Product.belongsToMany(Invoice, { through: InvoiceItem });
-  Customer.hasMany(Invoice);
-  Invoice.belongsTo(Customer);
-  Receipt.belongsTo(Customer);
-  Customer.hasMany(Receipt);
-  Payment.belongsTo(Supplier);
-  Supplier.hasMany(Payment);
-  Purchase.belongsTo(Supplier);
-  Supplier.hasMany(Purchase);
-  Purchase.belongsToMany(Product, { through: PurchaseItem });
-  Product.belongsToMany(Purchase, { through: PurchaseItem });
-
-  await database.sync();
-
-  // Seed default admin
-  const admin = await User.findOne({ where: { role: 'admin' } });
-  if (!admin) {
-    const hashedPassword = await bcrypt.hash('admin', 12);
-    await User.create({
-      fullName: 'admin',
-      username: 'admin',
-      password: hashedPassword,
-      role: 'admin',
-    });
-  }
-
-  // Register IPC handlers (after models/db are ready)
-  const { registerInvoiceHandlers } = await import('./ipc/invoice.handlers');
-  const { registerCustomerHandlers } = await import('./ipc/customer.handlers');
-  const { registerProductHandlers } = await import('./ipc/product.handlers');
-  const { registerUserHandlers } = await import('./ipc/user.handlers');
-  const { registerSupplierHandlers } = await import('./ipc/supplier.handlers');
-  const { registerPurchaseHandlers } = await import('./ipc/purchase.handlers');
-  const { registerPaymentHandlers } = await import('./ipc/payment.handlers');
-  const { registerReceiptHandlers } = await import('./ipc/receipt.handlers');
-  const { registerExpenseHandlers } = await import('./ipc/expense.handlers');
-  const { registerStoreInfoHandlers } = await import(
-    './ipc/storeInfo.handlers'
-  );
-
-  registerInvoiceHandlers();
-  registerCustomerHandlers();
-  registerProductHandlers();
-  registerUserHandlers();
-  registerSupplierHandlers();
-  registerPurchaseHandlers();
-  registerPaymentHandlers();
-  registerReceiptHandlers();
-  registerExpenseHandlers();
-  registerStoreInfoHandlers();
+  registerAuthHandlers();
 
   ipcMain.handle('dialog:selectDbPath', async () => {
     const result = await dialog.showOpenDialog({
@@ -160,6 +92,48 @@ app.whenReady().then(async () => {
   });
 
   await createWindow();
+
+  mainWindow?.webContents.once('did-finish-load', () => {
+    setTimeout(() => {
+      // eslint-disable-next-line no-new
+      new AppUpdater();
+    }, 0);
+  });
+
+  void (async () => {
+    const { registerInvoiceHandlers } = await import('./ipc/invoice.handlers');
+    const { registerCustomerHandlers } = await import('./ipc/customer.handlers');
+    const { registerProductHandlers } = await import('./ipc/product.handlers');
+    const { registerUserHandlers } = await import('./ipc/user.handlers');
+    const { registerSupplierHandlers } = await import('./ipc/supplier.handlers');
+    const { registerPurchaseHandlers } = await import('./ipc/purchase.handlers');
+    const { registerPaymentHandlers } = await import('./ipc/payment.handlers');
+    const { registerReceiptHandlers } = await import('./ipc/receipt.handlers');
+
+    registerInvoiceHandlers();
+    registerCustomerHandlers();
+    registerProductHandlers();
+    registerUserHandlers();
+    registerSupplierHandlers();
+    registerPurchaseHandlers();
+    registerPaymentHandlers();
+    registerReceiptHandlers();
+
+    await ensureAppReady();
+
+    const { registerExpenseHandlers } = await import('./ipc/expense.handlers');
+    const { registerStoreInfoHandlers } = await import(
+      './ipc/storeInfo.handlers'
+    );
+
+    registerExpenseHandlers();
+    registerStoreInfoHandlers();
+
+    const { registerAnalyticsHandlers } = await import('./ipc/analytics.handlers');
+    registerAnalyticsHandlers();
+  })().catch((error) => {
+    log.error('App initialization failed', error);
+  });
 
   app.on('activate', () => {
     if (mainWindow === null) createWindow();

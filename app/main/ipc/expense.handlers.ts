@@ -4,10 +4,19 @@ import dayjs from 'dayjs';
 import { z } from 'zod';
 import ExpenseType from '../../models/expenseType';
 import {
+  getExpenseById,
   getExpenses,
   createExpense,
   deleteExpense,
+  updateExpense,
 } from '../../services/expense.service';
+
+const expenseInputSchema = z.object({
+  type: z.string().min(1),
+  amount: z.number().min(0),
+  date: z.date(),
+  note: z.string().optional().nullable(),
+});
 
 export function registerExpenseHandlers(): void {
   ipcMain.handle('expense:getAll', async () => {
@@ -15,17 +24,44 @@ export function registerExpenseHandlers(): void {
     return expenses.map((e: any) => (e.toJSON ? e.toJSON() : e));
   });
 
-  ipcMain.handle('expense:create', async (_event, values: any) => {
-    const schema = z.object({
-      type: z.string().min(1),
-      amount: z.number(),
-      date: z.string().min(1),
-      note: z.string(),
-    });
-    schema.parse(values);
+  ipcMain.handle('expense:getById', async (_event, id: number) => {
+    z.number().parse(id);
+    const expense = await getExpenseById(id);
 
-    const expense = await createExpense(values);
+    if (!expense) {
+      throw new Error('Expense not found');
+    }
+
     return (expense as any).toJSON ? (expense as any).toJSON() : expense;
+  });
+
+  ipcMain.handle('expense:create', async (_event, values: any) => {
+    const parsedValues = z.object({
+      type: z.string().min(1),
+      amount: z.coerce.number(),
+      date: z.string().min(1),
+      note: z.string().optional().nullable(),
+    }).parse(values);
+
+    const expense = await createExpense({
+      ...parsedValues,
+      date: new Date(parsedValues.date),
+      note: parsedValues.note || undefined,
+      postedBy: values.postedBy || null,
+    });
+    return (expense as any).toJSON ? (expense as any).toJSON() : expense;
+  });
+
+  ipcMain.handle('expense:update', async (_event, id: number, values: any) => {
+    z.number().parse(id);
+    const parsedValues = expenseInputSchema.parse(values);
+    await updateExpense(
+      id,
+      {
+        ...parsedValues,
+        note: parsedValues.note || undefined,
+      }
+    );
   });
 
   ipcMain.handle('expense:delete', async (_event, id: number) => {
@@ -56,6 +92,22 @@ export function registerExpenseHandlers(): void {
       return expenses.map((e: any) => (e.toJSON ? e.toJSON() : e));
     }
   );
+
+  ipcMain.handle('expense:search', async (_event, value: string) => {
+    z.string().min(1).parse(value);
+
+    const expenses = await getExpenses({
+      where: {
+        [Op.or]: [
+          { type: { [Op.substring]: value } },
+          { note: { [Op.substring]: value } },
+        ],
+      },
+      order: [['date', 'DESC']],
+    });
+
+    return expenses.map((e: any) => (e.toJSON ? e.toJSON() : e));
+  });
 
   ipcMain.handle('expense:getTypes', async () => {
     const types = await ExpenseType.findAll();

@@ -51,9 +51,19 @@ describe('customer controller', () => {
 
   describe('getCustomersFn', () => {
     it('returns customers on success', async () => {
-      mockApi.customer.getAll.mockResolvedValue([mockCustomer]);
+      mockApi.customer.getAll.mockResolvedValue({
+        rows: [mockCustomer],
+        total: 1,
+        page: 1,
+        pageSize: 25,
+      });
       const result = await getCustomersFn();
-      expect(result).toEqual([mockCustomer]);
+      expect(result).toEqual({
+        rows: [mockCustomer],
+        total: 1,
+        page: 1,
+        pageSize: 25,
+      });
       expect(mockApi.customer.getAll).toHaveBeenCalled();
     });
 
@@ -110,14 +120,24 @@ describe('customer controller', () => {
 
   describe('searchCustomerFn', () => {
     it('returns matching customers', async () => {
-      mockApi.customer.search.mockResolvedValue([mockCustomer]);
-      const result = await searchCustomerFn('Test');
-      expect(result).toEqual([mockCustomer]);
+      mockApi.customer.search.mockResolvedValue({
+        rows: [mockCustomer],
+        total: 1,
+        page: 1,
+        pageSize: 25,
+      });
+      const result = await searchCustomerFn({ search: 'Test' });
+      expect(result).toEqual({
+        rows: [mockCustomer],
+        total: 1,
+        page: 1,
+        pageSize: 25,
+      });
     });
 
     it('calls toast.error on failure', async () => {
       mockApi.customer.search.mockRejectedValue(new Error('Search failed'));
-      await searchCustomerFn('Test');
+      await searchCustomerFn({ search: 'Test' });
       expect(toast.error).toHaveBeenCalled();
     });
   });

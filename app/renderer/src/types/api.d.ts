@@ -1,9 +1,27 @@
+import type {
+  InvoiceListQuery,
+  PaginatedResult,
+  PaginationQuery,
+  PaymentListQuery,
+  ProductListQuery,
+  PurchaseListQuery,
+  ReceiptListQuery,
+  SearchPaginationQuery,
+} from '../../../types/pagination';
+
 declare global {
   interface Window {
     api: {
+      auth: {
+        getBootstrapStatus: () => Promise<{ hasUsers: boolean }>;
+        createInitialAdmin: (values: {
+          fullName: string;
+          username: string;
+          password: string;
+        }) => Promise<any>;
+      };
       invoice: {
-        getAll: () => Promise<any[]>;
-        getById: (id: number) => Promise<any>;
+        getAll: (query?: PaginationQuery) => Promise<PaginatedResult<any>>;
         create: (invoiceItems: any[], invoice: any) => Promise<any>;
         delete: (id: number) => Promise<void>;
         deleteItem: (args: any) => Promise<void>;
@@ -11,21 +29,26 @@ declare global {
           currentInvoice: any,
           currentInvoiceItem: any
         ) => Promise<void>;
-        filter: (
-          startDate: string,
-          endDate: string,
-          saleType: string
-        ) => Promise<any[]>;
-        filterById: (id: number) => Promise<any[]>;
+        updateItem: (args: {
+          invoiceItemId: number;
+          invoiceId: number;
+          productId: number;
+          newQuantity: number;
+          postedBy: string;
+        }) => Promise<void>;
+        filter: (query: InvoiceListQuery) => Promise<PaginatedResult<any>>;
+        filterById: (query: InvoiceListQuery) => Promise<PaginatedResult<any>>;
         getSingle: (id: number) => Promise<any>;
       };
       customer: {
-        getAll: () => Promise<any[]>;
+        getAll: (query?: PaginationQuery) => Promise<PaginatedResult<any>>;
         getById: (id: number) => Promise<any>;
         create: (values: any) => Promise<any>;
         update: (id: number, values: any) => Promise<void>;
         delete: (id: number) => Promise<void>;
-        search: (value: string) => Promise<any[]>;
+        search: (
+          query: SearchPaginationQuery
+        ) => Promise<PaginatedResult<any>>;
         getInvoices: (
           customerId: number,
           startDate: string,
@@ -36,14 +59,19 @@ declare global {
           startDate?: string,
           endDate?: string
         ) => Promise<any[]>;
+        getActivityTimeline: (
+          customerId: number,
+          startDate: string,
+          endDate: string
+        ) => Promise<any[]>;
       };
       product: {
-        getAll: (filter?: string) => Promise<any[]>;
+        getAll: (query?: ProductListQuery) => Promise<PaginatedResult<any>>;
         getById: (id: number) => Promise<any>;
         create: (values: any) => Promise<void>;
         update: (id: number, values: any) => Promise<void>;
         delete: (id: number) => Promise<void>;
-        search: (value: string) => Promise<any[]>;
+        search: (query: ProductListQuery) => Promise<PaginatedResult<any>>;
         getInvoices: (
           productId: number,
           startDate: string,
@@ -54,9 +82,14 @@ declare global {
           startDate: string,
           endDate: string
         ) => Promise<any[]>;
+        getAuditLog: (
+          productId: number,
+          startDate: string,
+          endDate: string
+        ) => Promise<any[]>;
       };
       user: {
-        getAll: () => Promise<any[]>;
+        getAll: (query?: PaginationQuery) => Promise<PaginatedResult<any>>;
         getById: (id: number) => Promise<any>;
         create: (values: any) => Promise<void>;
         update: (id: number, values: any) => Promise<void>;
@@ -67,23 +100,30 @@ declare global {
         }) => Promise<any>;
       };
       supplier: {
-        getAll: () => Promise<any[]>;
+        getAll: (query?: PaginationQuery) => Promise<PaginatedResult<any>>;
         getById: (id: number) => Promise<any>;
         create: (values: any) => Promise<void>;
         update: (id: number, values: any) => Promise<void>;
         delete: (id: number) => Promise<void>;
-        search: (value: string) => Promise<any[]>;
+        search: (
+          query: SearchPaginationQuery
+        ) => Promise<PaginatedResult<any>>;
+        getActivityTimeline: (
+          supplierId: number,
+          startDate: string,
+          endDate: string
+        ) => Promise<any[]>;
       };
       purchase: {
-        getAll: () => Promise<any[]>;
+        getAll: (query?: PaginationQuery) => Promise<PaginatedResult<any>>;
         getById: (id: number) => Promise<any>;
         create: (purchaseItems: any[], purchase: any) => Promise<any>;
+        update: (id: number, purchaseItems: any[], meta: any) => Promise<void>;
         delete: (id: number) => Promise<void>;
-        filter: (
-          startDate: string,
-          endDate: string,
-          supplierId?: number
-        ) => Promise<any[]>;
+        search: (
+          query: SearchPaginationQuery
+        ) => Promise<PaginatedResult<any>>;
+        filter: (query: PurchaseListQuery) => Promise<PaginatedResult<any>>;
         getBySupplier: (
           supplierId: number,
           startDate: string,
@@ -91,14 +131,15 @@ declare global {
         ) => Promise<any[]>;
       };
       payment: {
-        getAll: () => Promise<any[]>;
+        getAll: (query?: PaginationQuery) => Promise<PaginatedResult<any>>;
+        getById: (id: number) => Promise<any>;
         create: (values: any) => Promise<any>;
+        update: (id: number, values: any) => Promise<void>;
         delete: (id: number) => Promise<void>;
-        filter: (
-          startDate: string,
-          endDate: string,
-          supplierId?: number
-        ) => Promise<any[]>;
+        search: (
+          query: SearchPaginationQuery
+        ) => Promise<PaginatedResult<any>>;
+        filter: (query: PaymentListQuery) => Promise<PaginatedResult<any>>;
         getBySupplier: (
           supplierId: number,
           startDate: string,
@@ -106,27 +147,66 @@ declare global {
         ) => Promise<any[]>;
       };
       receipt: {
-        getAll: () => Promise<any[]>;
+        getAll: (query?: PaginationQuery) => Promise<PaginatedResult<any>>;
+        getById: (id: number) => Promise<any>;
         create: (values: any) => Promise<any>;
+        update: (id: number, values: any) => Promise<void>;
         delete: (id: number) => Promise<void>;
-        filter: (
-          startDate: string,
-          endDate: string,
-          customerId?: number
-        ) => Promise<any[]>;
+        search: (
+          query: SearchPaginationQuery
+        ) => Promise<PaginatedResult<any>>;
+        filter: (query: ReceiptListQuery) => Promise<PaginatedResult<any>>;
       };
       expense: {
         getAll: () => Promise<any[]>;
+        getById: (id: number) => Promise<any>;
         create: (values: any) => Promise<any>;
+        update: (id: number, values: any) => Promise<void>;
         delete: (id: number) => Promise<void>;
+        search: (value: string) => Promise<any[]>;
         filter: (startDate: string, endDate: string) => Promise<any[]>;
         getTypes: () => Promise<any[]>;
         createType: (values: any) => Promise<any>;
       };
       storeInfo: {
-        get: () => Promise<any>;
-        update: (values: any) => Promise<void>;
+        getAll: () => Promise<any[]>;
+        getById: (id: number) => Promise<any>;
+        update: (id: number, values: any) => Promise<void>;
         create: (values: any) => Promise<any>;
+        delete: (id: number) => Promise<void>;
+      };
+      analytics: {
+        getSummary: (input: {
+          startDate: string;
+          endDate: string;
+        }) => Promise<{
+          invoiceTotal: number;
+          invoiceProfit: number;
+          purchaseTotal: number;
+          receiptTotal: number;
+          paymentTotal: number;
+          expenseTotal: number;
+          customerBalanceSum: number;
+          supplierBalanceSum: number;
+        }>;
+        getTopCustomers: (input: {
+          startDate: string;
+          endDate: string;
+        }) => Promise<any[]>;
+        getBestSellingProducts: (input: {
+          startDate: string;
+          endDate: string;
+        }) => Promise<any[]>;
+        getTopSuppliersBySpend: (input: {
+          startDate: string;
+          endDate: string;
+        }) => Promise<any[]>;
+        getLowStockProducts: () => Promise<any[]>;
+        getRevenueOverTime: () => Promise<any[]>;
+        getExpenseBreakdown: (input: {
+          startDate: string;
+          endDate: string;
+        }) => Promise<any[]>;
       };
       dialog: {
         selectDbPath: () => Promise<string | undefined>;

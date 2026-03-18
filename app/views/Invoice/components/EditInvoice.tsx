@@ -3,10 +3,11 @@ import { useReactToPrint } from 'react-to-print';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import dayjs from 'dayjs';
+import { useParams } from 'react-router-dom';
 
 import DashboardLayout from '../../../layouts/DashboardLayout/DashboardLayout';
 import { Button } from '../../../components/ui/button';
+import AsyncCombobox from '../../../components/ui/async-combobox';
 import { Label } from '../../../components/ui/label';
 import { Input } from '../../../components/ui/input';
 import {
@@ -20,12 +21,19 @@ import {
   Table,
   TableHeader,
   TableBody,
+  TableFooter,
   TableRow,
   TableHead,
   TableCell,
 } from '../../../components/ui/table';
+import {
+  TableEmptyRow,
+  TableFrame,
+} from '../../../components/ui/table-helpers';
+import { useAsyncComboboxOptions } from '../../../hooks/useAsyncComboboxOptions';
 
 import { numberWithCommas } from '../../../utils/helpers';
+import { isAdmin } from '../../../utils/helpers';
 import ComponentToPrint from '../../../components/PrintedReceipt/ReceiptWrapper';
 import { IProduct } from '../../../models/product';
 import { IInvoiceItem } from '../../../models/invoiceItem';
@@ -34,9 +42,16 @@ import {
   addInvoiceItemFn,
   deleteInvoiceItemFn,
   getSingleInvoiceFn,
+  updateInvoiceItemFn,
 } from '../../../controllers/invoice.controller';
-import { getProductsFn } from '../../../controllers/product.controller';
+import {
+  getProductsFn,
+  searchProductFn,
+} from '../../../controllers/product.controller';
 import { ICustomer } from '../../../models/customer';
+import { IStoreInfo } from '../../../models/storeInfo';
+import { getStoreInfoFn } from '../../../controllers/storeInfo.controller';
+import { MAX_PAGE_SIZE } from '../../../types/pagination';
 
 interface InvoiceItem extends IInvoiceItem {
   product: IProduct;
@@ -50,20 +65,31 @@ const invoiceItemSchema = z.object({
 
 type InvoiceItemFormValues = z.infer<typeof invoiceItemSchema>;
 
-const InvoiceScreen: React.FC = ({ match }: any) => {
-  const invoiceId = match.params.id;
+const InvoiceScreen: React.FC = () => {
+  const { id } = useParams<{ id: string }>();
+  const invoiceId = Number(id);
+  const hasValidInvoiceId = Number.isInteger(invoiceId) && invoiceId > 0;
 
-  const componentRef = useRef(null);
+  const componentRef = useRef<HTMLDivElement>(null);
 
   const handlePrint = useReactToPrint({
-    content: () => componentRef.current,
+    contentRef: componentRef,
+    onAfterPrint: () => setPrintInvoice(false),
   });
 
   const [invoiceItems, setInvoiceItems] = useState<InvoiceItem[]>([]);
   const [invoice, setInvoice] = useState<IInvoice>({} as IInvoice);
   const [printInvoice, setPrintInvoice] = useState(false);
   const [singleCustomer, setSingleCustomer] = useState({} as ICustomer);
-  const [products, setProducts] = useState<IProduct[]>([]);
+  const [storeInfo, setStoreInfo] = useState<IStoreInfo | undefined>(undefined);
+
+  useEffect(() => {
+    getStoreInfoFn().then((records) => {
+      setStoreInfo(records[0]);
+    });
+  }, []);
+  const [editingQtyId, setEditingQtyId] = useState<number | null>(null);
+  const [editingQtyValue, setEditingQtyValue] = useState<number>(0);
 
   const {
     register,
@@ -78,16 +104,32 @@ const InvoiceScreen: React.FC = ({ match }: any) => {
     defaultValues: { quantity: 0, unitPrice: 0, product: '' },
   });
 
-  const watchedProduct = watch('product');
+  const productOptions = useAsyncComboboxOptions<IProduct>({
+    getInitialOptions: () =>
+      getProductsFn({ filter: 'inStock', pageSize: MAX_PAGE_SIZE }),
+    searchOptions: (search) =>
+      searchProductFn({
+        filter: 'inStock',
+        pageSize: MAX_PAGE_SIZE,
+        search,
+      }),
+    getOptionValue: (product) => String(product.id),
+    getOptionLabel: (product) => product.title,
+  });
 
   const fetchData = useCallback(async () => {
-    const getproducts = getProductsFn('inStock');
-    const getSingleInvoice = getSingleInvoiceFn(Number(invoiceId));
-    const [productsResponse, singleInvoiceResponse] = await Promise.all([
-      getproducts,
-      getSingleInvoice,
-    ]);
-    setProducts(productsResponse);
+    if (!hasValidInvoiceId) {
+      setInvoiceItems([]);
+      setInvoice({} as IInvoice);
+      setSingleCustomer({} as ICustomer);
+      return;
+    }
+
+    const getSingleInvoice = getSingleInvoiceFn(invoiceId);
+    const singleInvoiceResponse = await getSingleInvoice;
+    if (!singleInvoiceResponse) {
+      return;
+    }
 
     setInvoice({
       ...singleInvoiceResponse,
@@ -114,11 +156,17 @@ const InvoiceScreen: React.FC = ({ match }: any) => {
 
     setInvoiceItems(invoiceItemList);
     setSingleCustomer(singleInvoiceResponse.customer);
-  }, [invoiceId]);
+    productOptions.primeItems(singleInvoiceResponse.products);
+  }, [hasValidInvoiceId, invoiceId]);
 
   useEffect(() => {
     fetchData();
   }, [invoiceId, fetchData]);
+
+  const watchedProduct = watch('product');
+  const selectedProduct = watchedProduct
+    ? productOptions.getItemByValue(watchedProduct)
+    : null;
 
   const removeInvoiceItem = async (
     invoiceItemId: number,
@@ -126,9 +174,31 @@ const InvoiceScreen: React.FC = ({ match }: any) => {
   ) => {
     await deleteInvoiceItemFn({
       productId,
-      invoiceId: Number(invoiceId),
+      invoiceId,
       invoiceItemId,
     });
+    fetchData();
+  };
+
+  const startEditQty = (item: InvoiceItem) => {
+    setEditingQtyId(item.id);
+    setEditingQtyValue(item.quantity);
+  };
+
+  const cancelEditQty = () => {
+    setEditingQtyId(null);
+    setEditingQtyValue(0);
+  };
+
+  const saveEditQty = async (item: InvoiceItem) => {
+    if (editingQtyValue <= 0) return;
+    await updateInvoiceItemFn({
+      invoiceItemId: item.id,
+      invoiceId,
+      productId: item.product.id,
+      newQuantity: editingQtyValue,
+    });
+    setEditingQtyId(null);
     fetchData();
   };
 
@@ -192,14 +262,54 @@ const InvoiceScreen: React.FC = ({ match }: any) => {
   };
 
   const renderOrders = invoiceItems.map((invoiceItem, index) => {
+    const isEditingThis = editingQtyId === invoiceItem.id;
     return (
       <TableRow key={invoiceItem.id}>
         <TableCell>{index + 1}</TableCell>
         <TableCell>{invoiceItem.product?.title}</TableCell>
-        <TableCell>{invoiceItem.quantity}</TableCell>
-        <TableCell>{numberWithCommas(invoiceItem.unitPrice)}</TableCell>
-        <TableCell>{numberWithCommas(invoiceItem.amount)}</TableCell>
-        <TableCell>
+        <TableCell className="text-right">
+          {isEditingThis ? (
+            <div className="flex items-center gap-1 justify-end">
+              <Input
+                type="number"
+                min={1}
+                value={editingQtyValue}
+                onChange={(e) => setEditingQtyValue(Number(e.target.value))}
+                className="w-16 text-right"
+                autoFocus
+              />
+              <Button
+                size="sm"
+                onClick={() => saveEditQty(invoiceItem)}
+              >
+                Save
+              </Button>
+              <Button
+                size="sm"
+                variant="ghost"
+                onClick={cancelEditQty}
+              >
+                ✕
+              </Button>
+            </div>
+          ) : (
+            <button
+              type="button"
+              className="underline-offset-2 hover:underline cursor-pointer"
+              onClick={() => startEditQty(invoiceItem)}
+              title="Click to edit quantity"
+            >
+              {invoiceItem.quantity}
+            </button>
+          )}
+        </TableCell>
+        <TableCell className="text-right">
+          {numberWithCommas(invoiceItem.unitPrice)}
+        </TableCell>
+        <TableCell className="text-right">
+          {numberWithCommas(invoiceItem.amount)}
+        </TableCell>
+        <TableCell className="text-right">
           <Button
             onClick={() => {
               removeInvoiceItem(invoiceItem.id, invoiceItem.product.id);
@@ -218,7 +328,7 @@ const InvoiceScreen: React.FC = ({ match }: any) => {
     if (printInvoice) {
       return (
         <div style={{ display: 'none' }}>
-          <ComponentToPrint ref={componentRef} invoice={invoice} />
+          <ComponentToPrint ref={componentRef} invoice={invoice} storeInfo={storeInfo} />
         </div>
       );
     }
@@ -232,22 +342,29 @@ const InvoiceScreen: React.FC = ({ match }: any) => {
   useEffect(() => {
     if (printInvoice) {
       handlePrint?.();
-      setPrintInvoice(false);
     }
   }, [printInvoice, handlePrint]);
 
+  // Admins can add items at any time; non-admins are restricted to same-day
   const disabledAdditem = () => {
-    const invoiceDate = dayjs(invoice?.createdAt).format('DD/MM/YYYY');
-    const todaysDate = dayjs().format('DD/MM/YYYY');
-
-    if (invoiceDate === todaysDate) {
-      return false;
-    }
-    return true;
+    if (isAdmin()) return false;
+    const invoiceDate = invoice?.createdAt
+      ? new Date(invoice.createdAt).toDateString()
+      : '';
+    const todaysDate = new Date().toDateString();
+    return invoiceDate !== todaysDate;
   };
 
   const onSubmit = async (values: InvoiceItemFormValues) => {
-    const product: IProduct = JSON.parse(values.product as any);
+    if (!hasValidInvoiceId) {
+      return;
+    }
+
+    const product = productOptions.getItemByValue(values.product);
+    if (!product) {
+      return;
+    }
+
     const quantity = Number(values.quantity);
     const unitPrice = Number(values.unitPrice);
     const amount = unitPrice * quantity;
@@ -267,6 +384,16 @@ const InvoiceScreen: React.FC = ({ match }: any) => {
     reset({ quantity: 0, unitPrice: 0, product: '' });
   };
 
+  if (!hasValidInvoiceId) {
+    return (
+      <DashboardLayout screenTitle="Edit Invoice">
+        <p className="text-sm text-muted-foreground">
+          Invalid invoice selected.
+        </p>
+      </DashboardLayout>
+    );
+  }
+
   return (
     <DashboardLayout screenTitle="Update Invoice">
       <div className="flex gap-4">
@@ -274,23 +401,39 @@ const InvoiceScreen: React.FC = ({ match }: any) => {
           <h1 className="text-xl font-bold mb-3">
             Total: ₦{invoice?.amount ? numberWithCommas(invoice.amount) : 0}
           </h1>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>No</TableHead>
-                <TableHead>Product</TableHead>
-                <TableHead>Quantity</TableHead>
-                <TableHead>Unit Price</TableHead>
-                <TableHead>Amount</TableHead>
-                <TableHead>Action</TableHead>
-              </TableRow>
-            </TableHeader>
+          <TableFrame>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>No</TableHead>
+                  <TableHead>Product</TableHead>
+                  <TableHead className="text-right">Quantity</TableHead>
+                  <TableHead className="text-right">Unit Price</TableHead>
+                  <TableHead className="text-right">Amount</TableHead>
+                  <TableHead className="text-right">Action</TableHead>
+                </TableRow>
+              </TableHeader>
 
-            <TableBody>{renderOrders}</TableBody>
-          </Table>
-          <div className="mt-2 text-sm font-semibold text-right">
-            Total: ₦{invoice?.amount ? numberWithCommas(invoice.amount) : 0}
-          </div>
+              <TableBody>
+                {invoiceItems.length > 0 ? (
+                  renderOrders
+                ) : (
+                  <TableEmptyRow
+                    colSpan={6}
+                    message="No invoice items available."
+                  />
+                )}
+              </TableBody>
+              <TableFooter>
+                <TableRow>
+                  <TableCell colSpan={5}>Total</TableCell>
+                  <TableCell className="text-right">
+                    ₦{invoice?.amount ? numberWithCommas(invoice.amount) : 0}
+                  </TableCell>
+                </TableRow>
+              </TableFooter>
+            </Table>
+          </TableFrame>
           <p className="text-sm text-muted-foreground mt-2">
             Note: Use same price level when updating existing product quantity
           </p>
@@ -336,27 +479,22 @@ const InvoiceScreen: React.FC = ({ match }: any) => {
                       name="product"
                       control={control}
                       render={({ field }) => (
-                        <Select
+                        <AsyncCombobox
+                          value={field.value}
                           onValueChange={(val) => {
                             field.onChange(val);
                             setValue('unitPrice', 0);
                           }}
-                          value={field.value}
-                        >
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select Product" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {products.map((product) => (
-                              <SelectItem
-                                key={product.id}
-                                value={JSON.stringify(product)}
-                              >
-                                {product.title}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
+                          placeholder="Select Product"
+                          searchPlaceholder="Search products"
+                          selectedLabel={productOptions.getLabelByValue(
+                            field.value
+                          )}
+                          options={productOptions.options}
+                          loading={productOptions.loading}
+                          emptyMessage="No products found."
+                          onSearchChange={productOptions.onSearchChange}
+                        />
                       )}
                     />
                     {errors.product && (
@@ -365,9 +503,7 @@ const InvoiceScreen: React.FC = ({ match }: any) => {
                       </p>
                     )}
                   </div>
-                  {watchedProduct
-                    ? renderPrices(JSON.parse(watchedProduct as string))
-                    : null}
+                  {selectedProduct ? renderPrices(selectedProduct) : null}
 
                   <div className="space-y-1">
                     <Label htmlFor="quantity">Quantity</Label>

@@ -1,3 +1,8 @@
+const { hashMock, compareMock } = vi.hoisted(() => ({
+  hashMock: vi.fn().mockResolvedValue('hashedPassword'),
+  compareMock: vi.fn().mockResolvedValue(true),
+}));
+
 const handlers: Record<string, Function> = {};
 
 vi.mock('electron', () => ({
@@ -12,6 +17,11 @@ vi.mock('electron', () => ({
     showOpenDialogSync: vi.fn(() => ['/tmp/test.db']),
     showSaveDialogSync: vi.fn(() => '/tmp/test.db'),
   },
+}));
+
+vi.mock('../../runtime', () => ({
+  withAppReady: (fn: Function) => fn,
+  ensureAuthReady: vi.fn(),
 }));
 
 vi.mock('../../database', () => ({
@@ -30,20 +40,31 @@ vi.mock('../../../services/user.service', () => ({
   deleteUser: vi.fn(),
 }));
 
-vi.mock('bcryptjs', () => ({
+vi.mock('../../../models/user', () => ({
   default: {
-    hash: vi.fn().mockResolvedValue('hashedPassword'),
-    compare: vi.fn().mockResolvedValue(true),
+    findAndCountAll: vi.fn(),
   },
-  hash: vi.fn().mockResolvedValue('hashedPassword'),
-  compare: vi.fn().mockResolvedValue(true),
 }));
 
+vi.mock('bcryptjs', () => ({
+  default: {
+    hash: hashMock,
+    compare: compareMock,
+  },
+  hash: hashMock,
+  compare: compareMock,
+}));
+
+import UserModel from '../../../models/user';
 import * as userService from '../../../services/user.service';
-import bcrypt from 'bcryptjs';
 import { registerUserHandlers } from '../user.handlers';
 
 const mockEvent = {} as any;
+const expectedSession = {
+  id: 1,
+  fullName: 'Admin User',
+  role: 'admin',
+};
 
 const mockUser = {
   id: 1,
@@ -55,6 +76,7 @@ const mockUser = {
     id: 1,
     fullName: 'Admin User',
     username: 'admin',
+    password: 'hashedPassword',
     role: 'admin',
   }),
 };
@@ -66,21 +88,21 @@ describe('user IPC handlers', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    // Restore default mock behaviour after clearAllMocks resets return values
-    (bcrypt.hash as any).mockResolvedValue('hashedPassword');
-    (bcrypt.compare as any).mockResolvedValue(true);
+    hashMock.mockResolvedValue('hashedPassword');
+    compareMock.mockResolvedValue(true);
   });
 
   // ------------------------------------------------------------------ login
   describe('user:login', () => {
     it('logs in successfully and returns serialized user', async () => {
       (userService.findOneUser as any).mockResolvedValue(mockUser);
-      (bcrypt.compare as any).mockResolvedValue(true);
+      compareMock.mockResolvedValue(true);
       const result = await handlers['user:login'](mockEvent, {
         username: 'admin',
         password: 'admin123',
       });
-      expect(result).toEqual(mockUser.toJSON());
+      expect(result).toEqual(expectedSession);
+      expect(result).not.toHaveProperty('password');
     });
 
     it('throws when user is not found', async () => {
@@ -95,7 +117,7 @@ describe('user IPC handlers', () => {
 
     it('throws when password is invalid', async () => {
       (userService.findOneUser as any).mockResolvedValue(mockUser);
-      (bcrypt.compare as any).mockResolvedValue(false);
+      compareMock.mockResolvedValue(false);
       await expect(
         handlers['user:login'](mockEvent, {
           username: 'admin',
@@ -122,17 +144,28 @@ describe('user IPC handlers', () => {
 
   // ------------------------------------------------------------------ getAll
   describe('user:getAll', () => {
-    it('returns all users serialized', async () => {
-      (userService.getUsers as any).mockResolvedValue([mockUser]);
-      const result = await handlers['user:getAll'](mockEvent);
-      expect(result).toEqual([mockUser.toJSON()]);
+    it('returns paginated users without passwords', async () => {
+      (UserModel.findAndCountAll as any).mockResolvedValue({
+        rows: [mockUser],
+        count: 1,
+      });
+      const result = await handlers['user:getAll'](mockEvent, {});
+      expect(result).toEqual({
+        rows: [{ id: 1, fullName: 'Admin User', username: 'admin', role: 'admin' }],
+        total: 1,
+        page: 1,
+        pageSize: 25,
+      });
+      expect(result.rows[0]).not.toHaveProperty('password');
     });
 
-    it('throws on service error', async () => {
-      (userService.getUsers as any).mockRejectedValue(new Error('DB error'));
-      await expect(handlers['user:getAll'](mockEvent)).rejects.toThrow(
-        'DB error'
+    it('throws on db error', async () => {
+      (UserModel.findAndCountAll as any).mockRejectedValue(
+        new Error('DB error')
       );
+      await expect(
+        handlers['user:getAll'](mockEvent, {})
+      ).rejects.toThrow('DB error');
     });
   });
 
@@ -141,7 +174,13 @@ describe('user IPC handlers', () => {
     it('returns single user serialized', async () => {
       (userService.getUserById as any).mockResolvedValue(mockUser);
       const result = await handlers['user:getById'](mockEvent, 1);
-      expect(result).toEqual(mockUser.toJSON());
+      expect(result).toEqual({
+        id: 1,
+        fullName: 'Admin User',
+        username: 'admin',
+        role: 'admin',
+      });
+      expect(result).not.toHaveProperty('password');
     });
   });
 
@@ -149,14 +188,14 @@ describe('user IPC handlers', () => {
   describe('user:create', () => {
     it('creates user with hashed password', async () => {
       (userService.createUser as any).mockResolvedValue(mockUser);
-      (bcrypt.hash as any).mockResolvedValue('hashedPassword');
+      hashMock.mockResolvedValue('hashedPassword');
       await handlers['user:create'](mockEvent, {
         fullName: 'New User',
         username: 'newuser',
-        password: 'pass123',
+        password: 'pass1234',
         role: 'cashier',
       });
-      expect(bcrypt.hash).toHaveBeenCalledWith('pass123', 12);
+      expect(hashMock).toHaveBeenCalledWith('pass1234', 12);
       expect(userService.createUser).toHaveBeenCalledWith(
         expect.objectContaining({ password: 'hashedPassword' })
       );
@@ -164,11 +203,11 @@ describe('user IPC handlers', () => {
 
     it('does not store the plain-text password', async () => {
       (userService.createUser as any).mockResolvedValue(mockUser);
-      (bcrypt.hash as any).mockResolvedValue('hashedPassword');
+      hashMock.mockResolvedValue('hashedPassword');
       await handlers['user:create'](mockEvent, {
         fullName: 'New User',
         username: 'newuser',
-        password: 'plain123',
+        password: 'plain1234',
         role: 'cashier',
       });
       const callArg = (userService.createUser as any).mock.calls[0][0];
@@ -222,22 +261,16 @@ describe('user IPC handlers', () => {
 
   // ------------------------------------------------------------------ delete
   describe('user:delete', () => {
-    it('deletes a user when found', async () => {
-      const mockDestroyUser = {
-        ...mockUser,
-        destroy: vi.fn().mockResolvedValue(undefined),
-      };
-      (userService.deleteUser as any).mockResolvedValue(mockDestroyUser);
+    it('deletes a user by id', async () => {
+      (userService.deleteUser as any).mockResolvedValue(1);
       await handlers['user:delete'](mockEvent, 1);
       expect(userService.deleteUser).toHaveBeenCalledWith(1);
-      expect(mockDestroyUser.destroy).toHaveBeenCalled();
     });
 
-    it('does not call destroy when user is not found', async () => {
-      (userService.deleteUser as any).mockResolvedValue(null);
+    it('does not throw when no row is deleted', async () => {
+      (userService.deleteUser as any).mockResolvedValue(0);
       await handlers['user:delete'](mockEvent, 999);
       expect(userService.deleteUser).toHaveBeenCalledWith(999);
-      // No error should be thrown
     });
   });
 });

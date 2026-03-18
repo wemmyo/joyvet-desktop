@@ -49,9 +49,22 @@ import { sum } from '../utils/helpers';
 //   profit: 1400,
 // };
 
-export const createInvoiceValidation = (values, meta) => {
+interface InvoiceValidationItem {
+  quantity: number;
+  unitPrice: number;
+  amount: number;
+}
+
+interface InvoiceValidationMeta {
+  amount: number;
+}
+
+export const createInvoiceValidation = (
+  values: InvoiceValidationItem[],
+  meta: InvoiceValidationMeta
+) => {
   //  If an item is out of stock
-  if (values.length < 0) {
+  if (values.length === 0) {
     throw new Error('Products validation failed');
   }
   //  If quantity * unitPrice !== Amount
@@ -71,7 +84,7 @@ export const createInvoiceValidation = (values, meta) => {
   }
 
   //  For each product if not quantity, unitPrice,Amount
-  values.forEach((each) => {
+  values.forEach((each: InvoiceValidationItem) => {
     if (!each.quantity) {
       throw new Error('Each quantity validation failed');
     } else if (!each.amount) {

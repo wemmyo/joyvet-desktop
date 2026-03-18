@@ -6,23 +6,23 @@ import dayjs from 'dayjs';
 import styles from './PrintedReceipt.module.css';
 import { numberWithCommas } from '../../utils/helpers';
 import { IInvoice } from '../../models/invoice';
+import { IStoreInfo } from '../../models/storeInfo';
 
 interface ReceiptWrapperProps {
   invoice: IInvoice;
+  storeInfo?: IStoreInfo;
 }
 
 const ReceiptWrapper = React.forwardRef<HTMLDivElement, ReceiptWrapperProps>(
-  ({ invoice }: ReceiptWrapperProps, ref) => {
+  ({ invoice, storeInfo }: ReceiptWrapperProps, ref) => {
     return (
       <div ref={ref} className={styles.receipt}>
         <div className={styles.receipt__companyInfo}>
-          <h5>JOY VETERINARY</h5>
+          <h5>{storeInfo?.storeName ?? 'JOY VETERINARY'}</h5>
           <p>
-            37, Iganmode Road
+            {storeInfo?.address ?? '37, Iganmode Road, Ota, Ogun State'}
             <br />
-            Ota, Ogun State
-            <br />
-            08027634893 ,08095988354, 07076224865
+            {storeInfo?.phoneNumber ?? '08027634893'}
           </p>
           <p>
             <b>Sales Invoice!</b>

@@ -14,6 +14,7 @@ import {
   TableRow,
   TableCell,
 } from '../../../../components/ui/table';
+import { TableFrame } from '../../../../components/ui/table-helpers';
 
 export interface ReceiptDetailProps {
   receiptId: string | number;
@@ -59,40 +60,44 @@ const ReceiptDetail: React.FC<ReceiptDetailProps> = ({
 
   return (
     <div className="space-y-3">
-      <Table>
-        <TableBody>
-          <TableRow>
-            <TableCell className="font-medium">Customer</TableCell>
-            <TableCell>{customer ? customer.fullName : ''}</TableCell>
-          </TableRow>
-          <TableRow>
-            <TableCell className="font-medium">Customer balance</TableCell>
-            <TableCell>{customer ? customer.balance : 0.0}</TableCell>
-          </TableRow>
-          <TableRow>
-            <TableCell className="font-medium">Amount</TableCell>
-            <TableCell>{amount || ''}</TableCell>
-          </TableRow>
-          <TableRow>
-            <TableCell className="font-medium">Payment Method</TableCell>
-            <TableCell>{paymentMethod || ''}</TableCell>
-          </TableRow>
-          <TableRow>
-            <TableCell className="font-medium">Bank</TableCell>
-            <TableCell>{bank || ''}</TableCell>
-          </TableRow>
-          <TableRow>
-            <TableCell className="font-medium">Note</TableCell>
-            <TableCell>{note || ''}</TableCell>
-          </TableRow>
-          <TableRow>
-            <TableCell className="font-medium">Date</TableCell>
-            <TableCell>
-              {new Date(createdAt).toLocaleDateString('en-gb') || ''}
-            </TableCell>
-          </TableRow>
-        </TableBody>
-      </Table>
+      <TableFrame>
+        <Table>
+          <TableBody>
+            <TableRow>
+              <TableCell className="font-medium">Customer</TableCell>
+              <TableCell>{customer ? customer.fullName : ''}</TableCell>
+            </TableRow>
+            <TableRow>
+              <TableCell className="font-medium">Customer balance</TableCell>
+              <TableCell>{customer ? customer.balance : 0.0}</TableCell>
+            </TableRow>
+            <TableRow>
+              <TableCell className="font-medium">Amount</TableCell>
+              <TableCell>{amount || ''}</TableCell>
+            </TableRow>
+            <TableRow>
+              <TableCell className="font-medium">Payment Method</TableCell>
+              <TableCell>{paymentMethod || ''}</TableCell>
+            </TableRow>
+            <TableRow>
+              <TableCell className="font-medium">Bank</TableCell>
+              <TableCell>{bank || ''}</TableCell>
+            </TableRow>
+            <TableRow>
+              <TableCell className="font-medium">Note</TableCell>
+              <TableCell>{note || ''}</TableCell>
+            </TableRow>
+            <TableRow>
+              <TableCell className="font-medium">Date</TableCell>
+              <TableCell>
+                {createdAt
+                  ? new Date(createdAt).toLocaleDateString('en-gb')
+                  : ''}
+              </TableCell>
+            </TableRow>
+          </TableBody>
+        </Table>
+      </TableFrame>
       <Button onClick={() => handleDelete()} variant="destructive">
         Delete
       </Button>

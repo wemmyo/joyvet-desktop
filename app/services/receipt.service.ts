@@ -1,6 +1,6 @@
 import Receipt, { IReceipt } from '../models/receipt';
 
-export const getReceipts = async (args) => {
+export const getReceipts = async (args: any) => {
   return Receipt.findAll({
     ...args,
   }).then((data: IReceipt[]) => {
@@ -16,11 +16,16 @@ export const getReceiptById = (id: number) => {
   });
 };
 
-export const updateReceipt = (id: number, receipt: Partial<IReceipt>) => {
+export const updateReceipt = (
+  id: number,
+  receipt: Partial<IReceipt>,
+  transaction?: any
+) => {
   return Receipt.update(receipt, {
     where: {
       id,
     },
+    transaction,
   }).then((data: IReceipt) => {
     return data;
   });

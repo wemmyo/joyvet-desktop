@@ -5,10 +5,15 @@ import {
   Table,
   TableBody,
   TableCell,
+  TableFooter,
   TableHead,
   TableHeader,
   TableRow,
 } from '../../../../components/ui/table';
+import {
+  TableEmptyRow,
+  TableFrame,
+} from '../../../../components/ui/table-helpers';
 
 export interface CustomerHistoryPurchasesProps {
   data: any[];
@@ -23,7 +28,9 @@ const CustomerHistoryPurchases: React.FC<CustomerHistoryPurchasesProps> = ({
         <TableRow key={invoice.id}>
           <TableCell>{invoice.id}</TableCell>
           <TableCell>{invoice.invoiceNumber}</TableCell>
-          <TableCell>₦{numberWithCommas(invoice.amount)}</TableCell>
+          <TableCell className="text-right">
+            ₦{numberWithCommas(invoice.amount)}
+          </TableCell>
           <TableCell>
             {dayjs(invoice.createdAt).format('DD/MM/YY, h:mm a')}
           </TableCell>
@@ -46,22 +53,35 @@ const CustomerHistoryPurchases: React.FC<CustomerHistoryPurchasesProps> = ({
 
   return (
     <>
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>Purchase ID</TableHead>
-            <TableHead>Invoice Number</TableHead>
-            <TableHead>Amount</TableHead>
-            <TableHead>Date &amp; Time</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>{renderPurchases()}</TableBody>
-      </Table>
-      {isAdmin() ? (
-        <div className="mt-2 text-right font-semibold">
-          Total: ₦{numberWithCommas(sumOfAmounts())}
-        </div>
-      ) : null}
+      <TableFrame>
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Purchase ID</TableHead>
+              <TableHead>Invoice Number</TableHead>
+              <TableHead className="text-right">Amount</TableHead>
+              <TableHead>Date &amp; Time</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {data.length > 0 ? (
+              renderPurchases()
+            ) : (
+              <TableEmptyRow colSpan={4} message="No purchases found." />
+            )}
+          </TableBody>
+          {isAdmin() ? (
+            <TableFooter>
+              <TableRow>
+                <TableCell colSpan={3}>Total</TableCell>
+                <TableCell className="text-right">
+                  ₦{numberWithCommas(sumOfAmounts())}
+                </TableCell>
+              </TableRow>
+            </TableFooter>
+          ) : null}
+        </Table>
+      </TableFrame>
     </>
   );
 };

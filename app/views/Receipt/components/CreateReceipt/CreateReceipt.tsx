@@ -1,8 +1,9 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 
+import AsyncCombobox from '../../../../components/ui/async-combobox';
 import { Button } from '../../../../components/ui/button';
 import { Input } from '../../../../components/ui/input';
 import { Label } from '../../../../components/ui/label';
@@ -13,16 +14,17 @@ import {
   SelectTrigger,
   SelectValue,
 } from '../../../../components/ui/select';
+import { useAsyncComboboxOptions } from '../../../../hooks/useAsyncComboboxOptions';
 import { numberWithCommas } from '../../../../utils/helpers';
 import {
   getCustomersFn,
-  getSingleCustomerFn,
+  searchCustomerFn,
 } from '../../../../controllers/customer.controller';
 import {
-  getReceiptsFn,
   createReceiptFn,
 } from '../../../../controllers/receipt.controller';
 import { ICustomer } from '../../../../models/customer';
+import { MAX_PAGE_SIZE } from '../../../../types/pagination';
 
 const createReceiptSchema = z.object({
   customerId: z.string().min(1, 'Customer is required'),
@@ -34,8 +36,7 @@ const createReceiptSchema = z.object({
 
 type CreateReceiptFormValues = z.infer<typeof createReceiptSchema>;
 
-const CreateReceipt: React.FC = () => {
-  const [customers, setCustomers] = useState<ICustomer[]>([]);
+const CreateReceipt: React.FC<{ onRefresh?: () => void }> = ({ onRefresh }) => {
   const [singleCustomer, setSingleCustomer] = useState<ICustomer>(
     {} as ICustomer
   );
@@ -59,19 +60,16 @@ const CreateReceipt: React.FC = () => {
   });
 
   const watchedPaymentMethod = watch('paymentMethod');
-
-  const fetchCustomers = async () => {
-    const response = await getCustomersFn();
-    setCustomers(response);
-  };
-
-  const fetchReceipts = async () => {
-    await getReceiptsFn();
-  };
-
-  useEffect(() => {
-    fetchCustomers();
-  }, []);
+  const customerOptions = useAsyncComboboxOptions<ICustomer>({
+    getInitialOptions: () => getCustomersFn({ pageSize: MAX_PAGE_SIZE }),
+    searchOptions: (search) =>
+      searchCustomerFn({
+        pageSize: MAX_PAGE_SIZE,
+        search,
+      }),
+    getOptionValue: (customer) => String(customer.id),
+    getOptionLabel: (customer) => customer.fullName,
+  });
 
   const handleNewReceipt = (values: CreateReceiptFormValues) => {
     createReceiptFn(
@@ -81,7 +79,7 @@ const CreateReceipt: React.FC = () => {
         amount: Number(values.amount),
       },
       () => {
-        fetchReceipts();
+        onRefresh?.();
       }
     );
   };
@@ -139,24 +137,21 @@ const CreateReceipt: React.FC = () => {
             name="customerId"
             control={control}
             render={({ field }) => (
-              <Select
-                onValueChange={async (val) => {
-                  field.onChange(val);
-                  await getSingleCustomerFn(Number(val));
-                }}
+              <AsyncCombobox
                 value={field.value}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select Customer" />
-                </SelectTrigger>
-                <SelectContent>
-                  {customers.map((c) => (
-                    <SelectItem key={c.id} value={String(c.id)}>
-                      {c.fullName}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+                onValueChange={(val) => {
+                  field.onChange(val);
+                  const customer = customerOptions.getItemByValue(val);
+                  setSingleCustomer(customer ?? ({} as ICustomer));
+                }}
+                placeholder="Select Customer"
+                searchPlaceholder="Search customers"
+                selectedLabel={customerOptions.getLabelByValue(field.value)}
+                options={customerOptions.options}
+                loading={customerOptions.loading}
+                emptyMessage="No customers found."
+                onSearchChange={customerOptions.onSearchChange}
+              />
             )}
           />
           {errors.customerId && (

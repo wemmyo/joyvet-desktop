@@ -1,5 +1,7 @@
+import { getUserSession } from './session';
+
 export const numberWithCommas = (n: number) => {
-  if (!n || typeof n !== 'number') {
+  if (typeof n !== 'number' || Number.isNaN(n)) {
     return '';
   }
 
@@ -8,15 +10,7 @@ export const numberWithCommas = (n: number) => {
 };
 
 export const isAdmin = () => {
-  const loggedInUserRaw = localStorage.getItem('user');
-  const loggedInUserRole = loggedInUserRaw
-    ? JSON.parse(loggedInUserRaw).role
-    : '';
-
-  if (loggedInUserRole === 'admin') {
-    return true;
-  }
-  return false;
+  return getUserSession()?.role === 'admin';
 };
 
 export const sum = (prev: number, next: number) => {

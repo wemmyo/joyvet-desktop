@@ -3,6 +3,7 @@ import dayjs from 'dayjs';
 import { Plus, RefreshCw } from 'lucide-react';
 
 import DashboardLayout from '../../layouts/DashboardLayout/DashboardLayout';
+import PaginationControls from '../../components/PaginationControls/PaginationControls';
 import CreateReceipt from './components/CreateReceipt/CreateReceipt';
 import { numberWithCommas } from '../../utils/helpers';
 import { useSidebarContext } from '../../contexts/SidebarContext';
@@ -13,6 +14,7 @@ import {
   getReceiptsFn,
   searchReceiptFn,
 } from '../../controllers/receipt.controller';
+import { DEFAULT_PAGE, DEFAULT_PAGE_SIZE } from '../../types/pagination';
 import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
 import {
@@ -23,6 +25,10 @@ import {
   TableHead,
   TableCell,
 } from '../../components/ui/table';
+import {
+  TableEmptyRow,
+  TableFrame,
+} from '../../components/ui/table-helpers';
 
 const CONTENT_CREATE = 'create';
 const CONTENT_EDIT = 'edit';
@@ -32,17 +38,37 @@ const ReceiptsScreen: React.FC = () => {
   const [sideContent, setSideContent] = useState('');
   const [receiptId, setReceiptId] = useState('');
   const [searchValue, setSearchValue] = useState('');
+  const [appliedSearch, setAppliedSearch] = useState('');
   const [receipts, setReceipts] = useState<IReceipt[]>([]);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [page, setPage] = useState(DEFAULT_PAGE);
+  const [total, setTotal] = useState(0);
 
   const { openSideContent: openSideBar, closeSideContent: closeSideBar } =
     useSidebarContext();
 
-  const fetchReceipts = async () => {
+  const fetchReceipts = async (nextPage = page, search = appliedSearch) => {
     setLoading(true);
-    const response = await getReceiptsFn();
-    setReceipts(response);
-    setLoading(false);
+    setError(null);
+    try {
+      const response = search
+        ? await searchReceiptFn({
+            page: nextPage,
+            pageSize: DEFAULT_PAGE_SIZE,
+            search,
+          })
+        : await getReceiptsFn({
+            page: nextPage,
+            pageSize: DEFAULT_PAGE_SIZE,
+          });
+      setReceipts(response.rows ?? []);
+      setTotal(response.total ?? 0);
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Failed to load data');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const openSideContent = (content: string) => {
@@ -51,7 +77,7 @@ const ReceiptsScreen: React.FC = () => {
   };
 
   useEffect(() => {
-    fetchReceipts();
+    void fetchReceipts(page, appliedSearch);
 
     return () => {
       const closeSideContent = () => {
@@ -62,7 +88,7 @@ const ReceiptsScreen: React.FC = () => {
 
       closeSideContent();
     };
-  }, []);
+  }, [appliedSearch, page]);
 
   const viewSingleReceipt = (id) => {
     setReceiptId(id);
@@ -75,11 +101,13 @@ const ReceiptsScreen: React.FC = () => {
         <TableRow
           key={each.id}
           onClick={() => viewSingleReceipt(each.id)}
-          className="cursor-pointer hover:bg-muted/50"
+          className="cursor-pointer"
         >
           <TableCell>{each.id}</TableCell>
           <TableCell>{each.customer?.fullName}</TableCell>
-          <TableCell>{numberWithCommas(each.amount)}</TableCell>
+          <TableCell className="text-right">
+            {numberWithCommas(each.amount)}
+          </TableCell>
           <TableCell>{each.paymentMethod}</TableCell>
           <TableCell>{dayjs(each.createdAt).format('DD/MM/YYYY')}</TableCell>
         </TableRow>
@@ -90,7 +118,7 @@ const ReceiptsScreen: React.FC = () => {
 
   const renderSideContent = () => {
     if (sideContent === CONTENT_CREATE) {
-      return <CreateReceipt />;
+      return <CreateReceipt onRefresh={() => fetchReceipts(DEFAULT_PAGE, appliedSearch)} />;
     }
     if (sideContent === CONTENT_EDIT) {
       return <EditReceipt receiptId={receiptId} />;
@@ -105,12 +133,6 @@ const ReceiptsScreen: React.FC = () => {
     setSearchValue(e.target.value);
   };
 
-  useEffect(() => {
-    if (searchValue.length === 0) {
-      fetchReceipts();
-    }
-  }, [searchValue]);
-
   const headerContent = () => {
     return (
       <div className="flex items-center gap-2 flex-wrap">
@@ -122,22 +144,31 @@ const ReceiptsScreen: React.FC = () => {
           <Plus className="mr-1 h-4 w-4" />
           Create
         </Button>
-        <Button variant="outline" onClick={fetchReceipts}>
+        <Button
+          variant="outline"
+          onClick={() => {
+            void fetchReceipts(page, appliedSearch);
+          }}
+        >
           <RefreshCw className="mr-1 h-4 w-4" />
           Refresh
         </Button>
         <form
-          onSubmit={async (e) => {
+          onSubmit={(e) => {
             e.preventDefault();
-            setLoading(true);
-            const response = await searchReceiptFn(searchValue);
-            setReceipts(response);
-            setLoading(false);
+            setAppliedSearch(searchValue.trim());
+            setPage(DEFAULT_PAGE);
           }}
         >
           <Input
             placeholder="Search Receipt No"
-            onChange={handleSearchChange}
+            onChange={(event) => {
+              handleSearchChange(event);
+              if (event.target.value.trim() === '' && appliedSearch !== '') {
+                setAppliedSearch('');
+                setPage(DEFAULT_PAGE);
+              }
+            }}
             value={searchValue}
           />
         </form>
@@ -151,24 +182,41 @@ const ReceiptsScreen: React.FC = () => {
       rightSidebar={renderSideContent()}
       headerContent={headerContent()}
     >
+      {error && <p className="text-destructive text-sm p-4">{error}</p>}
       {loading ? (
         <div className="flex items-center justify-center p-8">
           <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
         </div>
       ) : (
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Receipt no</TableHead>
-              <TableHead>Customer</TableHead>
-              <TableHead>Amount</TableHead>
-              <TableHead>Payment Method</TableHead>
-              <TableHead>Date</TableHead>
-            </TableRow>
-          </TableHeader>
+        <>
+          <TableFrame>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Receipt no</TableHead>
+                  <TableHead>Customer</TableHead>
+                  <TableHead className="text-right">Amount</TableHead>
+                  <TableHead>Payment Method</TableHead>
+                  <TableHead>Date</TableHead>
+                </TableRow>
+              </TableHeader>
 
-          <TableBody>{renderRows()}</TableBody>
-        </Table>
+              <TableBody>
+                {receipts.length > 0 ? (
+                  renderRows()
+                ) : (
+                  <TableEmptyRow colSpan={5} message="No receipts found." />
+                )}
+              </TableBody>
+            </Table>
+          </TableFrame>
+          <PaginationControls
+            page={page}
+            pageSize={DEFAULT_PAGE_SIZE}
+            total={total}
+            onPageChange={setPage}
+          />
+        </>
       )}
     </DashboardLayout>
   );

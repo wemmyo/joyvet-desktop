@@ -1,58 +1,71 @@
 import React, { useEffect, useState } from 'react';
 import dayjs from 'dayjs';
+import { useParams } from 'react-router-dom';
 
 import DashboardLayout from '../../layouts/DashboardLayout/DashboardLayout';
 import SuppplierHistoryPayments from './components/Payments/Payments';
 import SuppplierHistoryPurchases from './components/Purchases/Purchases';
+import ActivityTimeline from './components/ActivityTimeline/ActivityTimeline';
 import {
   getSupplierPaymentsFn,
   getSupplierPurchasesFn,
+  getSupplierActivityTimelineFn,
 } from '../../controllers/supplier.controller';
 import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
 import { Label } from '../../components/ui/label';
 
-// export interface SuppplierHistoryProps {}
-
 const TODAYS_DATE = `${dayjs().format('YYYY-MM-DD')}`;
 
-const SuppplierHistory: React.FC = ({ match }: any) => {
+const SuppplierHistory: React.FC = () => {
   const [startDate, setStartDate] = useState(TODAYS_DATE);
   const [endDate, setEndDate] = useState(TODAYS_DATE);
-  const [payments, setPayments] = useState([]);
-  const [purchases, setPurchases] = useState([]);
+  const [payments, setPayments] = useState<any[]>([]);
+  const [purchases, setPurchases] = useState<any[]>([]);
+  const [activityTimeline, setActivityTimeline] = useState<any[]>([]);
   const [activeTab, setActiveTab] = useState('Purchases');
-
-  const supplierId = match.params.id;
+  const { id } = useParams<{ id: string }>();
+  const supplierId = Number(id);
+  const hasValidSupplierId = Number.isInteger(supplierId) && supplierId > 0;
 
   useEffect(() => {
+    if (!hasValidSupplierId) {
+      setPayments([]);
+      setPurchases([]);
+      setActivityTimeline([]);
+      return;
+    }
+
     const fetchData = async () => {
-      const getPayments = getSupplierPaymentsFn(
-        Number(supplierId),
-        startDate,
-        endDate
-      );
-      const getPurchases = getSupplierPurchasesFn(
-        Number(supplierId),
-        startDate,
-        endDate
-      );
-      const [paymentsResponse, purchasesResponse] = await Promise.all([
-        getPayments,
-        getPurchases,
-      ]);
-      setPayments(paymentsResponse);
-      setPurchases(purchasesResponse);
+      const [paymentsResponse, purchasesResponse, timelineResponse] =
+        await Promise.all([
+          getSupplierPaymentsFn(supplierId, startDate, endDate),
+          getSupplierPurchasesFn(supplierId, startDate, endDate),
+          getSupplierActivityTimelineFn(supplierId, startDate, endDate),
+        ]);
+      setPayments(paymentsResponse || []);
+      setPurchases(purchasesResponse || []);
+      setActivityTimeline(timelineResponse || []);
     };
     fetchData();
-  }, [startDate, endDate, supplierId]);
+  }, [endDate, hasValidSupplierId, startDate, supplierId]);
 
   const resetFilters = () => {
     setStartDate(TODAYS_DATE);
     setEndDate(TODAYS_DATE);
   };
 
-  const tabs = ['Purchases', 'Payments'];
+  const tabs = ['Purchases', 'Payments', 'Activity'];
+
+  if (!hasValidSupplierId) {
+    return (
+      <DashboardLayout screenTitle="Supplier History">
+        <p className="text-sm text-muted-foreground">
+          Invalid supplier selected.
+        </p>
+      </DashboardLayout>
+    );
+  }
 
   return (
     <DashboardLayout screenTitle="Supplier History">
@@ -103,6 +116,9 @@ const SuppplierHistory: React.FC = ({ match }: any) => {
           )}
           {activeTab === 'Payments' && (
             <SuppplierHistoryPayments data={payments} />
+          )}
+          {activeTab === 'Activity' && (
+            <ActivityTimeline data={activityTimeline} />
           )}
         </div>
       </div>

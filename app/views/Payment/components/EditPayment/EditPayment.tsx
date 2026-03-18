@@ -1,27 +1,26 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect } from 'react';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 
+import AsyncCombobox from '../../../../components/ui/async-combobox';
 import { Button } from '../../../../components/ui/button';
 import { Input } from '../../../../components/ui/input';
 import { Label } from '../../../../components/ui/label';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '../../../../components/ui/select';
+import { useAsyncComboboxOptions } from '../../../../hooks/useAsyncComboboxOptions';
 import { useSidebarContext } from '../../../../contexts/SidebarContext';
 import {
   getPaymentsFn,
   getSinglePaymentFn,
   updatePaymentFn,
 } from '../../../../controllers/payment.controller';
-import { getSuppliersFn } from '../../../../controllers/supplier.controller';
+import {
+  getSuppliersFn,
+  searchSupplierFn,
+} from '../../../../controllers/supplier.controller';
 import { IPayment } from '../../../../models/payment';
 import { ISupplier } from '../../../../models/supplier';
+import { MAX_PAGE_SIZE } from '../../../../types/pagination';
 
 export interface EditPaymentProps {
   paymentId: string | number;
@@ -38,9 +37,17 @@ type EditPaymentFormValues = z.infer<typeof editPaymentSchema>;
 const EditPayment: React.FC<EditPaymentProps> = ({
   paymentId,
 }: EditPaymentProps) => {
-  const [payment, setPayment] = useState<IPayment>({} as IPayment);
-  const [suppliers, setSuppliers] = useState<ISupplier[]>([]);
   const { closeSideContent } = useSidebarContext();
+  const supplierOptions = useAsyncComboboxOptions<ISupplier>({
+    getInitialOptions: () => getSuppliersFn({ pageSize: MAX_PAGE_SIZE }),
+    searchOptions: (search) =>
+      searchSupplierFn({
+        pageSize: MAX_PAGE_SIZE,
+        search,
+      }),
+    getOptionValue: (supplier) => String(supplier.id),
+    getOptionLabel: (supplier) => supplier.fullName,
+  });
 
   const {
     register,
@@ -59,12 +66,7 @@ const EditPayment: React.FC<EditPaymentProps> = ({
 
   useEffect(() => {
     const fetchData = async () => {
-      const [paymentResponse, suppliersResponse] = await Promise.all([
-        getSinglePaymentFn(Number(paymentId)),
-        getSuppliersFn(),
-      ]);
-      setPayment(paymentResponse);
-      setSuppliers(suppliersResponse);
+      const paymentResponse = await getSinglePaymentFn(Number(paymentId));
       reset({
         supplierId: paymentResponse.supplierId
           ? String(paymentResponse.supplierId)
@@ -72,6 +74,9 @@ const EditPayment: React.FC<EditPaymentProps> = ({
         amount: paymentResponse.amount || 0,
         note: paymentResponse.note || '',
       });
+      if (paymentResponse.supplier) {
+        supplierOptions.primeItems([paymentResponse.supplier]);
+      }
     };
     fetchData();
   }, [paymentId, reset]);
@@ -98,18 +103,17 @@ const EditPayment: React.FC<EditPaymentProps> = ({
             name="supplierId"
             control={control}
             render={({ field }) => (
-              <Select onValueChange={field.onChange} value={field.value}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select Supplier" />
-                </SelectTrigger>
-                <SelectContent>
-                  {suppliers.map((s: any) => (
-                    <SelectItem key={s.id} value={String(s.id)}>
-                      {s.fullName}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <AsyncCombobox
+                value={field.value}
+                onValueChange={field.onChange}
+                placeholder="Select Supplier"
+                searchPlaceholder="Search suppliers"
+                selectedLabel={supplierOptions.getLabelByValue(field.value)}
+                options={supplierOptions.options}
+                loading={supplierOptions.loading}
+                emptyMessage="No suppliers found."
+                onSearchChange={supplierOptions.onSearchChange}
+              />
             )}
           />
           {errors.supplierId && (

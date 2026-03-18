@@ -3,6 +3,7 @@ import dayjs from 'dayjs';
 import { Plus, RefreshCw } from 'lucide-react';
 
 import DashboardLayout from '../../layouts/DashboardLayout/DashboardLayout';
+import PaginationControls from '../../components/PaginationControls/PaginationControls';
 import CreatePayment from './components/CreatePayment/CreatePayment';
 import { numberWithCommas } from '../../utils/helpers';
 import PaymentDetail from './components/PaymentDetail/PaymentDetail';
@@ -13,6 +14,7 @@ import {
   searchPaymentFn,
 } from '../../controllers/payment.controller';
 import { IPayment } from '../../models/payment';
+import { DEFAULT_PAGE, DEFAULT_PAGE_SIZE } from '../../types/pagination';
 import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
 import {
@@ -23,6 +25,10 @@ import {
   TableHead,
   TableCell,
 } from '../../components/ui/table';
+import {
+  TableEmptyRow,
+  TableFrame,
+} from '../../components/ui/table-helpers';
 
 const CONTENT_CREATE = 'create';
 const CONTENT_DETAIL = 'detail';
@@ -32,17 +38,37 @@ const PaymentsScreen: React.FC = () => {
   const [sideContent, setSideContent] = useState('');
   const [paymentId, setPaymentId] = useState('');
   const [searchValue, setSearchValue] = useState('');
+  const [appliedSearch, setAppliedSearch] = useState('');
   const [payments, setPayments] = useState<IPayment[]>([]);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [page, setPage] = useState(DEFAULT_PAGE);
+  const [total, setTotal] = useState(0);
 
   const { openSideContent: openSideBar, closeSideContent: closeSideBar } =
     useSidebarContext();
 
-  const fetchPayments = async () => {
+  const fetchPayments = async (nextPage = page, search = appliedSearch) => {
     setLoading(true);
-    const response = await getPaymentsFn();
-    setPayments(response);
-    setLoading(false);
+    setError(null);
+    try {
+      const response = search
+        ? await searchPaymentFn({
+            page: nextPage,
+            pageSize: DEFAULT_PAGE_SIZE,
+            search,
+          })
+        : await getPaymentsFn({
+            page: nextPage,
+            pageSize: DEFAULT_PAGE_SIZE,
+          });
+      setPayments(response.rows ?? []);
+      setTotal(response.total ?? 0);
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Failed to load data');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const openSideContent = (content: string) => {
@@ -51,7 +77,7 @@ const PaymentsScreen: React.FC = () => {
   };
 
   useEffect(() => {
-    fetchPayments();
+    void fetchPayments(page, appliedSearch);
 
     return () => {
       const closeSideContent = () => {
@@ -61,7 +87,7 @@ const PaymentsScreen: React.FC = () => {
       };
       closeSideContent();
     };
-  }, []);
+  }, [appliedSearch, page]);
 
   const viewPaymentReceipt = (id) => {
     setPaymentId(id);
@@ -74,10 +100,12 @@ const PaymentsScreen: React.FC = () => {
         <TableRow
           key={each.id}
           onClick={() => viewPaymentReceipt(each.id)}
-          className="cursor-pointer hover:bg-muted/50"
+          className="cursor-pointer"
         >
           <TableCell>{each.id}</TableCell>
-          <TableCell>{numberWithCommas(each.amount)}</TableCell>
+          <TableCell className="text-right">
+            {numberWithCommas(each.amount)}
+          </TableCell>
           <TableCell>{each.paymentMethod}</TableCell>
           <TableCell>{each.bank}</TableCell>
           <TableCell>{dayjs(each.createdAt).format('DD/MM/YYYY')}</TableCell>
@@ -109,12 +137,6 @@ const PaymentsScreen: React.FC = () => {
     setSearchValue(e.target.value);
   };
 
-  useEffect(() => {
-    if (searchValue.length === 0) {
-      fetchPayments();
-    }
-  }, [searchValue]);
-
   const headerContent = () => {
     return (
       <div className="flex items-center gap-2 flex-wrap">
@@ -126,22 +148,31 @@ const PaymentsScreen: React.FC = () => {
           <Plus className="mr-1 h-4 w-4" />
           Create
         </Button>
-        <Button variant="outline" onClick={fetchPayments}>
+        <Button
+          variant="outline"
+          onClick={() => {
+            void fetchPayments(page, appliedSearch);
+          }}
+        >
           <RefreshCw className="mr-1 h-4 w-4" />
           Refresh
         </Button>
         <form
-          onSubmit={async (e) => {
+          onSubmit={(e) => {
             e.preventDefault();
-            setLoading(true);
-            const response = await searchPaymentFn(searchValue);
-            setPayments(response);
-            setLoading(false);
+            setAppliedSearch(searchValue.trim());
+            setPage(DEFAULT_PAGE);
           }}
         >
           <Input
             placeholder="Search Payment"
-            onChange={handleSearchChange}
+            onChange={(event) => {
+              handleSearchChange(event);
+              if (event.target.value.trim() === '' && appliedSearch !== '') {
+                setAppliedSearch('');
+                setPage(DEFAULT_PAGE);
+              }
+            }}
             value={searchValue}
           />
         </form>
@@ -155,23 +186,40 @@ const PaymentsScreen: React.FC = () => {
       rightSidebar={renderSideContent()}
       headerContent={headerContent()}
     >
+      {error && <p className="text-destructive text-sm p-4">{error}</p>}
       {loading ? (
         <div className="flex items-center justify-center p-8">
           <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
         </div>
       ) : (
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Payment no</TableHead>
-              <TableHead>Amount</TableHead>
-              <TableHead>Payment Method</TableHead>
-              <TableHead>Bank</TableHead>
-              <TableHead>Date</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>{renderRows()}</TableBody>
-        </Table>
+        <>
+          <TableFrame>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Payment no</TableHead>
+                  <TableHead className="text-right">Amount</TableHead>
+                  <TableHead>Payment Method</TableHead>
+                  <TableHead>Bank</TableHead>
+                  <TableHead>Date</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {payments.length > 0 ? (
+                  renderRows()
+                ) : (
+                  <TableEmptyRow colSpan={5} message="No payments found." />
+                )}
+              </TableBody>
+            </Table>
+          </TableFrame>
+          <PaginationControls
+            page={page}
+            pageSize={DEFAULT_PAGE_SIZE}
+            total={total}
+            onPageChange={setPage}
+          />
+        </>
       )}
     </DashboardLayout>
   );

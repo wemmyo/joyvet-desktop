@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState } from 'react';
+import React, { createContext, useCallback, useContext, useState } from 'react';
 
 interface RightPanelContextValue {
   sideContentisOpen: boolean;
@@ -17,8 +17,8 @@ export const RightPanelProvider: React.FC<{ children: React.ReactNode }> = ({
 }) => {
   const [sideContentisOpen, setSideContentisOpen] = useState(false);
 
-  const openSideContent = () => setSideContentisOpen(true);
-  const closeSideContent = () => setSideContentisOpen(false);
+  const openSideContent = useCallback(() => setSideContentisOpen(true), []);
+  const closeSideContent = useCallback(() => setSideContentisOpen(false), []);
 
   return (
     <RightPanelContext.Provider

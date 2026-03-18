@@ -2,13 +2,16 @@ import React, { useEffect, useState, useRef } from 'react';
 import dayjs from 'dayjs';
 import { useReactToPrint } from 'react-to-print';
 import { Printer } from 'lucide-react';
+import { useParams } from 'react-router-dom';
 
 import DashboardLayout from '../../layouts/DashboardLayout/DashboardLayout';
 import CustomerHistoryInvoices from './components/Invoices/Invoices';
 import CustomerHistoryReceipts from './components/Receipts/Receipts';
+import ActivityTimeline from './components/ActivityTimeline/ActivityTimeline';
 import {
   getCustomerInvoicesFn,
   getCustomerReceiptsFn,
+  getCustomerActivityTimelineFn,
 } from '../../controllers/customer.controller';
 import { IReceipt } from '../../models/receipt';
 import { IInvoice } from '../../models/invoice';
@@ -18,51 +21,62 @@ import { Label } from '../../components/ui/label';
 
 const TODAYS_DATE = `${dayjs().format('YYYY-MM-DD')}`;
 
-const CustomerHistory: React.FC = ({ match }: any) => {
+const CustomerHistory: React.FC = () => {
   const [startDate, setStartDate] = useState(TODAYS_DATE);
   const [endDate, setEndDate] = useState(TODAYS_DATE);
   const [receipts, setReceipts] = useState<IReceipt[]>([]);
   const [invoices, setInvoices] = useState<IInvoice[]>([]);
+  const [activityTimeline, setActivityTimeline] = useState<any[]>([]);
   const [activeTab, setActiveTab] = useState('Receipts');
+  const { id } = useParams<{ id: string }>();
+  const customerId = Number(id);
+  const hasValidCustomerId = Number.isInteger(customerId) && customerId > 0;
 
-  const customerId = match.params.id;
-
-  const componentRef = useRef(null);
+  const componentRef = useRef<HTMLDivElement>(null);
 
   const handlePrint = useReactToPrint({
-    content: () => componentRef.current,
+    contentRef: componentRef,
   });
 
   useEffect(() => {
-    const fetchData = async () => {
-      const getInvoices = getCustomerInvoicesFn(
-        Number(customerId),
-        startDate,
-        endDate
-      );
-      const getReceipts = getCustomerReceiptsFn(
-        Number(customerId),
-        startDate,
-        endDate
-      );
+    if (!hasValidCustomerId) {
+      setInvoices([]);
+      setReceipts([]);
+      setActivityTimeline([]);
+      return;
+    }
 
-      const [invoicesResponse, receiptsResponse] = await Promise.all([
-        getInvoices,
-        getReceipts,
-      ]);
-      setInvoices(invoicesResponse);
-      setReceipts(receiptsResponse);
+    const fetchData = async () => {
+      const [invoicesResponse, receiptsResponse, timelineResponse] =
+        await Promise.all([
+          getCustomerInvoicesFn(customerId, startDate, endDate),
+          getCustomerReceiptsFn(customerId, startDate, endDate),
+          getCustomerActivityTimelineFn(customerId, startDate, endDate),
+        ]);
+      setInvoices(invoicesResponse || []);
+      setReceipts(receiptsResponse || []);
+      setActivityTimeline(timelineResponse || []);
     };
 
     fetchData();
-  }, [startDate, endDate, customerId]);
+  }, [customerId, endDate, hasValidCustomerId, startDate]);
 
   const resetFilters = () => {
     setStartDate(TODAYS_DATE);
     setEndDate(TODAYS_DATE);
   };
 
-  const tabs = ['Receipts', 'Invoices'];
+  const tabs = ['Receipts', 'Invoices', 'Activity'];
+
+  if (!hasValidCustomerId) {
+    return (
+      <DashboardLayout screenTitle="Customer History">
+        <p className="text-sm text-muted-foreground">
+          Invalid customer selected.
+        </p>
+      </DashboardLayout>
+    );
+  }
 
   return (
     <DashboardLayout screenTitle="Customer History">
@@ -119,6 +133,9 @@ const CustomerHistory: React.FC = ({ match }: any) => {
             )}
             {activeTab === 'Invoices' && (
               <CustomerHistoryInvoices data={invoices} />
+            )}
+            {activeTab === 'Activity' && (
+              <ActivityTimeline data={activityTimeline} />
             )}
           </div>
         </div>

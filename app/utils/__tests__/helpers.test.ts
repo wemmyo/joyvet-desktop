@@ -1,11 +1,12 @@
 import { numberWithCommas, isAdmin, sum } from '../helpers';
+import { setUserSession } from '../session';
 
 describe('numberWithCommas', () => {
   it('formats number with commas and 2 decimal places', () => {
     expect(numberWithCommas(1234567.89)).toBe('1,234,567.89');
   });
-  it('returns empty string for falsy input', () => {
-    expect(numberWithCommas(0)).toBe('');
+  it('formats zero and returns empty string for invalid input', () => {
+    expect(numberWithCommas(0)).toBe('0.00');
     expect(numberWithCommas(null as any)).toBe('');
   });
   it('formats small number', () => {
@@ -20,11 +21,11 @@ describe('isAdmin', () => {
     expect(isAdmin()).toBe(false);
   });
   it('returns true when user role is admin', () => {
-    localStorage.setItem('user', JSON.stringify({ role: 'admin' }));
+    setUserSession({ id: 1, fullName: 'Admin User', role: 'admin' });
     expect(isAdmin()).toBe(true);
   });
   it('returns false when user role is not admin', () => {
-    localStorage.setItem('user', JSON.stringify({ role: 'cashier' }));
+    setUserSession({ id: 2, fullName: 'Cashier User', role: 'cashier' });
     expect(isAdmin()).toBe(false);
   });
 });

@@ -3,6 +3,7 @@ import dayjs from 'dayjs';
 import { Plus, RefreshCw } from 'lucide-react';
 
 import DashboardLayout from '../../layouts/DashboardLayout/DashboardLayout';
+import PaginationControls from '../../components/PaginationControls/PaginationControls';
 import EditUser from './components/EditUser/EditUser';
 import { IUser } from '../../models/user';
 import { getUsersFn, createUserFn } from '../../controllers/user.controller';
@@ -17,6 +18,11 @@ import {
   TableHeader,
   TableRow,
 } from '../../components/ui/table';
+import {
+  TableEmptyRow,
+  TableFrame,
+} from '../../components/ui/table-helpers';
+import { DEFAULT_PAGE, DEFAULT_PAGE_SIZE } from '../../types/pagination';
 // import { createStoreInfoTable } from '../../controllers/storeInfo.controller';
 
 const CONTENT_CREATE = 'create';
@@ -26,13 +32,19 @@ const UserScreen: React.FC = () => {
   const [sideContent, setSideContent] = useState('');
   const [userId, setUserId] = useState('');
   const [users, setUsers] = useState<IUser[]>([]);
+  const [page, setPage] = useState(DEFAULT_PAGE);
+  const [total, setTotal] = useState(0);
 
   const { openSideContent: openSideBar, closeSideContent: closeSideBar } =
     useSidebarContext();
 
-  const fetchUsers = async () => {
-    const response = await getUsersFn();
-    setUsers(response);
+  const fetchUsers = async (nextPage = page) => {
+    const response = await getUsersFn({
+      page: nextPage,
+      pageSize: DEFAULT_PAGE_SIZE,
+    });
+    setUsers(response.rows ?? []);
+    setTotal(response.total ?? 0);
   };
 
   const openSideContent = (content: string) => {
@@ -41,7 +53,7 @@ const UserScreen: React.FC = () => {
   };
 
   useEffect(() => {
-    fetchUsers();
+    void fetchUsers(page);
 
     return () => {
       const closeSideContent = () => {
@@ -51,7 +63,7 @@ const UserScreen: React.FC = () => {
       };
       closeSideContent();
     };
-  }, []);
+  }, [page]);
 
   const handleNewUser = (values) => {
     createUserFn(values, () => {
@@ -87,7 +99,13 @@ const UserScreen: React.FC = () => {
           <Plus className="mr-2 h-4 w-4" />
           Create
         </Button>
-        <Button variant="outline" size="sm" onClick={fetchUsers}>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => {
+            void fetchUsers(page);
+          }}
+        >
           <RefreshCw className="mr-2 h-4 w-4" />
           Refresh
         </Button>
@@ -101,34 +119,46 @@ const UserScreen: React.FC = () => {
       rightSidebar={renderSideContent()}
       headerContent={headerContent()}
     >
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>Full Name</TableHead>
-            <TableHead>Username</TableHead>
-            <TableHead>Role</TableHead>
-            <TableHead>Created</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {users.map((each) => {
-            return (
-              <TableRow
-                onClick={() => openSingleUser(each.id)}
-                key={each.id}
-                className="cursor-pointer"
-              >
-                <TableCell>{each.fullName}</TableCell>
-                <TableCell>{each.username}</TableCell>
-                <TableCell>{each.role}</TableCell>
-                <TableCell>
-                  {dayjs(each.createdAt).format('DD/MM/YYYY')}
-                </TableCell>
-              </TableRow>
-            );
-          })}
-        </TableBody>
-      </Table>
+      <TableFrame>
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Full Name</TableHead>
+              <TableHead>Username</TableHead>
+              <TableHead>Role</TableHead>
+              <TableHead>Created</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {users.length > 0 ? (
+              users.map((each) => {
+                return (
+                  <TableRow
+                    onClick={() => openSingleUser(each.id)}
+                    key={each.id}
+                    className="cursor-pointer"
+                  >
+                    <TableCell>{each.fullName}</TableCell>
+                    <TableCell>{each.username}</TableCell>
+                    <TableCell>{each.role}</TableCell>
+                    <TableCell>
+                      {dayjs(each.createdAt).format('DD/MM/YYYY')}
+                    </TableCell>
+                  </TableRow>
+                );
+              })
+            ) : (
+              <TableEmptyRow colSpan={4} message="No users found." />
+            )}
+          </TableBody>
+        </Table>
+      </TableFrame>
+      <PaginationControls
+        page={page}
+        pageSize={DEFAULT_PAGE_SIZE}
+        total={total}
+        onPageChange={setPage}
+      />
     </DashboardLayout>
   );
 };

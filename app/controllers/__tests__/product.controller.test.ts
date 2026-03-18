@@ -54,15 +54,32 @@ describe('product controller', () => {
 
   describe('getProductsFn', () => {
     it('returns all products', async () => {
-      mockApi.product.getAll.mockResolvedValue([mockProduct]);
+      mockApi.product.getAll.mockResolvedValue({
+        rows: [mockProduct],
+        total: 1,
+        page: 1,
+        pageSize: 25,
+      });
       const result = await getProductsFn();
-      expect(result).toEqual([mockProduct]);
+      expect(result).toEqual({
+        rows: [mockProduct],
+        total: 1,
+        page: 1,
+        pageSize: 25,
+      });
     });
 
     it('returns in-stock products when filter is inStock', async () => {
-      mockApi.product.getAll.mockResolvedValue([mockProduct]);
-      await getProductsFn('inStock');
-      expect(mockApi.product.getAll).toHaveBeenCalledWith('inStock');
+      mockApi.product.getAll.mockResolvedValue({
+        rows: [mockProduct],
+        total: 1,
+        page: 1,
+        pageSize: 25,
+      });
+      await getProductsFn({ filter: 'inStock' });
+      expect(mockApi.product.getAll).toHaveBeenCalledWith({
+        filter: 'inStock',
+      });
     });
   });
 
@@ -103,9 +120,33 @@ describe('product controller', () => {
 
   describe('searchProductFn', () => {
     it('returns matching products', async () => {
-      mockApi.product.search.mockResolvedValue([mockProduct]);
-      const result = await searchProductFn('Test');
-      expect(result).toEqual([mockProduct]);
+      mockApi.product.search.mockResolvedValue({
+        rows: [mockProduct],
+        total: 1,
+        page: 1,
+        pageSize: 25,
+      });
+      const result = await searchProductFn({ search: 'Test' });
+      expect(result).toEqual({
+        rows: [mockProduct],
+        total: 1,
+        page: 1,
+        pageSize: 25,
+      });
+    });
+
+    it('passes the in-stock filter through to the search API', async () => {
+      mockApi.product.search.mockResolvedValue({
+        rows: [mockProduct],
+        total: 1,
+        page: 1,
+        pageSize: 25,
+      });
+      await searchProductFn({ filter: 'inStock', search: 'Test' });
+      expect(mockApi.product.search).toHaveBeenCalledWith({
+        filter: 'inStock',
+        search: 'Test',
+      });
     });
   });
 });

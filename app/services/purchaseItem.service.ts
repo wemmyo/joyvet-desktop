@@ -1,6 +1,6 @@
 import PurchaseItem, { IPurchaseItem } from '../models/purchaseItem';
 
-export const getPurchaseItems = (args) => {
+export const getPurchaseItems = (args: any) => {
   return PurchaseItem.findAll({
     ...args,
   }).then((data: IPurchaseItem[]) => {

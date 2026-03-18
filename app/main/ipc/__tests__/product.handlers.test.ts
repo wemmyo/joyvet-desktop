@@ -14,6 +14,11 @@ vi.mock('electron', () => ({
   },
 }));
 
+vi.mock('../../runtime', () => ({
+  withAppReady: (fn: Function) => fn,
+  ensureAuthReady: vi.fn(),
+}));
+
 vi.mock('../../database', () => ({
   default: {
     transaction: vi.fn((cb: Function) => cb({})),
@@ -29,6 +34,16 @@ vi.mock('../../../services/product.service', () => ({
   deleteProduct: vi.fn(),
 }));
 
+vi.mock('../../../models/product', () => ({
+  default: {
+    findAndCountAll: vi.fn(),
+    findByPk: vi.fn(),
+    update: vi.fn(),
+    decrement: vi.fn(),
+    increment: vi.fn(),
+  },
+}));
+
 vi.mock('../../../services/purchaseItem.service', () => ({
   getPurchaseItems: vi.fn(),
 }));
@@ -37,6 +52,7 @@ vi.mock('../../../services/invoiceItem.service', () => ({
   getInvoiceItems: vi.fn(),
 }));
 
+import ProductModel from '../../../models/product';
 import * as productService from '../../../services/product.service';
 import * as invoiceItemService from '../../../services/invoiceItem.service';
 import * as purchaseItemService from '../../../services/purchaseItem.service';
@@ -74,40 +90,57 @@ describe('product IPC handlers', () => {
 
   // ------------------------------------------------------------------ getAll
   describe('product:getAll', () => {
-    it('returns all products serialized', async () => {
-      (productService.getProducts as any).mockResolvedValue([mockProduct]);
-      const result = await handlers['product:getAll'](mockEvent);
-      expect(result).toEqual([mockProduct.toJSON()]);
+    it('returns paginated products', async () => {
+      (ProductModel.findAndCountAll as any).mockResolvedValue({
+        rows: [mockProduct],
+        count: 1,
+      });
+      const result = await handlers['product:getAll'](mockEvent, {});
+      expect(result).toEqual({
+        rows: [mockProduct.toJSON()],
+        total: 1,
+        page: 1,
+        pageSize: 25,
+      });
     });
 
     it('orders by title ASC', async () => {
-      (productService.getProducts as any).mockResolvedValue([]);
-      await handlers['product:getAll'](mockEvent);
-      expect(productService.getProducts).toHaveBeenCalledWith(
+      (ProductModel.findAndCountAll as any).mockResolvedValue({
+        rows: [],
+        count: 0,
+      });
+      await handlers['product:getAll'](mockEvent, {});
+      expect(ProductModel.findAndCountAll).toHaveBeenCalledWith(
         expect.objectContaining({ order: [['title', 'ASC']] })
       );
     });
 
     it('filters in-stock products when filter is "inStock"', async () => {
-      (productService.getProducts as any).mockResolvedValue([mockProduct]);
-      await handlers['product:getAll'](mockEvent, 'inStock');
-      expect(productService.getProducts).toHaveBeenCalledWith(
+      (ProductModel.findAndCountAll as any).mockResolvedValue({
+        rows: [mockProduct],
+        count: 1,
+      });
+      await handlers['product:getAll'](mockEvent, { filter: 'inStock' });
+      expect(ProductModel.findAndCountAll).toHaveBeenCalledWith(
         expect.objectContaining({ where: expect.any(Object) })
       );
     });
 
     it('does not add a where clause when no filter is provided', async () => {
-      (productService.getProducts as any).mockResolvedValue([]);
-      await handlers['product:getAll'](mockEvent);
-      const callArg = (productService.getProducts as any).mock.calls[0][0];
+      (ProductModel.findAndCountAll as any).mockResolvedValue({
+        rows: [],
+        count: 0,
+      });
+      await handlers['product:getAll'](mockEvent, {});
+      const callArg = (ProductModel.findAndCountAll as any).mock.calls[0][0];
       expect(callArg.where).toBeUndefined();
     });
 
-    it('throws on service error', async () => {
-      (productService.getProducts as any).mockRejectedValue(
+    it('throws on db error', async () => {
+      (ProductModel.findAndCountAll as any).mockRejectedValue(
         new Error('DB error')
       );
-      await expect(handlers['product:getAll'](mockEvent)).rejects.toThrow(
+      await expect(handlers['product:getAll'](mockEvent, {})).rejects.toThrow(
         'DB error'
       );
     });
@@ -180,22 +213,56 @@ describe('product IPC handlers', () => {
   // ------------------------------------------------------------------ search
   describe('product:search', () => {
     it('returns matching products', async () => {
-      (productService.getProducts as any).mockResolvedValue([mockProduct]);
-      const result = await handlers['product:search'](mockEvent, 'Test');
-      expect(Array.isArray(result)).toBe(true);
-      expect(result).toEqual([mockProduct.toJSON()]);
+      (ProductModel.findAndCountAll as any).mockResolvedValue({
+        rows: [mockProduct],
+        count: 1,
+      });
+      const result = await handlers['product:search'](mockEvent, {
+        search: 'Test',
+      });
+      expect(result).toEqual({
+        rows: [mockProduct.toJSON()],
+        total: 1,
+        page: 1,
+        pageSize: 25,
+      });
     });
 
     it('passes a substring where clause on title', async () => {
-      (productService.getProducts as any).mockResolvedValue([]);
-      await handlers['product:search'](mockEvent, 'Query');
-      const callArg = (productService.getProducts as any).mock.calls[0][0];
+      (ProductModel.findAndCountAll as any).mockResolvedValue({
+        rows: [],
+        count: 0,
+      });
+      await handlers['product:search'](mockEvent, { search: 'Query' });
+      const callArg = (ProductModel.findAndCountAll as any).mock.calls[0][0];
       expect(callArg.where).toBeDefined();
       expect(callArg.where.title).toBeDefined();
     });
 
-    it('throws on empty search string', async () => {
-      await expect(handlers['product:search'](mockEvent, '')).rejects.toThrow();
+    it('keeps the in-stock filter when searching products', async () => {
+      (ProductModel.findAndCountAll as any).mockResolvedValue({
+        rows: [],
+        count: 0,
+      });
+      await handlers['product:search'](mockEvent, {
+        filter: 'inStock',
+        search: 'Query',
+      });
+      expect(ProductModel.findAndCountAll).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({
+            stock: expect.any(Object),
+            title: expect.any(Object),
+          }),
+        })
+      );
+    });
+
+    it('returns empty paginated result for empty search string', async () => {
+      const result = await handlers['product:search'](mockEvent, {
+        search: '',
+      });
+      expect(result).toEqual({ rows: [], total: 0, page: 1, pageSize: 25 });
     });
   });
 

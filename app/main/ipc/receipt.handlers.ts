@@ -5,68 +5,168 @@ import { z } from 'zod';
 import Receipt from '../../models/receipt';
 import Customer from '../../models/customer';
 import database from '../database';
-import { getReceipts } from '../../services/receipt.service';
+import { getReceiptById, updateReceipt } from '../../services/receipt.service';
+import {
+  receiptListQuerySchema,
+  toPaginatedResult,
+  toPaginationOptions,
+} from './listing';
+import { withAppReady } from '../runtime';
+
+const receiptInputSchema = z.object({
+  amount: z.number().min(1),
+  customerId: z.number(),
+  paymentMethod: z.string().min(1),
+  bank: z.string().optional().nullable(),
+  note: z.string().optional().nullable(),
+});
+
+const receiptUpdateSchema = z.object({
+  amount: z.number().min(1),
+  customerId: z.number(),
+  paymentMethod: z.string().min(1).optional(),
+  bank: z.string().optional().nullable(),
+  note: z.string().optional().nullable(),
+});
 
 export function registerReceiptHandlers(): void {
-  ipcMain.handle('receipt:getAll', async () => {
-    const receipts = await Receipt.findAll({
-      include: [{ model: Customer }],
-    });
-    return receipts.map((r: any) => (r.toJSON ? r.toJSON() : r));
-  });
-
-  ipcMain.handle('receipt:create', async (_event, values: any) => {
-    const schema = z.object({
-      amount: z.number().min(1),
-      customerId: z.number(),
-      paymentMethod: z.string().min(1),
-    });
-    schema.parse(values);
-
-    await database.transaction(async (t: any) => {
-      const receipt = await Receipt.create(
-        {
-          customerId: values.customerId || null,
-          amount: values.amount || null,
-          paymentMethod: values.paymentMethod || null,
-          bank: values.bank || null,
-          note: values.note || null,
-        },
-        { transaction: t }
+  ipcMain.handle(
+    'receipt:getAll',
+    withAppReady(async (_event, input: unknown = {}) => {
+      const query = receiptListQuerySchema.parse(input);
+      const { page, pageSize } = query;
+      const { rows, count } = await Receipt.findAndCountAll({
+        distinct: true,
+        ...toPaginationOptions({ page, pageSize }),
+        include: [{ model: Customer }],
+        order: [['createdAt', 'DESC']],
+      });
+      return toPaginatedResult(
+        rows.map((receipt: any) => (receipt.toJSON ? receipt.toJSON() : receipt)),
+        count,
+        page,
+        pageSize
       );
+    })
+  );
 
-      await Customer.decrement('balance', {
-        by: values.amount,
-        where: { id: values.customerId },
-        transaction: t,
+  ipcMain.handle(
+    'receipt:getById',
+    withAppReady(async (_event, id: number) => {
+      z.number().parse(id);
+
+      const receipt = await getReceiptById(id);
+
+      if (!receipt) {
+        throw new Error('Receipt not found');
+      }
+
+      const hydratedReceipt = await Receipt.findByPk(id, {
+        include: [{ model: Customer }],
       });
 
-      return (receipt as any).toJSON ? (receipt as any).toJSON() : receipt;
-    });
-  });
+      return hydratedReceipt && (hydratedReceipt as any).toJSON
+        ? (hydratedReceipt as any).toJSON()
+        : hydratedReceipt;
+    })
+  );
 
-  ipcMain.handle('receipt:delete', async (_event, id: number) => {
-    const schema = z.object({ id: z.number() });
-    schema.parse({ id });
+  ipcMain.handle(
+    'receipt:create',
+    withAppReady(async (_event, values: any) => {
+      const parsedValues = receiptInputSchema.parse(values);
 
-    await database.transaction(async (t: any) => {
-      const receipt = await Receipt.findByPk(id, { transaction: t });
-      if (!receipt) throw new Error('Receipt not found');
+      await database.transaction(async (t: any) => {
+        const receipt = await Receipt.create(
+          {
+            customerId: parsedValues.customerId,
+            amount: parsedValues.amount,
+            paymentMethod: parsedValues.paymentMethod,
+            bank: parsedValues.bank || null,
+            note: parsedValues.note || null,
+            postedBy: values.postedBy || null,
+          },
+          { transaction: t }
+        );
 
-      await Customer.increment('balance', {
-        by: (receipt as any).amount,
-        where: { id: (receipt as any).customerId },
-        transaction: t,
+        await Customer.decrement('balance', {
+          by: parsedValues.amount,
+          where: { id: parsedValues.customerId },
+          transaction: t,
+        });
+
+        return (receipt as any).toJSON ? (receipt as any).toJSON() : receipt;
       });
+    })
+  );
 
-      await (receipt as any).destroy({ transaction: t });
-    });
-  });
+  ipcMain.handle(
+    'receipt:update',
+    withAppReady(async (_event, id: number, values: any) => {
+      z.number().parse(id);
+      const parsedValues = receiptUpdateSchema.parse(values);
+
+      await database.transaction(async (t: any) => {
+        const receipt = await Receipt.findByPk(id, { transaction: t });
+
+        if (!receipt) {
+          throw new Error('Receipt not found');
+        }
+
+        await Customer.increment('balance', {
+          by: (receipt as any).amount,
+          where: { id: (receipt as any).customerId },
+          transaction: t,
+        });
+
+        await Customer.decrement('balance', {
+          by: parsedValues.amount,
+          where: { id: parsedValues.customerId },
+          transaction: t,
+        });
+
+        await updateReceipt(
+          id,
+          {
+            ...parsedValues,
+            paymentMethod:
+              parsedValues.paymentMethod || (receipt as any).paymentMethod,
+            bank: parsedValues.bank || (receipt as any).bank || undefined,
+            note: parsedValues.note || undefined,
+          },
+          t
+        );
+      });
+    })
+  );
+
+  ipcMain.handle(
+    'receipt:delete',
+    withAppReady(async (_event, id: number) => {
+      const schema = z.object({ id: z.number() });
+      schema.parse({ id });
+
+      await database.transaction(async (t: any) => {
+        const receipt = await Receipt.findByPk(id, { transaction: t });
+        if (!receipt) throw new Error('Receipt not found');
+
+        await Customer.increment('balance', {
+          by: (receipt as any).amount,
+          where: { id: (receipt as any).customerId },
+          transaction: t,
+        });
+
+        await (receipt as any).destroy({ transaction: t });
+      });
+    })
+  );
 
   ipcMain.handle(
     'receipt:filter',
-    async (_event, startDate: string, endDate: string, customerId?: number) => {
-      const whereClause: any = {};
+    withAppReady(async (_event, input: unknown = {}) => {
+      const query = receiptListQuerySchema.parse(input);
+      const { customerId, endDate, page, pageSize, startDate } = query;
+      const whereClause: Record<string, unknown> = {};
 
       if (startDate && endDate) {
         whereClause.createdAt = {
@@ -81,12 +181,48 @@ export function registerReceiptHandlers(): void {
         whereClause.customerId = customerId;
       }
 
-      const receipts = await getReceipts({
+      const { rows, count } = await Receipt.findAndCountAll({
+        distinct: true,
+        ...toPaginationOptions({ page, pageSize }),
         where: Object.keys(whereClause).length ? whereClause : undefined,
         include: [{ model: Customer }],
         order: [['createdAt', 'DESC']],
       });
-      return receipts.map((r: any) => (r.toJSON ? r.toJSON() : r));
-    }
+
+      return toPaginatedResult(
+        rows.map((receipt: any) => (receipt.toJSON ? receipt.toJSON() : receipt)),
+        count,
+        page,
+        pageSize
+      );
+    })
+  );
+
+  ipcMain.handle(
+    'receipt:search',
+    withAppReady(async (_event, input: unknown = {}) => {
+      const query = receiptListQuerySchema.parse(input);
+      const { page, pageSize, search } = query;
+      const receiptId = Number(search);
+
+      if (!search || Number.isNaN(receiptId)) {
+        return toPaginatedResult([], 0, page, pageSize);
+      }
+
+      const { rows, count } = await Receipt.findAndCountAll({
+        distinct: true,
+        ...toPaginationOptions({ page, pageSize }),
+        where: { id: receiptId },
+        include: [{ model: Customer }],
+        order: [['createdAt', 'DESC']],
+      });
+
+      return toPaginatedResult(
+        rows.map((receipt: any) => (receipt.toJSON ? receipt.toJSON() : receipt)),
+        count,
+        page,
+        pageSize
+      );
+    })
   );
 }

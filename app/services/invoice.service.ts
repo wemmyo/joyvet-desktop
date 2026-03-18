@@ -1,6 +1,6 @@
 import Invoice, { IInvoice } from '../models/invoice';
 
-export const getInvoices = async (args) => {
+export const getInvoices = async (args: any) => {
   return Invoice.findAll({
     ...args,
   }).then((data: IInvoice[]) => {
@@ -10,7 +10,7 @@ export const getInvoices = async (args) => {
   });
 };
 
-export const getInvoiceById = (id: number, args?) => {
+export const getInvoiceById = (id: number, args?: any) => {
   return Invoice.findByPk(id, {
     ...args,
   }).then((data: IInvoice) => {

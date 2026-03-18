@@ -1,11 +1,29 @@
 import { toast } from 'sonner';
 import type { IProduct } from '../models/product';
+import type {
+  PaginatedResult,
+  PaginationQuery,
+  ProductListQuery,
+} from '../types/pagination';
+import { getUserSession } from '../utils/session';
 
-export const getProductsFn = async (filter?: 'inStock') => {
+const emptyProducts = (
+  query?: PaginationQuery
+): PaginatedResult<IProduct> => ({
+  rows: [],
+  total: 0,
+  page: query?.page ?? 1,
+  pageSize: query?.pageSize ?? 25,
+});
+
+export const getProductsFn = async (
+  query?: ProductListQuery
+): Promise<PaginatedResult<IProduct>> => {
   try {
-    return await window.api.product.getAll(filter);
+    return await window.api.product.getAll(query);
   } catch (error: any) {
     toast.error(error.message || '');
+    return emptyProducts(query);
   }
 };
 
@@ -14,11 +32,11 @@ export const createProductFn = async (
   cb?: () => void
 ) => {
   try {
-    const user =
-      localStorage.getItem('user') !== null
-        ? JSON.parse(localStorage.getItem('user') || '')
-        : '';
-    await window.api.product.create({ ...values, postedBy: user.fullName });
+    const user = getUserSession();
+    await window.api.product.create({
+      ...values,
+      postedBy: user?.fullName ?? '',
+    });
     toast.success('Successfully created');
     if (cb) cb();
   } catch (error: any) {
@@ -60,11 +78,14 @@ export const deleteProductFn = async (id: number, cb?: () => void) => {
   }
 };
 
-export const searchProductFn = async (value: string) => {
+export const searchProductFn = async (
+  query: ProductListQuery
+): Promise<PaginatedResult<IProduct>> => {
   try {
-    return await window.api.product.search(value);
+    return await window.api.product.search(query);
   } catch (error: any) {
     toast.error(error.message || '');
+    return emptyProducts(query);
   }
 };
 
@@ -77,6 +98,7 @@ export const getProductInvoicesFn = async (
     return await window.api.product.getInvoices(productId, startDate, endDate);
   } catch (error: any) {
     toast.error(error.message || '');
+    return [];
   }
 };
 
@@ -93,5 +115,19 @@ export const getProductPurchasesFn = async (
     );
   } catch (error: any) {
     toast.error(error.message || '');
+    return [];
+  }
+};
+
+export const getProductAuditLogFn = async (
+  productId: number,
+  startDate: string,
+  endDate: string
+) => {
+  try {
+    return await window.api.product.getAuditLog(productId, startDate, endDate);
+  } catch (error: any) {
+    toast.error(error.message || '');
+    return [];
   }
 };

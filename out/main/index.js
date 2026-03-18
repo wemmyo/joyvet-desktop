@@ -1,9 +1,11 @@
 "use strict";
+Object.defineProperty(exports, Symbol.toStringTag, { value: "Module" });
 const path = require("path");
 const electron = require("electron");
 const electronUpdater = require("electron-updater");
 const log = require("electron-log");
-const bcrypt = require("bcryptjs");
+const bcryptjs = require("bcryptjs");
+const zod = require("zod");
 class MenuBuilder {
   constructor(mainWindow2) {
     this.mainWindow = mainWindow2;
@@ -254,6 +256,167 @@ class MenuBuilder {
     return templateDefault;
   }
 }
+const hasUsers = async (UserModel) => {
+  return await UserModel.count() > 0;
+};
+const maybeSeedDevelopmentAdmin = async (UserModel, isDevelopment = process.env.NODE_ENV === "development") => {
+  if (!isDevelopment || process.env.SEED_DEV_ADMIN !== "true") {
+    return false;
+  }
+  const admin = await UserModel.findOne({ where: { role: "admin" } });
+  if (admin) {
+    return false;
+  }
+  const hashedPassword = await bcryptjs.hash("admin", 12);
+  await UserModel.create({
+    fullName: "admin",
+    username: "admin",
+    password: hashedPassword,
+    role: "admin"
+  });
+  return true;
+};
+const createInitialAdmin = async (UserModel, values) => {
+  if (await hasUsers(UserModel)) {
+    throw new Error("Initial admin has already been configured");
+  }
+  const hashedPassword = await bcryptjs.hash(values.password, 12);
+  return UserModel.create({
+    fullName: values.fullName,
+    username: values.username,
+    password: hashedPassword,
+    role: "admin"
+  });
+};
+let authReadyPromise = null;
+let appReadyPromise = null;
+let associationsRegistered = false;
+const loadAuthModel = async () => {
+  return {
+    User: (await Promise.resolve().then(() => require("./chunks/user-DoEgQ7As.js"))).default
+  };
+};
+const loadCoreModels = async () => {
+  const { default: database } = await Promise.resolve().then(() => require("./chunks/database-Cj22cbL8.js"));
+  return {
+    database,
+    Customer: (await Promise.resolve().then(() => require("./chunks/customer-CS2lwHZV.js"))).default,
+    Invoice: (await Promise.resolve().then(() => require("./chunks/invoice-Civ-gfB_.js"))).default,
+    Payment: (await Promise.resolve().then(() => require("./chunks/payment-9-9dtC0H.js"))).default,
+    Product: (await Promise.resolve().then(() => require("./chunks/product-D77rVCIx.js"))).default,
+    Purchase: (await Promise.resolve().then(() => require("./chunks/purchase-BlBXNXRZ.js"))).default,
+    Receipt: (await Promise.resolve().then(() => require("./chunks/receipt-CgVNnpBY.js"))).default,
+    Supplier: (await Promise.resolve().then(() => require("./chunks/supplier-D6HH6Jzr.js"))).default,
+    InvoiceItem: (await Promise.resolve().then(() => require("./chunks/invoiceItem-nbCLMwgg.js"))).default,
+    PurchaseItem: (await Promise.resolve().then(() => require("./chunks/purchaseItem-CTTHQz2J.js"))).default,
+    User: (await Promise.resolve().then(() => require("./chunks/user-DoEgQ7As.js"))).default,
+    ProductAuditLog: (await Promise.resolve().then(() => require("./chunks/productAuditLog-DrnoXAKA.js"))).default,
+    StoreInfo: (await Promise.resolve().then(() => require("./chunks/storeInfo-Bg_7gZyj.js"))).default,
+    Expense: (await Promise.resolve().then(() => require("./chunks/expense-e9NOTXMw.js"))).default,
+    ExpenseType: (await Promise.resolve().then(() => require("./chunks/expenseType-BdnVKnYp.js"))).default
+  };
+};
+const registerAssociations = (models) => {
+  if (associationsRegistered) {
+    return;
+  }
+  const {
+    Customer,
+    Invoice,
+    InvoiceItem,
+    Payment,
+    Product,
+    Purchase,
+    PurchaseItem,
+    Receipt,
+    Supplier,
+    ProductAuditLog
+  } = models;
+  Invoice.belongsToMany(Product, { through: InvoiceItem });
+  Product.belongsToMany(Invoice, { through: InvoiceItem });
+  Customer.hasMany(Invoice);
+  Invoice.belongsTo(Customer);
+  Receipt.belongsTo(Customer);
+  Customer.hasMany(Receipt);
+  Payment.belongsTo(Supplier);
+  Supplier.hasMany(Payment);
+  Purchase.belongsTo(Supplier);
+  Supplier.hasMany(Purchase);
+  Purchase.belongsToMany(Product, { through: PurchaseItem });
+  Product.belongsToMany(Purchase, { through: PurchaseItem });
+  Product.hasMany(ProductAuditLog, { foreignKey: "productId" });
+  ProductAuditLog.belongsTo(Product, { foreignKey: "productId" });
+  associationsRegistered = true;
+};
+const ensureAuthReady = async () => {
+  if (!authReadyPromise) {
+    authReadyPromise = (async () => {
+      const { User } = await loadAuthModel();
+      await User.sync();
+      return { User };
+    })();
+  }
+  return authReadyPromise;
+};
+const ensureAppReady = async () => {
+  if (!appReadyPromise) {
+    appReadyPromise = (async () => {
+      const models = await loadCoreModels();
+      registerAssociations(models);
+      await models.database.sync();
+      await maybeSeedDevelopmentAdmin(models.User);
+    })();
+  }
+  return appReadyPromise;
+};
+const withAppReady = (handler) => {
+  return async (...args) => {
+    await ensureAppReady();
+    return handler(...args);
+  };
+};
+const isObject = (value) => {
+  return typeof value === "object" && value !== null;
+};
+const sanitizeUserSession = (value) => {
+  if (!isObject(value)) {
+    return null;
+  }
+  const { id, fullName, role } = value;
+  if (typeof id !== "number" || Number.isNaN(id) || typeof fullName !== "string" || fullName.trim() === "" || typeof role !== "string" || role.trim() === "") {
+    return null;
+  }
+  return {
+    id,
+    fullName,
+    role
+  };
+};
+const initialAdminSchema = zod.z.object({
+  fullName: zod.z.string().min(3).max(255),
+  username: zod.z.string().min(3).max(255),
+  password: zod.z.string().min(8).max(255)
+});
+function registerAuthHandlers() {
+  electron.ipcMain.handle("auth:getBootstrapStatus", async () => {
+    const { User } = await ensureAuthReady();
+    return {
+      hasUsers: await hasUsers(User)
+    };
+  });
+  electron.ipcMain.handle("auth:createInitialAdmin", async (_event, values) => {
+    const { User } = await ensureAuthReady();
+    const parsedValues = initialAdminSchema.parse(values);
+    const user = await createInitialAdmin(User, parsedValues);
+    const session = sanitizeUserSession(
+      user?.toJSON ? user.toJSON() : user
+    );
+    if (!session) {
+      throw new Error("Invalid user session");
+    }
+    return session;
+  });
+}
 class AppUpdater {
   constructor() {
     log.transports.file.level = "info";
@@ -285,7 +448,7 @@ const createWindow = async () => {
       preload: path.join(__dirname, "../preload/index.js"),
       contextIsolation: true,
       nodeIntegration: false,
-      sandbox: false
+      sandbox: true
     }
   });
   if (process.env.NODE_ENV === "development" && process.env["ELECTRON_RENDERER_URL"]) {
@@ -307,7 +470,6 @@ const createWindow = async () => {
   });
   const menuBuilder = new MenuBuilder(mainWindow);
   menuBuilder.buildMenu();
-  new AppUpdater();
 };
 electron.app.on("window-all-closed", () => {
   if (process.platform !== "darwin") {
@@ -315,60 +477,7 @@ electron.app.on("window-all-closed", () => {
   }
 });
 electron.app.whenReady().then(async () => {
-  const { default: database } = await Promise.resolve().then(() => require("./chunks/database-Cj22cbL8.js"));
-  const Customer = (await Promise.resolve().then(() => require("./chunks/customer-DOw70VuU.js"))).default;
-  const Invoice = (await Promise.resolve().then(() => require("./chunks/invoice-Civ-gfB_.js"))).default;
-  const Payment = (await Promise.resolve().then(() => require("./chunks/payment-9-9dtC0H.js"))).default;
-  const Product = (await Promise.resolve().then(() => require("./chunks/product-D77rVCIx.js"))).default;
-  const Purchase = (await Promise.resolve().then(() => require("./chunks/purchase-BlBXNXRZ.js"))).default;
-  const Receipt = (await Promise.resolve().then(() => require("./chunks/receipt-CgVNnpBY.js"))).default;
-  const Supplier = (await Promise.resolve().then(() => require("./chunks/supplier-CIPjGeuJ.js"))).default;
-  const InvoiceItem = (await Promise.resolve().then(() => require("./chunks/invoiceItem-nbCLMwgg.js"))).default;
-  const PurchaseItem = (await Promise.resolve().then(() => require("./chunks/purchaseItem-CTTHQz2J.js"))).default;
-  const User = (await Promise.resolve().then(() => require("./chunks/user-DoEgQ7As.js"))).default;
-  Invoice.belongsToMany(Product, { through: InvoiceItem });
-  Product.belongsToMany(Invoice, { through: InvoiceItem });
-  Customer.hasMany(Invoice);
-  Invoice.belongsTo(Customer);
-  Receipt.belongsTo(Customer);
-  Customer.hasMany(Receipt);
-  Payment.belongsTo(Supplier);
-  Supplier.hasMany(Payment);
-  Purchase.belongsTo(Supplier);
-  Supplier.hasMany(Purchase);
-  Purchase.belongsToMany(Product, { through: PurchaseItem });
-  Product.belongsToMany(Purchase, { through: PurchaseItem });
-  await database.sync();
-  const admin = await User.findOne({ where: { role: "admin" } });
-  if (!admin) {
-    const hashedPassword = await bcrypt.hash("admin", 12);
-    await User.create({
-      fullName: "admin",
-      username: "admin",
-      password: hashedPassword,
-      role: "admin"
-    });
-  }
-  const { registerInvoiceHandlers } = await Promise.resolve().then(() => require("./chunks/invoice.handlers-bwHI08w7.js"));
-  const { registerCustomerHandlers } = await Promise.resolve().then(() => require("./chunks/customer.handlers-CLbkXNn-.js"));
-  const { registerProductHandlers } = await Promise.resolve().then(() => require("./chunks/product.handlers-zqbljPh_.js"));
-  const { registerUserHandlers } = await Promise.resolve().then(() => require("./chunks/user.handlers-qERNHyuZ.js"));
-  const { registerSupplierHandlers } = await Promise.resolve().then(() => require("./chunks/supplier.handlers-CKqfOFR3.js"));
-  const { registerPurchaseHandlers } = await Promise.resolve().then(() => require("./chunks/purchase.handlers-B6HpbW4Z.js"));
-  const { registerPaymentHandlers } = await Promise.resolve().then(() => require("./chunks/payment.handlers-CSzkYmA4.js"));
-  const { registerReceiptHandlers } = await Promise.resolve().then(() => require("./chunks/receipt.handlers-B3iaECqJ.js"));
-  const { registerExpenseHandlers } = await Promise.resolve().then(() => require("./chunks/expense.handlers-BpaZmlXw.js"));
-  const { registerStoreInfoHandlers } = await Promise.resolve().then(() => require("./chunks/storeInfo.handlers-DsI117IS.js"));
-  registerInvoiceHandlers();
-  registerCustomerHandlers();
-  registerProductHandlers();
-  registerUserHandlers();
-  registerSupplierHandlers();
-  registerPurchaseHandlers();
-  registerPaymentHandlers();
-  registerReceiptHandlers();
-  registerExpenseHandlers();
-  registerStoreInfoHandlers();
+  registerAuthHandlers();
   electron.ipcMain.handle("dialog:selectDbPath", async () => {
     const result = await electron.dialog.showOpenDialog({
       properties: ["openFile"],
@@ -377,7 +486,42 @@ electron.app.whenReady().then(async () => {
     return result.filePaths[0];
   });
   await createWindow();
+  mainWindow?.webContents.once("did-finish-load", () => {
+    setTimeout(() => {
+      new AppUpdater();
+    }, 0);
+  });
+  void (async () => {
+    const { registerInvoiceHandlers } = await Promise.resolve().then(() => require("./chunks/invoice.handlers-C4Kh1z8h.js"));
+    const { registerCustomerHandlers } = await Promise.resolve().then(() => require("./chunks/customer.handlers-DOGbPBU1.js"));
+    const { registerProductHandlers } = await Promise.resolve().then(() => require("./chunks/product.handlers-BlU2_t0o.js"));
+    const { registerUserHandlers } = await Promise.resolve().then(() => require("./chunks/user.handlers-DymXi95W.js"));
+    const { registerSupplierHandlers } = await Promise.resolve().then(() => require("./chunks/supplier.handlers-DfN6Ltym.js"));
+    const { registerPurchaseHandlers } = await Promise.resolve().then(() => require("./chunks/purchase.handlers-CwUgD83N.js"));
+    const { registerPaymentHandlers } = await Promise.resolve().then(() => require("./chunks/payment.handlers-CjVM6TV1.js"));
+    const { registerReceiptHandlers } = await Promise.resolve().then(() => require("./chunks/receipt.handlers-DO8cWS7m.js"));
+    registerInvoiceHandlers();
+    registerCustomerHandlers();
+    registerProductHandlers();
+    registerUserHandlers();
+    registerSupplierHandlers();
+    registerPurchaseHandlers();
+    registerPaymentHandlers();
+    registerReceiptHandlers();
+    await ensureAppReady();
+    const { registerExpenseHandlers } = await Promise.resolve().then(() => require("./chunks/expense.handlers-iDJfPTDN.js"));
+    const { registerStoreInfoHandlers } = await Promise.resolve().then(() => require("./chunks/storeInfo.handlers-B3PwoOMv.js"));
+    registerExpenseHandlers();
+    registerStoreInfoHandlers();
+    const { registerAnalyticsHandlers } = await Promise.resolve().then(() => require("./chunks/analytics.handlers-XJYXNBBh.js"));
+    registerAnalyticsHandlers();
+  })().catch((error) => {
+    log.error("App initialization failed", error);
+  });
   electron.app.on("activate", () => {
     if (mainWindow === null) createWindow();
   });
 });
+exports.ensureAuthReady = ensureAuthReady;
+exports.sanitizeUserSession = sanitizeUserSession;
+exports.withAppReady = withAppReady;

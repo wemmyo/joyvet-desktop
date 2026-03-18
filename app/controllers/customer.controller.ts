@@ -2,12 +2,30 @@ import { toast } from 'sonner';
 import { ICustomer } from '../models/customer';
 import { IInvoice } from '../models/invoice';
 import { IReceipt } from '../models/receipt';
+import type {
+  PaginatedResult,
+  PaginationQuery,
+  SearchPaginationQuery,
+} from '../types/pagination';
+import { getUserSession } from '../utils/session';
 
-export const getCustomersFn = async () => {
+const emptyCustomers = (
+  query?: PaginationQuery
+): PaginatedResult<ICustomer> => ({
+  rows: [],
+  total: 0,
+  page: query?.page ?? 1,
+  pageSize: query?.pageSize ?? 25,
+});
+
+export const getCustomersFn = async (
+  query?: PaginationQuery
+): Promise<PaginatedResult<ICustomer>> => {
   try {
-    return await window.api.customer.getAll();
+    return await window.api.customer.getAll(query);
   } catch (error: any) {
     toast.error(error.message || '');
+    return emptyCustomers(query);
   }
 };
 
@@ -16,13 +34,10 @@ export const createCustomerFn = async (
   cb?: () => void
 ) => {
   try {
-    const user =
-      localStorage.getItem('user') !== null
-        ? JSON.parse(localStorage.getItem('user') || '')
-        : '';
+    const user = getUserSession();
     const customer = await window.api.customer.create({
       ...values,
-      postedBy: user.fullName,
+      postedBy: user?.fullName ?? '',
     });
     toast.success('Successfully created');
     if (cb) cb();
@@ -66,11 +81,14 @@ export const getSingleCustomerFn = async (id: number, cb?: () => void) => {
   }
 };
 
-export const searchCustomerFn = async (value: string) => {
+export const searchCustomerFn = async (
+  query: SearchPaginationQuery
+): Promise<PaginatedResult<ICustomer>> => {
   try {
-    return await window.api.customer.search(value);
+    return await window.api.customer.search(query);
   } catch (error: any) {
     toast.error(error.message || '');
+    return emptyCustomers(query);
   }
 };
 
@@ -81,6 +99,23 @@ export const getCustomerInvoicesFn = async (
 ): Promise<IInvoice[]> => {
   try {
     return await window.api.customer.getInvoices(
+      customerId,
+      startDate,
+      endDate
+    );
+  } catch (error: any) {
+    toast.error(error.message || '');
+    return [];
+  }
+};
+
+export const getCustomerActivityTimelineFn = async (
+  customerId: number,
+  startDate: string,
+  endDate: string
+): Promise<any[]> => {
+  try {
+    return await window.api.customer.getActivityTimeline(
       customerId,
       startDate,
       endDate

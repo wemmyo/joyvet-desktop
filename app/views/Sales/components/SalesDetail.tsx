@@ -21,6 +21,10 @@ import {
   TableHead,
   TableCell,
 } from '../../../components/ui/table';
+import {
+  TableEmptyRow,
+  TableFrame,
+} from '../../../components/ui/table-helpers';
 
 interface SalesDetailProps {
   salesId: number;
@@ -29,7 +33,7 @@ interface SalesDetailProps {
 }
 
 const SalesDetail = ({ salesId, onRefresh }: SalesDetailProps) => {
-  const componentRef = useRef(null);
+  const componentRef = useRef<HTMLDivElement>(null);
   const { closeSideContent } = useSidebarContext();
 
   const [printInvoice, setPrintInvoice] = useState(false);
@@ -37,7 +41,8 @@ const SalesDetail = ({ salesId, onRefresh }: SalesDetailProps) => {
   const [sales, setSales] = useState<IInvoice>({} as IInvoice);
 
   const handlePrint = useReactToPrint({
-    content: () => componentRef.current,
+    contentRef: componentRef,
+    onAfterPrint: () => setPrintInvoice(false),
   });
 
   const handlePrintFn = () => {
@@ -88,76 +93,86 @@ const SalesDetail = ({ salesId, onRefresh }: SalesDetailProps) => {
 
   return (
     <div className="space-y-3">
-      <Table>
-        <TableBody>
-          <TableRow>
-            <TableCell className="font-medium">Invoice ID</TableCell>
-            <TableCell>{sales.id}</TableCell>
-          </TableRow>
-          <TableRow>
-            <TableCell className="font-medium">Customer</TableCell>
-            <TableCell>{sales.customer?.fullName}</TableCell>
-          </TableRow>
-          <TableRow>
-            <TableCell className="font-medium">Type</TableCell>
-            <TableCell>{sales.saleType}</TableCell>
-          </TableRow>
-          <TableRow>
-            <TableCell className="font-medium">Date</TableCell>
-            <TableCell>{dayjs(sales.createdAt).format('DD/MM/YYYY')}</TableCell>
-          </TableRow>
-          <TableRow>
-            <TableCell className="font-medium">Time</TableCell>
-            <TableCell>{dayjs(sales.createdAt).format('h:mm a')}</TableCell>
-          </TableRow>
-          <TableRow>
-            <TableCell className="font-medium">Amount</TableCell>
-            <TableCell>₦{numberWithCommas(sales.amount)}</TableCell>
-          </TableRow>
-          <TableRow>
-            <TableCell className="font-medium">Profit</TableCell>
-            <TableCell>₦{numberWithCommas(sales.profit)}</TableCell>
-          </TableRow>
-          <TableRow>
-            <TableCell className="font-medium">Posted By</TableCell>
-            <TableCell>{sales.postedBy}</TableCell>
-          </TableRow>
-        </TableBody>
-      </Table>
-
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>No</TableHead>
-            <TableHead>Product</TableHead>
-            <TableHead>Quantity</TableHead>
-            <TableHead>Unit Price</TableHead>
-            <TableHead>Amount</TableHead>
-          </TableRow>
-        </TableHeader>
-
-        <TableBody>
-          {sales.products?.map((order, index) => (
-            <TableRow key={order.id}>
-              <TableCell>{index + 1}</TableCell>
-              <TableCell>{order.title}</TableCell>
-              <TableCell>{order.invoiceItem?.quantity}</TableCell>
-              <TableCell>
-                ₦
-                {order.invoiceItem?.unitPrice
-                  ? numberWithCommas(order.invoiceItem?.unitPrice)
-                  : 'N/A'}
-              </TableCell>
-              <TableCell>
-                ₦
-                {order.invoiceItem?.amount
-                  ? numberWithCommas(order.invoiceItem?.amount)
-                  : 'N/A'}
-              </TableCell>
+      <TableFrame>
+        <Table>
+          <TableBody>
+            <TableRow>
+              <TableCell className="font-medium">Invoice ID</TableCell>
+              <TableCell>{sales.id}</TableCell>
             </TableRow>
-          ))}
-        </TableBody>
-      </Table>
+            <TableRow>
+              <TableCell className="font-medium">Customer</TableCell>
+              <TableCell>{sales.customer?.fullName}</TableCell>
+            </TableRow>
+            <TableRow>
+              <TableCell className="font-medium">Type</TableCell>
+              <TableCell>{sales.saleType}</TableCell>
+            </TableRow>
+            <TableRow>
+              <TableCell className="font-medium">Date</TableCell>
+              <TableCell>{dayjs(sales.createdAt).format('DD/MM/YYYY')}</TableCell>
+            </TableRow>
+            <TableRow>
+              <TableCell className="font-medium">Time</TableCell>
+              <TableCell>{dayjs(sales.createdAt).format('h:mm a')}</TableCell>
+            </TableRow>
+            <TableRow>
+              <TableCell className="font-medium">Amount</TableCell>
+              <TableCell>₦{numberWithCommas(sales.amount)}</TableCell>
+            </TableRow>
+            <TableRow>
+              <TableCell className="font-medium">Profit</TableCell>
+              <TableCell>₦{numberWithCommas(sales.profit)}</TableCell>
+            </TableRow>
+            <TableRow>
+              <TableCell className="font-medium">Posted By</TableCell>
+              <TableCell>{sales.postedBy}</TableCell>
+            </TableRow>
+          </TableBody>
+        </Table>
+      </TableFrame>
+
+      <TableFrame>
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>No</TableHead>
+              <TableHead>Product</TableHead>
+              <TableHead className="text-right">Quantity</TableHead>
+              <TableHead className="text-right">Unit Price</TableHead>
+              <TableHead className="text-right">Amount</TableHead>
+            </TableRow>
+          </TableHeader>
+
+          <TableBody>
+            {sales.products?.length ? (
+              sales.products.map((order, index) => (
+                <TableRow key={order.id}>
+                  <TableCell>{index + 1}</TableCell>
+                  <TableCell>{order.title}</TableCell>
+                  <TableCell className="text-right">
+                    {order.invoiceItem?.quantity}
+                  </TableCell>
+                  <TableCell className="text-right">
+                    ₦
+                    {order.invoiceItem?.unitPrice
+                      ? numberWithCommas(order.invoiceItem?.unitPrice)
+                      : 'N/A'}
+                  </TableCell>
+                  <TableCell className="text-right">
+                    ₦
+                    {order.invoiceItem?.amount
+                      ? numberWithCommas(order.invoiceItem?.amount)
+                      : 'N/A'}
+                  </TableCell>
+                </TableRow>
+              ))
+            ) : (
+              <TableEmptyRow colSpan={5} message="No sale items found." />
+            )}
+          </TableBody>
+        </Table>
+      </TableFrame>
       <div className="flex gap-2 flex-wrap">
         <Button variant="outline" type="button" onClick={handlePrintFn}>
           Print

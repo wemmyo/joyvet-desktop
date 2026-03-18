@@ -1,28 +1,55 @@
 import { contextBridge, ipcRenderer } from 'electron';
+import type {
+  InvoiceListQuery,
+  PaginationQuery,
+  PaymentListQuery,
+  ProductListQuery,
+  PurchaseListQuery,
+  ReceiptListQuery,
+  SearchPaginationQuery,
+} from '../types/pagination';
 
 const api = {
+  auth: {
+    getBootstrapStatus: () => ipcRenderer.invoke('auth:getBootstrapStatus'),
+    createInitialAdmin: (values: {
+      fullName: string;
+      username: string;
+      password: string;
+    }) => ipcRenderer.invoke('auth:createInitialAdmin', values),
+  },
   invoice: {
-    getAll: () => ipcRenderer.invoke('invoice:getAll'),
-    getById: (id: number) => ipcRenderer.invoke('invoice:getById', id),
+    getAll: (query?: PaginationQuery) =>
+      ipcRenderer.invoke('invoice:getAll', query),
     create: (invoiceItems: any[], invoice: any) =>
       ipcRenderer.invoke('invoice:create', invoiceItems, invoice),
     delete: (id: number) => ipcRenderer.invoke('invoice:delete', id),
     deleteItem: (args: any) => ipcRenderer.invoke('invoice:deleteItem', args),
     addItem: (currentInvoice: any, currentInvoiceItem: any) =>
       ipcRenderer.invoke('invoice:addItem', currentInvoice, currentInvoiceItem),
-    filter: (startDate: string, endDate: string, saleType: string) =>
-      ipcRenderer.invoke('invoice:filter', startDate, endDate, saleType),
-    filterById: (id: number) => ipcRenderer.invoke('invoice:filterById', id),
+    updateItem: (args: {
+      invoiceItemId: number;
+      invoiceId: number;
+      productId: number;
+      newQuantity: number;
+      postedBy: string;
+    }) => ipcRenderer.invoke('invoice:updateItem', args),
+    filter: (query: InvoiceListQuery) =>
+      ipcRenderer.invoke('invoice:filter', query),
+    filterById: (query: InvoiceListQuery) =>
+      ipcRenderer.invoke('invoice:filterById', query),
     getSingle: (id: number) => ipcRenderer.invoke('invoice:getSingle', id),
   },
   customer: {
-    getAll: () => ipcRenderer.invoke('customer:getAll'),
+    getAll: (query?: PaginationQuery) =>
+      ipcRenderer.invoke('customer:getAll', query),
     getById: (id: number) => ipcRenderer.invoke('customer:getById', id),
     create: (values: any) => ipcRenderer.invoke('customer:create', values),
     update: (id: number, values: any) =>
       ipcRenderer.invoke('customer:update', id, values),
     delete: (id: number) => ipcRenderer.invoke('customer:delete', id),
-    search: (value: string) => ipcRenderer.invoke('customer:search', value),
+    search: (query: SearchPaginationQuery) =>
+      ipcRenderer.invoke('customer:search', query),
     getInvoices: (customerId: number, startDate: string, endDate: string) =>
       ipcRenderer.invoke(
         'customer:getInvoices',
@@ -37,22 +64,38 @@ const api = {
         startDate,
         endDate
       ),
+    getActivityTimeline: (
+      customerId: number,
+      startDate: string,
+      endDate: string
+    ) =>
+      ipcRenderer.invoke(
+        'customer:getActivityTimeline',
+        customerId,
+        startDate,
+        endDate
+      ),
   },
   product: {
-    getAll: (filter?: string) => ipcRenderer.invoke('product:getAll', filter),
+    getAll: (query?: ProductListQuery) =>
+      ipcRenderer.invoke('product:getAll', query),
     getById: (id: number) => ipcRenderer.invoke('product:getById', id),
     create: (values: any) => ipcRenderer.invoke('product:create', values),
     update: (id: number, values: any) =>
       ipcRenderer.invoke('product:update', id, values),
     delete: (id: number) => ipcRenderer.invoke('product:delete', id),
-    search: (value: string) => ipcRenderer.invoke('product:search', value),
+    search: (query: ProductListQuery) =>
+      ipcRenderer.invoke('product:search', query),
     getInvoices: (productId: number, startDate: string, endDate: string) =>
       ipcRenderer.invoke('product:getInvoices', productId, startDate, endDate),
     getPurchases: (productId: number, startDate: string, endDate: string) =>
       ipcRenderer.invoke('product:getPurchases', productId, startDate, endDate),
+    getAuditLog: (productId: number, startDate: string, endDate: string) =>
+      ipcRenderer.invoke('product:getAuditLog', productId, startDate, endDate),
   },
   user: {
-    getAll: () => ipcRenderer.invoke('user:getAll'),
+    getAll: (query?: PaginationQuery) =>
+      ipcRenderer.invoke('user:getAll', query),
     getById: (id: number) => ipcRenderer.invoke('user:getById', id),
     create: (values: any) => ipcRenderer.invoke('user:create', values),
     update: (id: number, values: any) =>
@@ -62,22 +105,40 @@ const api = {
       ipcRenderer.invoke('user:login', credentials),
   },
   supplier: {
-    getAll: () => ipcRenderer.invoke('supplier:getAll'),
+    getAll: (query?: PaginationQuery) =>
+      ipcRenderer.invoke('supplier:getAll', query),
     getById: (id: number) => ipcRenderer.invoke('supplier:getById', id),
     create: (values: any) => ipcRenderer.invoke('supplier:create', values),
     update: (id: number, values: any) =>
       ipcRenderer.invoke('supplier:update', id, values),
     delete: (id: number) => ipcRenderer.invoke('supplier:delete', id),
-    search: (value: string) => ipcRenderer.invoke('supplier:search', value),
+    search: (query: SearchPaginationQuery) =>
+      ipcRenderer.invoke('supplier:search', query),
+    getActivityTimeline: (
+      supplierId: number,
+      startDate: string,
+      endDate: string
+    ) =>
+      ipcRenderer.invoke(
+        'supplier:getActivityTimeline',
+        supplierId,
+        startDate,
+        endDate
+      ),
   },
   purchase: {
-    getAll: () => ipcRenderer.invoke('purchase:getAll'),
+    getAll: (query?: PaginationQuery) =>
+      ipcRenderer.invoke('purchase:getAll', query),
     getById: (id: number) => ipcRenderer.invoke('purchase:getById', id),
     create: (purchaseItems: any[], purchase: any) =>
       ipcRenderer.invoke('purchase:create', purchaseItems, purchase),
+    update: (id: number, purchaseItems: any[], meta: any) =>
+      ipcRenderer.invoke('purchase:update', id, purchaseItems, meta),
     delete: (id: number) => ipcRenderer.invoke('purchase:delete', id),
-    filter: (startDate: string, endDate: string, supplierId?: number) =>
-      ipcRenderer.invoke('purchase:filter', startDate, endDate, supplierId),
+    search: (query: SearchPaginationQuery) =>
+      ipcRenderer.invoke('purchase:search', query),
+    filter: (query: PurchaseListQuery) =>
+      ipcRenderer.invoke('purchase:filter', query),
     getBySupplier: (supplierId: number, startDate: string, endDate: string) =>
       ipcRenderer.invoke(
         'purchase:getBySupplier',
@@ -87,11 +148,17 @@ const api = {
       ),
   },
   payment: {
-    getAll: () => ipcRenderer.invoke('payment:getAll'),
+    getAll: (query?: PaginationQuery) =>
+      ipcRenderer.invoke('payment:getAll', query),
+    getById: (id: number) => ipcRenderer.invoke('payment:getById', id),
     create: (values: any) => ipcRenderer.invoke('payment:create', values),
+    update: (id: number, values: any) =>
+      ipcRenderer.invoke('payment:update', id, values),
     delete: (id: number) => ipcRenderer.invoke('payment:delete', id),
-    filter: (startDate: string, endDate: string, supplierId?: number) =>
-      ipcRenderer.invoke('payment:filter', startDate, endDate, supplierId),
+    search: (query: SearchPaginationQuery) =>
+      ipcRenderer.invoke('payment:search', query),
+    filter: (query: PaymentListQuery) =>
+      ipcRenderer.invoke('payment:filter', query),
     getBySupplier: (supplierId: number, startDate: string, endDate: string) =>
       ipcRenderer.invoke(
         'payment:getBySupplier',
@@ -101,16 +168,26 @@ const api = {
       ),
   },
   receipt: {
-    getAll: () => ipcRenderer.invoke('receipt:getAll'),
+    getAll: (query?: PaginationQuery) =>
+      ipcRenderer.invoke('receipt:getAll', query),
+    getById: (id: number) => ipcRenderer.invoke('receipt:getById', id),
     create: (values: any) => ipcRenderer.invoke('receipt:create', values),
+    update: (id: number, values: any) =>
+      ipcRenderer.invoke('receipt:update', id, values),
     delete: (id: number) => ipcRenderer.invoke('receipt:delete', id),
-    filter: (startDate: string, endDate: string, customerId?: number) =>
-      ipcRenderer.invoke('receipt:filter', startDate, endDate, customerId),
+    search: (query: SearchPaginationQuery) =>
+      ipcRenderer.invoke('receipt:search', query),
+    filter: (query: ReceiptListQuery) =>
+      ipcRenderer.invoke('receipt:filter', query),
   },
   expense: {
     getAll: () => ipcRenderer.invoke('expense:getAll'),
+    getById: (id: number) => ipcRenderer.invoke('expense:getById', id),
     create: (values: any) => ipcRenderer.invoke('expense:create', values),
+    update: (id: number, values: any) =>
+      ipcRenderer.invoke('expense:update', id, values),
     delete: (id: number) => ipcRenderer.invoke('expense:delete', id),
+    search: (value: string) => ipcRenderer.invoke('expense:search', value),
     filter: (startDate: string, endDate: string) =>
       ipcRenderer.invoke('expense:filter', startDate, endDate),
     getTypes: () => ipcRenderer.invoke('expense:getTypes'),
@@ -118,9 +195,28 @@ const api = {
       ipcRenderer.invoke('expense:createType', values),
   },
   storeInfo: {
-    get: () => ipcRenderer.invoke('storeInfo:get'),
-    update: (values: any) => ipcRenderer.invoke('storeInfo:update', values),
+    getAll: () => ipcRenderer.invoke('storeInfo:getAll'),
+    getById: (id: number) => ipcRenderer.invoke('storeInfo:getById', id),
+    update: (id: number, values: any) =>
+      ipcRenderer.invoke('storeInfo:update', id, values),
     create: (values: any) => ipcRenderer.invoke('storeInfo:create', values),
+    delete: (id: number) => ipcRenderer.invoke('storeInfo:delete', id),
+  },
+  analytics: {
+    getSummary: (input: { startDate: string; endDate: string }) =>
+      ipcRenderer.invoke('analytics:getSummary', input),
+    getTopCustomers: (input: { startDate: string; endDate: string }) =>
+      ipcRenderer.invoke('analytics:getTopCustomers', input),
+    getBestSellingProducts: (input: { startDate: string; endDate: string }) =>
+      ipcRenderer.invoke('analytics:getBestSellingProducts', input),
+    getTopSuppliersBySpend: (input: { startDate: string; endDate: string }) =>
+      ipcRenderer.invoke('analytics:getTopSuppliersBySpend', input),
+    getLowStockProducts: (input?: any) =>
+      ipcRenderer.invoke('analytics:getLowStockProducts', input),
+    getRevenueOverTime: () =>
+      ipcRenderer.invoke('analytics:getRevenueOverTime'),
+    getExpenseBreakdown: (input: { startDate: string; endDate: string }) =>
+      ipcRenderer.invoke('analytics:getExpenseBreakdown', input),
   },
   dialog: {
     selectDbPath: () => ipcRenderer.invoke('dialog:selectDbPath'),

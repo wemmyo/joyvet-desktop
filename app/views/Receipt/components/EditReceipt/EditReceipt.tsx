@@ -1,7 +1,8 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect } from 'react';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
+import AsyncCombobox from '../../../../components/ui/async-combobox';
 import {
   updateReceiptFn,
   getReceiptsFn,
@@ -10,17 +11,15 @@ import {
 import { ICustomer } from '../../../../models/customer';
 import { IReceipt } from '../../../../models/receipt';
 import { useSidebarContext } from '../../../../contexts/SidebarContext';
-import { getCustomersFn } from '../../../../controllers/customer.controller';
+import {
+  getCustomersFn,
+  searchCustomerFn,
+} from '../../../../controllers/customer.controller';
 import { Button } from '../../../../components/ui/button';
 import { Input } from '../../../../components/ui/input';
 import { Label } from '../../../../components/ui/label';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '../../../../components/ui/select';
+import { useAsyncComboboxOptions } from '../../../../hooks/useAsyncComboboxOptions';
+import { MAX_PAGE_SIZE } from '../../../../types/pagination';
 
 const schema = z.object({
   customerId: z.string().optional().default(''),
@@ -37,8 +36,17 @@ export interface EditReceiptProps {
 const EditReceipt: React.FC<EditReceiptProps> = ({
   receiptId,
 }: EditReceiptProps) => {
-  const [customers, setCustomers] = useState<ICustomer[]>([] as ICustomer[]);
   const { closeSideContent } = useSidebarContext();
+  const customerOptions = useAsyncComboboxOptions<ICustomer>({
+    getInitialOptions: () => getCustomersFn({ pageSize: MAX_PAGE_SIZE }),
+    searchOptions: (search) =>
+      searchCustomerFn({
+        pageSize: MAX_PAGE_SIZE,
+        search,
+      }),
+    getOptionValue: (customer) => String(customer.id),
+    getOptionLabel: (customer) => customer.fullName,
+  });
 
   const { register, handleSubmit, control, reset } = useForm<FormValues>({
     resolver: zodResolver(schema),
@@ -47,18 +55,16 @@ const EditReceipt: React.FC<EditReceiptProps> = ({
   useEffect(() => {
     const fetchData = async () => {
       const getSingleReceipt = getSingleReceiptFn(receiptId);
-      const getCustomers = getCustomersFn();
-      const [receiptResponse, customersResponse] = await Promise.all([
-        getSingleReceipt,
-        getCustomers,
-      ]);
+      const receiptResponse = await getSingleReceipt;
       const receipt: IReceipt = receiptResponse;
       reset({
         customerId: receipt.customerId ? String(receipt.customerId) : '',
         amount: receipt.amount ? String(receipt.amount) : '',
         note: receipt.note || '',
       });
-      setCustomers(customersResponse);
+      if (receipt.customer) {
+        customerOptions.primeItems([receipt.customer]);
+      }
     };
     fetchData();
   }, [receiptId, reset]);
@@ -77,18 +83,17 @@ const EditReceipt: React.FC<EditReceiptProps> = ({
           name="customerId"
           control={control}
           render={({ field }) => (
-            <Select onValueChange={field.onChange} value={field.value}>
-              <SelectTrigger>
-                <SelectValue placeholder="Select Customer" />
-              </SelectTrigger>
-              <SelectContent>
-                {customers.map((c) => (
-                  <SelectItem key={c.id} value={String(c.id)}>
-                    {c.fullName}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <AsyncCombobox
+              value={field.value}
+              onValueChange={field.onChange}
+              placeholder="Select Customer"
+              searchPlaceholder="Search customers"
+              selectedLabel={customerOptions.getLabelByValue(field.value)}
+              options={customerOptions.options}
+              loading={customerOptions.loading}
+              emptyMessage="No customers found."
+              onSearchChange={customerOptions.onSearchChange}
+            />
           )}
         />
       </div>

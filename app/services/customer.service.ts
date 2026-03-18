@@ -1,6 +1,6 @@
 import Customer, { ICustomer } from '../models/customer';
 
-export const getCustomers = (args) => {
+export const getCustomers = (args: any) => {
   return Customer.findAll({
     ...args,
   }).then((data: ICustomer[]) => {

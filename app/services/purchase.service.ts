@@ -1,6 +1,6 @@
 import Purchase, { IPurchase } from '../models/purchase';
 
-export const getPurchases = (args) => {
+export const getPurchases = (args: any) => {
   return Purchase.findAll({
     ...args,
   }).then((data: IPurchase[]) => {
@@ -10,7 +10,7 @@ export const getPurchases = (args) => {
   });
 };
 
-export const getPurchaseById = (id: number, args) => {
+export const getPurchaseById = (id: number, args: any) => {
   return Purchase.findByPk(id, {
     ...args,
   }).then((data: IPurchase) => {

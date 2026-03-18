@@ -1,6 +1,6 @@
 import User, { IUser } from '../models/user';
 
-export const findOneUser = (args) => {
+export const findOneUser = (args: any) => {
   return User.findOne({
     ...args,
   }).then((data: IUser) => {
@@ -8,7 +8,7 @@ export const findOneUser = (args) => {
   });
 };
 
-export const getUsers = (args) => {
+export const getUsers = (args: any) => {
   return User.findAll({
     ...args,
   }).then((data: IUser[]) => {
@@ -39,7 +39,7 @@ export const deleteUser = (id: number) => {
     where: {
       id,
     },
-  }).then((data: IUser) => {
+  }).then((data: number) => {
     return data;
   });
 };

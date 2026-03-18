@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import dayjs from 'dayjs';
+import { useParams } from 'react-router-dom';
 
 import DashboardLayout from '../../layouts/DashboardLayout/DashboardLayout';
 import { Button } from '../../components/ui/button';
@@ -8,54 +9,65 @@ import { Label } from '../../components/ui/label';
 
 import ProductHistoryInvoices from './components/Invoices/Invoices';
 import ProductHistoryPurchases from './components/Purchases/Purchases';
+import AuditLog from './components/AuditLog/AuditLog';
 import {
   getProductInvoicesFn,
   getProductPurchasesFn,
+  getProductAuditLogFn,
 } from '../../controllers/product.controller';
-
-// export interface ProductHistoryProps {}
 
 const TODAYS_DATE = `${dayjs().format('YYYY-MM-DD')}`;
 
-const ProductHistory: React.FC = ({ match }: any) => {
+const ProductHistory: React.FC = () => {
   const [startDate, setStartDate] = useState(TODAYS_DATE);
   const [endDate, setEndDate] = useState(TODAYS_DATE);
-  const [activeTab, setActiveTab] = useState<'purchases' | 'invoices'>(
+  const [activeTab, setActiveTab] = useState<'purchases' | 'invoices' | 'auditLog'>(
     'purchases'
   );
+  const { id } = useParams<{ id: string }>();
+  const productId = Number(id);
+  const hasValidProductId = Number.isInteger(productId) && productId > 0;
 
-  const productId = match.params.id;
-
-  const [invoices, setInvoices] = useState([]);
-  const [purchases, setPurchases] = useState([]);
+  const [invoices, setInvoices] = useState<any[]>([]);
+  const [purchases, setPurchases] = useState<any[]>([]);
+  const [auditLog, setAuditLog] = useState<any[]>([]);
 
   useEffect(() => {
-    const fetchData = async () => {
-      const getInvoices = getProductInvoicesFn(
-        Number(productId),
-        startDate,
-        endDate
-      );
-      const getReceipts = getProductPurchasesFn(
-        Number(productId),
-        startDate,
-        endDate
-      );
+    if (!hasValidProductId) {
+      setInvoices([]);
+      setPurchases([]);
+      setAuditLog([]);
+      return;
+    }
 
-      const [invoicesResponse, receiptsResponse] = await Promise.all([
-        getInvoices,
-        getReceipts,
-      ]);
-      setInvoices(invoicesResponse);
-      setPurchases(receiptsResponse);
+    const fetchData = async () => {
+      const [invoicesResponse, purchasesResponse, auditLogResponse] =
+        await Promise.all([
+          getProductInvoicesFn(productId, startDate, endDate),
+          getProductPurchasesFn(productId, startDate, endDate),
+          getProductAuditLogFn(productId, startDate, endDate),
+        ]);
+      setInvoices(invoicesResponse || []);
+      setPurchases(purchasesResponse || []);
+      setAuditLog(auditLogResponse || []);
     };
     fetchData();
-  }, [startDate, endDate, productId]);
+  }, [endDate, hasValidProductId, productId, startDate]);
 
   const resetFilters = () => {
     setStartDate(TODAYS_DATE);
     setEndDate(TODAYS_DATE);
   };
+
+  if (!hasValidProductId) {
+    return (
+      <DashboardLayout screenTitle="Product History">
+        <p className="text-sm text-muted-foreground">
+          Invalid product selected.
+        </p>
+      </DashboardLayout>
+    );
+  }
 
   return (
     <DashboardLayout screenTitle="Product History">
@@ -87,34 +99,33 @@ const ProductHistory: React.FC = ({ match }: any) => {
 
       <div>
         <div className="flex border-b mb-4">
-          <button
-            type="button"
-            onClick={() => setActiveTab('purchases')}
-            className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
-              activeTab === 'purchases'
-                ? 'border-primary text-primary'
-                : 'border-transparent text-muted-foreground hover:text-foreground'
-            }`}
-          >
-            Purchases
-          </button>
-          <button
-            type="button"
-            onClick={() => setActiveTab('invoices')}
-            className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
-              activeTab === 'invoices'
-                ? 'border-primary text-primary'
-                : 'border-transparent text-muted-foreground hover:text-foreground'
-            }`}
-          >
-            Invoices
-          </button>
+          {(
+            [
+              { key: 'purchases', label: 'Purchases' },
+              { key: 'invoices', label: 'Invoices' },
+              { key: 'auditLog', label: 'Audit Log' },
+            ] as const
+          ).map(({ key, label }) => (
+            <button
+              key={key}
+              type="button"
+              onClick={() => setActiveTab(key)}
+              className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
+                activeTab === key
+                  ? 'border-primary text-primary'
+                  : 'border-transparent text-muted-foreground hover:text-foreground'
+              }`}
+            >
+              {label}
+            </button>
+          ))}
         </div>
 
         {activeTab === 'purchases' && (
           <ProductHistoryPurchases data={purchases} />
         )}
         {activeTab === 'invoices' && <ProductHistoryInvoices data={invoices} />}
+        {activeTab === 'auditLog' && <AuditLog data={auditLog} />}
       </div>
     </DashboardLayout>
   );

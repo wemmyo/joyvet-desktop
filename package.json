@@ -8,16 +8,20 @@
     "dev": "electron-vite dev",
     "build": "electron-vite build",
     "preview": "electron-vite preview",
-    "package": "yarn build && electron-builder build --publish never",
-    "package-all": "yarn build && electron-builder build -mwl",
-    "package-mac": "yarn build && electron-builder build --mac --x64",
-    "package-linux": "yarn build && electron-builder build --linux",
-    "package-win": "yarn build && electron-builder build --win --x64",
+    "package": "npm run build && electron-builder build --publish never",
+    "package-all": "npm run build && electron-builder build -mwl",
+    "package-mac": "npm run build && electron-builder build --mac --x64",
+    "package-linux": "npm run build && electron-builder build --linux",
+    "package-win": "npm run build && electron-builder build --win --x64",
     "lint": "biome check .",
     "format": "biome format .",
     "start": "cross-env NODE_ENV=production electron ./out/main/index.js",
     "postinstall": "electron-builder install-app-deps",
-    "test": "vitest run"
+    "test": "vitest run",
+    "typecheck:renderer": "tsc -p tsconfig.renderer.json --noEmit",
+    "typecheck:electron": "tsc -p tsconfig.electron.json --noEmit",
+    "typecheck": "npm run typecheck:renderer && npm run typecheck:electron",
+    "validate": "npm run typecheck && npm test && npm run build"
   },
   "build": {
     "productName": "JoyvetSales",
@@ -60,40 +64,23 @@
     },
     "publish": {
       "provider": "github",
-      "owner": "electron-react-boilerplate",
-      "repo": "electron-react-boilerplate",
+      "owner": "wemmyo",
+      "repo": "joyvet-desktop",
       "private": false
     }
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/electron-react-boilerplate/electron-react-boilerplate.git"
+    "url": "git+https://github.com/wemmyo/joyvet-desktop.git"
   },
   "author": {
-    "name": "Electron React Boilerplate Maintainers",
-    "email": "electronreactboilerplate@gmail.com",
-    "url": "https://electron-react-boilerplate.js.org"
+    "name": "David Oyedeji",
+    "email": "wemmyoyedeji@gmail.com",
+    "url": "https://github.com/wemmyo"
   },
-  "contributors": [
-    {
-      "name": "Vikram Rangaraj",
-      "email": "vikr01@icloud.com",
-      "url": "https://github.com/vikr01"
-    },
-    {
-      "name": "Amila Welihinda",
-      "email": "amilajack@gmail.com",
-      "url": "https://github.com/amilajack"
-    },
-    {
-      "name": "John Tran",
-      "email": "jptran318@gmail.com",
-      "url": "https://github.com/jooohhn"
-    }
-  ],
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/electron-react-boilerplate/electron-react-boilerplate/issues"
+    "url": "https://github.com/wemmyo/joyvet-desktop/issues"
   },
   "keywords": [
     "electron",
@@ -102,27 +89,24 @@
     "vite",
     "electron-vite"
   ],
-  "homepage": "https://github.com/electron-react-boilerplate/electron-react-boilerplate#readme",
+  "homepage": "https://github.com/wemmyo/joyvet-desktop#readme",
   "devDependencies": {
     "@biomejs/biome": "^1.9.4",
     "@electron/rebuild": "^3.6.0",
+    "@testing-library/react": "^16.3.2",
+    "@testing-library/user-event": "^14.6.1",
     "@types/node": "^18.0.0",
     "@types/react": "^18.3.0",
     "@types/react-dom": "^18.3.0",
     "@vitejs/plugin-react": "^4.3.0",
-    "@vitest/ui": "^2.1.0",
     "autoprefixer": "^10.4.0",
-    "chalk": "^4.1.0",
-    "concurrently": "^5.2.0",
     "cross-env": "^7.0.0",
     "electron": "^28.0.0",
     "electron-builder": "^24.9.1",
     "electron-devtools-installer": "^3.2.0",
     "electron-vite": "^2.3.0",
-    "identity-obj-proxy": "^3.0.0",
+    "jsdom": "^28.1.0",
     "postcss": "^8.4.0",
-    "rimraf": "^3.0.0",
-    "shadcn": "^4.0.6",
     "typescript": "^5.9.3",
     "vite": "^5.4.0",
     "vitest": "^2.1.0"
@@ -133,17 +117,16 @@
     "@radix-ui/react-dialog": "^1.1.0",
     "@radix-ui/react-dropdown-menu": "^2.1.0",
     "@radix-ui/react-label": "^2.1.0",
+    "@radix-ui/react-popover": "^1.1.15",
     "@radix-ui/react-select": "^2.2.6",
     "@radix-ui/react-slot": "^1.1.0",
     "bcryptjs": "^2.4.3",
     "class-variance-authority": "^0.7.0",
     "clsx": "^2.1.0",
     "dayjs": "^1.11.13",
-    "electron-debug": "^3.1.0",
     "electron-log": "^4.2.2",
     "electron-updater": "^6.3.0",
     "lucide-react": "^0.460.0",
-    "mysql2": "^2.2.5",
     "react": "^18.3.0",
     "react-dom": "^18.3.0",
     "react-hook-form": "^7.43.2",
@@ -151,7 +134,6 @@
     "react-to-print": "^3.0.0",
     "sequelize": "^6.37.8",
     "sonner": "^1.7.0",
-    "source-map-support": "^0.5.19",
     "sqlite3": "^5.1.6",
     "tailwind-merge": "^2.5.0",
     "tailwindcss": "^3.4.0",
@@ -163,14 +145,5 @@
     "npm": ">=8.x",
     "yarn": ">=1.22.0"
   },
-  "browserslist": [],
-  "stylelint": {
-    "extends": [
-      "stylelint-config-standard",
-      "stylelint-config-prettier"
-    ]
-  },
-  "optionalDependencies": {
-    "pg-hstore": "^2.3.4"
-  }
+  "browserslist": []
 }

@@ -24,6 +24,7 @@ import {
   createUserFn,
   deleteUserFn,
 } from '../user.controller';
+import { getUserSession } from '../../utils/session';
 
 const mockUser = {
   id: 1,
@@ -40,11 +41,15 @@ describe('user controller', () => {
   });
 
   describe('loginUserFn', () => {
-    it('logs in successfully and stores user in localStorage', async () => {
+    it('logs in successfully and stores a sanitized session', async () => {
       mockApi.user.login.mockResolvedValue(mockUser);
       const cb = vi.fn();
       await loginUserFn({ username: 'admin', password: 'admin' }, cb);
-      expect(localStorage.getItem('user')).toBeTruthy();
+      expect(getUserSession()).toEqual({
+        id: 1,
+        fullName: 'Admin User',
+        role: 'admin',
+      });
       expect(cb).toHaveBeenCalled();
     });
 
@@ -54,20 +59,32 @@ describe('user controller', () => {
       );
       await loginUserFn({ username: 'nobody', password: 'pass' });
       expect(toast.error).toHaveBeenCalled();
+      expect(getUserSession()).toBeNull();
     });
 
     it('calls toast.error when password is invalid', async () => {
       mockApi.user.login.mockRejectedValue(new Error('Invalid password'));
       await loginUserFn({ username: 'admin', password: 'wrong' });
       expect(toast.error).toHaveBeenCalledWith('Invalid password');
+      expect(getUserSession()).toBeNull();
     });
   });
 
   describe('getUsersFn', () => {
     it('returns users', async () => {
-      mockApi.user.getAll.mockResolvedValue([mockUser]);
+      mockApi.user.getAll.mockResolvedValue({
+        rows: [mockUser],
+        total: 1,
+        page: 1,
+        pageSize: 25,
+      });
       const result = await getUsersFn();
-      expect(result).toEqual([mockUser]);
+      expect(result).toEqual({
+        rows: [mockUser],
+        total: 1,
+        page: 1,
+        pageSize: 25,
+      });
     });
   });
 

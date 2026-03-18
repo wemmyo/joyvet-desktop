@@ -6,6 +6,7 @@ export const getStoreInfoFn = async () => {
     return await window.api.storeInfo.getAll();
   } catch (error: any) {
     toast.error(error.message || '');
+    return [];
   }
 };
 

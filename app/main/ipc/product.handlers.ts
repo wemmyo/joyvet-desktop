@@ -2,100 +2,230 @@ import { ipcMain } from 'electron';
 import { Op } from 'sequelize';
 import dayjs from 'dayjs';
 import { z } from 'zod';
+import Product from '../../models/product';
+import ProductAuditLog from '../../models/productAuditLog';
 import {
-  getProducts,
   createProduct,
-  updateProduct,
   getProductById,
   deleteProduct,
 } from '../../services/product.service';
 import { getPurchaseItems } from '../../services/purchaseItem.service';
 import { getInvoiceItems } from '../../services/invoiceItem.service';
+import {
+  productListQuerySchema,
+  toPaginatedResult,
+  toPaginationOptions,
+} from './listing';
+import { withAppReady } from '../runtime';
 
 export function registerProductHandlers(): void {
-  ipcMain.handle('product:getAll', async (_event, filter?: string) => {
-    const filters: any = {};
-    if (filter === 'inStock') {
-      filters.where = { stock: { [Op.gt]: 0 } };
-    }
-    const products = await getProducts({
-      ...filters,
-      order: [['title', 'ASC']],
-    });
-    return products.map((p: any) => (p.toJSON ? p.toJSON() : p));
-  });
+  ipcMain.handle(
+    'product:getAll',
+    withAppReady(async (_event, input: unknown = {}) => {
+      const query = productListQuerySchema.parse(input);
+      const { filter, page, pageSize } = query;
+      const where =
+        filter === 'inStock' ? { stock: { [Op.gt]: 0 } } : undefined;
+      const { rows, count } = await Product.findAndCountAll({
+        ...toPaginationOptions({ page, pageSize }),
+        where,
+        order: [['title', 'ASC']],
+      });
 
-  ipcMain.handle('product:getById', async (_event, id: number) => {
-    const product = await getProductById(id);
-    return (product as any).toJSON ? (product as any).toJSON() : product;
-  });
+      return toPaginatedResult(
+        rows.map((product: any) =>
+          product.toJSON ? product.toJSON() : product
+        ),
+        count,
+        page,
+        pageSize
+      );
+    })
+  );
 
-  ipcMain.handle('product:create', async (_event, values: any) => {
-    const schema = z.object({
-      values: z.object({
-        title: z.string().min(1),
-        sellPrice: z.number(),
-        sellPrice2: z.number(),
-        sellPrice3: z.number(),
-        buyPrice: z.number(),
-      }),
-    });
-    schema.parse({ values });
-    await createProduct(values);
-  });
+  ipcMain.handle(
+    'product:getById',
+    withAppReady(async (_event, id: number) => {
+      const product = await getProductById(id);
+      return (product as any).toJSON ? (product as any).toJSON() : product;
+    })
+  );
 
-  ipcMain.handle('product:update', async (_event, id: number, values: any) => {
-    await updateProduct(id, values);
-  });
+  ipcMain.handle(
+    'product:create',
+    withAppReady(async (_event, values: any) => {
+      const schema = z.object({
+        values: z.object({
+          title: z.string().min(1),
+          sellPrice: z.number(),
+          sellPrice2: z.number(),
+          sellPrice3: z.number(),
+          buyPrice: z.number(),
+        }),
+      });
+      schema.parse({ values });
+      await createProduct(values);
+    })
+  );
 
-  ipcMain.handle('product:delete', async (_event, id: number) => {
-    await deleteProduct(id);
-  });
+  ipcMain.handle(
+    'product:update',
+    withAppReady(async (_event, id: number, values: any) => {
+      const { _postedBy, ...productValues } = values;
+      const postedBy = _postedBy || 'unknown';
 
-  ipcMain.handle('product:search', async (_event, value: string) => {
-    const schema = z.object({ value: z.string().min(1) });
-    schema.parse({ value });
-    const products = await getProducts({
-      where: { title: { [Op.substring]: value } },
-    });
-    return products.map((p: any) => (p.toJSON ? p.toJSON() : p));
-  });
+      const product = await Product.findByPk(id);
+      if (!product) {
+        throw new Error('Product not found');
+      }
+
+      const stockBefore = (product as any).stock;
+      const stockChanged =
+        productValues.stock !== undefined &&
+        productValues.stock !== stockBefore;
+
+      const priceFields = ['buyPrice', 'sellPrice', 'sellPrice2', 'sellPrice3'];
+      const priceChanges: any[] = [];
+      priceFields.forEach((field) => {
+        if (
+          productValues[field] !== undefined &&
+          productValues[field] !== (product as any)[field]
+        ) {
+          priceChanges.push({
+            field,
+            before: (product as any)[field],
+            after: productValues[field],
+          });
+        }
+      });
+
+      await Product.update(productValues, { where: { id } });
+
+      if (stockChanged) {
+        await ProductAuditLog.create({
+          productId: id,
+          changeType: 'stock_change',
+          delta: productValues.stock - stockBefore,
+          stockBefore,
+          stockAfter: productValues.stock,
+          reason: 'manual_edit',
+          referenceType: 'manual',
+          postedBy,
+        });
+      }
+
+      if (priceChanges.length > 0) {
+        await ProductAuditLog.create({
+          productId: id,
+          changeType: 'price_change',
+          priceChanges: JSON.stringify(priceChanges),
+          reason: 'manual_edit',
+          referenceType: 'manual',
+          postedBy,
+        });
+      }
+    })
+  );
+
+  ipcMain.handle(
+    'product:delete',
+    withAppReady(async (_event, id: number) => {
+      await deleteProduct(id);
+    })
+  );
+
+  ipcMain.handle(
+    'product:search',
+    withAppReady(async (_event, input: unknown = {}) => {
+      const query = productListQuerySchema.parse(input);
+      const { filter, page, pageSize, search } = query;
+
+      if (!search) {
+        return toPaginatedResult([], 0, page, pageSize);
+      }
+
+      const where = {
+        ...(filter === 'inStock' ? { stock: { [Op.gt]: 0 } } : {}),
+        title: { [Op.substring]: search },
+      };
+
+      const { rows, count } = await Product.findAndCountAll({
+        ...toPaginationOptions({ page, pageSize }),
+        where,
+        order: [['title', 'ASC']],
+      });
+
+      return toPaginatedResult(
+        rows.map((product: any) =>
+          product.toJSON ? product.toJSON() : product
+        ),
+        count,
+        page,
+        pageSize
+      );
+    })
+  );
 
   ipcMain.handle(
     'product:getInvoices',
-    async (_event, productId: number, startDate: string, endDate: string) => {
-      const items = await getInvoiceItems({
-        where: {
-          productId,
-          createdAt: {
-            [Op.between]: [
-              `${dayjs(startDate).format('YYYY-MM-DD')} 00:00:00`,
-              `${dayjs(endDate).format('YYYY-MM-DD')} 23:00:00`,
-            ],
+    withAppReady(
+      async (_event, productId: number, startDate: string, endDate: string) => {
+        const items = await getInvoiceItems({
+          where: {
+            productId,
+            createdAt: {
+              [Op.between]: [
+                `${dayjs(startDate).format('YYYY-MM-DD')} 00:00:00`,
+                `${dayjs(endDate).format('YYYY-MM-DD')} 23:00:00`,
+              ],
+            },
           },
-        },
-        order: [['createdAt', 'DESC']],
-      });
-      return items.map((i: any) => (i.toJSON ? i.toJSON() : i));
-    }
+          order: [['createdAt', 'DESC']],
+        });
+        return items.map((i: any) => (i.toJSON ? i.toJSON() : i));
+      }
+    )
   );
 
   ipcMain.handle(
     'product:getPurchases',
-    async (_event, productId: number, startDate: string, endDate: string) => {
-      const items = await getPurchaseItems({
-        where: {
-          productId,
-          createdAt: {
-            [Op.between]: [
-              `${dayjs(startDate).format('YYYY-MM-DD')} 00:00:00`,
-              `${dayjs(endDate).format('YYYY-MM-DD')} 23:00:00`,
-            ],
+    withAppReady(
+      async (_event, productId: number, startDate: string, endDate: string) => {
+        const items = await getPurchaseItems({
+          where: {
+            productId,
+            createdAt: {
+              [Op.between]: [
+                `${dayjs(startDate).format('YYYY-MM-DD')} 00:00:00`,
+                `${dayjs(endDate).format('YYYY-MM-DD')} 23:00:00`,
+              ],
+            },
           },
-        },
-        order: [['createdAt', 'DESC']],
-      });
-      return items.map((i: any) => (i.toJSON ? i.toJSON() : i));
-    }
+          order: [['createdAt', 'DESC']],
+        });
+        return items.map((i: any) => (i.toJSON ? i.toJSON() : i));
+      }
+    )
+  );
+
+  ipcMain.handle(
+    'product:getAuditLog',
+    withAppReady(
+      async (_event, productId: number, startDate: string, endDate: string) => {
+        const logs = await ProductAuditLog.findAll({
+          where: {
+            productId,
+            createdAt: {
+              [Op.between]: [
+                `${dayjs(startDate).format('YYYY-MM-DD')} 00:00:00`,
+                `${dayjs(endDate).format('YYYY-MM-DD')} 23:59:59`,
+              ],
+            },
+          },
+          order: [['createdAt', 'DESC']],
+        });
+        return logs.map((log: any) => (log.toJSON ? log.toJSON() : log));
+      }
+    )
   );
 }

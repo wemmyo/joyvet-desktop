@@ -1,6 +1,6 @@
 import { defineConfig, externalizeDepsPlugin } from 'electron-vite';
 import react from '@vitejs/plugin-react';
-import { join } from 'path';
+import { join } from 'node:path';
 
 export default defineConfig({
   main: {
@@ -37,9 +37,6 @@ export default defineConfig({
       alias: {
         '@': join(__dirname, 'app'),
       },
-    },
-    optimizeDeps: {
-      exclude: ['@reduxjs/toolkit', 'react-redux', 'redux', 'redux-logger'],
     },
   },
 });

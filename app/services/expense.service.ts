@@ -1,6 +1,6 @@
 import Expense, { IExpense } from '../models/expense';
 
-export const getExpenses = (args) => {
+export const getExpenses = (args: any) => {
   return Expense.findAll({
     ...args,
   }).then((data: IExpense[]) => {
@@ -16,11 +16,16 @@ export const getExpenseById = (id: number) => {
   });
 };
 
-export const updateExpense = (id: number, expense: Partial<IExpense>) => {
+export const updateExpense = (
+  id: number,
+  expense: Partial<IExpense>,
+  transaction?: any
+) => {
   return Expense.update(expense, {
     where: {
       id,
     },
+    transaction,
   }).then((data: IExpense) => {
     return data;
   });

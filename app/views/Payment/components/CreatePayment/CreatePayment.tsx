@@ -1,8 +1,9 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 
+import AsyncCombobox from '../../../../components/ui/async-combobox';
 import { Button } from '../../../../components/ui/button';
 import { Input } from '../../../../components/ui/input';
 import { Label } from '../../../../components/ui/label';
@@ -13,13 +14,15 @@ import {
   SelectTrigger,
   SelectValue,
 } from '../../../../components/ui/select';
+import { useAsyncComboboxOptions } from '../../../../hooks/useAsyncComboboxOptions';
 import { numberWithCommas } from '../../../../utils/helpers';
 import { createPaymentFn } from '../../../../controllers/payment.controller';
 import {
   getSuppliersFn,
-  getSingleSupplierFn,
+  searchSupplierFn,
 } from '../../../../controllers/supplier.controller';
 import { ISupplier } from '../../../../models/supplier';
+import { MAX_PAGE_SIZE } from '../../../../types/pagination';
 
 interface ICreatePayment {
   refreshPayments: () => void;
@@ -36,7 +39,6 @@ const createPaymentSchema = z.object({
 type CreatePaymentFormValues = z.infer<typeof createPaymentSchema>;
 
 const CreatePayment = ({ refreshPayments }: ICreatePayment) => {
-  const [suppliers, setSuppliers] = useState<ISupplier[]>([]);
   const [singleSupplier, setSingleSupplier] = useState<ISupplier>(
     {} as ISupplier
   );
@@ -60,14 +62,16 @@ const CreatePayment = ({ refreshPayments }: ICreatePayment) => {
   });
 
   const watchedPaymentMethod = watch('paymentMethod');
-
-  useEffect(() => {
-    const fetchSuppliers = async () => {
-      const response = await getSuppliersFn();
-      setSuppliers(response);
-    };
-    fetchSuppliers();
-  }, []);
+  const supplierOptions = useAsyncComboboxOptions<ISupplier>({
+    getInitialOptions: () => getSuppliersFn({ pageSize: MAX_PAGE_SIZE }),
+    searchOptions: (search) =>
+      searchSupplierFn({
+        pageSize: MAX_PAGE_SIZE,
+        search,
+      }),
+    getOptionValue: (supplier) => String(supplier.id),
+    getOptionLabel: (supplier) => supplier.fullName,
+  });
 
   const showSupplierBalance = () => {
     if (singleSupplier.balance) {
@@ -129,25 +133,21 @@ const CreatePayment = ({ refreshPayments }: ICreatePayment) => {
             name="supplierId"
             control={control}
             render={({ field }) => (
-              <Select
-                onValueChange={async (val) => {
-                  field.onChange(val);
-                  const supplier = await getSingleSupplierFn(Number(val));
-                  if (supplier) setSingleSupplier(supplier);
-                }}
+              <AsyncCombobox
                 value={field.value}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select Supplier" />
-                </SelectTrigger>
-                <SelectContent>
-                  {suppliers.map((s) => (
-                    <SelectItem key={s.id} value={String(s.id)}>
-                      {s.fullName}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+                onValueChange={(val) => {
+                  field.onChange(val);
+                  const supplier = supplierOptions.getItemByValue(val);
+                  setSingleSupplier(supplier ?? ({} as ISupplier));
+                }}
+                placeholder="Select Supplier"
+                searchPlaceholder="Search suppliers"
+                selectedLabel={supplierOptions.getLabelByValue(field.value)}
+                options={supplierOptions.options}
+                loading={supplierOptions.loading}
+                emptyMessage="No suppliers found."
+                onSearchChange={supplierOptions.onSearchChange}
+              />
             )}
           />
           {errors.supplierId && (

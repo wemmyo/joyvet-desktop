@@ -3,6 +3,7 @@
     "target": "ES2020",
     "module": "CommonJS",
     "moduleResolution": "node",
+    "baseUrl": ".",
     "lib": ["ES2020", "DOM", "DOM.Iterable"],
     "jsx": "react-jsx",
     "strict": true,
@@ -18,6 +19,11 @@
     "declaration": true,
     "declarationMap": true,
     "skipLibCheck": true,
+    "paths": {
+      "@/*": ["app/*"],
+      "@/components/*": ["app/components/*"],
+      "@/lib/*": ["app/lib/*"]
+    },
     "types": ["vitest/globals"]
   },
   "exclude": [
@@ -26,9 +32,6 @@
     "app/dist",
     "app/renderer/src",
     "out",
-    "joyvet-modern",
-    "app/index.tsx",
-    "app/main.dev.ts",
     "app/utils/database.ts"
   ]
 }

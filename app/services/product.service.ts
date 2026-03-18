@@ -1,6 +1,6 @@
 import Product, { IProduct } from '../models/product';
 
-export const getProducts = (args) => {
+export const getProducts = (args: any) => {
   return Product.findAll({
     ...args,
   }).then((data: IProduct[]) => {

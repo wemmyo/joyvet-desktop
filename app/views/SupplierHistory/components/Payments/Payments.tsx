@@ -5,10 +5,15 @@ import {
   Table,
   TableBody,
   TableCell,
+  TableFooter,
   TableHead,
   TableHeader,
   TableRow,
 } from '../../../../components/ui/table';
+import {
+  TableEmptyRow,
+  TableFrame,
+} from '../../../../components/ui/table-helpers';
 
 export interface CustomerHistoryPaymentsProps {
   data: any[];
@@ -22,7 +27,9 @@ const CustomerHistoryPayments: React.FC<CustomerHistoryPaymentsProps> = ({
       return (
         <TableRow key={payment.id}>
           <TableCell>{payment.id}</TableCell>
-          <TableCell>₦{numberWithCommas(payment.amount)}</TableCell>
+          <TableCell className="text-right">
+            ₦{numberWithCommas(payment.amount)}
+          </TableCell>
           <TableCell>{payment.paymentMethod}</TableCell>
           <TableCell>{payment.bank}</TableCell>
           <TableCell>
@@ -48,24 +55,37 @@ const CustomerHistoryPayments: React.FC<CustomerHistoryPaymentsProps> = ({
 
   return (
     <>
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>Payment ID</TableHead>
-            <TableHead>Amount</TableHead>
-            <TableHead>Payment Method</TableHead>
-            <TableHead>Bank</TableHead>
-            <TableHead>Date &amp; Time</TableHead>
-            <TableHead>Note</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>{renderPayments()}</TableBody>
-      </Table>
-      {isAdmin() ? (
-        <div className="mt-2 text-right font-semibold">
-          Total: ₦{numberWithCommas(sumOfAmounts())}
-        </div>
-      ) : null}
+      <TableFrame>
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Payment ID</TableHead>
+              <TableHead className="text-right">Amount</TableHead>
+              <TableHead>Payment Method</TableHead>
+              <TableHead>Bank</TableHead>
+              <TableHead>Date &amp; Time</TableHead>
+              <TableHead>Note</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {data.length > 0 ? (
+              renderPayments()
+            ) : (
+              <TableEmptyRow colSpan={6} message="No payments found." />
+            )}
+          </TableBody>
+          {isAdmin() ? (
+            <TableFooter>
+              <TableRow>
+                <TableCell colSpan={5}>Total</TableCell>
+                <TableCell className="text-right">
+                  ₦{numberWithCommas(sumOfAmounts())}
+                </TableCell>
+              </TableRow>
+            </TableFooter>
+          ) : null}
+        </Table>
+      </TableFrame>
     </>
   );
 };

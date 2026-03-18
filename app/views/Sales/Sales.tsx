@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import dayjs from 'dayjs';
 import DashboardLayout from '../../layouts/DashboardLayout/DashboardLayout';
+import PaginationControls from '../../components/PaginationControls/PaginationControls';
 import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
 import { Label } from '../../components/ui/label';
@@ -15,19 +16,21 @@ import {
   Table,
   TableHeader,
   TableBody,
+  TableFooter,
   TableRow,
   TableHead,
   TableCell,
 } from '../../components/ui/table';
+import {
+  TableEmptyRow,
+  TableFrame,
+} from '../../components/ui/table-helpers';
 import { numberWithCommas, isAdmin } from '../../utils/helpers';
 import { useSidebarContext } from '../../contexts/SidebarContext';
 import SalesDetail from './components/SalesDetail';
-import {
-  filterInvoiceFn,
-  filterInvoiceById,
-  getInvoicesFn,
-} from '../../controllers/invoice.controller';
+import { filterInvoiceFn } from '../../controllers/invoice.controller';
 import { IInvoice } from '../../models/invoice';
+import { DEFAULT_PAGE, DEFAULT_PAGE_SIZE } from '../../types/pagination';
 
 const TODAYS_DATE = `${dayjs().format('YYYY-MM-DD')}`;
 const CONTENT_DETAIL = 'detail';
@@ -37,9 +40,13 @@ const SalesScreen: React.FC = () => {
   const [salesId, setSalesId] = useState<number | undefined>();
   const [saleType, setSaleType] = useState('all');
   const [searchValue, setSearchValue] = useState('');
+  const [appliedSearch, setAppliedSearch] = useState('');
   const [startDate, setStartDate] = useState(TODAYS_DATE);
   const [endDate, setEndDate] = useState(TODAYS_DATE);
   const [invoices, setInvoices] = useState<IInvoice[]>([]);
+  const [page, setPage] = useState(DEFAULT_PAGE);
+  const [total, setTotal] = useState(0);
+  const [loading, setLoading] = useState(false);
 
   const { openSideContent: openSideBar, closeSideContent: closeSideBar } =
     useSidebarContext();
@@ -49,30 +56,35 @@ const SalesScreen: React.FC = () => {
     setSideContent(content);
   };
 
-  const fetchInvoices = useCallback(async () => {
-    const response = await filterInvoiceFn(startDate, endDate, saleType);
-    setInvoices(response);
-  }, [startDate, endDate, saleType]);
+  const loadInvoices = useCallback(
+    async (nextPage: number) => {
+      setLoading(true);
+      const response = await filterInvoiceFn({
+        page: nextPage,
+        pageSize: DEFAULT_PAGE_SIZE,
+        startDate,
+        endDate,
+        saleType,
+        search: appliedSearch || undefined,
+      });
+      setInvoices(response.rows ?? []);
+      setTotal(response.total ?? 0);
+      setLoading(false);
+    },
+    [appliedSearch, endDate, saleType, startDate]
+  );
 
   useEffect(() => {
-    fetchInvoices();
+    void loadInvoices(page);
+  }, [loadInvoices, page]);
 
+  useEffect(() => {
     return () => {
       closeSideBar();
       setSideContent('');
       setSalesId(undefined);
     };
-  }, [fetchInvoices]);
-
-  useEffect(() => {
-    const fetchData = async () => {
-      if (searchValue) {
-        const response = await filterInvoiceById(Number(searchValue));
-        setInvoices(response);
-      }
-    };
-    fetchData();
-  }, [searchValue]);
+  }, [closeSideBar]);
 
   const openSingleSale = async (id: number) => {
     setSalesId(id);
@@ -84,14 +96,18 @@ const SalesScreen: React.FC = () => {
       <TableRow
         onClick={() => openSingleSale(each.id)}
         key={each.id}
-        className="cursor-pointer hover:bg-muted/50"
+        className="cursor-pointer"
       >
         <TableCell>{each.customer?.fullName}</TableCell>
         <TableCell>{each.id}</TableCell>
         <TableCell>{each.saleType}</TableCell>
-        <TableCell>₦{numberWithCommas(each.amount)}</TableCell>
+        <TableCell className="text-right">
+          ₦{numberWithCommas(each.amount)}
+        </TableCell>
         {isAdmin() ? (
-          <TableCell>₦{numberWithCommas(each.profit)}</TableCell>
+          <TableCell className="text-right">
+            ₦{numberWithCommas(each.profit)}
+          </TableCell>
         ) : null}
         <TableCell>{dayjs(each.createdAt).format('DD/MM/YYYY')}</TableCell>
       </TableRow>
@@ -107,13 +123,18 @@ const SalesScreen: React.FC = () => {
     return null;
   };
 
-  const resetFilters = async () => {
+  const resetFilters = () => {
     setStartDate(TODAYS_DATE);
     setEndDate(TODAYS_DATE);
     setSaleType('all');
     setSearchValue('');
-    await getInvoicesFn();
+    setAppliedSearch('');
+    setPage(DEFAULT_PAGE);
   };
+
+  const fetchInvoices = useCallback(async () => {
+    await loadInvoices(page);
+  }, [loadInvoices, page]);
 
   const headerContent = () => {
     return (
@@ -157,12 +178,27 @@ const SalesScreen: React.FC = () => {
           </div>
           <div className="space-y-1">
             <Label htmlFor="search">Search</Label>
-            <Input
-              id="search"
-              placeholder="Invoice number"
-              onChange={(e) => setSearchValue(e.target.value)}
-              value={searchValue}
-            />
+            <form
+              onSubmit={(event) => {
+                event.preventDefault();
+                setAppliedSearch(searchValue.trim());
+                setPage(DEFAULT_PAGE);
+              }}
+            >
+              <Input
+                id="search"
+                placeholder="Invoice number"
+                onChange={(e) => {
+                  const nextSearchValue = e.target.value;
+                  setSearchValue(nextSearchValue);
+                  if (nextSearchValue.trim() === '' && appliedSearch !== '') {
+                    setAppliedSearch('');
+                    setPage(DEFAULT_PAGE);
+                  }
+                }}
+                value={searchValue}
+              />
+            </form>
           </div>
         </div>
       </div>
@@ -200,26 +236,67 @@ const SalesScreen: React.FC = () => {
       rightSidebar={renderSideContent()}
       headerContent={headerContent()}
     >
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>Customer</TableHead>
-            <TableHead>Invoice Number</TableHead>
-            <TableHead>Type</TableHead>
-            <TableHead>Amount</TableHead>
-            {isAdmin() ? <TableHead>Profit</TableHead> : null}
-            <TableHead>Date</TableHead>
-          </TableRow>
-        </TableHeader>
+      {loading ? (
+        <div className="flex items-center justify-center p-8">
+          <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+        </div>
+      ) : (
+        <>
+          <TableFrame>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Customer</TableHead>
+                  <TableHead>Invoice Number</TableHead>
+                  <TableHead>Type</TableHead>
+                  <TableHead className="text-right">Amount</TableHead>
+                  {isAdmin() ? (
+                    <TableHead className="text-right">Profit</TableHead>
+                  ) : null}
+                  <TableHead>Date</TableHead>
+                </TableRow>
+              </TableHeader>
 
-        <TableBody>{renderRows}</TableBody>
-      </Table>
-      <div className="mt-2 text-sm font-semibold flex gap-8 justify-end">
-        <span>Total: ₦{numberWithCommas(sumOfAmount())}</span>
-        {isAdmin() ? (
-          <span>Profit Total: ₦{numberWithCommas(sumOfProfit())}</span>
-        ) : null}
-      </div>
+              <TableBody>
+                {invoices.length > 0 ? (
+                  renderRows
+                ) : (
+                  <TableEmptyRow
+                    colSpan={isAdmin() ? 6 : 5}
+                    message="No sales found."
+                  />
+                )}
+              </TableBody>
+              <TableFooter>
+                <TableRow>
+                  <TableCell colSpan={isAdmin() ? 4 : 3}>Total</TableCell>
+                  {isAdmin() ? (
+                    <>
+                      <TableCell className="text-right">
+                        ₦{numberWithCommas(sumOfAmount())}
+                      </TableCell>
+                      <TableCell className="text-right">
+                        ₦{numberWithCommas(sumOfProfit())}
+                      </TableCell>
+                    </>
+                  ) : (
+                    <TableCell className="text-right">
+                      ₦{numberWithCommas(sumOfAmount())}
+                    </TableCell>
+                  )}
+                  <TableCell />
+                </TableRow>
+              </TableFooter>
+            </Table>
+          </TableFrame>
+          <PaginationControls
+            page={page}
+            pageSize={DEFAULT_PAGE_SIZE}
+            total={total}
+            onPageChange={setPage}
+          />
+        </>
+      )}
     </DashboardLayout>
   );
 };

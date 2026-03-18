@@ -6,6 +6,7 @@ export const searchExpenseFn = async (value: string) => {
     return await window.api.expense.search(value);
   } catch (error: any) {
     toast.error(error.message || '');
+    return [];
   }
 };
 
@@ -40,6 +41,7 @@ export const getSingleExpenseFn = async (id: number, cb?: () => void) => {
     return response;
   } catch (error: any) {
     toast.error(error.message || '');
+    return null;
   }
 };
 
@@ -54,6 +56,7 @@ export const filterExpensesFn = async ({
     return await window.api.expense.filter(startDate, endDate);
   } catch (error: any) {
     toast.error(error.message || '');
+    return [];
   }
 };
 

@@ -23,6 +23,6 @@
     }
   },
   "files": {
-    "ignore": ["node_modules", "out", "release", "joyvet-modern", "app/dist"]
+    "ignore": ["node_modules", "out", "release", "app/dist"]
   }
 }

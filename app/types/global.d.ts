@@ -1,6 +1,14 @@
 declare global {
   interface Window {
     api: {
+      auth: {
+        getBootstrapStatus: () => Promise<{ hasUsers: boolean }>;
+        createInitialAdmin: (values: {
+          fullName: string;
+          username: string;
+          password: string;
+        }) => Promise<any>;
+      };
       invoice: {
         getAll: () => Promise<any[]>;
         getById: (id: number) => Promise<any>;
@@ -11,6 +19,13 @@ declare global {
           currentInvoice: any,
           currentInvoiceItem: any
         ) => Promise<void>;
+        updateItem: (args: {
+          invoiceItemId: number;
+          invoiceId: number;
+          productId: number;
+          newQuantity: number;
+          postedBy: string;
+        }) => Promise<void>;
         filter: (
           startDate: string,
           endDate: string,
@@ -36,6 +51,11 @@ declare global {
           startDate?: string,
           endDate?: string
         ) => Promise<any[]>;
+        getActivityTimeline: (
+          customerId: number,
+          startDate: string,
+          endDate: string
+        ) => Promise<any[]>;
       };
       product: {
         getAll: (filter?: string) => Promise<any[]>;
@@ -50,6 +70,11 @@ declare global {
           endDate: string
         ) => Promise<any[]>;
         getPurchases: (
+          productId: number,
+          startDate: string,
+          endDate: string
+        ) => Promise<any[]>;
+        getAuditLog: (
           productId: number,
           startDate: string,
           endDate: string
@@ -83,12 +108,22 @@ declare global {
           startDate: string,
           endDate: string
         ) => Promise<any[]>;
+        getActivityTimeline: (
+          supplierId: number,
+          startDate: string,
+          endDate: string
+        ) => Promise<any[]>;
       };
       purchase: {
         getAll: () => Promise<any[]>;
         getById: (id: number) => Promise<any>;
         create: (purchaseItems: any[], purchase: any) => Promise<any>;
         delete: (id: number) => Promise<void>;
+        update: (
+          id: number,
+          purchaseItems: any[],
+          meta: { invoiceNumber: string; amount: number; postedBy?: string }
+        ) => Promise<void>;
         filter: (
           startDate: string,
           endDate: string,
@@ -150,6 +185,30 @@ declare global {
         update: (id: number, values: any) => Promise<void>;
         delete: (id: number) => Promise<void>;
         create: (values: any) => Promise<any>;
+      };
+      analytics: {
+        getSummary: (args: {
+          startDate: string;
+          endDate: string;
+        }) => Promise<any>;
+        getTopCustomers: (args: {
+          startDate: string;
+          endDate: string;
+        }) => Promise<any[]>;
+        getBestSellingProducts: (args: {
+          startDate: string;
+          endDate: string;
+        }) => Promise<any[]>;
+        getTopSuppliersBySpend: (args: {
+          startDate: string;
+          endDate: string;
+        }) => Promise<any[]>;
+        getLowStockProducts: () => Promise<any[]>;
+        getRevenueOverTime: () => Promise<any[]>;
+        getExpenseBreakdown: (args: {
+          startDate: string;
+          endDate: string;
+        }) => Promise<any[]>;
       };
       dialog: {
         selectDbPath: () => Promise<string | undefined>;

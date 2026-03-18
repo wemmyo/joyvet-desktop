@@ -1,35 +1,38 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 
 import DashboardLayout from '../../layouts/DashboardLayout/DashboardLayout';
 import { Button } from '../../components/ui/button';
+import AsyncCombobox from '../../components/ui/async-combobox';
 import { Label } from '../../components/ui/label';
 import { Input } from '../../components/ui/input';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '../../components/ui/select';
 import {
   Table,
   TableHeader,
   TableBody,
+  TableFooter,
   TableRow,
   TableHead,
   TableCell,
 } from '../../components/ui/table';
+import { TableEmptyRow, TableFrame } from '../../components/ui/table-helpers';
+import { useAsyncComboboxOptions } from '../../hooks/useAsyncComboboxOptions';
 
-import { getSuppliersFn } from '../../controllers/supplier.controller';
-import { getProductsFn } from '../../controllers/product.controller';
+import {
+  getSuppliersFn,
+  searchSupplierFn,
+} from '../../controllers/supplier.controller';
+import {
+  getProductsFn,
+  searchProductFn,
+} from '../../controllers/product.controller';
 import { ISupplier } from '../../models/supplier';
 import { IProduct } from '../../models/product';
 import { numberWithCommas } from '../../utils/helpers';
 import { createPurchaseFn } from '../../controllers/purchase.controller';
-import { IPurchaseItem } from '../../models/purchaseItem';
+import { MAX_PAGE_SIZE } from '../../types/pagination';
 
 const itemSchema = z.object({
   supplierId: z.string().min(1, 'Supplier is required'),
@@ -44,10 +47,18 @@ const itemSchema = z.object({
 
 type ItemFormValues = z.infer<typeof itemSchema>;
 
+interface PurchaseOrder extends IProduct {
+  amount: number;
+  orderId: number;
+  quantity: number;
+  unitPrice: number;
+  newSellPrice: number;
+  newSellPrice2: number;
+  newSellPrice3: number;
+}
+
 const PurchaseScreen: React.FC = () => {
-  const [orders, setOrders] = useState([]);
-  const [suppliers, setSuppliers] = useState<ISupplier[]>([]);
-  const [products, setProducts] = useState<IProduct[]>([]);
+  const [orders, setOrders] = useState<PurchaseOrder[]>([]);
 
   const {
     register,
@@ -72,25 +83,33 @@ const PurchaseScreen: React.FC = () => {
   });
 
   const watchedValues = watch();
-
-  useEffect(() => {
-    const fetchData = async () => {
-      const getSuppliers = getSuppliersFn();
-      const getProducts = getProductsFn();
-      const [suppliersResponse, productsResponse] = await Promise.all([
-        getSuppliers,
-        getProducts,
-      ]);
-      setSuppliers(suppliersResponse);
-      setProducts(productsResponse);
-    };
-    fetchData();
-  }, []);
+  const supplierOptions = useAsyncComboboxOptions<ISupplier>({
+    getInitialOptions: () => getSuppliersFn({ pageSize: MAX_PAGE_SIZE }),
+    searchOptions: (search) =>
+      searchSupplierFn({
+        pageSize: MAX_PAGE_SIZE,
+        search,
+      }),
+    getOptionValue: (supplier) => String(supplier.id),
+    getOptionLabel: (supplier) => supplier.fullName,
+  });
+  const productOptions = useAsyncComboboxOptions<IProduct>({
+    getInitialOptions: () =>
+      getProductsFn({ filter: 'inStock', pageSize: MAX_PAGE_SIZE }),
+    searchOptions: (search) =>
+      searchProductFn({
+        filter: 'inStock',
+        pageSize: MAX_PAGE_SIZE,
+        search,
+      }),
+    getOptionValue: (product) => String(product.id),
+    getOptionLabel: (product) => product.title,
+  });
 
   const amount = (item: any) => item.amount;
   const sum = (prev: number, next: number) => prev + next;
 
-  const addToOrders = (value: IPurchaseItem) => {
+  const addToOrders = (value: PurchaseOrder) => {
     setOrders([...orders, value]);
   };
 
@@ -111,10 +130,14 @@ const PurchaseScreen: React.FC = () => {
       <TableRow key={order.orderId}>
         <TableCell>{index + 1}</TableCell>
         <TableCell>{order.title}</TableCell>
-        <TableCell>{order.quantity}</TableCell>
-        <TableCell>{numberWithCommas(order.unitPrice)}</TableCell>
-        <TableCell>{numberWithCommas(order.amount)}</TableCell>
-        <TableCell>
+        <TableCell className="text-right">{order.quantity}</TableCell>
+        <TableCell className="text-right">
+          {numberWithCommas(order.unitPrice)}
+        </TableCell>
+        <TableCell className="text-right">
+          {numberWithCommas(order.amount)}
+        </TableCell>
+        <TableCell className="text-right">
           <Button
             onClick={() => removeOrder(order.orderId)}
             variant="destructive"
@@ -128,8 +151,13 @@ const PurchaseScreen: React.FC = () => {
   };
 
   const onAddItem = (values: ItemFormValues) => {
+    const product = productOptions.getItemByValue(values.product);
+    if (!product) {
+      return;
+    }
+
     addToOrders({
-      ...JSON.parse(values.product),
+      ...product,
       quantity: values.quantity,
       amount: Number(values.unitPrice) * Number(values.quantity),
       unitPrice: values.unitPrice,
@@ -151,12 +179,15 @@ const PurchaseScreen: React.FC = () => {
   };
 
   const createPurchase = async () => {
-    await createPurchaseFn(orders, {
-      supplierId: Number(watchedValues.supplierId),
-      invoiceNumber: watchedValues.invoiceNumber,
-      amount: sumOfOrders(),
-      products: orders,
-    } as any);
+    await createPurchaseFn(
+      orders as any,
+      {
+        supplierId: Number(watchedValues.supplierId),
+        invoiceNumber: watchedValues.invoiceNumber,
+        amount: sumOfOrders(),
+        products: orders,
+      } as any
+    );
     reset();
     setOrders([]);
   };
@@ -168,23 +199,39 @@ const PurchaseScreen: React.FC = () => {
           <h1 className="text-xl font-bold mb-3">
             Total: ₦{numberWithCommas(sumOfOrders())}
           </h1>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>No</TableHead>
-                <TableHead>Product</TableHead>
-                <TableHead>Quantity</TableHead>
-                <TableHead>Rate</TableHead>
-                <TableHead>Amount</TableHead>
-                <TableHead>Action</TableHead>
-              </TableRow>
-            </TableHeader>
+          <TableFrame>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>No</TableHead>
+                  <TableHead>Product</TableHead>
+                  <TableHead className="text-right">Quantity</TableHead>
+                  <TableHead className="text-right">Rate</TableHead>
+                  <TableHead className="text-right">Amount</TableHead>
+                  <TableHead className="text-right">Action</TableHead>
+                </TableRow>
+              </TableHeader>
 
-            <TableBody>{renderOrders()}</TableBody>
-          </Table>
-          <div className="mt-2 text-sm font-semibold text-right">
-            Total: ₦{numberWithCommas(sumOfOrders())}
-          </div>
+              <TableBody>
+                {orders.length > 0 ? (
+                  renderOrders()
+                ) : (
+                  <TableEmptyRow
+                    colSpan={6}
+                    message="No purchase items added yet."
+                  />
+                )}
+              </TableBody>
+              <TableFooter>
+                <TableRow>
+                  <TableCell colSpan={5}>Total</TableCell>
+                  <TableCell className="text-right">
+                    ₦{numberWithCommas(sumOfOrders())}
+                  </TableCell>
+                </TableRow>
+              </TableFooter>
+            </Table>
+          </TableFrame>
         </div>
         <div className="w-72 shrink-0">
           <div className="border rounded p-4">
@@ -196,21 +243,19 @@ const PurchaseScreen: React.FC = () => {
                     name="supplierId"
                     control={control}
                     render={({ field }) => (
-                      <Select
-                        onValueChange={field.onChange}
+                      <AsyncCombobox
                         value={field.value}
-                      >
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select Supplier" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {suppliers.map((s) => (
-                            <SelectItem key={s.id} value={String(s.id)}>
-                              {s.fullName}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
+                        onValueChange={field.onChange}
+                        placeholder="Select Supplier"
+                        searchPlaceholder="Search suppliers"
+                        selectedLabel={supplierOptions.getLabelByValue(
+                          field.value
+                        )}
+                        options={supplierOptions.options}
+                        loading={supplierOptions.loading}
+                        emptyMessage="No suppliers found."
+                        onSearchChange={supplierOptions.onSearchChange}
+                      />
                     )}
                   />
                   {errors.supplierId && (
@@ -241,29 +286,30 @@ const PurchaseScreen: React.FC = () => {
                       name="product"
                       control={control}
                       render={({ field }) => (
-                        <Select
+                        <AsyncCombobox
+                          value={field.value}
                           onValueChange={(val) => {
                             field.onChange(val);
                             if (val) {
-                              const parsed = JSON.parse(val);
-                              setValue('newSellPrice', parsed.sellPrice);
-                              setValue('newSellPrice2', parsed.sellPrice2);
-                              setValue('newSellPrice3', parsed.sellPrice3);
+                              const product =
+                                productOptions.getItemByValue(val);
+                              if (product) {
+                                setValue('newSellPrice', product.sellPrice);
+                                setValue('newSellPrice2', product.sellPrice2);
+                                setValue('newSellPrice3', product.sellPrice3);
+                              }
                             }
                           }}
-                          value={field.value}
-                        >
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select Item" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {products.map((p) => (
-                              <SelectItem key={p.id} value={JSON.stringify(p)}>
-                                {p.title}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
+                          placeholder="Select Item"
+                          searchPlaceholder="Search products"
+                          selectedLabel={productOptions.getLabelByValue(
+                            field.value
+                          )}
+                          options={productOptions.options}
+                          loading={productOptions.loading}
+                          emptyMessage="No products found."
+                          onSearchChange={productOptions.onSearchChange}
+                        />
                       )}
                     />
                     {errors.product && (

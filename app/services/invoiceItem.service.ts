@@ -1,6 +1,6 @@
 import InvoiceItem, { IInvoiceItem } from '../models/invoiceItem';
 
-export const getInvoiceItems = (args) => {
+export const getInvoiceItems = (args: any) => {
   return InvoiceItem.findAll({
     ...args,
   }).then((data: IInvoiceItem[]) => {

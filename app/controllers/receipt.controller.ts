@@ -1,10 +1,28 @@
 import { toast } from 'sonner';
+import type {
+  PaginatedResult,
+  PaginationQuery,
+  SearchPaginationQuery,
+} from '../types/pagination';
+import { getUserSession } from '../utils/session';
 
-export const searchReceiptFn = async (value: string) => {
+const emptyReceipts = (
+  query?: PaginationQuery
+): PaginatedResult<any> => ({
+  rows: [],
+  total: 0,
+  page: query?.page ?? 1,
+  pageSize: query?.pageSize ?? 25,
+});
+
+export const searchReceiptFn = async (
+  query: SearchPaginationQuery
+) => {
   try {
-    return await window.api.receipt.search(value);
+    return await window.api.receipt.search(query);
   } catch (error: any) {
     toast.error(error.message || '');
+    return emptyReceipts(query);
   }
 };
 
@@ -29,14 +47,16 @@ export const getSingleReceiptFn = async (
     return receipt;
   } catch (error: any) {
     toast.error(error.message || '');
+    return null;
   }
 };
 
-export const getReceiptsFn = async () => {
+export const getReceiptsFn = async (query?: PaginationQuery) => {
   try {
-    return await window.api.receipt.getAll();
+    return await window.api.receipt.getAll(query);
   } catch (error: any) {
     toast.error(error.message || '');
+    return emptyReceipts(query);
   }
 };
 
@@ -51,11 +71,11 @@ export const deleteReceiptFn = async (id: string | number) => {
 
 export const createReceiptFn = async (values: any, cb?: () => void) => {
   try {
-    const user =
-      localStorage.getItem('user') !== null
-        ? JSON.parse(localStorage.getItem('user') || '')
-        : '';
-    await window.api.receipt.create({ ...values, postedBy: user.fullName });
+    const user = getUserSession();
+    await window.api.receipt.create({
+      ...values,
+      postedBy: user?.fullName ?? '',
+    });
     toast.success('Receipt successfully created');
     if (cb) cb();
   } catch (error: any) {

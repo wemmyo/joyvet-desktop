@@ -13,4 +13,5 @@ export default {
   USER: '/user',
   EXPENSE: '/expense',
   STORE_INFO: '/store-info',
+  ANALYTICS: '/analytics',
 };

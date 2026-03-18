@@ -1,6 +1,6 @@
 import Payment, { IPayment } from '../models/payment';
 
-export const getPayments = (args) => {
+export const getPayments = (args: any) => {
   return Payment.findAll({
     ...args,
   }).then((data: IPayment[]) => {
@@ -10,7 +10,7 @@ export const getPayments = (args) => {
   });
 };
 
-export const getPaymentById = (id: number, args) => {
+export const getPaymentById = (id: number, args: any) => {
   return Payment.findByPk(id, {
     ...args,
   }).then((data: IPayment) => {
@@ -18,11 +18,16 @@ export const getPaymentById = (id: number, args) => {
   });
 };
 
-export const updatePayment = (id: number, payment: Partial<IPayment>) => {
+export const updatePayment = (
+  id: number,
+  payment: Partial<IPayment>,
+  transaction?: any
+) => {
   return Payment.update(payment, {
     where: {
       id,
     },
+    transaction,
   }).then((data: IPayment) => {
     return data;
   });

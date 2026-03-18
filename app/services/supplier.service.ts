@@ -1,6 +1,6 @@
 import Supplier, { ISupplier } from '../models/supplier';
 
-export const getSuppliers = (args) => {
+export const getSuppliers = (args: any) => {
   return Supplier.findAll({
     ...args,
   }).then((data: ISupplier[]) => {

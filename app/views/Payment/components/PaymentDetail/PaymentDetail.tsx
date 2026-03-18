@@ -15,6 +15,7 @@ import {
   TableRow,
   TableCell,
 } from '../../../../components/ui/table';
+import { TableFrame } from '../../../../components/ui/table-helpers';
 
 export interface PaymentDetailProps {
   paymentId: number;
@@ -52,40 +53,44 @@ const PaymentDetail = ({ paymentId, refreshPayments }: PaymentDetailProps) => {
 
   return (
     <div className="space-y-3">
-      <Table>
-        <TableBody>
-          <TableRow>
-            <TableCell className="font-medium">Supplier</TableCell>
-            <TableCell>{supplier ? supplier.fullName : ''}</TableCell>
-          </TableRow>
-          <TableRow>
-            <TableCell className="font-medium">Supplier balance</TableCell>
-            <TableCell>
-              {supplier ? numberWithCommas(supplier.balance) : 0.0}
-            </TableCell>
-          </TableRow>
-          <TableRow>
-            <TableCell className="font-medium">Amount</TableCell>
-            <TableCell>{numberWithCommas(amount) || ''}</TableCell>
-          </TableRow>
-          <TableRow>
-            <TableCell className="font-medium">Payment Method</TableCell>
-            <TableCell>{paymentMethod || ''}</TableCell>
-          </TableRow>
-          <TableRow>
-            <TableCell className="font-medium">Bank</TableCell>
-            <TableCell>{bank || ''}</TableCell>
-          </TableRow>
-          <TableRow>
-            <TableCell className="font-medium">Note</TableCell>
-            <TableCell>{note || ''}</TableCell>
-          </TableRow>
-          <TableRow>
-            <TableCell className="font-medium">Date</TableCell>
-            <TableCell>{dayjs(createdAt).format('DD/MM/YYYY') || ''}</TableCell>
-          </TableRow>
-        </TableBody>
-      </Table>
+      <TableFrame>
+        <Table>
+          <TableBody>
+            <TableRow>
+              <TableCell className="font-medium">Supplier</TableCell>
+              <TableCell>{supplier ? supplier.fullName : ''}</TableCell>
+            </TableRow>
+            <TableRow>
+              <TableCell className="font-medium">Supplier balance</TableCell>
+              <TableCell>
+                {supplier ? numberWithCommas(supplier.balance) : 0.0}
+              </TableCell>
+            </TableRow>
+            <TableRow>
+              <TableCell className="font-medium">Amount</TableCell>
+              <TableCell>{numberWithCommas(amount) || ''}</TableCell>
+            </TableRow>
+            <TableRow>
+              <TableCell className="font-medium">Payment Method</TableCell>
+              <TableCell>{paymentMethod || ''}</TableCell>
+            </TableRow>
+            <TableRow>
+              <TableCell className="font-medium">Bank</TableCell>
+              <TableCell>{bank || ''}</TableCell>
+            </TableRow>
+            <TableRow>
+              <TableCell className="font-medium">Note</TableCell>
+              <TableCell>{note || ''}</TableCell>
+            </TableRow>
+            <TableRow>
+              <TableCell className="font-medium">Date</TableCell>
+              <TableCell>
+                {dayjs(createdAt).format('DD/MM/YYYY') || ''}
+              </TableCell>
+            </TableRow>
+          </TableBody>
+        </Table>
+      </TableFrame>
       <Button onClick={() => handleDelete()} variant="destructive">
         Delete
       </Button>

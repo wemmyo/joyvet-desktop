@@ -20,6 +20,7 @@ export default sequelize.define(
       type: Sequelize.INTEGER,
       allowNull: false,
       primaryKey: true,
+      autoIncrement: true,
     },
     fullName: { type: Sequelize.STRING, allowNull: false },
     address: Sequelize.STRING,

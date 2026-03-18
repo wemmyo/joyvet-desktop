@@ -1,10 +1,4 @@
-import React, {
-  Fragment,
-  useEffect,
-  useState,
-  useRef,
-  useCallback,
-} from 'react';
+import React, { useEffect, useState, useRef, useCallback } from 'react';
 import { useReactToPrint } from 'react-to-print';
 import dayjs from 'dayjs';
 import { Plus, Printer } from 'lucide-react';
@@ -17,10 +11,15 @@ import {
   Table,
   TableHeader,
   TableBody,
+  TableFooter,
   TableRow,
   TableHead,
   TableCell,
 } from '../../components/ui/table';
+import {
+  TableEmptyRow,
+  TableFrame,
+} from '../../components/ui/table-helpers';
 
 import CreateExpense from './components/CreateExpense/CreateExpense';
 import { numberWithCommas } from '../../utils/helpers';
@@ -43,21 +42,28 @@ const ExpensesScreen: React.FC = () => {
   const [endDate, setEndDate] = useState(TODAYS_DATE);
   const [expenses, setExpenses] = useState<IExpense[]>([]);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const { openSideContent: openSideBar, closeSideContent: closeSideBar } =
     useSidebarContext();
 
-  const componentRef = useRef(null);
+  const componentRef = useRef<HTMLDivElement>(null);
 
   const handlePrint = useReactToPrint({
-    content: () => componentRef.current,
+    contentRef: componentRef,
   });
 
   const filterExpenses = useCallback(async () => {
     setLoading(true);
-    const response = await filterExpensesFn({ startDate, endDate });
-    setExpenses(response);
-    setLoading(false);
+    setError(null);
+    try {
+      const response = await filterExpensesFn({ startDate, endDate });
+      setExpenses(response);
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Failed to load data');
+    } finally {
+      setLoading(false);
+    }
   }, [endDate, startDate]);
 
   const sum = (prev: number, next: number) => {
@@ -113,57 +119,56 @@ const ExpensesScreen: React.FC = () => {
     openSideContent(CONTENT_EDIT);
   };
 
-  const renderRows = () => {
+  const renderSections = () => {
     const groupedObject = groupBy(expenses, 'type');
 
-    const allSections = Object.entries(groupedObject).map(
-      ([title, itemArray]) => {
-        const itemSum = sumOfAmounts(itemArray);
-        const itemSection = itemArray.map((each) => {
-          return (
-            <TableRow
-              onClick={() => openSingleExpense(each.id)}
-              key={each.id}
-              className="cursor-pointer hover:bg-muted/50"
-            >
-              <TableCell>{each.type}</TableCell>
-              <TableCell>{numberWithCommas(each.amount)}</TableCell>
-              <TableCell>
-                {new Date(each.date).toLocaleDateString('en-gb')}
-              </TableCell>
-              <TableCell>{each.note}</TableCell>
-            </TableRow>
-          );
-        });
-        return (
-          <Fragment key={title}>
+    return Object.entries(groupedObject).map(([title, itemArray]) => {
+      const itemSum = sumOfAmounts(itemArray);
+
+      return (
+        <TableFrame key={title}>
+          <Table>
             <TableHeader>
               <TableRow>
                 <TableHead>{title.toUpperCase()}</TableHead>
-                <TableHead>Amount</TableHead>
+                <TableHead className="text-right">Amount</TableHead>
                 <TableHead>Date</TableHead>
                 <TableHead>Note</TableHead>
               </TableRow>
             </TableHeader>
 
             <TableBody>
-              {itemSection}
-
-              <TableRow>
-                <TableCell />
-                <TableCell>
-                  <strong>₦{numberWithCommas(itemSum)}</strong>
-                </TableCell>
-                <TableCell />
-                <TableCell />
-              </TableRow>
+              {itemArray.map((each) => {
+                return (
+                  <TableRow
+                    onClick={() => openSingleExpense(each.id)}
+                    key={each.id}
+                    className="cursor-pointer"
+                  >
+                    <TableCell>{each.type}</TableCell>
+                    <TableCell className="text-right">
+                      {numberWithCommas(each.amount)}
+                    </TableCell>
+                    <TableCell>
+                      {new Date(each.date).toLocaleDateString('en-gb')}
+                    </TableCell>
+                    <TableCell>{each.note}</TableCell>
+                  </TableRow>
+                );
+              })}
             </TableBody>
-          </Fragment>
-        );
-      }
-    );
-
-    return allSections;
+            <TableFooter>
+              <TableRow>
+                <TableCell colSpan={3}>Total</TableCell>
+                <TableCell className="text-right">
+                  ₦{numberWithCommas(itemSum)}
+                </TableCell>
+              </TableRow>
+            </TableFooter>
+          </Table>
+        </TableFrame>
+      );
+    });
   };
 
   const renderSideContent = () => {
@@ -241,6 +246,7 @@ const ExpensesScreen: React.FC = () => {
 
   return (
     <DashboardLayout screenTitle="Expenses" rightSidebar={renderSideContent()}>
+      {error && <p className="text-destructive text-sm p-4">{error}</p>}
       {loading ? (
         <div className="flex items-center justify-center p-8">
           <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
@@ -251,10 +257,25 @@ const ExpensesScreen: React.FC = () => {
           <h1 className="text-xl font-bold my-3">
             Total: ₦{numberWithCommas(sumOfAmounts(expenses))}
           </h1>
-          <Table>{renderRows()}</Table>
-          <div className="mt-2 text-sm font-semibold text-right">
-            Total: ₦{numberWithCommas(sumOfAmounts(expenses))}
-          </div>
+          {expenses.length > 0 ? (
+            <div className="space-y-4">{renderSections()}</div>
+          ) : (
+            <TableFrame>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Type</TableHead>
+                    <TableHead className="text-right">Amount</TableHead>
+                    <TableHead>Date</TableHead>
+                    <TableHead>Note</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  <TableEmptyRow colSpan={4} message="No expenses found." />
+                </TableBody>
+              </Table>
+            </TableFrame>
+          )}
         </div>
       )}
     </DashboardLayout>
