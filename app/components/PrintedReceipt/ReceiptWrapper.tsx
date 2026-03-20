@@ -1,12 +1,12 @@
 /* eslint-disable react/jsx-indent */
 
-import * as React from 'react';
-import dayjs from 'dayjs';
+import * as React from "react";
+import dayjs from "dayjs";
 
-import styles from './PrintedReceipt.module.css';
-import { numberWithCommas } from '../../utils/helpers';
-import { IInvoice } from '../../models/invoice';
-import { IStoreInfo } from '../../models/storeInfo';
+import styles from "./PrintedReceipt.module.css";
+import { numberWithCommas } from "../../utils/helpers";
+import type { IInvoice } from "../../models/invoice";
+import type { IStoreInfo } from "../../models/storeInfo";
 
 interface ReceiptWrapperProps {
   invoice: IInvoice;
@@ -18,11 +18,11 @@ const ReceiptWrapper = React.forwardRef<HTMLDivElement, ReceiptWrapperProps>(
     return (
       <div ref={ref} className={styles.receipt}>
         <div className={styles.receipt__companyInfo}>
-          <h5>{storeInfo?.storeName ?? 'JOY VETERINARY'}</h5>
+          <h5>{storeInfo?.storeName ?? "JOY VETERINARY"}</h5>
           <p>
-            {storeInfo?.address ?? '37, Iganmode Road, Ota, Ogun State'}
+            {storeInfo?.address ?? "37, Iganmode Road, Ota, Ogun State"}
             <br />
-            {storeInfo?.phoneNumber ?? '08027634893'}
+            {storeInfo?.phoneNumber ?? "08027634893"}
           </p>
           <p>
             <b>Sales Invoice!</b>
@@ -31,7 +31,7 @@ const ReceiptWrapper = React.forwardRef<HTMLDivElement, ReceiptWrapperProps>(
         </div>
         <p>
           Customer:
-          {invoice?.customer?.fullName || 'VALUED CUSTOMER'}
+          {invoice?.customer?.fullName || "VALUED CUSTOMER"}
         </p>
         <p>
           Invoice#:
@@ -39,9 +39,9 @@ const ReceiptWrapper = React.forwardRef<HTMLDivElement, ReceiptWrapperProps>(
         </p>
         <p>
           Transaction Date:
-          {dayjs(invoice.createdAt).format('DD/MM/YYYY')}
+          {dayjs(invoice.createdAt).format("DD/MM/YYYY")}
         </p>
-        <table className="w-full border-collapse text-sm">
+        <table>
           <thead>
             <tr>
               <th className="border px-2 py-1 text-left">Description</th>
@@ -98,8 +98,8 @@ const ReceiptWrapper = React.forwardRef<HTMLDivElement, ReceiptWrapperProps>(
         </p>
       </div>
     );
-  }
+  },
 );
 
 export default ReceiptWrapper;
-ReceiptWrapper.displayName = 'ReceiptWrapper';
+ReceiptWrapper.displayName = "ReceiptWrapper";
