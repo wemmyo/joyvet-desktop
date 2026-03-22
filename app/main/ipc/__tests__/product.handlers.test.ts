@@ -69,6 +69,7 @@ vi.mock('../../../models/purchaseItem', () => ({
 }));
 
 import ProductModel from '../../../models/product';
+import ProductAuditLogModel from '../../../models/productAuditLog';
 import InvoiceItemModel from '../../../models/invoiceItem';
 import PurchaseItemModel from '../../../models/purchaseItem';
 import * as productService from '../../../services/product.service';
@@ -211,11 +212,13 @@ describe('product IPC handlers', () => {
   // ------------------------------------------------------------------ update
   describe('product:update', () => {
     it('updates a product', async () => {
-      (productService.updateProduct as any).mockResolvedValue([1]);
+      vi.mocked(ProductModel.findByPk).mockResolvedValue(mockProduct as any);
+      (ProductModel.update as any).mockResolvedValue([1]);
       await handlers['product:update'](mockEvent, 1, { sellPrice: 600 });
-      expect(productService.updateProduct).toHaveBeenCalledWith(1, {
-        sellPrice: 600,
-      });
+      expect(ProductModel.update).toHaveBeenCalledWith(
+        { sellPrice: 600 },
+        expect.objectContaining({ where: { id: 1 } })
+      );
     });
   });
 
@@ -252,7 +255,9 @@ describe('product IPC handlers', () => {
     it('deletes successfully when not referenced', async () => {
       vi.mocked(InvoiceItemModel.count).mockResolvedValue(0 as any);
       vi.mocked(PurchaseItemModel.count).mockResolvedValue(0 as any);
-      vi.mocked(productService.deleteProduct).mockResolvedValue(undefined as any);
+      vi.mocked(productService.deleteProduct).mockResolvedValue(
+        undefined as any
+      );
 
       await handlers['product:delete'](mockEvent, 1);
 
@@ -345,6 +350,27 @@ describe('product IPC handlers', () => {
         '2024-01-31'
       );
       expect(result).toEqual([{ id: 20, productId: 1 }]);
+    });
+  });
+
+  // ---------------------------------------------------------- getAuditLog
+  describe('product:getAuditLog', () => {
+    it('calls ProductAuditLog.findAll with date-range where clause', async () => {
+      vi.mocked(ProductAuditLogModel.findAll).mockResolvedValue([]);
+      await handlers['product:getAuditLog'](mockEvent, 1, '2024-01-01', '2024-01-31');
+      expect(ProductAuditLogModel.findAll).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({ productId: 1 }),
+          order: [['createdAt', 'DESC']],
+        })
+      );
+    });
+
+    it('returns mapped toJSON results', async () => {
+      const mockLog = { id: 1, changeType: 'stock_change', toJSON: () => ({ id: 1, changeType: 'stock_change' }) };
+      vi.mocked(ProductAuditLogModel.findAll).mockResolvedValue([mockLog as any]);
+      const result = await handlers['product:getAuditLog'](mockEvent, 1, '2024-01-01', '2024-01-31');
+      expect(result).toEqual([{ id: 1, changeType: 'stock_change' }]);
     });
   });
 });

@@ -76,10 +76,16 @@ vi.mock('../../../sliceValidation/index', () => ({
   createInvoiceValidation: vi.fn(),
 }));
 
+vi.mock('../../../services/invoiceAuditLog.service', () => ({
+  createInvoiceAuditLog: vi.fn(),
+  getInvoiceAuditLogs: vi.fn(),
+}));
+
 import InvoiceModel from '../../../models/invoice';
 import CustomerModel from '../../../models/customer';
 import ProductModel from '../../../models/product';
 import InvoiceItemModel from '../../../models/invoiceItem';
+import ProductAuditLogModel from '../../../models/productAuditLog';
 import * as invoiceService from '../../../services/invoice.service';
 import { registerInvoiceHandlers } from '../invoice.handlers';
 
@@ -131,9 +137,9 @@ describe('invoice IPC handlers', () => {
       (InvoiceModel.findAndCountAll as any).mockRejectedValue(
         new Error('DB error')
       );
-      await expect(
-        handlers['invoice:getAll'](mockEvent, {})
-      ).rejects.toThrow('DB error');
+      await expect(handlers['invoice:getAll'](mockEvent, {})).rejects.toThrow(
+        'DB error'
+      );
     });
   });
 
@@ -239,11 +245,13 @@ describe('invoice IPC handlers', () => {
         createInvoice: createInvoiceMock,
       });
 
-      await handlers['invoice:create'](
-        mockEvent,
-        [],
-        { customerId: 1, saleType: 'cash', amount: 5000, profit: 1000, postedBy: 'Jane' }
-      );
+      await handlers['invoice:create'](mockEvent, [], {
+        customerId: 1,
+        saleType: 'cash',
+        amount: 5000,
+        profit: 1000,
+        postedBy: 'Jane',
+      });
 
       expect(createInvoiceMock).toHaveBeenCalledWith(
         expect.objectContaining({ postedBy: 'Jane' }),
@@ -283,11 +291,13 @@ describe('invoice IPC handlers', () => {
         },
       ];
 
-      await handlers['invoice:create'](
-        mockEvent,
-        invoiceItems,
-        { customerId: 1, saleType: 'cash', amount: 1000, profit: 200, postedBy: 'admin' }
-      );
+      await handlers['invoice:create'](mockEvent, invoiceItems, {
+        customerId: 1,
+        saleType: 'cash',
+        amount: 1000,
+        profit: 200,
+        postedBy: 'admin',
+      });
 
       expect(InvoiceItemModel.create).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -319,6 +329,130 @@ describe('invoice IPC handlers', () => {
         page: 1,
         pageSize: 25,
       });
+    });
+  });
+
+  // ------------------------------------------------------------------ delete
+  describe('invoice:delete', () => {
+    it('deletes invoice and restores stock', async () => {
+      // Mock invoice with a product
+      const mockInvoiceWithProducts = {
+        ...mockInvoice,
+        products: [{ id: 10, title: 'Widget', stock: 5, invoiceItem: { quantity: 2, amount: 1000, profit: 200 } }],
+        destroy: vi.fn().mockResolvedValue(undefined),
+        update: vi.fn(),
+      };
+      vi.mocked(InvoiceModel.findByPk).mockResolvedValue(mockInvoiceWithProducts as any);
+      vi.mocked(ProductModel.update).mockResolvedValue([1] as any);
+      await handlers['invoice:delete'](mockEvent, 1);
+      expect(ProductModel.update).toHaveBeenCalledWith(
+        { stock: 7 },
+        expect.objectContaining({ where: { id: 10 } })
+      );
+      expect(mockInvoiceWithProducts.destroy).toHaveBeenCalled();
+    });
+
+    it('throws when invoice not found', async () => {
+      vi.mocked(InvoiceModel.findByPk).mockResolvedValue(null as any);
+      await expect(handlers['invoice:delete'](mockEvent, 999)).rejects.toThrow('Invoice not found');
+    });
+
+    it('decrements customer balance for credit invoices', async () => {
+      const creditInvoice = {
+        ...mockInvoice, saleType: 'credit', products: [],
+        destroy: vi.fn().mockResolvedValue(undefined), update: vi.fn(),
+      };
+      vi.mocked(InvoiceModel.findByPk).mockResolvedValue(creditInvoice as any);
+      await handlers['invoice:delete'](mockEvent, 1);
+      expect(CustomerModel.decrement).toHaveBeenCalledWith(
+        'balance',
+        expect.objectContaining({ by: 5000, where: { id: 1 } })
+      );
+    });
+  });
+
+  // ------------------------------------------------------------------ addItem
+  describe('invoice:addItem', () => {
+    it('creates a new invoice item and updates totals', async () => {
+      const inv = { ...mockInvoice, update: vi.fn().mockResolvedValue(undefined) };
+      const prod = { id: 10, title: 'Widget', stock: 20, buyPrice: 50, update: vi.fn().mockResolvedValue(undefined) };
+      vi.mocked(InvoiceModel.findByPk).mockResolvedValue(inv as any);
+      vi.mocked(ProductModel.findByPk).mockResolvedValue(prod as any);
+      vi.mocked(InvoiceItemModel.findOne).mockResolvedValue(null as any);
+      vi.mocked(InvoiceItemModel.create).mockResolvedValue({} as any);
+      vi.mocked(InvoiceItemModel.findAll).mockResolvedValue([
+        { amount: 1000, profit: 200 } as any,
+      ]);
+      await handlers['invoice:addItem'](mockEvent, { id: 1, saleType: 'cash', postedBy: 'admin' }, {
+        product: { id: 10 }, quantity: 2, unitPrice: 500, amount: 1000, profit: 200,
+      });
+      expect(InvoiceItemModel.create).toHaveBeenCalled();
+      expect(inv.update).toHaveBeenCalled();
+    });
+
+    it('throws when stock is insufficient', async () => {
+      const inv = { ...mockInvoice, update: vi.fn() };
+      const prod = { id: 10, title: 'Widget', stock: 1, buyPrice: 50, update: vi.fn() };
+      vi.mocked(InvoiceModel.findByPk).mockResolvedValue(inv as any);
+      vi.mocked(ProductModel.findByPk).mockResolvedValue(prod as any);
+      await expect(
+        handlers['invoice:addItem'](mockEvent, { id: 1, saleType: 'cash', postedBy: 'admin' }, {
+          product: { id: 10 }, quantity: 5, unitPrice: 500, amount: 2500, profit: 500,
+        })
+      ).rejects.toThrow('Not enough stock');
+      // IMPORTANT: because stock guard fires before writes, InvoiceItem.create must NOT have been called
+      expect(InvoiceItemModel.create).not.toHaveBeenCalled();
+    });
+  });
+
+  // --------------------------------------------------------------- updateItem
+  describe('invoice:updateItem', () => {
+    it('updates quantity and adjusts stock and invoice totals', async () => {
+      const inv = { ...mockInvoice, update: vi.fn().mockResolvedValue(undefined) };
+      const item = { id: 1, quantity: 2, unitPrice: 500, amount: 1000, profit: 200, update: vi.fn().mockResolvedValue(undefined) };
+      const prod = { id: 10, stock: 20, buyPrice: 50 };
+      vi.mocked(InvoiceModel.findByPk).mockResolvedValue(inv as any);
+      vi.mocked(InvoiceItemModel.findByPk).mockResolvedValue(item as any);
+      vi.mocked(ProductModel.findByPk).mockResolvedValue(prod as any);
+      vi.mocked(ProductModel.update).mockResolvedValue([1] as any);
+      vi.mocked(InvoiceItemModel.findAll).mockResolvedValue([{ amount: 1500, profit: 300 } as any]);
+      await handlers['invoice:updateItem'](mockEvent, {
+        invoiceItemId: 1, invoiceId: 1, productId: 10, newQuantity: 3, postedBy: 'admin',
+      });
+      expect(item.update).toHaveBeenCalledWith(
+        expect.objectContaining({ quantity: 3 }), expect.anything()
+      );
+      expect(ProductModel.update).toHaveBeenCalledWith(
+        { stock: 19 }, expect.objectContaining({ where: { id: 10 } })
+      );
+    });
+  });
+
+  // --------------------------------------------------------------- deleteItem
+  describe('invoice:deleteItem', () => {
+    it('removes item and restores stock', async () => {
+      const inv = { ...mockInvoice, update: vi.fn().mockResolvedValue(undefined) };
+      const item = { id: 1, quantity: 2, amount: 1000, profit: 200, destroy: vi.fn().mockResolvedValue(undefined) };
+      const prod = { id: 10, title: 'Widget', stock: 5 };
+      vi.mocked(InvoiceModel.findByPk).mockResolvedValue(inv as any);
+      vi.mocked(InvoiceItemModel.findByPk).mockResolvedValue(item as any);
+      vi.mocked(ProductModel.findByPk).mockResolvedValue(prod as any);
+      vi.mocked(ProductModel.update).mockResolvedValue([1] as any);
+      await handlers['invoice:deleteItem'](mockEvent, { productId: 10, invoiceId: 1, invoiceItemId: 1 });
+      expect(ProductModel.update).toHaveBeenCalledWith(
+        { stock: 7 }, expect.objectContaining({ where: { id: 10 } })
+      );
+      expect(item.destroy).toHaveBeenCalled();
+    });
+  });
+
+  // ------------------------------------------------------------ getAuditLog
+  describe('invoice:getAuditLog', () => {
+    it('calls getInvoiceAuditLogs with the invoiceId', async () => {
+      const { getInvoiceAuditLogs } = await import('../../../services/invoiceAuditLog.service');
+      vi.mocked(getInvoiceAuditLogs).mockResolvedValue([]);
+      await handlers['invoice:getAuditLog'](mockEvent, 42);
+      expect(getInvoiceAuditLogs).toHaveBeenCalledWith(42);
     });
   });
 });

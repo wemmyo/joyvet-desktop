@@ -147,9 +147,9 @@ describe('customer IPC handlers', () => {
       (CustomerModel.findAndCountAll as any).mockRejectedValue(
         new Error('DB error')
       );
-      await expect(
-        handlers['customer:getAll'](mockEvent, {})
-      ).rejects.toThrow('DB error');
+      await expect(handlers['customer:getAll'](mockEvent, {})).rejects.toThrow(
+        'DB error'
+      );
     });
   });
 
@@ -207,6 +207,24 @@ describe('customer IPC handlers', () => {
         fullName: 'Updated Name',
       });
     });
+
+    it('throws when maxPriceLevel exceeds 3', async () => {
+      await expect(
+        handlers['customer:update'](mockEvent, 1, { maxPriceLevel: 4 })
+      ).rejects.toThrow();
+    });
+
+    it('throws when maxPriceLevel is negative', async () => {
+      await expect(
+        handlers['customer:update'](mockEvent, 1, { maxPriceLevel: -1 })
+      ).rejects.toThrow();
+    });
+
+    it('throws when phoneNumber exceeds 50 characters', async () => {
+      await expect(
+        handlers['customer:update'](mockEvent, 1, { phoneNumber: 'x'.repeat(51) })
+      ).rejects.toThrow();
+    });
   });
 
   // ------------------------------------------------------------------ delete
@@ -234,7 +252,9 @@ describe('customer IPC handlers', () => {
     it('deletes successfully when no related records exist', async () => {
       vi.mocked(InvoiceModel.count).mockResolvedValue(0 as any);
       vi.mocked(ReceiptModel.count).mockResolvedValue(0 as any);
-      vi.mocked(customerService.deleteCustomer).mockResolvedValue(undefined as any);
+      vi.mocked(customerService.deleteCustomer).mockResolvedValue(
+        undefined as any
+      );
 
       await handlers['customer:delete'](mockEvent, 1);
 
