@@ -152,7 +152,12 @@ describe('receipt IPC handlers', () => {
 
   describe('receipt:delete', () => {
     it('restores customer balance', async () => {
-      const receipt = { ...mockReceipt, amount: 2000, customerId: 1, destroy: vi.fn() };
+      const receipt = {
+        ...mockReceipt,
+        amount: 2000,
+        customerId: 1,
+        destroy: vi.fn(),
+      };
       (ReceiptModel.findByPk as any).mockResolvedValue(receipt);
       (CustomerModel.increment as any).mockResolvedValue(undefined);
 
@@ -166,9 +171,9 @@ describe('receipt IPC handlers', () => {
 
     it('throws if not found', async () => {
       (ReceiptModel.findByPk as any).mockResolvedValue(null);
-      await expect(
-        handlers['receipt:delete'](mockEvent, 999)
-      ).rejects.toThrow('Receipt not found');
+      await expect(handlers['receipt:delete'](mockEvent, 999)).rejects.toThrow(
+        'Receipt not found'
+      );
     });
   });
 
@@ -189,6 +194,17 @@ describe('receipt IPC handlers', () => {
         expect.objectContaining({ customerId: 1, createdAt: expect.anything() })
       );
     });
+
+    it('throws error when date range exceeds 90 days', async () => {
+      await expect(
+        handlers['receipt:filter'](mockEvent, {
+          startDate: '2024-01-01',
+          endDate: '2024-04-01',
+        })
+      ).rejects.toThrow(
+        'Date range too large. Please select a range smaller than 90 days.'
+      );
+    });
   });
 
   describe('receipt:search', () => {
@@ -197,7 +213,9 @@ describe('receipt IPC handlers', () => {
         rows: [mockReceipt],
         count: 1,
       });
-      const result = await handlers['receipt:search'](mockEvent, { search: '1' });
+      const result = await handlers['receipt:search'](mockEvent, {
+        search: '1',
+      });
       expect(result).toEqual({
         rows: [mockReceipt.toJSON()],
         total: 1,

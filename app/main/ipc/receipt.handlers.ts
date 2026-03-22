@@ -22,12 +22,14 @@ const receiptInputSchema = z.object({
 });
 
 const receiptUpdateSchema = z.object({
-  amount: z.number().min(1),
+  amount: z.coerce.number().min(1),
   customerId: z.number(),
   paymentMethod: z.string().min(1).optional(),
   bank: z.string().optional().nullable(),
   note: z.string().optional().nullable(),
 });
+
+const MAX_DATE_RANGE = 90;
 
 export function registerReceiptHandlers(): void {
   ipcMain.handle(
@@ -42,7 +44,9 @@ export function registerReceiptHandlers(): void {
         order: [['createdAt', 'DESC']],
       });
       return toPaginatedResult(
-        rows.map((receipt: any) => (receipt.toJSON ? receipt.toJSON() : receipt)),
+        rows.map((receipt: any) =>
+          receipt.toJSON ? receipt.toJSON() : receipt
+        ),
         count,
         page,
         pageSize
@@ -76,7 +80,7 @@ export function registerReceiptHandlers(): void {
     withAppReady(async (_event, values: any) => {
       const parsedValues = receiptInputSchema.parse(values);
 
-      await database.transaction(async (t: any) => {
+      return await database.transaction(async (t: any) => {
         const receipt = await Receipt.create(
           {
             customerId: parsedValues.customerId,
@@ -169,6 +173,13 @@ export function registerReceiptHandlers(): void {
       const whereClause: Record<string, unknown> = {};
 
       if (startDate && endDate) {
+        const dateDifference = dayjs(endDate).diff(dayjs(startDate), 'days');
+        if (dateDifference > MAX_DATE_RANGE) {
+          throw new Error(
+            `Date range too large. Please select a range smaller than ${MAX_DATE_RANGE} days.`
+          );
+        }
+
         whereClause.createdAt = {
           [Op.between]: [
             `${dayjs(startDate).format('YYYY-MM-DD')} 00:00:00`,
@@ -190,7 +201,9 @@ export function registerReceiptHandlers(): void {
       });
 
       return toPaginatedResult(
-        rows.map((receipt: any) => (receipt.toJSON ? receipt.toJSON() : receipt)),
+        rows.map((receipt: any) =>
+          receipt.toJSON ? receipt.toJSON() : receipt
+        ),
         count,
         page,
         pageSize
@@ -218,7 +231,9 @@ export function registerReceiptHandlers(): void {
       });
 
       return toPaginatedResult(
-        rows.map((receipt: any) => (receipt.toJSON ? receipt.toJSON() : receipt)),
+        rows.map((receipt: any) =>
+          receipt.toJSON ? receipt.toJSON() : receipt
+        ),
         count,
         page,
         pageSize

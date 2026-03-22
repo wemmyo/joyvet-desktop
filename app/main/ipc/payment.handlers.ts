@@ -21,6 +21,8 @@ const paymentInputSchema = z.object({
   note: z.string().optional().nullable(),
 });
 
+const MAX_DATE_RANGE = 90;
+
 export function registerPaymentHandlers(): void {
   ipcMain.handle(
     'payment:getAll',
@@ -34,7 +36,9 @@ export function registerPaymentHandlers(): void {
         order: [['createdAt', 'DESC']],
       });
       return toPaginatedResult(
-        rows.map((payment: any) => (payment.toJSON ? payment.toJSON() : payment)),
+        rows.map((payment: any) =>
+          payment.toJSON ? payment.toJSON() : payment
+        ),
         count,
         page,
         pageSize
@@ -64,7 +68,7 @@ export function registerPaymentHandlers(): void {
     withAppReady(async (_event, values: any) => {
       const parsedValues = paymentInputSchema.parse(values);
 
-      await database.transaction(async (t: any) => {
+      return await database.transaction(async (t: any) => {
         const payment = await Payment.create(
           {
             supplierId: parsedValues.supplierId,
@@ -157,6 +161,13 @@ export function registerPaymentHandlers(): void {
       const whereClause: Record<string, unknown> = {};
 
       if (startDate && endDate) {
+        const dateDifference = dayjs(endDate).diff(dayjs(startDate), 'days');
+        if (dateDifference > MAX_DATE_RANGE) {
+          throw new Error(
+            `Date range too large. Please select a range smaller than ${MAX_DATE_RANGE} days.`
+          );
+        }
+
         whereClause.createdAt = {
           [Op.between]: [
             `${dayjs(startDate).format('YYYY-MM-DD')} 00:00:00`,
@@ -178,7 +189,9 @@ export function registerPaymentHandlers(): void {
       });
 
       return toPaginatedResult(
-        rows.map((payment: any) => (payment.toJSON ? payment.toJSON() : payment)),
+        rows.map((payment: any) =>
+          payment.toJSON ? payment.toJSON() : payment
+        ),
         count,
         page,
         pageSize
@@ -206,7 +219,9 @@ export function registerPaymentHandlers(): void {
       });
 
       return toPaginatedResult(
-        rows.map((payment: any) => (payment.toJSON ? payment.toJSON() : payment)),
+        rows.map((payment: any) =>
+          payment.toJSON ? payment.toJSON() : payment
+        ),
         count,
         page,
         pageSize

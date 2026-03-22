@@ -151,7 +151,12 @@ describe('payment IPC handlers', () => {
 
   describe('payment:delete', () => {
     it('restores supplier balance', async () => {
-      const payment = { ...mockPayment, amount: 3000, supplierId: 1, destroy: vi.fn() };
+      const payment = {
+        ...mockPayment,
+        amount: 3000,
+        supplierId: 1,
+        destroy: vi.fn(),
+      };
       (PaymentModel.findByPk as any).mockResolvedValue(payment);
       (SupplierModel.increment as any).mockResolvedValue(undefined);
 
@@ -165,9 +170,9 @@ describe('payment IPC handlers', () => {
 
     it('throws if not found', async () => {
       (PaymentModel.findByPk as any).mockResolvedValue(null);
-      await expect(
-        handlers['payment:delete'](mockEvent, 999)
-      ).rejects.toThrow('Payment not found');
+      await expect(handlers['payment:delete'](mockEvent, 999)).rejects.toThrow(
+        'Payment not found'
+      );
     });
   });
 
@@ -188,6 +193,17 @@ describe('payment IPC handlers', () => {
         expect.objectContaining({ supplierId: 1, createdAt: expect.anything() })
       );
     });
+
+    it('throws error when date range exceeds 90 days', async () => {
+      await expect(
+        handlers['payment:filter'](mockEvent, {
+          startDate: '2024-01-01',
+          endDate: '2024-04-01',
+        })
+      ).rejects.toThrow(
+        'Date range too large. Please select a range smaller than 90 days.'
+      );
+    });
   });
 
   describe('payment:search', () => {
@@ -196,7 +212,9 @@ describe('payment IPC handlers', () => {
         rows: [mockPayment],
         count: 1,
       });
-      const result = await handlers['payment:search'](mockEvent, { search: '1' });
+      const result = await handlers['payment:search'](mockEvent, {
+        search: '1',
+      });
       expect(result).toEqual({
         rows: [mockPayment.toJSON()],
         total: 1,
