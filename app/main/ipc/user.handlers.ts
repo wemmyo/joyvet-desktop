@@ -108,7 +108,7 @@ export function registerUserHandlers(): void {
         fullName: z.string().min(3).max(255),
         username: z.string().min(3).max(255),
         password: z.string().min(8).max(255),
-        role: z.string().min(3).max(255),
+        role: z.enum(['admin', 'manager', 'staff', 'newbie']),
       });
       schema.parse(values);
       const hashedPassword = await hash(values.password, 12);
@@ -125,7 +125,17 @@ export function registerUserHandlers(): void {
     'user:update',
     withAppReady(async (_event, id: number, values: any) => {
       z.number().parse(id);
-      await updateUser(id, values);
+      const updateSchema = z.object({
+        fullName: z.string().min(3).max(255).optional(),
+        username: z.string().min(3).max(255).optional(),
+        role: z.enum(['admin', 'manager', 'staff', 'newbie']).optional(),
+        password: z.string().min(8).max(255).optional(),
+      });
+      const parsed = updateSchema.parse(values);
+      if (parsed.password) {
+        parsed.password = await hash(parsed.password, 12);
+      }
+      await updateUser(id, parsed);
     })
   );
 
@@ -133,6 +143,13 @@ export function registerUserHandlers(): void {
     'user:delete',
     withAppReady(async (_event, id: number) => {
       z.number().parse(id);
+      const user = await User.findByPk(id);
+      if (user && (user as any).role === 'admin') {
+        const adminCount = await User.count({ where: { role: 'admin' } });
+        if (adminCount <= 1) {
+          throw new Error('Cannot delete the last admin account');
+        }
+      }
       await deleteUser(id);
     })
   );

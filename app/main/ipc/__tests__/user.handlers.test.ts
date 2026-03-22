@@ -43,6 +43,8 @@ vi.mock('../../../services/user.service', () => ({
 vi.mock('../../../models/user', () => ({
   default: {
     findAndCountAll: vi.fn(),
+    findByPk: vi.fn(),
+    count: vi.fn(),
   },
 }));
 
@@ -151,7 +153,9 @@ describe('user IPC handlers', () => {
       });
       const result = await handlers['user:getAll'](mockEvent, {});
       expect(result).toEqual({
-        rows: [{ id: 1, fullName: 'Admin User', username: 'admin', role: 'admin' }],
+        rows: [
+          { id: 1, fullName: 'Admin User', username: 'admin', role: 'admin' },
+        ],
         total: 1,
         page: 1,
         pageSize: 25,
@@ -163,9 +167,9 @@ describe('user IPC handlers', () => {
       (UserModel.findAndCountAll as any).mockRejectedValue(
         new Error('DB error')
       );
-      await expect(
-        handlers['user:getAll'](mockEvent, {})
-      ).rejects.toThrow('DB error');
+      await expect(handlers['user:getAll'](mockEvent, {})).rejects.toThrow(
+        'DB error'
+      );
     });
   });
 
@@ -193,7 +197,7 @@ describe('user IPC handlers', () => {
         fullName: 'New User',
         username: 'newuser',
         password: 'pass1234',
-        role: 'cashier',
+        role: 'staff',
       });
       expect(hashMock).toHaveBeenCalledWith('pass1234', 12);
       expect(userService.createUser).toHaveBeenCalledWith(
@@ -208,7 +212,7 @@ describe('user IPC handlers', () => {
         fullName: 'New User',
         username: 'newuser',
         password: 'plain1234',
-        role: 'cashier',
+        role: 'staff',
       });
       const callArg = (userService.createUser as any).mock.calls[0][0];
       expect(callArg.password).not.toBe('plain123');
@@ -262,12 +266,49 @@ describe('user IPC handlers', () => {
   // ------------------------------------------------------------------ delete
   describe('user:delete', () => {
     it('deletes a user by id', async () => {
+      (UserModel.findByPk as any).mockResolvedValue(null);
       (userService.deleteUser as any).mockResolvedValue(1);
       await handlers['user:delete'](mockEvent, 1);
       expect(userService.deleteUser).toHaveBeenCalledWith(1);
     });
 
     it('does not throw when no row is deleted', async () => {
+      (UserModel.findByPk as any).mockResolvedValue(null);
+      (userService.deleteUser as any).mockResolvedValue(0);
+      await handlers['user:delete'](mockEvent, 999);
+      expect(userService.deleteUser).toHaveBeenCalledWith(999);
+    });
+
+    it('throws when deleting the last admin', async () => {
+      const adminUser = { id: 1, role: 'admin' };
+      (UserModel.findByPk as any).mockResolvedValue(adminUser);
+      (UserModel.count as any).mockResolvedValue(1);
+      await expect(
+        handlers['user:delete'](mockEvent, 1)
+      ).rejects.toThrow('Cannot delete the last admin account');
+      expect(userService.deleteUser).not.toHaveBeenCalled();
+    });
+
+    it('succeeds when deleting an admin with other admins', async () => {
+      const adminUser = { id: 1, role: 'admin' };
+      (UserModel.findByPk as any).mockResolvedValue(adminUser);
+      (UserModel.count as any).mockResolvedValue(2);
+      (userService.deleteUser as any).mockResolvedValue(1);
+      await handlers['user:delete'](mockEvent, 1);
+      expect(userService.deleteUser).toHaveBeenCalledWith(1);
+    });
+
+    it('succeeds when deleting a non-admin user', async () => {
+      const staffUser = { id: 2, role: 'staff' };
+      (UserModel.findByPk as any).mockResolvedValue(staffUser);
+      (userService.deleteUser as any).mockResolvedValue(1);
+      await handlers['user:delete'](mockEvent, 2);
+      expect(userService.deleteUser).toHaveBeenCalledWith(2);
+      expect(UserModel.count).not.toHaveBeenCalled();
+    });
+
+    it('succeeds when user does not exist', async () => {
+      (UserModel.findByPk as any).mockResolvedValue(null);
       (userService.deleteUser as any).mockResolvedValue(0);
       await handlers['user:delete'](mockEvent, 999);
       expect(userService.deleteUser).toHaveBeenCalledWith(999);
