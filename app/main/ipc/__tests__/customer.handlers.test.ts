@@ -43,6 +43,32 @@ vi.mock('../../../models/customer', () => ({
   },
 }));
 
+vi.mock('../../../models/invoice', () => ({
+  default: {
+    count: vi.fn(),
+    findAll: vi.fn(),
+    sum: vi.fn(),
+  },
+}));
+
+vi.mock('../../../models/receipt', () => ({
+  default: {
+    count: vi.fn(),
+    findAll: vi.fn(),
+    sum: vi.fn(),
+  },
+}));
+
+vi.mock('../../../models/product', () => ({
+  default: {
+    findAndCountAll: vi.fn(),
+    findByPk: vi.fn(),
+    update: vi.fn(),
+    decrement: vi.fn(),
+    increment: vi.fn(),
+  },
+}));
+
 vi.mock('../../../services/receipt.service', () => ({
   getReceipts: vi.fn(),
 }));
@@ -56,6 +82,8 @@ vi.mock('../../../services/invoice.service', () => ({
 }));
 
 import CustomerModel from '../../../models/customer';
+import InvoiceModel from '../../../models/invoice';
+import ReceiptModel from '../../../models/receipt';
 import * as customerService from '../../../services/customer.service';
 import * as invoiceService from '../../../services/invoice.service';
 import * as receiptService from '../../../services/receipt.service';
@@ -183,9 +211,33 @@ describe('customer IPC handlers', () => {
 
   // ------------------------------------------------------------------ delete
   describe('customer:delete', () => {
-    it('deletes a customer', async () => {
-      (customerService.deleteCustomer as any).mockResolvedValue(1);
+    it('throws if customer has invoices', async () => {
+      vi.mocked(InvoiceModel.count).mockResolvedValue(3 as any);
+      vi.mocked(ReceiptModel.count).mockResolvedValue(0 as any);
+
+      await expect(handlers['customer:delete'](mockEvent, 1)).rejects.toThrow(
+        'Cannot delete customer with existing invoices'
+      );
+      expect(customerService.deleteCustomer).not.toHaveBeenCalled();
+    });
+
+    it('throws if customer has receipts', async () => {
+      vi.mocked(InvoiceModel.count).mockResolvedValue(0 as any);
+      vi.mocked(ReceiptModel.count).mockResolvedValue(2 as any);
+
+      await expect(handlers['customer:delete'](mockEvent, 1)).rejects.toThrow(
+        'Cannot delete customer with existing receipts'
+      );
+      expect(customerService.deleteCustomer).not.toHaveBeenCalled();
+    });
+
+    it('deletes successfully when no related records exist', async () => {
+      vi.mocked(InvoiceModel.count).mockResolvedValue(0 as any);
+      vi.mocked(ReceiptModel.count).mockResolvedValue(0 as any);
+      vi.mocked(customerService.deleteCustomer).mockResolvedValue(undefined as any);
+
       await handlers['customer:delete'](mockEvent, 1);
+
       expect(customerService.deleteCustomer).toHaveBeenCalledWith(1);
     });
   });

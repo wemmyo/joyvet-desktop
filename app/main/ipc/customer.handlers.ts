@@ -75,6 +75,20 @@ export function registerCustomerHandlers(): void {
   ipcMain.handle(
     'customer:delete',
     withAppReady(async (_event, id: number) => {
+      const invoiceCount = await Invoice.count({ where: { customerId: id } });
+      if (invoiceCount > 0) {
+        throw new Error(
+          `Cannot delete customer with existing invoices (${invoiceCount} found). Remove invoices first.`
+        );
+      }
+
+      const receiptCount = await Receipt.count({ where: { customerId: id } });
+      if (receiptCount > 0) {
+        throw new Error(
+          `Cannot delete customer with existing receipts (${receiptCount} found). Remove receipts first.`
+        );
+      }
+
       await deleteCustomer(id);
     })
   );
