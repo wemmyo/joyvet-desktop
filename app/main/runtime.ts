@@ -71,6 +71,7 @@ const registerAssociations = (models: CoreModels) => {
     Receipt,
     Supplier,
     ProductAuditLog,
+    InvoiceAuditLog,
   } = models;
 
   Invoice.belongsToMany(Product, { through: InvoiceItem });
@@ -87,6 +88,8 @@ const registerAssociations = (models: CoreModels) => {
   Product.belongsToMany(Purchase, { through: PurchaseItem });
   Product.hasMany(ProductAuditLog, { foreignKey: 'productId' });
   ProductAuditLog.belongsTo(Product, { foreignKey: 'productId' });
+  Invoice.hasMany(InvoiceAuditLog, { foreignKey: 'invoiceId' });
+  InvoiceAuditLog.belongsTo(Invoice, { foreignKey: 'invoiceId' });
 
   associationsRegistered = true;
 };
