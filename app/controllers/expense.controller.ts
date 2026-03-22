@@ -1,9 +1,10 @@
 import { toast } from 'sonner';
 import { IExpense } from '../models/expense';
 
-export const searchExpenseFn = async (value: string) => {
+export const searchExpenseFn = async (value: string): Promise<IExpense[]> => {
   try {
-    return await window.api.expense.search(value);
+    const result = await window.api.expense.search({ search: value });
+    return result.rows ?? [];
   } catch (error: any) {
     toast.error(error.message || '');
     return [];
@@ -63,6 +64,7 @@ export const filterExpensesFn = async ({
 export const createExpenseFn = async (values: any, cb?: () => void) => {
   try {
     const response = await window.api.expense.create(values);
+    toast.success('Expense created successfully');
     if (cb) cb();
     return response;
   } catch (error: any) {

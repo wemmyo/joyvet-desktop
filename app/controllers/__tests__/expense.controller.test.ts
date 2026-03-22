@@ -41,9 +41,9 @@ describe('expense controller', () => {
 
   describe('searchExpenseFn', () => {
     it('calls window.api.expense.search', async () => {
-      mockApi.expense.search.mockResolvedValue([mockExpense]);
+      mockApi.expense.search.mockResolvedValue({ rows: [mockExpense], total: 1, page: 1, pageSize: 25 });
       const result = await searchExpenseFn('Medicine');
-      expect(mockApi.expense.search).toHaveBeenCalledWith('Medicine');
+      expect(mockApi.expense.search).toHaveBeenCalledWith({ search: 'Medicine' });
       expect(result).toEqual([mockExpense]);
     });
 

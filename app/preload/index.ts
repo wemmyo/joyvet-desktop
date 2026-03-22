@@ -1,5 +1,6 @@
 import { contextBridge, ipcRenderer } from 'electron';
 import type {
+  ExpenseListQuery,
   InvoiceListQuery,
   PaginationQuery,
   PaymentListQuery,
@@ -39,6 +40,8 @@ const api = {
     filterById: (query: InvoiceListQuery) =>
       ipcRenderer.invoke('invoice:filterById', query),
     getSingle: (id: number) => ipcRenderer.invoke('invoice:getSingle', id),
+    getAuditLog: (invoiceId?: number) =>
+      ipcRenderer.invoke('invoice:getAuditLog', invoiceId),
   },
   customer: {
     getAll: (query?: PaginationQuery) =>
@@ -181,18 +184,19 @@ const api = {
       ipcRenderer.invoke('receipt:filter', query),
   },
   expense: {
-    getAll: () => ipcRenderer.invoke('expense:getAll'),
+    getAll: (query?: ExpenseListQuery) =>
+      ipcRenderer.invoke('expense:getAll', query),
     getById: (id: number) => ipcRenderer.invoke('expense:getById', id),
     create: (values: any) => ipcRenderer.invoke('expense:create', values),
     update: (id: number, values: any) =>
       ipcRenderer.invoke('expense:update', id, values),
     delete: (id: number) => ipcRenderer.invoke('expense:delete', id),
-    search: (value: string) => ipcRenderer.invoke('expense:search', value),
     filter: (startDate: string, endDate: string) =>
       ipcRenderer.invoke('expense:filter', startDate, endDate),
+    search: (query: ExpenseListQuery) =>
+      ipcRenderer.invoke('expense:search', query),
     getTypes: () => ipcRenderer.invoke('expense:getTypes'),
-    createType: (values: any) =>
-      ipcRenderer.invoke('expense:createType', values),
+    createType: (values: { type: string }) => ipcRenderer.invoke('expense:createType', values),
   },
   storeInfo: {
     getAll: () => ipcRenderer.invoke('storeInfo:getAll'),

@@ -46,3 +46,8 @@ export interface PaginatedResult<T> {
   page: number;
   pageSize: number;
 }
+
+export interface ExpenseListQuery extends SearchPaginationQuery {
+  startDate?: string;
+  endDate?: string;
+}

@@ -49,6 +49,11 @@ export const productListQuerySchema = searchPaginationSchema.extend({
   filter: z.enum(['inStock']).optional(),
 });
 
+export const expenseListQuerySchema = searchPaginationSchema.extend({
+  startDate: z.string().optional(),
+  endDate: z.string().optional(),
+});
+
 export const toPaginationOptions = ({
   page,
   pageSize,
