@@ -26,6 +26,14 @@ vi.mock('../../database', () => ({
   },
 }));
 
+vi.mock('../../../utils/database', () => ({
+  default: {},
+}));
+
+vi.mock('../../../models/productAuditLog', () => ({
+  default: { create: vi.fn(), findAll: vi.fn() },
+}));
+
 vi.mock('../../../services/product.service', () => ({
   getProducts: vi.fn(),
   getProductById: vi.fn(),
@@ -52,7 +60,17 @@ vi.mock('../../../services/invoiceItem.service', () => ({
   getInvoiceItems: vi.fn(),
 }));
 
+vi.mock('../../../models/invoiceItem', () => ({
+  default: { count: vi.fn() },
+}));
+
+vi.mock('../../../models/purchaseItem', () => ({
+  default: { count: vi.fn() },
+}));
+
 import ProductModel from '../../../models/product';
+import InvoiceItemModel from '../../../models/invoiceItem';
+import PurchaseItemModel from '../../../models/purchaseItem';
 import * as productService from '../../../services/product.service';
 import * as invoiceItemService from '../../../services/invoiceItem.service';
 import * as purchaseItemService from '../../../services/purchaseItem.service';
@@ -204,8 +222,40 @@ describe('product IPC handlers', () => {
   // ------------------------------------------------------------------ delete
   describe('product:delete', () => {
     it('deletes a product', async () => {
+      vi.mocked(InvoiceItemModel.count).mockResolvedValue(0 as any);
+      vi.mocked(PurchaseItemModel.count).mockResolvedValue(0 as any);
       (productService.deleteProduct as any).mockResolvedValue(1);
       await handlers['product:delete'](mockEvent, 1);
+      expect(productService.deleteProduct).toHaveBeenCalledWith(1);
+    });
+
+    it('throws if product has invoice items', async () => {
+      vi.mocked(InvoiceItemModel.count).mockResolvedValue(4 as any);
+      vi.mocked(PurchaseItemModel.count).mockResolvedValue(0 as any);
+
+      await expect(handlers['product:delete'](mockEvent, 1)).rejects.toThrow(
+        'Cannot delete product referenced by existing invoices'
+      );
+      expect(productService.deleteProduct).not.toHaveBeenCalled();
+    });
+
+    it('throws if product has purchase items', async () => {
+      vi.mocked(InvoiceItemModel.count).mockResolvedValue(0 as any);
+      vi.mocked(PurchaseItemModel.count).mockResolvedValue(2 as any);
+
+      await expect(handlers['product:delete'](mockEvent, 1)).rejects.toThrow(
+        'Cannot delete product referenced by existing purchases'
+      );
+      expect(productService.deleteProduct).not.toHaveBeenCalled();
+    });
+
+    it('deletes successfully when not referenced', async () => {
+      vi.mocked(InvoiceItemModel.count).mockResolvedValue(0 as any);
+      vi.mocked(PurchaseItemModel.count).mockResolvedValue(0 as any);
+      vi.mocked(productService.deleteProduct).mockResolvedValue(undefined as any);
+
+      await handlers['product:delete'](mockEvent, 1);
+
       expect(productService.deleteProduct).toHaveBeenCalledWith(1);
     });
   });

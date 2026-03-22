@@ -2,6 +2,7 @@ import { ipcMain } from 'electron';
 import { Op } from 'sequelize';
 import dayjs from 'dayjs';
 import { z } from 'zod';
+import database from '../database';
 import Product from '../../models/product';
 import ProductAuditLog from '../../models/productAuditLog';
 import {
@@ -17,6 +18,8 @@ import {
   toPaginationOptions,
 } from './listing';
 import { withAppReady } from '../runtime';
+import InvoiceItem from '../../models/invoiceItem';
+import PurchaseItem from '../../models/purchaseItem';
 
 export function registerProductHandlers(): void {
   ipcMain.handle(
@@ -71,6 +74,19 @@ export function registerProductHandlers(): void {
   ipcMain.handle(
     'product:update',
     withAppReady(async (_event, id: number, values: any) => {
+      const updateSchema = z.object({
+        title: z.string().min(1).max(255).optional(),
+        stock: z.number().optional(),
+        buyPrice: z.number().optional(),
+        sellPrice: z.number().optional(),
+        sellPrice2: z.number().optional(),
+        sellPrice3: z.number().optional(),
+        reorderLevel: z.number().optional(),
+        productCode: z.string().optional().nullable(),
+        numberInPack: z.number().optional().nullable(),
+        _postedBy: z.string().optional(),
+      });
+      updateSchema.parse(values);
       const { _postedBy, ...productValues } = values;
       const postedBy = _postedBy || 'unknown';
 
@@ -99,37 +115,53 @@ export function registerProductHandlers(): void {
         }
       });
 
-      await Product.update(productValues, { where: { id } });
+      await database.transaction(async (t: any) => {
+        await Product.update(productValues, { where: { id }, transaction: t });
 
-      if (stockChanged) {
-        await ProductAuditLog.create({
-          productId: id,
-          changeType: 'stock_change',
-          delta: productValues.stock - stockBefore,
-          stockBefore,
-          stockAfter: productValues.stock,
-          reason: 'manual_edit',
-          referenceType: 'manual',
-          postedBy,
-        });
-      }
+        if (stockChanged) {
+          await ProductAuditLog.create({
+            productId: id,
+            changeType: 'stock_change',
+            delta: productValues.stock - stockBefore,
+            stockBefore,
+            stockAfter: productValues.stock,
+            reason: 'manual_edit',
+            referenceType: 'manual',
+            postedBy,
+          }, { transaction: t });
+        }
 
-      if (priceChanges.length > 0) {
-        await ProductAuditLog.create({
-          productId: id,
-          changeType: 'price_change',
-          priceChanges: JSON.stringify(priceChanges),
-          reason: 'manual_edit',
-          referenceType: 'manual',
-          postedBy,
-        });
-      }
+        if (priceChanges.length > 0) {
+          await ProductAuditLog.create({
+            productId: id,
+            changeType: 'price_change',
+            priceChanges: JSON.stringify(priceChanges),
+            reason: 'manual_edit',
+            referenceType: 'manual',
+            postedBy,
+          }, { transaction: t });
+        }
+      });
     })
   );
 
   ipcMain.handle(
     'product:delete',
     withAppReady(async (_event, id: number) => {
+      const invoiceItemCount = await InvoiceItem.count({ where: { productId: id } });
+      if (invoiceItemCount > 0) {
+        throw new Error(
+          `Cannot delete product referenced by existing invoices (${invoiceItemCount} line items). Remove invoices first.`
+        );
+      }
+
+      const purchaseItemCount = await PurchaseItem.count({ where: { productId: id } });
+      if (purchaseItemCount > 0) {
+        throw new Error(
+          `Cannot delete product referenced by existing purchases (${purchaseItemCount} line items). Remove purchases first.`
+        );
+      }
+
       await deleteProduct(id);
     })
   );
@@ -176,7 +208,7 @@ export function registerProductHandlers(): void {
             createdAt: {
               [Op.between]: [
                 `${dayjs(startDate).format('YYYY-MM-DD')} 00:00:00`,
-                `${dayjs(endDate).format('YYYY-MM-DD')} 23:00:00`,
+                `${dayjs(endDate).format('YYYY-MM-DD')} 23:59:59`,
               ],
             },
           },
@@ -197,7 +229,7 @@ export function registerProductHandlers(): void {
             createdAt: {
               [Op.between]: [
                 `${dayjs(startDate).format('YYYY-MM-DD')} 00:00:00`,
-                `${dayjs(endDate).format('YYYY-MM-DD')} 23:00:00`,
+                `${dayjs(endDate).format('YYYY-MM-DD')} 23:59:59`,
               ],
             },
           },
