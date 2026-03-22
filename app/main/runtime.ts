@@ -1,24 +1,28 @@
 import { maybeSeedDevelopmentAdmin } from './bootstrap';
+import type { ModelStatic, Model, Sequelize } from 'sequelize';
+
+type AnyModel = ModelStatic<Model>;
 
 type CoreModels = {
-  database: any;
-  Customer: any;
-  Invoice: any;
-  Payment: any;
-  Product: any;
-  Purchase: any;
-  Receipt: any;
-  Supplier: any;
-  InvoiceItem: any;
-  PurchaseItem: any;
-  User: any;
-  ProductAuditLog: any;
-  StoreInfo: any;
-  Expense: any;
-  ExpenseType: any;
+  database: Sequelize;
+  Customer: AnyModel;
+  Invoice: AnyModel;
+  Payment: AnyModel;
+  Product: AnyModel;
+  Purchase: AnyModel;
+  Receipt: AnyModel;
+  Supplier: AnyModel;
+  InvoiceItem: AnyModel;
+  PurchaseItem: AnyModel;
+  User: AnyModel;
+  ProductAuditLog: AnyModel;
+  InvoiceAuditLog: AnyModel;
+  StoreInfo: AnyModel;
+  Expense: AnyModel;
+  ExpenseType: AnyModel;
 };
 
-let authReadyPromise: Promise<{ User: any }> | null = null;
+let authReadyPromise: Promise<{ User: AnyModel }> | null = null;
 let appReadyPromise: Promise<void> | null = null;
 let associationsRegistered = false;
 
@@ -44,6 +48,7 @@ const loadCoreModels = async (): Promise<CoreModels> => {
     PurchaseItem: (await import('../models/purchaseItem')).default,
     User: (await import('../models/user')).default,
     ProductAuditLog: (await import('../models/productAuditLog')).default,
+    InvoiceAuditLog: (await import('../models/invoiceAuditLog')).default,
     StoreInfo: (await import('../models/storeInfo')).default,
     Expense: (await import('../models/expense')).default,
     ExpenseType: (await import('../models/expenseType')).default,
