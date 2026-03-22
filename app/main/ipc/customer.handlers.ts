@@ -68,7 +68,15 @@ export function registerCustomerHandlers(): void {
   ipcMain.handle(
     'customer:update',
     withAppReady(async (_event, id: number, values: any) => {
-      await updateCustomer(id, values);
+      const updateSchema = z.object({
+        fullName: z.string().min(1).max(255).optional(),
+        phoneNumber: z.string().max(50).optional().nullable(),
+        address: z.string().max(500).optional().nullable(),
+        balance: z.number().optional(),
+        maxPriceLevel: z.number().min(0).max(3).optional(),
+      });
+      const parsed = updateSchema.parse(values);
+      await updateCustomer(id, parsed);
     })
   );
 
@@ -127,7 +135,7 @@ export function registerCustomerHandlers(): void {
           createdAt: {
             [Op.between]: [
               `${dayjs(startDate).format('YYYY-MM-DD')} 00:00:00`,
-              `${dayjs(endDate).format('YYYY-MM-DD')} 23:00:00`,
+              `${dayjs(endDate).format('YYYY-MM-DD')} 23:59:59`,
             ],
           },
         },
@@ -141,16 +149,17 @@ export function registerCustomerHandlers(): void {
     'customer:getReceipts',
     withAppReady(
       async (_event, customerId: number, startDate?: string, endDate?: string) => {
+        const whereClause: any = { customerId };
+        if (startDate && endDate) {
+          whereClause.createdAt = {
+            [Op.between]: [
+              `${dayjs(startDate).format('YYYY-MM-DD')} 00:00:00`,
+              `${dayjs(endDate).format('YYYY-MM-DD')} 23:59:59`,
+            ],
+          };
+        }
         const receipts = await getReceipts({
-          where: {
-            customerId,
-            createdAt: {
-              [Op.between]: [
-                `${dayjs(startDate).format('YYYY-MM-DD')} 00:00:00`,
-                `${dayjs(endDate).format('YYYY-MM-DD')} 23:00:00`,
-              ],
-            },
-          },
+          where: whereClause,
           order: [['createdAt', 'DESC']],
         });
         return receipts.map((r: any) => (r.toJSON ? r.toJSON() : r));
