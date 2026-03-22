@@ -2,6 +2,7 @@ import { ipcMain } from 'electron';
 import { compare, hash } from 'bcryptjs';
 import { z } from 'zod';
 import User from '../../models/user';
+import database from '../database';
 import {
   getUserById,
   updateUser,
@@ -143,14 +144,19 @@ export function registerUserHandlers(): void {
     'user:delete',
     withAppReady(async (_event, id: number) => {
       z.number().parse(id);
-      const user = await User.findByPk(id);
-      if (user && (user as any).role === 'admin') {
-        const adminCount = await User.count({ where: { role: 'admin' } });
-        if (adminCount <= 1) {
-          throw new Error('Cannot delete the last admin account');
+      await database.transaction(async (t: any) => {
+        const user = await User.findByPk(id, { transaction: t });
+        if (user && (user as any).role === 'admin') {
+          const adminCount = await User.count({
+            where: { role: 'admin' },
+            transaction: t,
+          });
+          if (adminCount <= 1) {
+            throw new Error('Cannot delete the last admin account');
+          }
         }
-      }
-      await deleteUser(id);
+        await User.destroy({ where: { id }, transaction: t });
+      });
     })
   );
 }

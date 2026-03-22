@@ -45,6 +45,7 @@ vi.mock('../../../models/user', () => ({
     findAndCountAll: vi.fn(),
     findByPk: vi.fn(),
     count: vi.fn(),
+    destroy: vi.fn(),
   },
 }));
 
@@ -224,7 +225,7 @@ describe('user IPC handlers', () => {
           fullName: 'ab',
           username: 'validuser',
           password: 'validpass',
-          role: 'cashier',
+          role: 'staff',
         })
       ).rejects.toThrow();
     });
@@ -235,7 +236,7 @@ describe('user IPC handlers', () => {
           fullName: 'Valid Name',
           username: 'ab',
           password: 'validpass',
-          role: 'cashier',
+          role: 'staff',
         })
       ).rejects.toThrow();
     });
@@ -246,7 +247,7 @@ describe('user IPC handlers', () => {
           fullName: 'Valid Name',
           username: 'validuser',
           password: 'ab',
-          role: 'cashier',
+          role: 'staff',
         })
       ).rejects.toThrow();
     });
@@ -267,16 +268,20 @@ describe('user IPC handlers', () => {
   describe('user:delete', () => {
     it('deletes a user by id', async () => {
       (UserModel.findByPk as any).mockResolvedValue(null);
-      (userService.deleteUser as any).mockResolvedValue(1);
+      (UserModel.destroy as any).mockResolvedValue(1);
       await handlers['user:delete'](mockEvent, 1);
-      expect(userService.deleteUser).toHaveBeenCalledWith(1);
+      expect(UserModel.destroy).toHaveBeenCalledWith(
+        expect.objectContaining({ where: { id: 1 } })
+      );
     });
 
     it('does not throw when no row is deleted', async () => {
       (UserModel.findByPk as any).mockResolvedValue(null);
-      (userService.deleteUser as any).mockResolvedValue(0);
+      (UserModel.destroy as any).mockResolvedValue(0);
       await handlers['user:delete'](mockEvent, 999);
-      expect(userService.deleteUser).toHaveBeenCalledWith(999);
+      expect(UserModel.destroy).toHaveBeenCalledWith(
+        expect.objectContaining({ where: { id: 999 } })
+      );
     });
 
     it('throws when deleting the last admin', async () => {
@@ -286,32 +291,38 @@ describe('user IPC handlers', () => {
       await expect(
         handlers['user:delete'](mockEvent, 1)
       ).rejects.toThrow('Cannot delete the last admin account');
-      expect(userService.deleteUser).not.toHaveBeenCalled();
+      expect(UserModel.destroy).not.toHaveBeenCalled();
     });
 
     it('succeeds when deleting an admin with other admins', async () => {
       const adminUser = { id: 1, role: 'admin' };
       (UserModel.findByPk as any).mockResolvedValue(adminUser);
       (UserModel.count as any).mockResolvedValue(2);
-      (userService.deleteUser as any).mockResolvedValue(1);
+      (UserModel.destroy as any).mockResolvedValue(1);
       await handlers['user:delete'](mockEvent, 1);
-      expect(userService.deleteUser).toHaveBeenCalledWith(1);
+      expect(UserModel.destroy).toHaveBeenCalledWith(
+        expect.objectContaining({ where: { id: 1 } })
+      );
     });
 
     it('succeeds when deleting a non-admin user', async () => {
       const staffUser = { id: 2, role: 'staff' };
       (UserModel.findByPk as any).mockResolvedValue(staffUser);
-      (userService.deleteUser as any).mockResolvedValue(1);
+      (UserModel.destroy as any).mockResolvedValue(1);
       await handlers['user:delete'](mockEvent, 2);
-      expect(userService.deleteUser).toHaveBeenCalledWith(2);
+      expect(UserModel.destroy).toHaveBeenCalledWith(
+        expect.objectContaining({ where: { id: 2 } })
+      );
       expect(UserModel.count).not.toHaveBeenCalled();
     });
 
     it('succeeds when user does not exist', async () => {
       (UserModel.findByPk as any).mockResolvedValue(null);
-      (userService.deleteUser as any).mockResolvedValue(0);
+      (UserModel.destroy as any).mockResolvedValue(0);
       await handlers['user:delete'](mockEvent, 999);
-      expect(userService.deleteUser).toHaveBeenCalledWith(999);
+      expect(UserModel.destroy).toHaveBeenCalledWith(
+        expect.objectContaining({ where: { id: 999 } })
+      );
     });
   });
 });
