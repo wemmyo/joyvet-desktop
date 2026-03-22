@@ -77,6 +77,20 @@ export function registerSupplierHandlers(): void {
   ipcMain.handle(
     'supplier:delete',
     withAppReady(async (_event, id: number) => {
+      const purchaseCount = await Purchase.count({ where: { supplierId: id } });
+      if (purchaseCount > 0) {
+        throw new Error(
+          `Cannot delete supplier with existing purchases (${purchaseCount} found). Remove purchases first.`
+        );
+      }
+
+      const paymentCount = await Payment.count({ where: { supplierId: id } });
+      if (paymentCount > 0) {
+        throw new Error(
+          `Cannot delete supplier with existing payments (${paymentCount} found). Remove payments first.`
+        );
+      }
+
       await deleteSupplier(id);
     })
   );
@@ -121,7 +135,7 @@ export function registerSupplierHandlers(): void {
           createdAt: {
             [Op.between]: [
               `${dayjs(startDate).format('YYYY-MM-DD')} 00:00:00`,
-              `${dayjs(endDate).format('YYYY-MM-DD')} 23:00:00`,
+              `${dayjs(endDate).format('YYYY-MM-DD')} 23:59:59`,
             ],
           },
         },
@@ -147,7 +161,7 @@ export function registerSupplierHandlers(): void {
           createdAt: {
             [Op.between]: [
               `${dayjs(startDate).format('YYYY-MM-DD')} 00:00:00`,
-              `${dayjs(endDate).format('YYYY-MM-DD')} 23:00:00`,
+              `${dayjs(endDate).format('YYYY-MM-DD')} 23:59:59`,
             ],
           },
         },

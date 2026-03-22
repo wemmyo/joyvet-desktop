@@ -36,12 +36,23 @@ vi.mock('../../../models/supplier', () => ({
 vi.mock('../../../models/payment', () => ({
   default: {
     findAll: vi.fn(),
+    count: vi.fn(),
+    sum: vi.fn(),
   },
 }));
 
 vi.mock('../../../models/purchase', () => ({
   default: {
     findAll: vi.fn(),
+    count: vi.fn(),
+    sum: vi.fn(),
+  },
+}));
+
+vi.mock('../../../models/product', () => ({
+  default: {
+    findAndCountAll: vi.fn(),
+    findByPk: vi.fn(),
   },
 }));
 
@@ -144,8 +155,40 @@ describe('supplier IPC handlers', () => {
 
   describe('supplier:delete', () => {
     it('calls deleteSupplier', async () => {
+      vi.mocked(PurchaseModel.count).mockResolvedValue(0 as any);
+      vi.mocked(PaymentModel.count).mockResolvedValue(0 as any);
       (supplierService.deleteSupplier as any).mockResolvedValue(undefined);
       await handlers['supplier:delete'](mockEvent, 1);
+      expect(supplierService.deleteSupplier).toHaveBeenCalledWith(1);
+    });
+
+    it('throws if supplier has purchases', async () => {
+      vi.mocked(PurchaseModel.count).mockResolvedValue(5 as any);
+      vi.mocked(PaymentModel.count).mockResolvedValue(0 as any);
+
+      await expect(handlers['supplier:delete'](mockEvent, 1)).rejects.toThrow(
+        'Cannot delete supplier with existing purchases'
+      );
+      expect(supplierService.deleteSupplier).not.toHaveBeenCalled();
+    });
+
+    it('throws if supplier has payments', async () => {
+      vi.mocked(PurchaseModel.count).mockResolvedValue(0 as any);
+      vi.mocked(PaymentModel.count).mockResolvedValue(1 as any);
+
+      await expect(handlers['supplier:delete'](mockEvent, 1)).rejects.toThrow(
+        'Cannot delete supplier with existing payments'
+      );
+      expect(supplierService.deleteSupplier).not.toHaveBeenCalled();
+    });
+
+    it('deletes successfully when no related records exist', async () => {
+      vi.mocked(PurchaseModel.count).mockResolvedValue(0 as any);
+      vi.mocked(PaymentModel.count).mockResolvedValue(0 as any);
+      vi.mocked(supplierService.deleteSupplier).mockResolvedValue(undefined as any);
+
+      await handlers['supplier:delete'](mockEvent, 1);
+
       expect(supplierService.deleteSupplier).toHaveBeenCalledWith(1);
     });
   });
