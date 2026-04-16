@@ -50,9 +50,17 @@ describe('expense:getAll', () => {
       count: 1,
     } as any);
 
-    const result = await handlers['expense:getAll'](mockEvent, { page: 1, pageSize: 25 });
+    const result = await handlers['expense:getAll'](mockEvent, {
+      page: 1,
+      pageSize: 25,
+    });
 
-    expect(result).toMatchObject({ rows: expect.any(Array), total: 1, page: 1, pageSize: 25 });
+    expect(result).toMatchObject({
+      rows: expect.any(Array),
+      total: 1,
+      page: 1,
+      pageSize: 25,
+    });
     expect(ExpenseModel.findAndCountAll).toHaveBeenCalled();
   });
 });
@@ -69,7 +77,11 @@ describe('expense:filter', () => {
       { id: 1, toJSON: () => ({ id: 1 }) },
     ] as any);
 
-    const result = await handlers['expense:filter'](mockEvent, '2025-01-01', '2025-01-31');
+    const result = await handlers['expense:filter'](
+      mockEvent,
+      '2025-01-01',
+      '2025-01-31'
+    );
     expect(result).toHaveLength(1);
   });
 });
@@ -81,7 +93,11 @@ describe('expense:search', () => {
       count: 1,
     } as any);
 
-    const result = await handlers['expense:search'](mockEvent, { search: 'fuel', page: 1, pageSize: 25 });
+    const result = await handlers['expense:search'](mockEvent, {
+      search: 'fuel',
+      page: 1,
+      pageSize: 25,
+    });
     expect(result).toMatchObject({ rows: expect.any(Array), total: 1 });
   });
 });

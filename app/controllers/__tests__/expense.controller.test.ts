@@ -41,9 +41,16 @@ describe('expense controller', () => {
 
   describe('searchExpenseFn', () => {
     it('calls window.api.expense.search', async () => {
-      mockApi.expense.search.mockResolvedValue({ rows: [mockExpense], total: 1, page: 1, pageSize: 25 });
+      mockApi.expense.search.mockResolvedValue({
+        rows: [mockExpense],
+        total: 1,
+        page: 1,
+        pageSize: 25,
+      });
       const result = await searchExpenseFn('Medicine');
-      expect(mockApi.expense.search).toHaveBeenCalledWith({ search: 'Medicine' });
+      expect(mockApi.expense.search).toHaveBeenCalledWith({
+        search: 'Medicine',
+      });
       expect(result).toEqual([mockExpense]);
     });
 
@@ -105,13 +112,19 @@ describe('expense controller', () => {
   describe('filterExpensesFn', () => {
     it('returns filtered result', async () => {
       mockApi.expense.filter.mockResolvedValue([mockExpense]);
-      const result = await filterExpensesFn({ startDate: '2024-01-01', endDate: '2024-01-31' });
+      const result = await filterExpensesFn({
+        startDate: '2024-01-01',
+        endDate: '2024-01-31',
+      });
       expect(result).toEqual([mockExpense]);
     });
 
     it('calls toast.error on failure', async () => {
       mockApi.expense.filter.mockRejectedValue(new Error('Filter failed'));
-      const result = await filterExpensesFn({ startDate: '2024-01-01', endDate: '2024-01-31' });
+      const result = await filterExpensesFn({
+        startDate: '2024-01-01',
+        endDate: '2024-01-31',
+      });
       expect(toast.error).toHaveBeenCalled();
       expect(result).toEqual([]);
     });

@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from 'react';
+import { toast } from 'sonner';
 import { useSidebarContext } from '../../../../contexts/SidebarContext';
 import {
   getSingleUserFn,
   deleteUserFn,
-  getUsersFn,
   updateUserFn,
 } from '../../../../controllers/user.controller';
 import { IUser } from '../../../../models/user';
@@ -20,9 +20,13 @@ import {
 
 export interface EditUserProps {
   userId: string | number;
+  onUpdate?: () => void;
 }
 
-const EditUser: React.FC<EditUserProps> = ({ userId }: EditUserProps) => {
+const EditUser: React.FC<EditUserProps> = ({
+  userId,
+  onUpdate,
+}: EditUserProps) => {
   const [user, setUser] = useState<IUser>({} as IUser);
   const [values, setValues] = useState({
     fullName: '',
@@ -33,28 +37,43 @@ const EditUser: React.FC<EditUserProps> = ({ userId }: EditUserProps) => {
 
   useEffect(() => {
     const fetchData = async () => {
-      const response = await getSingleUserFn(Number(userId));
-      setUser(response);
-      setValues({
-        fullName: response.fullName || '',
-        username: response.username || '',
-        role: response.role || '',
-      });
+      try {
+        const response = await getSingleUserFn(Number(userId));
+        if (!response) return;
+        setUser(response);
+        setValues({
+          fullName: response.fullName || '',
+          username: response.username || '',
+          role: response.role || '',
+        });
+      } catch (err: unknown) {
+        toast.error(err instanceof Error ? err.message : 'Failed to load user');
+      }
     };
     fetchData();
   }, [userId]);
 
   const deleteUser = async () => {
-    await deleteUserFn(Number(userId));
-    await getUsersFn();
-    closeSideContent();
+    try {
+      await deleteUserFn(Number(userId));
+      toast.success('User deleted');
+      onUpdate?.();
+      closeSideContent();
+    } catch {
+      toast.error('Failed to delete user');
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    await updateUserFn(values, Number(userId));
-    closeSideContent();
-    await getUsersFn();
+    try {
+      await updateUserFn(values, Number(userId));
+      toast.success('User updated');
+      onUpdate?.();
+      closeSideContent();
+    } catch {
+      toast.error('Failed to update user');
+    }
   };
 
   return (

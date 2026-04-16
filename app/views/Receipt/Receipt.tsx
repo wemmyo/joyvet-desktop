@@ -25,10 +25,7 @@ import {
   TableHead,
   TableCell,
 } from '../../components/ui/table';
-import {
-  TableEmptyRow,
-  TableFrame,
-} from '../../components/ui/table-helpers';
+import { TableEmptyRow, TableFrame } from '../../components/ui/table-helpers';
 
 const CONTENT_CREATE = 'create';
 const CONTENT_EDIT = 'edit';
@@ -118,10 +115,19 @@ const ReceiptsScreen: React.FC = () => {
 
   const renderSideContent = () => {
     if (sideContent === CONTENT_CREATE) {
-      return <CreateReceipt onRefresh={() => fetchReceipts(DEFAULT_PAGE, appliedSearch)} />;
+      return (
+        <CreateReceipt
+          onRefresh={() => fetchReceipts(DEFAULT_PAGE, appliedSearch)}
+        />
+      );
     }
     if (sideContent === CONTENT_EDIT) {
-      return <EditReceipt receiptId={receiptId} />;
+      return (
+        <EditReceipt
+          receiptId={receiptId}
+          onRefresh={() => fetchReceipts(page, appliedSearch)}
+        />
+      );
     }
     if (sideContent === CONTENT_DETAIL) {
       return <ReceiptDetail receiptId={receiptId} />;

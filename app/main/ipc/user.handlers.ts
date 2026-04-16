@@ -8,7 +8,6 @@ import {
   updateUser,
   createUser,
   findOneUser,
-  deleteUser,
 } from '../../services/user.service';
 import { sanitizeUserSession, type UserSession } from '../../types/session';
 import {
@@ -17,6 +16,7 @@ import {
   toPaginationOptions,
 } from './listing';
 import { ensureAuthReady, withAppReady } from '../runtime';
+import { setActiveSession, requireRole } from '../session';
 
 const toRendererUser = (user: any): Record<string, unknown> | null => {
   const serializedUser = user && user.toJSON ? user.toJSON() : user;
@@ -64,6 +64,13 @@ export function registerUserHandlers(): void {
         throw new Error('Invalid user session');
       }
 
+      // Store the session in the main process so IPC handlers can check roles.
+      setActiveSession({
+        id: rendererUser.id,
+        role: rendererUser.role,
+        fullName: rendererUser.fullName,
+      });
+
       return rendererUser;
     }
   );
@@ -105,6 +112,7 @@ export function registerUserHandlers(): void {
   ipcMain.handle(
     'user:create',
     withAppReady(async (_event, values: any) => {
+      requireRole(['admin', 'manager']);
       const schema = z.object({
         fullName: z.string().min(3).max(255),
         username: z.string().min(3).max(255),
@@ -113,18 +121,28 @@ export function registerUserHandlers(): void {
       });
       schema.parse(values);
       const hashedPassword = await hash(values.password, 12);
-      await createUser({
-        fullName: values.fullName,
-        username: values.username,
-        password: hashedPassword,
-        role: values.role,
-      });
+      try {
+        await createUser({
+          fullName: values.fullName,
+          username: values.username,
+          password: hashedPassword,
+          role: values.role,
+        });
+      } catch (error: any) {
+        if (error.name === 'SequelizeUniqueConstraintError') {
+          throw new Error(
+            `A user with the username "${values.username}" already exists`
+          );
+        }
+        throw error;
+      }
     })
   );
 
   ipcMain.handle(
     'user:update',
     withAppReady(async (_event, id: number, values: any) => {
+      requireRole(['admin', 'manager']);
       z.number().parse(id);
       const updateSchema = z.object({
         fullName: z.string().min(3).max(255).optional(),
@@ -143,6 +161,7 @@ export function registerUserHandlers(): void {
   ipcMain.handle(
     'user:delete',
     withAppReady(async (_event, id: number) => {
+      requireRole(['admin']);
       z.number().parse(id);
       await database.transaction(async (t: any) => {
         const user = await User.findByPk(id, { transaction: t });
@@ -157,6 +176,13 @@ export function registerUserHandlers(): void {
         }
         await User.destroy({ where: { id }, transaction: t });
       });
+    })
+  );
+
+  ipcMain.handle(
+    'user:logout',
+    withAppReady(async () => {
+      setActiveSession(null);
     })
   );
 }

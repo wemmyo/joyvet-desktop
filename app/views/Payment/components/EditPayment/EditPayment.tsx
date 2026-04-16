@@ -1,4 +1,5 @@
 import React, { useEffect } from 'react';
+import { toast } from 'sonner';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -10,7 +11,6 @@ import { Label } from '../../../../components/ui/label';
 import { useAsyncComboboxOptions } from '../../../../hooks/useAsyncComboboxOptions';
 import { useSidebarContext } from '../../../../contexts/SidebarContext';
 import {
-  getPaymentsFn,
   getSinglePaymentFn,
   updatePaymentFn,
 } from '../../../../controllers/payment.controller';
@@ -24,6 +24,7 @@ import { MAX_PAGE_SIZE } from '../../../../types/pagination';
 
 export interface EditPaymentProps {
   paymentId: string | number;
+  onRefresh?: () => void;
 }
 
 const editPaymentSchema = z.object({
@@ -36,6 +37,7 @@ type EditPaymentFormValues = z.infer<typeof editPaymentSchema>;
 
 const EditPayment: React.FC<EditPaymentProps> = ({
   paymentId,
+  onRefresh,
 }: EditPaymentProps) => {
   const { closeSideContent } = useSidebarContext();
   const supplierOptions = useAsyncComboboxOptions<ISupplier>({
@@ -82,16 +84,21 @@ const EditPayment: React.FC<EditPaymentProps> = ({
   }, [paymentId, reset]);
 
   const onSubmit = async (values: EditPaymentFormValues) => {
-    await updatePaymentFn(
-      {
-        ...values,
-        supplierId: Number(values.supplierId),
-        amount: Number(values.amount),
-      },
-      Number(paymentId)
-    );
-    closeSideContent();
-    await getPaymentsFn();
+    try {
+      await updatePaymentFn(
+        {
+          ...values,
+          supplierId: Number(values.supplierId),
+          amount: Number(values.amount),
+        },
+        Number(paymentId)
+      );
+      toast.success('Payment updated');
+      closeSideContent();
+      onRefresh?.();
+    } catch {
+      toast.error('Failed to update payment');
+    }
   };
 
   return (

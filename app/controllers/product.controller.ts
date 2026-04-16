@@ -7,9 +7,7 @@ import type {
 } from '../types/pagination';
 import { getUserSession } from '../utils/session';
 
-const emptyProducts = (
-  query?: PaginationQuery
-): PaginatedResult<IProduct> => ({
+const emptyProducts = (query?: PaginationQuery): PaginatedResult<IProduct> => ({
   rows: [],
   total: 0,
   page: query?.page ?? 1,

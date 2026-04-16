@@ -46,9 +46,7 @@ declare global {
         create: (values: any) => Promise<any>;
         update: (id: number, values: any) => Promise<void>;
         delete: (id: number) => Promise<void>;
-        search: (
-          query: SearchPaginationQuery
-        ) => Promise<PaginatedResult<any>>;
+        search: (query: SearchPaginationQuery) => Promise<PaginatedResult<any>>;
         getInvoices: (
           customerId: number,
           startDate: string,
@@ -98,6 +96,7 @@ declare global {
           username: string;
           password: string;
         }) => Promise<any>;
+        logout: () => Promise<void>;
       };
       supplier: {
         getAll: (query?: PaginationQuery) => Promise<PaginatedResult<any>>;
@@ -105,9 +104,7 @@ declare global {
         create: (values: any) => Promise<void>;
         update: (id: number, values: any) => Promise<void>;
         delete: (id: number) => Promise<void>;
-        search: (
-          query: SearchPaginationQuery
-        ) => Promise<PaginatedResult<any>>;
+        search: (query: SearchPaginationQuery) => Promise<PaginatedResult<any>>;
         getActivityTimeline: (
           supplierId: number,
           startDate: string,
@@ -120,9 +117,7 @@ declare global {
         create: (purchaseItems: any[], purchase: any) => Promise<any>;
         update: (id: number, purchaseItems: any[], meta: any) => Promise<void>;
         delete: (id: number) => Promise<void>;
-        search: (
-          query: SearchPaginationQuery
-        ) => Promise<PaginatedResult<any>>;
+        search: (query: SearchPaginationQuery) => Promise<PaginatedResult<any>>;
         filter: (query: PurchaseListQuery) => Promise<PaginatedResult<any>>;
         getBySupplier: (
           supplierId: number,
@@ -136,9 +131,7 @@ declare global {
         create: (values: any) => Promise<any>;
         update: (id: number, values: any) => Promise<void>;
         delete: (id: number) => Promise<void>;
-        search: (
-          query: SearchPaginationQuery
-        ) => Promise<PaginatedResult<any>>;
+        search: (query: SearchPaginationQuery) => Promise<PaginatedResult<any>>;
         filter: (query: PaymentListQuery) => Promise<PaginatedResult<any>>;
         getBySupplier: (
           supplierId: number,
@@ -152,9 +145,7 @@ declare global {
         create: (values: any) => Promise<any>;
         update: (id: number, values: any) => Promise<void>;
         delete: (id: number) => Promise<void>;
-        search: (
-          query: SearchPaginationQuery
-        ) => Promise<PaginatedResult<any>>;
+        search: (query: SearchPaginationQuery) => Promise<PaginatedResult<any>>;
         filter: (query: ReceiptListQuery) => Promise<PaginatedResult<any>>;
       };
       expense: {

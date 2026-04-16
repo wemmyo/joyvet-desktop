@@ -8,9 +8,9 @@ const supplier = require("./supplier-D6HH6Jzr.js");
 const payment = require("./payment-9-9dtC0H.js");
 const purchase = require("./purchase-BlBXNXRZ.js");
 const product = require("./product-D77rVCIx.js");
-const listing = require("./listing-fG59YslC.js");
+const database = require("./database-Dx0B-evc.js");
+const listing = require("./listing-iK2d8TQt.js");
 const index = require("../index.js");
-require("./database-Dx0B-evc.js");
 require("fs");
 require("path");
 require("electron-updater");
@@ -23,15 +23,6 @@ const getSupplierById = (id) => {
 };
 const updateSupplier = (id, supplier$1) => {
   return supplier.default.update(supplier$1, {
-    where: {
-      id
-    }
-  }).then((data) => {
-    return data;
-  });
-};
-const deleteSupplier = (id) => {
-  return supplier.default.destroy({
     where: {
       id
     }
@@ -55,7 +46,9 @@ function registerSupplierHandlers() {
         order: [["fullName", "ASC"]]
       });
       return listing.toPaginatedResult(
-        rows.map((supplier2) => supplier2.toJSON ? supplier2.toJSON() : supplier2),
+        rows.map(
+          (supplier2) => supplier2.toJSON ? supplier2.toJSON() : supplier2
+        ),
         count,
         page,
         pageSize
@@ -98,7 +91,27 @@ function registerSupplierHandlers() {
   electron.ipcMain.handle(
     "supplier:delete",
     index.withAppReady(async (_event, id) => {
-      await deleteSupplier(id);
+      await database.database.transaction(async (t) => {
+        const purchaseCount = await purchase.default.count({
+          where: { supplierId: id },
+          transaction: t
+        });
+        if (purchaseCount > 0) {
+          throw new Error(
+            `Cannot delete supplier with existing purchases (${purchaseCount} found). Remove purchases first.`
+          );
+        }
+        const paymentCount = await payment.default.count({
+          where: { supplierId: id },
+          transaction: t
+        });
+        if (paymentCount > 0) {
+          throw new Error(
+            `Cannot delete supplier with existing payments (${paymentCount} found). Remove payments first.`
+          );
+        }
+        await supplier.default.destroy({ where: { id }, transaction: t });
+      });
     })
   );
   electron.ipcMain.handle(
@@ -115,7 +128,9 @@ function registerSupplierHandlers() {
         order: [["fullName", "ASC"]]
       });
       return listing.toPaginatedResult(
-        rows.map((supplier2) => supplier2.toJSON ? supplier2.toJSON() : supplier2),
+        rows.map(
+          (supplier2) => supplier2.toJSON ? supplier2.toJSON() : supplier2
+        ),
         count,
         page,
         pageSize
@@ -124,51 +139,55 @@ function registerSupplierHandlers() {
   );
   electron.ipcMain.handle(
     "payment:getBySupplier",
-    index.withAppReady(async (_event, supplierId, startDate, endDate) => {
-      const schema = zod.z.object({
-        supplierId: zod.z.number(),
-        startDate: zod.z.string(),
-        endDate: zod.z.string()
-      });
-      schema.parse({ supplierId, startDate, endDate });
-      const payments = await payment.default.findAll({
-        where: {
-          supplierId,
-          createdAt: {
-            [sequelize.Op.between]: [
-              `${dayjs(startDate).format("YYYY-MM-DD")} 00:00:00`,
-              `${dayjs(endDate).format("YYYY-MM-DD")} 23:00:00`
-            ]
-          }
-        },
-        order: [["createdAt", "DESC"]]
-      });
-      return payments.map((p) => p.toJSON ? p.toJSON() : p);
-    })
+    index.withAppReady(
+      async (_event, supplierId, startDate, endDate) => {
+        const schema = zod.z.object({
+          supplierId: zod.z.number(),
+          startDate: zod.z.string(),
+          endDate: zod.z.string()
+        });
+        schema.parse({ supplierId, startDate, endDate });
+        const payments = await payment.default.findAll({
+          where: {
+            supplierId,
+            createdAt: {
+              [sequelize.Op.between]: [
+                `${dayjs(startDate).format("YYYY-MM-DD")} 00:00:00`,
+                `${dayjs(endDate).format("YYYY-MM-DD")} 23:59:59`
+              ]
+            }
+          },
+          order: [["createdAt", "DESC"]]
+        });
+        return payments.map((p) => p.toJSON ? p.toJSON() : p);
+      }
+    )
   );
   electron.ipcMain.handle(
     "purchase:getBySupplier",
-    index.withAppReady(async (_event, supplierId, startDate, endDate) => {
-      const schema = zod.z.object({
-        supplierId: zod.z.number(),
-        startDate: zod.z.string(),
-        endDate: zod.z.string()
-      });
-      schema.parse({ supplierId, startDate, endDate });
-      const purchases = await purchase.default.findAll({
-        where: {
-          supplierId,
-          createdAt: {
-            [sequelize.Op.between]: [
-              `${dayjs(startDate).format("YYYY-MM-DD")} 00:00:00`,
-              `${dayjs(endDate).format("YYYY-MM-DD")} 23:00:00`
-            ]
-          }
-        },
-        order: [["createdAt", "DESC"]]
-      });
-      return purchases.map((p) => p.toJSON ? p.toJSON() : p);
-    })
+    index.withAppReady(
+      async (_event, supplierId, startDate, endDate) => {
+        const schema = zod.z.object({
+          supplierId: zod.z.number(),
+          startDate: zod.z.string(),
+          endDate: zod.z.string()
+        });
+        schema.parse({ supplierId, startDate, endDate });
+        const purchases = await purchase.default.findAll({
+          where: {
+            supplierId,
+            createdAt: {
+              [sequelize.Op.between]: [
+                `${dayjs(startDate).format("YYYY-MM-DD")} 00:00:00`,
+                `${dayjs(endDate).format("YYYY-MM-DD")} 23:59:59`
+              ]
+            }
+          },
+          order: [["createdAt", "DESC"]]
+        });
+        return purchases.map((p) => p.toJSON ? p.toJSON() : p);
+      }
+    )
   );
   electron.ipcMain.handle(
     "supplier:getActivityTimeline",

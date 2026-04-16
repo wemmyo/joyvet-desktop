@@ -41,7 +41,9 @@ const EditPurchase: React.FC<EditPurchaseProps> = ({
   onCancel,
   onSuccess,
 }) => {
-  const [invoiceNumber, setInvoiceNumber] = useState(purchase.invoiceNumber || '');
+  const [invoiceNumber, setInvoiceNumber] = useState(
+    purchase.invoiceNumber || ''
+  );
   const [items, setItems] = useState<EditableItem[]>(
     (purchase.products || []).map((p: any) => ({
       productId: p.id,
@@ -55,7 +57,11 @@ const EditPurchase: React.FC<EditPurchaseProps> = ({
   );
   const [saving, setSaving] = useState(false);
 
-  const updateItem = (index: number, field: keyof EditableItem, value: number | string) => {
+  const updateItem = (
+    index: number,
+    field: keyof EditableItem,
+    value: number | string
+  ) => {
     setItems((prev) => {
       const updated = [...prev];
       updated[index] = { ...updated[index], [field]: value };
@@ -186,7 +192,10 @@ const EditPurchase: React.FC<EditPurchaseProps> = ({
                 </TableRow>
               ))
             ) : (
-              <TableEmptyRow colSpan={5} message="No items. Add products above." />
+              <TableEmptyRow
+                colSpan={5}
+                message="No items. Add products above."
+              />
             )}
           </TableBody>
         </Table>

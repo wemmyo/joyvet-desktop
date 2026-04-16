@@ -112,9 +112,7 @@ export function registerAnalyticsHandlers(): void {
       return (results as any[]).map((row: any) => ({
         ...row,
         marginPct:
-          row.revenue > 0
-            ? Math.round((row.profit / row.revenue) * 100)
-            : 0,
+          row.revenue > 0 ? Math.round((row.profit / row.revenue) * 100) : 0,
       }));
     })
   );
@@ -147,11 +145,13 @@ export function registerAnalyticsHandlers(): void {
   ipcMain.handle(
     'analytics:getLowStockProducts',
     withAppReady(async (_event, input: unknown = {}) => {
-      const { page, pageSize, search } = z.object({
-        page: z.coerce.number().optional().default(1),
-        pageSize: z.coerce.number().optional().default(25),
-        search: z.string().optional(),
-      }).parse(input);
+      const { page, pageSize, search } = z
+        .object({
+          page: z.coerce.number().optional().default(1),
+          pageSize: z.coerce.number().optional().default(25),
+          search: z.string().optional(),
+        })
+        .parse(input);
 
       const offset = (page - 1) * pageSize;
       const searchClause = search ? `AND LOWER(title) LIKE LOWER(:search)` : '';
@@ -221,9 +221,7 @@ export function registerAnalyticsHandlers(): void {
       return (results as any[]).map((row: any) => ({
         ...row,
         pct:
-          totalExpenses > 0
-            ? Math.round((row.total / totalExpenses) * 100)
-            : 0,
+          totalExpenses > 0 ? Math.round((row.total / totalExpenses) * 100) : 0,
       }));
     })
   );

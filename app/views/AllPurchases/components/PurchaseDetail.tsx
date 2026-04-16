@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import dayjs from 'dayjs';
+import { toast } from 'sonner';
 
 import { isAdmin, numberWithCommas } from '../../../utils/helpers';
 import { useSidebarContext } from '../../../contexts/SidebarContext';
@@ -51,9 +52,16 @@ const SalesDetail: React.FC<SalesDetailProps> = ({
   }, [purchaseId]);
 
   const handleDelete = async () => {
-    await deletePurchaseFn(purchaseId);
-    closeSideContent();
-    onRefresh?.();
+    try {
+      await deletePurchaseFn(purchaseId);
+      toast.success('Purchase deleted');
+      closeSideContent();
+      onRefresh?.();
+    } catch (err: unknown) {
+      toast.error(
+        err instanceof Error ? err.message : 'Failed to delete purchase'
+      );
+    }
   };
 
   const renderOrders = () => {

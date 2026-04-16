@@ -8,7 +8,7 @@ const receipt = require("./receipt-CgVNnpBY.js");
 const customer = require("./customer-CS2lwHZV.js");
 const database = require("./database-Dx0B-evc.js");
 const receipt_service = require("./receipt.service-DcZJQlU4.js");
-const listing = require("./listing-fG59YslC.js");
+const listing = require("./listing-iK2d8TQt.js");
 const index = require("../index.js");
 require("fs");
 require("path");
@@ -23,12 +23,13 @@ const receiptInputSchema = zod.z.object({
   note: zod.z.string().optional().nullable()
 });
 const receiptUpdateSchema = zod.z.object({
-  amount: zod.z.number().min(1),
+  amount: zod.z.coerce.number().min(1),
   customerId: zod.z.number(),
   paymentMethod: zod.z.string().min(1).optional(),
   bank: zod.z.string().optional().nullable(),
   note: zod.z.string().optional().nullable()
 });
+const MAX_DATE_RANGE = 90;
 function registerReceiptHandlers() {
   electron.ipcMain.handle(
     "receipt:getAll",
@@ -42,7 +43,9 @@ function registerReceiptHandlers() {
         order: [["createdAt", "DESC"]]
       });
       return listing.toPaginatedResult(
-        rows.map((receipt2) => receipt2.toJSON ? receipt2.toJSON() : receipt2),
+        rows.map(
+          (receipt2) => receipt2.toJSON ? receipt2.toJSON() : receipt2
+        ),
         count,
         page,
         pageSize
@@ -67,7 +70,7 @@ function registerReceiptHandlers() {
     "receipt:create",
     index.withAppReady(async (_event, values) => {
       const parsedValues = receiptInputSchema.parse(values);
-      await database.database.transaction(async (t) => {
+      return await database.database.transaction(async (t) => {
         const receipt$1 = await receipt.default.create(
           {
             customerId: parsedValues.customerId,
@@ -103,6 +106,13 @@ function registerReceiptHandlers() {
           where: { id: receipt$1.customerId },
           transaction: t
         });
+        const targetCustomer = await customer.default.findByPk(
+          parsedValues.customerId,
+          { transaction: t }
+        );
+        if (!targetCustomer) {
+          throw new Error("Customer not found");
+        }
         await customer.default.decrement("balance", {
           by: parsedValues.amount,
           where: { id: parsedValues.customerId },
@@ -145,6 +155,12 @@ function registerReceiptHandlers() {
       const { customerId, endDate, page, pageSize, startDate } = query;
       const whereClause = {};
       if (startDate && endDate) {
+        const dateDifference = dayjs(endDate).diff(dayjs(startDate), "days");
+        if (dateDifference > MAX_DATE_RANGE) {
+          throw new Error(
+            `Date range too large. Please select a range smaller than ${MAX_DATE_RANGE} days.`
+          );
+        }
         whereClause.createdAt = {
           [sequelize.Op.between]: [
             `${dayjs(startDate).format("YYYY-MM-DD")} 00:00:00`,
@@ -163,7 +179,9 @@ function registerReceiptHandlers() {
         order: [["createdAt", "DESC"]]
       });
       return listing.toPaginatedResult(
-        rows.map((receipt2) => receipt2.toJSON ? receipt2.toJSON() : receipt2),
+        rows.map(
+          (receipt2) => receipt2.toJSON ? receipt2.toJSON() : receipt2
+        ),
         count,
         page,
         pageSize
@@ -187,7 +205,9 @@ function registerReceiptHandlers() {
         order: [["createdAt", "DESC"]]
       });
       return listing.toPaginatedResult(
-        rows.map((receipt2) => receipt2.toJSON ? receipt2.toJSON() : receipt2),
+        rows.map(
+          (receipt2) => receipt2.toJSON ? receipt2.toJSON() : receipt2
+        ),
         count,
         page,
         pageSize

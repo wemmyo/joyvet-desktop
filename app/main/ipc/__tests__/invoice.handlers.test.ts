@@ -276,6 +276,7 @@ describe('invoice IPC handlers', () => {
         id: productId,
         title: 'Test Product',
         stock: 10,
+        buyPrice: 400, // needed for server-side profit calculation
       });
 
       (ProductModel.decrement as any).mockResolvedValue(undefined);
@@ -299,6 +300,8 @@ describe('invoice IPC handlers', () => {
         postedBy: 'admin',
       });
 
+      // amount and profit are now computed server-side:
+      // amount = 2 * 500 = 1000, profit = 2 * (500 - 400) = 200
       expect(InvoiceItemModel.create).toHaveBeenCalledWith(
         expect.objectContaining({
           invoiceId,
@@ -343,11 +346,12 @@ describe('invoice IPC handlers', () => {
         update: vi.fn(),
       };
       vi.mocked(InvoiceModel.findByPk).mockResolvedValue(mockInvoiceWithProducts as any);
-      vi.mocked(ProductModel.update).mockResolvedValue([1] as any);
+      vi.mocked(ProductModel.increment).mockResolvedValue([1] as any);
       await handlers['invoice:delete'](mockEvent, 1);
-      expect(ProductModel.update).toHaveBeenCalledWith(
-        { stock: 7 },
-        expect.objectContaining({ where: { id: 10 } })
+      // Stock is now restored via atomic increment, not a direct update.
+      expect(ProductModel.increment).toHaveBeenCalledWith(
+        'stock',
+        expect.objectContaining({ by: 2, where: { id: 10 } })
       );
       expect(mockInvoiceWithProducts.destroy).toHaveBeenCalled();
     });
@@ -414,7 +418,7 @@ describe('invoice IPC handlers', () => {
       vi.mocked(InvoiceModel.findByPk).mockResolvedValue(inv as any);
       vi.mocked(InvoiceItemModel.findByPk).mockResolvedValue(item as any);
       vi.mocked(ProductModel.findByPk).mockResolvedValue(prod as any);
-      vi.mocked(ProductModel.update).mockResolvedValue([1] as any);
+      vi.mocked(ProductModel.decrement).mockResolvedValue([1] as any);
       vi.mocked(InvoiceItemModel.findAll).mockResolvedValue([{ amount: 1500, profit: 300 } as any]);
       await handlers['invoice:updateItem'](mockEvent, {
         invoiceItemId: 1, invoiceId: 1, productId: 10, newQuantity: 3, postedBy: 'admin',
@@ -422,8 +426,9 @@ describe('invoice IPC handlers', () => {
       expect(item.update).toHaveBeenCalledWith(
         expect.objectContaining({ quantity: 3 }), expect.anything()
       );
-      expect(ProductModel.update).toHaveBeenCalledWith(
-        { stock: 19 }, expect.objectContaining({ where: { id: 10 } })
+      // delta = 3 - 2 = 1 (positive), so stock is decremented atomically
+      expect(ProductModel.decrement).toHaveBeenCalledWith(
+        'stock', expect.objectContaining({ by: 1, where: { id: 10 } })
       );
     });
   });
@@ -437,10 +442,12 @@ describe('invoice IPC handlers', () => {
       vi.mocked(InvoiceModel.findByPk).mockResolvedValue(inv as any);
       vi.mocked(InvoiceItemModel.findByPk).mockResolvedValue(item as any);
       vi.mocked(ProductModel.findByPk).mockResolvedValue(prod as any);
-      vi.mocked(ProductModel.update).mockResolvedValue([1] as any);
+      vi.mocked(ProductModel.increment).mockResolvedValue([1] as any);
       await handlers['invoice:deleteItem'](mockEvent, { productId: 10, invoiceId: 1, invoiceItemId: 1 });
-      expect(ProductModel.update).toHaveBeenCalledWith(
-        { stock: 7 }, expect.objectContaining({ where: { id: 10 } })
+      // Stock is now restored via atomic increment, not a direct update.
+      expect(ProductModel.increment).toHaveBeenCalledWith(
+        'stock',
+        expect.objectContaining({ by: 2, where: { id: 10 } })
       );
       expect(item.destroy).toHaveBeenCalled();
     });

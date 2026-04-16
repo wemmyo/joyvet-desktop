@@ -4,6 +4,7 @@ import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useParams } from 'react-router-dom';
+import { toast } from 'sonner';
 
 import DashboardLayout from '../../../layouts/DashboardLayout/DashboardLayout';
 import { Button } from '../../../components/ui/button';
@@ -52,6 +53,7 @@ import { ICustomer } from '../../../models/customer';
 import { IStoreInfo } from '../../../models/storeInfo';
 import { getStoreInfoFn } from '../../../controllers/storeInfo.controller';
 import { MAX_PAGE_SIZE } from '../../../types/pagination';
+import InvoiceAuditLog from './InvoiceAuditLog';
 
 interface InvoiceItem extends IInvoiceItem {
   product: IProduct;
@@ -172,12 +174,16 @@ const InvoiceScreen: React.FC = () => {
     invoiceItemId: number,
     productId: number
   ) => {
-    await deleteInvoiceItemFn({
-      productId,
-      invoiceId,
-      invoiceItemId,
-    });
-    fetchData();
+    try {
+      await deleteInvoiceItemFn({
+        productId,
+        invoiceId,
+        invoiceItemId,
+      });
+      fetchData();
+    } catch {
+      toast.error('Failed to remove item');
+    }
   };
 
   const startEditQty = (item: InvoiceItem) => {
@@ -192,14 +198,18 @@ const InvoiceScreen: React.FC = () => {
 
   const saveEditQty = async (item: InvoiceItem) => {
     if (editingQtyValue <= 0) return;
-    await updateInvoiceItemFn({
-      invoiceItemId: item.id,
-      invoiceId,
-      productId: item.product.id,
-      newQuantity: editingQtyValue,
-    });
-    setEditingQtyId(null);
-    fetchData();
+    try {
+      await updateInvoiceItemFn({
+        invoiceItemId: item.id,
+        invoiceId,
+        productId: item.product.id,
+        newQuantity: editingQtyValue,
+      });
+      setEditingQtyId(null);
+      fetchData();
+    } catch {
+      toast.error('Failed to update quantity');
+    }
   };
 
   const renderPrices = (product: IProduct) => {
@@ -278,17 +288,10 @@ const InvoiceScreen: React.FC = () => {
                 className="w-16 text-right"
                 autoFocus
               />
-              <Button
-                size="sm"
-                onClick={() => saveEditQty(invoiceItem)}
-              >
+              <Button size="sm" onClick={() => saveEditQty(invoiceItem)}>
                 Save
               </Button>
-              <Button
-                size="sm"
-                variant="ghost"
-                onClick={cancelEditQty}
-              >
+              <Button size="sm" variant="ghost" onClick={cancelEditQty}>
                 ✕
               </Button>
             </div>
@@ -328,7 +331,11 @@ const InvoiceScreen: React.FC = () => {
     if (printInvoice) {
       return (
         <div style={{ display: 'none' }}>
-          <ComponentToPrint ref={componentRef} invoice={invoice} storeInfo={storeInfo} />
+          <ComponentToPrint
+            ref={componentRef}
+            invoice={invoice}
+            storeInfo={storeInfo}
+          />
         </div>
       );
     }
@@ -542,6 +549,7 @@ const InvoiceScreen: React.FC = () => {
           </div>
         </div>
       </div>
+      {hasValidInvoiceId && <InvoiceAuditLog invoiceId={invoiceId} />}
     </DashboardLayout>
   );
 };

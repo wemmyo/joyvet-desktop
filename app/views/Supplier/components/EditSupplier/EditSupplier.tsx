@@ -1,5 +1,9 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect } from 'react';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
 import { Link } from 'react-router-dom';
+import { toast } from 'sonner';
 
 import { useSidebarContext } from '../../../../contexts/SidebarContext';
 import routes from '../../../../routing/routes';
@@ -7,69 +11,95 @@ import { isAdmin } from '../../../../utils/helpers';
 import {
   getSingleSupplierFn,
   deleteSupplierFn,
-  getSuppliersFn,
   updateSupplierFn,
 } from '../../../../controllers/supplier.controller';
-import { ISupplier } from '../../../../models/supplier';
 import { Button } from '../../../../components/ui/button';
 import { Input } from '../../../../components/ui/input';
 import { Label } from '../../../../components/ui/label';
 
+const schema = z.object({
+  fullName: z.string().min(1, 'Required'),
+  address: z.string().optional().default(''),
+  phoneNumber: z.string().optional().default(''),
+  balance: z.coerce.number().optional().default(0),
+});
+
+type FormValues = z.infer<typeof schema>;
+
 export interface EditSupplierProps {
   supplierId: number;
+  onRefresh?: () => void;
 }
 
 const EditSupplier: React.FC<EditSupplierProps> = ({
   supplierId,
+  onRefresh,
 }: EditSupplierProps) => {
-  const [supplier, setSupplier] = useState<ISupplier>({} as ISupplier);
-  const [values, setValues] = useState({
-    fullName: '',
-    address: '',
-    phoneNumber: '',
-    balance: '',
-  });
-
   const { closeSideContent } = useSidebarContext();
+
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+    reset,
+  } = useForm<FormValues>({
+    resolver: zodResolver(schema),
+  });
 
   useEffect(() => {
     const fetchData = async () => {
       const response = await getSingleSupplierFn(supplierId);
-      setSupplier(response);
-      setValues({
+      if (!response) return;
+      reset({
         fullName: response.fullName || '',
         address: response.address || '',
         phoneNumber: response.phoneNumber || '',
-        balance: String(response.balance || ''),
+        balance: response.balance || 0,
       });
     };
     fetchData();
-  }, [supplierId]);
+  }, [supplierId, reset]);
 
   const handleDeleteSupplier = async () => {
-    await deleteSupplierFn(supplierId);
-    closeSideContent();
-    await getSuppliersFn();
+    try {
+      await deleteSupplierFn(supplierId);
+      toast.success('Supplier deleted');
+      closeSideContent();
+      onRefresh?.();
+    } catch {
+      toast.error('Failed to delete supplier');
+    }
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    await updateSupplierFn(values, supplierId);
-    closeSideContent();
-    await getSuppliersFn();
+  const onSubmit = async (values: FormValues) => {
+    try {
+      await updateSupplierFn(
+        { ...values, balance: Number(values.balance) },
+        supplierId
+      );
+      toast.success('Supplier updated');
+      closeSideContent();
+      onRefresh?.();
+    } catch {
+      toast.error('Failed to update supplier');
+    }
   };
 
   return (
-    <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+    <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4">
       <div className="flex flex-col gap-1">
         <Label htmlFor="fullName">Full Name</Label>
         <Input
           id="fullName"
           placeholder="Full Name"
           type="text"
-          value={values.fullName}
-          onChange={(e) => setValues({ ...values, fullName: e.target.value })}
+          {...register('fullName')}
         />
+        {errors.fullName && (
+          <span className="text-sm text-destructive">
+            {errors.fullName.message}
+          </span>
+        )}
       </div>
       <div className="flex flex-col gap-1">
         <Label htmlFor="address">Address</Label>
@@ -77,9 +107,13 @@ const EditSupplier: React.FC<EditSupplierProps> = ({
           id="address"
           placeholder="Address"
           type="text"
-          value={values.address}
-          onChange={(e) => setValues({ ...values, address: e.target.value })}
+          {...register('address')}
         />
+        {errors.address && (
+          <span className="text-sm text-destructive">
+            {errors.address.message}
+          </span>
+        )}
       </div>
       <div className="flex flex-col gap-1">
         <Label htmlFor="phoneNumber">Phone Number</Label>
@@ -87,11 +121,13 @@ const EditSupplier: React.FC<EditSupplierProps> = ({
           id="phoneNumber"
           placeholder="Phone Number"
           type="tel"
-          value={values.phoneNumber}
-          onChange={(e) =>
-            setValues({ ...values, phoneNumber: e.target.value })
-          }
+          {...register('phoneNumber')}
         />
+        {errors.phoneNumber && (
+          <span className="text-sm text-destructive">
+            {errors.phoneNumber.message}
+          </span>
+        )}
       </div>
       <div className="flex flex-col gap-1">
         <Label htmlFor="balance">Balance</Label>
@@ -99,10 +135,14 @@ const EditSupplier: React.FC<EditSupplierProps> = ({
           id="balance"
           placeholder="Balance"
           type="number"
-          value={values.balance}
-          onChange={(e) => setValues({ ...values, balance: e.target.value })}
+          {...register('balance')}
           disabled={!isAdmin()}
         />
+        {errors.balance && (
+          <span className="text-sm text-destructive">
+            {errors.balance.message}
+          </span>
+        )}
       </div>
       <div className="mt-2 flex gap-2">
         <Button type="submit" variant="default">

@@ -8,7 +8,6 @@ import ProductAuditLog from '../../models/productAuditLog';
 import {
   createProduct,
   getProductById,
-  deleteProduct,
 } from '../../services/product.service';
 import { getPurchaseItems } from '../../services/purchaseItem.service';
 import { getInvoiceItems } from '../../services/invoiceItem.service';
@@ -76,7 +75,7 @@ export function registerProductHandlers(): void {
     withAppReady(async (_event, id: number, values: any) => {
       const updateSchema = z.object({
         title: z.string().min(1).max(255).optional(),
-        stock: z.number().optional(),
+        stock: z.number().min(0).optional(),
         buyPrice: z.number().optional(),
         sellPrice: z.number().optional(),
         sellPrice2: z.number().optional(),
@@ -90,56 +89,67 @@ export function registerProductHandlers(): void {
       const { _postedBy, ...productValues } = values;
       const postedBy = _postedBy || 'unknown';
 
-      const product = await Product.findByPk(id);
-      if (!product) {
-        throw new Error('Product not found');
-      }
-
-      const stockBefore = (product as any).stock;
-      const stockChanged =
-        productValues.stock !== undefined &&
-        productValues.stock !== stockBefore;
-
-      const priceFields = ['buyPrice', 'sellPrice', 'sellPrice2', 'sellPrice3'];
-      const priceChanges: any[] = [];
-      priceFields.forEach((field) => {
-        if (
-          productValues[field] !== undefined &&
-          productValues[field] !== (product as any)[field]
-        ) {
-          priceChanges.push({
-            field,
-            before: (product as any)[field],
-            after: productValues[field],
-          });
-        }
-      });
-
       await database.transaction(async (t: any) => {
+        const product = await Product.findByPk(id, { transaction: t });
+        if (!product) {
+          throw new Error('Product not found');
+        }
+
+        const stockBefore = (product as any).stock;
+        const stockChanged =
+          productValues.stock !== undefined &&
+          productValues.stock !== stockBefore;
+
+        const priceFields = [
+          'buyPrice',
+          'sellPrice',
+          'sellPrice2',
+          'sellPrice3',
+        ];
+        const priceChanges: any[] = [];
+        priceFields.forEach((field) => {
+          if (
+            productValues[field] !== undefined &&
+            productValues[field] !== (product as any)[field]
+          ) {
+            priceChanges.push({
+              field,
+              before: (product as any)[field],
+              after: productValues[field],
+            });
+          }
+        });
+
         await Product.update(productValues, { where: { id }, transaction: t });
 
         if (stockChanged) {
-          await ProductAuditLog.create({
-            productId: id,
-            changeType: 'stock_change',
-            delta: productValues.stock - stockBefore,
-            stockBefore,
-            stockAfter: productValues.stock,
-            reason: 'manual_edit',
-            referenceType: 'manual',
-            postedBy,
-          }, { transaction: t });
+          await ProductAuditLog.create(
+            {
+              productId: id,
+              changeType: 'stock_change',
+              delta: productValues.stock - stockBefore,
+              stockBefore,
+              stockAfter: productValues.stock,
+              reason: 'manual_edit',
+              referenceType: 'manual',
+              postedBy,
+            },
+            { transaction: t }
+          );
         }
 
         if (priceChanges.length > 0) {
-          await ProductAuditLog.create({
-            productId: id,
-            changeType: 'price_change',
-            priceChanges: JSON.stringify(priceChanges),
-            reason: 'manual_edit',
-            referenceType: 'manual',
-            postedBy,
-          }, { transaction: t });
+          await ProductAuditLog.create(
+            {
+              productId: id,
+              changeType: 'price_change',
+              priceChanges: JSON.stringify(priceChanges),
+              reason: 'manual_edit',
+              referenceType: 'manual',
+              postedBy,
+            },
+            { transaction: t }
+          );
         }
       });
     })
@@ -148,21 +158,29 @@ export function registerProductHandlers(): void {
   ipcMain.handle(
     'product:delete',
     withAppReady(async (_event, id: number) => {
-      const invoiceItemCount = await InvoiceItem.count({ where: { productId: id } });
-      if (invoiceItemCount > 0) {
-        throw new Error(
-          `Cannot delete product referenced by existing invoices (${invoiceItemCount} line items). Remove invoices first.`
-        );
-      }
+      await database.transaction(async (t: any) => {
+        const invoiceItemCount = await InvoiceItem.count({
+          where: { productId: id },
+          transaction: t,
+        });
+        if (invoiceItemCount > 0) {
+          throw new Error(
+            `Cannot delete product referenced by existing invoices (${invoiceItemCount} line items). Remove invoices first.`
+          );
+        }
 
-      const purchaseItemCount = await PurchaseItem.count({ where: { productId: id } });
-      if (purchaseItemCount > 0) {
-        throw new Error(
-          `Cannot delete product referenced by existing purchases (${purchaseItemCount} line items). Remove purchases first.`
-        );
-      }
+        const purchaseItemCount = await PurchaseItem.count({
+          where: { productId: id },
+          transaction: t,
+        });
+        if (purchaseItemCount > 0) {
+          throw new Error(
+            `Cannot delete product referenced by existing purchases (${purchaseItemCount} line items). Remove purchases first.`
+          );
+        }
 
-      await deleteProduct(id);
+        await Product.destroy({ where: { id }, transaction: t });
+      });
     })
   );
 

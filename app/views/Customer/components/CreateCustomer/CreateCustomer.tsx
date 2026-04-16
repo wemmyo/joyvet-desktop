@@ -2,6 +2,7 @@ import * as React from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
+import { toast } from 'sonner';
 import { ICustomer } from '../../../../models/customer';
 import { Button } from '../../../../components/ui/button';
 import { Input } from '../../../../components/ui/input';
@@ -17,7 +18,7 @@ const schema = z.object({
 type FormValues = z.infer<typeof schema>;
 
 export interface CreateCustomerProps {
-  createCustomerFn: (values: Partial<ICustomer>) => void;
+  createCustomerFn: (values: Partial<ICustomer>) => Promise<void>;
 }
 
 const CreateCustomer: React.FC<CreateCustomerProps> = ({
@@ -38,9 +39,16 @@ const CreateCustomer: React.FC<CreateCustomerProps> = ({
     },
   });
 
-  const onSubmit = (values: FormValues) => {
-    createCustomerFn(values);
-    reset();
+  const onSubmit = async (values: FormValues) => {
+    try {
+      await createCustomerFn(values);
+      toast.success('Customer created');
+      reset();
+    } catch (err: unknown) {
+      toast.error(
+        err instanceof Error ? err.message : 'Failed to create customer'
+      );
+    }
   };
 
   return (

@@ -49,6 +49,7 @@ vi.mock('../../../models/product', () => ({
     update: vi.fn(),
     decrement: vi.fn(),
     increment: vi.fn(),
+    destroy: vi.fn(),
   },
 }));
 
@@ -227,9 +228,11 @@ describe('product IPC handlers', () => {
     it('deletes a product', async () => {
       vi.mocked(InvoiceItemModel.count).mockResolvedValue(0 as any);
       vi.mocked(PurchaseItemModel.count).mockResolvedValue(0 as any);
-      (productService.deleteProduct as any).mockResolvedValue(1);
+      vi.mocked(ProductModel.destroy).mockResolvedValue(1 as any);
       await handlers['product:delete'](mockEvent, 1);
-      expect(productService.deleteProduct).toHaveBeenCalledWith(1);
+      expect(ProductModel.destroy).toHaveBeenCalledWith(
+        expect.objectContaining({ where: { id: 1 } })
+      );
     });
 
     it('throws if product has invoice items', async () => {
@@ -239,7 +242,7 @@ describe('product IPC handlers', () => {
       await expect(handlers['product:delete'](mockEvent, 1)).rejects.toThrow(
         'Cannot delete product referenced by existing invoices'
       );
-      expect(productService.deleteProduct).not.toHaveBeenCalled();
+      expect(ProductModel.destroy).not.toHaveBeenCalled();
     });
 
     it('throws if product has purchase items', async () => {
@@ -249,19 +252,19 @@ describe('product IPC handlers', () => {
       await expect(handlers['product:delete'](mockEvent, 1)).rejects.toThrow(
         'Cannot delete product referenced by existing purchases'
       );
-      expect(productService.deleteProduct).not.toHaveBeenCalled();
+      expect(ProductModel.destroy).not.toHaveBeenCalled();
     });
 
     it('deletes successfully when not referenced', async () => {
       vi.mocked(InvoiceItemModel.count).mockResolvedValue(0 as any);
       vi.mocked(PurchaseItemModel.count).mockResolvedValue(0 as any);
-      vi.mocked(productService.deleteProduct).mockResolvedValue(
-        undefined as any
-      );
+      vi.mocked(ProductModel.destroy).mockResolvedValue(1 as any);
 
       await handlers['product:delete'](mockEvent, 1);
 
-      expect(productService.deleteProduct).toHaveBeenCalledWith(1);
+      expect(ProductModel.destroy).toHaveBeenCalledWith(
+        expect.objectContaining({ where: { id: 1 } })
+      );
     });
   });
 

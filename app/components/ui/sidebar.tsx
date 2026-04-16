@@ -21,7 +21,10 @@ interface SidebarContextValue {
 const SidebarContext = React.createContext<SidebarContextValue | null>(null);
 
 const getIsMobile = () => {
-  if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') {
+  if (
+    typeof window === 'undefined' ||
+    typeof window.matchMedia !== 'function'
+  ) {
     return false;
   }
 
@@ -32,7 +35,10 @@ function useIsMobile() {
   const [isMobile, setIsMobile] = React.useState(getIsMobile);
 
   React.useEffect(() => {
-    if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') {
+    if (
+      typeof window === 'undefined' ||
+      typeof window.matchMedia !== 'function'
+    ) {
       return undefined;
     }
 
@@ -159,7 +165,9 @@ export function Sidebar({
       data-state={open ? 'expanded' : 'collapsed'}
       className="fixed inset-y-0 left-0 z-30 hidden w-[var(--sidebar-width)] transition-transform duration-200 ease-out md:block"
       style={{
-        transform: open ? 'translateX(0)' : 'translateX(calc(-1 * var(--sidebar-width)))',
+        transform: open
+          ? 'translateX(0)'
+          : 'translateX(calc(-1 * var(--sidebar-width)))',
       }}
       {...props}
     >

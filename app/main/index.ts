@@ -102,13 +102,26 @@ app.whenReady().then(async () => {
 
   void (async () => {
     const { registerInvoiceHandlers } = await import('./ipc/invoice.handlers');
-    const { registerCustomerHandlers } = await import('./ipc/customer.handlers');
+    const { registerCustomerHandlers } = await import(
+      './ipc/customer.handlers'
+    );
     const { registerProductHandlers } = await import('./ipc/product.handlers');
     const { registerUserHandlers } = await import('./ipc/user.handlers');
-    const { registerSupplierHandlers } = await import('./ipc/supplier.handlers');
-    const { registerPurchaseHandlers } = await import('./ipc/purchase.handlers');
+    const { registerSupplierHandlers } = await import(
+      './ipc/supplier.handlers'
+    );
+    const { registerPurchaseHandlers } = await import(
+      './ipc/purchase.handlers'
+    );
     const { registerPaymentHandlers } = await import('./ipc/payment.handlers');
     const { registerReceiptHandlers } = await import('./ipc/receipt.handlers');
+    const { registerExpenseHandlers } = await import('./ipc/expense.handlers');
+    const { registerStoreInfoHandlers } = await import(
+      './ipc/storeInfo.handlers'
+    );
+    const { registerAnalyticsHandlers } = await import(
+      './ipc/analytics.handlers'
+    );
 
     registerInvoiceHandlers();
     registerCustomerHandlers();
@@ -118,19 +131,11 @@ app.whenReady().then(async () => {
     registerPurchaseHandlers();
     registerPaymentHandlers();
     registerReceiptHandlers();
-
-    await ensureAppReady();
-
-    const { registerExpenseHandlers } = await import('./ipc/expense.handlers');
-    const { registerStoreInfoHandlers } = await import(
-      './ipc/storeInfo.handlers'
-    );
-
     registerExpenseHandlers();
     registerStoreInfoHandlers();
-
-    const { registerAnalyticsHandlers } = await import('./ipc/analytics.handlers');
     registerAnalyticsHandlers();
+
+    await ensureAppReady();
   })().catch((error) => {
     log.error('App initialization failed', error);
   });

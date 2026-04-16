@@ -17,7 +17,7 @@ const schema = z.object({
   fullName: z.string().min(1, 'Required'),
   username: z.string().optional().default(''),
   password: z.string().optional().default(''),
-  role: z.string().optional().default(''),
+  role: z.string().min(1, 'Role is required'),
 });
 
 type FormValues = z.infer<typeof schema>;
@@ -28,7 +28,7 @@ export interface CreateUserProps {
     username: string;
     password: string;
     role: string;
-  }) => void;
+  }) => Promise<void>;
 }
 
 const CreateUser: React.FC<CreateUserProps> = ({
@@ -46,12 +46,12 @@ const CreateUser: React.FC<CreateUserProps> = ({
       fullName: '',
       username: '',
       password: '',
-      role: '',
+      role: '' as string,
     },
   });
 
-  const onSubmit = (values: FormValues) => {
-    createUserFn({
+  const onSubmit = async (values: FormValues) => {
+    await createUserFn({
       fullName: values.fullName,
       username: values.username || '',
       password: values.password || '',
@@ -123,6 +123,11 @@ const CreateUser: React.FC<CreateUserProps> = ({
             </Select>
           )}
         />
+        {errors.role && (
+          <span className="text-sm text-destructive">
+            {errors.role.message}
+          </span>
+        )}
       </div>
       <Button type="submit" className="w-full">
         Save

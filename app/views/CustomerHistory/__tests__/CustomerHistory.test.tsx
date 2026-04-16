@@ -10,8 +10,7 @@ const getCustomerActivityTimelineFn = vi.fn();
 
 vi.mock('../../../controllers/customer.controller', () => ({
   getCustomerInvoicesFn: (...args: unknown[]) => getCustomerInvoicesFn(...args),
-  getCustomerReceiptsFn: (...args: unknown[]) =>
-    getCustomerReceiptsFn(...args),
+  getCustomerReceiptsFn: (...args: unknown[]) => getCustomerReceiptsFn(...args),
   getCustomerActivityTimelineFn: (...args: unknown[]) =>
     getCustomerActivityTimelineFn(...args),
 }));
@@ -26,11 +25,15 @@ vi.mock('../../../layouts/DashboardLayout/DashboardLayout', () => ({
 }));
 
 vi.mock('../components/Invoices/Invoices', () => ({
-  default: ({ data }: any) => <div data-testid="invoice-results">{data.length}</div>,
+  default: ({ data }: any) => (
+    <div data-testid="invoice-results">{data.length}</div>
+  ),
 }));
 
 vi.mock('../components/Receipts/Receipts', () => ({
-  default: ({ data }: any) => <div data-testid="receipt-results">{data.length}</div>,
+  default: ({ data }: any) => (
+    <div data-testid="receipt-results">{data.length}</div>
+  ),
 }));
 
 vi.mock('react-to-print', () => ({

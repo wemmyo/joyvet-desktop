@@ -21,9 +21,9 @@ const TODAYS_DATE = `${dayjs().format('YYYY-MM-DD')}`;
 const ProductHistory: React.FC = () => {
   const [startDate, setStartDate] = useState(TODAYS_DATE);
   const [endDate, setEndDate] = useState(TODAYS_DATE);
-  const [activeTab, setActiveTab] = useState<'purchases' | 'invoices' | 'auditLog'>(
-    'purchases'
-  );
+  const [activeTab, setActiveTab] = useState<
+    'purchases' | 'invoices' | 'auditLog'
+  >('purchases');
   const { id } = useParams<{ id: string }>();
   const productId = Number(id);
   const hasValidProductId = Number.isInteger(productId) && productId > 0;

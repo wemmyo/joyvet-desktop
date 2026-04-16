@@ -21,10 +21,7 @@ import {
   TableHead,
   TableCell,
 } from '../../components/ui/table';
-import {
-  TableEmptyRow,
-  TableFrame,
-} from '../../components/ui/table-helpers';
+import { TableEmptyRow, TableFrame } from '../../components/ui/table-helpers';
 import { numberWithCommas, isAdmin } from '../../utils/helpers';
 import { useSidebarContext } from '../../contexts/SidebarContext';
 import SalesDetail from './components/SalesDetail';
@@ -47,6 +44,7 @@ const SalesScreen: React.FC = () => {
   const [page, setPage] = useState(DEFAULT_PAGE);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const { openSideContent: openSideBar, closeSideContent: closeSideBar } =
     useSidebarContext();
@@ -59,17 +57,23 @@ const SalesScreen: React.FC = () => {
   const loadInvoices = useCallback(
     async (nextPage: number) => {
       setLoading(true);
-      const response = await filterInvoiceFn({
-        page: nextPage,
-        pageSize: DEFAULT_PAGE_SIZE,
-        startDate,
-        endDate,
-        saleType,
-        search: appliedSearch || undefined,
-      });
-      setInvoices(response.rows ?? []);
-      setTotal(response.total ?? 0);
-      setLoading(false);
+      setError(null);
+      try {
+        const response = await filterInvoiceFn({
+          page: nextPage,
+          pageSize: DEFAULT_PAGE_SIZE,
+          startDate,
+          endDate,
+          saleType,
+          search: appliedSearch || undefined,
+        });
+        setInvoices(response.rows ?? []);
+        setTotal(response.total ?? 0);
+      } catch (err: unknown) {
+        setError(err instanceof Error ? err.message : 'Failed to load sales');
+      } finally {
+        setLoading(false);
+      }
     },
     [appliedSearch, endDate, saleType, startDate]
   );
@@ -236,6 +240,7 @@ const SalesScreen: React.FC = () => {
       rightSidebar={renderSideContent()}
       headerContent={headerContent()}
     >
+      {error && <p className="text-destructive text-sm p-4">{error}</p>}
       {loading ? (
         <div className="flex items-center justify-center p-8">
           <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />

@@ -1,6 +1,11 @@
 import React, { useState } from 'react';
 import dayjs from 'dayjs';
-import { ChevronDown, ChevronRight, ShoppingBag, CreditCard } from 'lucide-react';
+import {
+  ChevronDown,
+  ChevronRight,
+  ShoppingBag,
+  CreditCard,
+} from 'lucide-react';
 import {
   Table,
   TableBody,
@@ -39,7 +44,10 @@ const ActivityTimeline: React.FC<ActivityTimelineProps> = ({ data }) => {
       <TableFrame>
         <Table>
           <TableBody>
-            <TableEmptyRow colSpan={6} message="No activity found for this period." />
+            <TableEmptyRow
+              colSpan={6}
+              message="No activity found for this period."
+            />
           </TableBody>
         </Table>
       </TableFrame>
@@ -122,22 +130,33 @@ const ActivityTimeline: React.FC<ActivityTimelineProps> = ({ data }) => {
                               <tr className="text-muted-foreground border-b">
                                 <th className="text-left py-1 pr-4">Product</th>
                                 <th className="text-right py-1 pr-4">Qty</th>
-                                <th className="text-right py-1 pr-4">Unit Price</th>
+                                <th className="text-right py-1 pr-4">
+                                  Unit Price
+                                </th>
                                 <th className="text-right py-1">Amount</th>
                               </tr>
                             </thead>
                             <tbody>
                               {entry.products.map((product: any) => (
-                                <tr key={product.id} className="border-b border-muted">
+                                <tr
+                                  key={product.id}
+                                  className="border-b border-muted"
+                                >
                                   <td className="py-1 pr-4">{product.title}</td>
                                   <td className="text-right py-1 pr-4">
                                     {product.purchaseItem?.quantity}
                                   </td>
                                   <td className="text-right py-1 pr-4">
-                                    ₦{numberWithCommas(product.purchaseItem?.unitPrice)}
+                                    ₦
+                                    {numberWithCommas(
+                                      product.purchaseItem?.unitPrice
+                                    )}
                                   </td>
                                   <td className="text-right py-1">
-                                    ₦{numberWithCommas(product.purchaseItem?.amount)}
+                                    ₦
+                                    {numberWithCommas(
+                                      product.purchaseItem?.amount
+                                    )}
                                   </td>
                                 </tr>
                               ))}

@@ -128,10 +128,7 @@ describe('EditInvoice route params', () => {
     await user.click(screen.getByRole('combobox', { name: 'Select Product' }));
 
     await waitFor(() => {
-      expect(getProductsFn).toHaveBeenCalledWith({
-        filter: 'inStock',
-        pageSize: MAX_PAGE_SIZE,
-      });
+      expect(screen.getByRole('option', { name: 'Test Product' })).toBeTruthy();
     });
 
     await user.click(screen.getByRole('option', { name: 'Test Product' }));

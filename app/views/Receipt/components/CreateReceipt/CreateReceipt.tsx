@@ -20,9 +20,7 @@ import {
   getCustomersFn,
   searchCustomerFn,
 } from '../../../../controllers/customer.controller';
-import {
-  createReceiptFn,
-} from '../../../../controllers/receipt.controller';
+import { createReceiptFn } from '../../../../controllers/receipt.controller';
 import { ICustomer } from '../../../../models/customer';
 import { MAX_PAGE_SIZE } from '../../../../types/pagination';
 
@@ -71,8 +69,8 @@ const CreateReceipt: React.FC<{ onRefresh?: () => void }> = ({ onRefresh }) => {
     getOptionLabel: (customer) => customer.fullName,
   });
 
-  const handleNewReceipt = (values: CreateReceiptFormValues) => {
-    createReceiptFn(
+  const handleNewReceipt = async (values: CreateReceiptFormValues) => {
+    await createReceiptFn(
       {
         ...values,
         customerId: Number(values.customerId),
@@ -122,8 +120,8 @@ const CreateReceipt: React.FC<{ onRefresh?: () => void }> = ({ onRefresh }) => {
     return null;
   };
 
-  const onSubmit = (values: CreateReceiptFormValues) => {
-    handleNewReceipt(values);
+  const onSubmit = async (values: CreateReceiptFormValues) => {
+    await handleNewReceipt(values);
     reset();
     setSingleCustomer({} as ICustomer);
   };

@@ -27,7 +27,9 @@ vi.mock('../../../../routing/routeScreens', () => ({
 
 vi.mock('react-router-dom', async () => {
   const actual =
-    await vi.importActual<typeof import('react-router-dom')>('react-router-dom');
+    await vi.importActual<typeof import('react-router-dom')>(
+      'react-router-dom'
+    );
 
   return {
     ...actual,
@@ -91,7 +93,9 @@ describe('SideNav', () => {
     expect(screen.getByText('Admin')).toBeTruthy();
     expect(screen.getByRole('link', { name: 'Users' })).toBeTruthy();
     expect(
-      screen.getByRole('link', { name: 'Invoices' }).getAttribute('aria-current')
+      screen
+        .getByRole('link', { name: 'Invoices' })
+        .getAttribute('aria-current')
     ).toBe('page');
   });
 

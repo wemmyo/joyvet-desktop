@@ -6,6 +6,7 @@ import Supplier from '../../models/supplier';
 import Payment from '../../models/payment';
 import Purchase from '../../models/purchase';
 import Product from '../../models/product';
+import database from '../database';
 import {
   createSupplier,
   getSupplierById,
@@ -30,7 +31,9 @@ export function registerSupplierHandlers(): void {
         order: [['fullName', 'ASC']],
       });
       return toPaginatedResult(
-        rows.map((supplier: any) => (supplier.toJSON ? supplier.toJSON() : supplier)),
+        rows.map((supplier: any) =>
+          supplier.toJSON ? supplier.toJSON() : supplier
+        ),
         count,
         page,
         pageSize
@@ -77,21 +80,31 @@ export function registerSupplierHandlers(): void {
   ipcMain.handle(
     'supplier:delete',
     withAppReady(async (_event, id: number) => {
-      const purchaseCount = await Purchase.count({ where: { supplierId: id } });
-      if (purchaseCount > 0) {
-        throw new Error(
-          `Cannot delete supplier with existing purchases (${purchaseCount} found). Remove purchases first.`
-        );
-      }
+      // Wrap the existence checks and delete in a single transaction so no new
+      // purchase/payment can be created between the count queries and the delete.
+      await database.transaction(async (t: any) => {
+        const purchaseCount = await Purchase.count({
+          where: { supplierId: id },
+          transaction: t,
+        });
+        if (purchaseCount > 0) {
+          throw new Error(
+            `Cannot delete supplier with existing purchases (${purchaseCount} found). Remove purchases first.`
+          );
+        }
 
-      const paymentCount = await Payment.count({ where: { supplierId: id } });
-      if (paymentCount > 0) {
-        throw new Error(
-          `Cannot delete supplier with existing payments (${paymentCount} found). Remove payments first.`
-        );
-      }
+        const paymentCount = await Payment.count({
+          where: { supplierId: id },
+          transaction: t,
+        });
+        if (paymentCount > 0) {
+          throw new Error(
+            `Cannot delete supplier with existing payments (${paymentCount} found). Remove payments first.`
+          );
+        }
 
-      await deleteSupplier(id);
+        await Supplier.destroy({ where: { id }, transaction: t });
+      });
     })
   );
 
@@ -111,7 +124,9 @@ export function registerSupplierHandlers(): void {
         order: [['fullName', 'ASC']],
       });
       return toPaginatedResult(
-        rows.map((supplier: any) => (supplier.toJSON ? supplier.toJSON() : supplier)),
+        rows.map((supplier: any) =>
+          supplier.toJSON ? supplier.toJSON() : supplier
+        ),
         count,
         page,
         pageSize
@@ -121,60 +136,79 @@ export function registerSupplierHandlers(): void {
 
   ipcMain.handle(
     'payment:getBySupplier',
-    withAppReady(async (_event, supplierId: number, startDate: string, endDate: string) => {
-      const schema = z.object({
-        supplierId: z.number(),
-        startDate: z.string(),
-        endDate: z.string(),
-      });
-      schema.parse({ supplierId, startDate, endDate });
+    withAppReady(
+      async (
+        _event,
+        supplierId: number,
+        startDate: string,
+        endDate: string
+      ) => {
+        const schema = z.object({
+          supplierId: z.number(),
+          startDate: z.string(),
+          endDate: z.string(),
+        });
+        schema.parse({ supplierId, startDate, endDate });
 
-      const payments = await Payment.findAll({
-        where: {
-          supplierId,
-          createdAt: {
-            [Op.between]: [
-              `${dayjs(startDate).format('YYYY-MM-DD')} 00:00:00`,
-              `${dayjs(endDate).format('YYYY-MM-DD')} 23:59:59`,
-            ],
+        const payments = await Payment.findAll({
+          where: {
+            supplierId,
+            createdAt: {
+              [Op.between]: [
+                `${dayjs(startDate).format('YYYY-MM-DD')} 00:00:00`,
+                `${dayjs(endDate).format('YYYY-MM-DD')} 23:59:59`,
+              ],
+            },
           },
-        },
-        order: [['createdAt', 'DESC']],
-      });
-      return payments.map((p: any) => (p.toJSON ? p.toJSON() : p));
-    })
+          order: [['createdAt', 'DESC']],
+        });
+        return payments.map((p: any) => (p.toJSON ? p.toJSON() : p));
+      }
+    )
   );
 
   ipcMain.handle(
     'purchase:getBySupplier',
-    withAppReady(async (_event, supplierId: number, startDate: string, endDate: string) => {
-      const schema = z.object({
-        supplierId: z.number(),
-        startDate: z.string(),
-        endDate: z.string(),
-      });
-      schema.parse({ supplierId, startDate, endDate });
+    withAppReady(
+      async (
+        _event,
+        supplierId: number,
+        startDate: string,
+        endDate: string
+      ) => {
+        const schema = z.object({
+          supplierId: z.number(),
+          startDate: z.string(),
+          endDate: z.string(),
+        });
+        schema.parse({ supplierId, startDate, endDate });
 
-      const purchases = await Purchase.findAll({
-        where: {
-          supplierId,
-          createdAt: {
-            [Op.between]: [
-              `${dayjs(startDate).format('YYYY-MM-DD')} 00:00:00`,
-              `${dayjs(endDate).format('YYYY-MM-DD')} 23:59:59`,
-            ],
+        const purchases = await Purchase.findAll({
+          where: {
+            supplierId,
+            createdAt: {
+              [Op.between]: [
+                `${dayjs(startDate).format('YYYY-MM-DD')} 00:00:00`,
+                `${dayjs(endDate).format('YYYY-MM-DD')} 23:59:59`,
+              ],
+            },
           },
-        },
-        order: [['createdAt', 'DESC']],
-      });
-      return purchases.map((p: any) => (p.toJSON ? p.toJSON() : p));
-    })
+          order: [['createdAt', 'DESC']],
+        });
+        return purchases.map((p: any) => (p.toJSON ? p.toJSON() : p));
+      }
+    )
   );
 
   ipcMain.handle(
     'supplier:getActivityTimeline',
     withAppReady(
-      async (_event, supplierId: number, startDate: string, endDate: string) => {
+      async (
+        _event,
+        supplierId: number,
+        startDate: string,
+        endDate: string
+      ) => {
         const startStr = `${dayjs(startDate).format('YYYY-MM-DD')} 00:00:00`;
         const endStr = `${dayjs(endDate).format('YYYY-MM-DD')} 23:59:59`;
 

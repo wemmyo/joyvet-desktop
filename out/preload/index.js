@@ -14,7 +14,8 @@ const api = {
     updateItem: (args) => electron.ipcRenderer.invoke("invoice:updateItem", args),
     filter: (query) => electron.ipcRenderer.invoke("invoice:filter", query),
     filterById: (query) => electron.ipcRenderer.invoke("invoice:filterById", query),
-    getSingle: (id) => electron.ipcRenderer.invoke("invoice:getSingle", id)
+    getSingle: (id) => electron.ipcRenderer.invoke("invoice:getSingle", id),
+    getAuditLog: (invoiceId) => electron.ipcRenderer.invoke("invoice:getAuditLog", invoiceId)
   },
   customer: {
     getAll: (query) => electron.ipcRenderer.invoke("customer:getAll", query),
@@ -59,7 +60,8 @@ const api = {
     create: (values) => electron.ipcRenderer.invoke("user:create", values),
     update: (id, values) => electron.ipcRenderer.invoke("user:update", id, values),
     delete: (id) => electron.ipcRenderer.invoke("user:delete", id),
-    login: (credentials) => electron.ipcRenderer.invoke("user:login", credentials)
+    login: (credentials) => electron.ipcRenderer.invoke("user:login", credentials),
+    logout: () => electron.ipcRenderer.invoke("user:logout")
   },
   supplier: {
     getAll: (query) => electron.ipcRenderer.invoke("supplier:getAll", query),
@@ -115,13 +117,13 @@ const api = {
     filter: (query) => electron.ipcRenderer.invoke("receipt:filter", query)
   },
   expense: {
-    getAll: () => electron.ipcRenderer.invoke("expense:getAll"),
+    getAll: (query) => electron.ipcRenderer.invoke("expense:getAll", query),
     getById: (id) => electron.ipcRenderer.invoke("expense:getById", id),
     create: (values) => electron.ipcRenderer.invoke("expense:create", values),
     update: (id, values) => electron.ipcRenderer.invoke("expense:update", id, values),
     delete: (id) => electron.ipcRenderer.invoke("expense:delete", id),
-    search: (value) => electron.ipcRenderer.invoke("expense:search", value),
     filter: (startDate, endDate) => electron.ipcRenderer.invoke("expense:filter", startDate, endDate),
+    search: (query) => electron.ipcRenderer.invoke("expense:search", query),
     getTypes: () => electron.ipcRenderer.invoke("expense:getTypes"),
     createType: (values) => electron.ipcRenderer.invoke("expense:createType", values)
   },

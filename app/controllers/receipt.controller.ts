@@ -6,18 +6,14 @@ import type {
 } from '../types/pagination';
 import { getUserSession } from '../utils/session';
 
-const emptyReceipts = (
-  query?: PaginationQuery
-): PaginatedResult<any> => ({
+const emptyReceipts = (query?: PaginationQuery): PaginatedResult<any> => ({
   rows: [],
   total: 0,
   page: query?.page ?? 1,
   pageSize: query?.pageSize ?? 25,
 });
 
-export const searchReceiptFn = async (
-  query: SearchPaginationQuery
-) => {
+export const searchReceiptFn = async (query: SearchPaginationQuery) => {
   try {
     return await window.api.receipt.search(query);
   } catch (error: any) {

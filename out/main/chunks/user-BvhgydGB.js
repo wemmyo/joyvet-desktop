@@ -13,7 +13,7 @@ const User = database.database.define("user", {
     primaryKey: true
   },
   fullName: Sequelize.STRING,
-  username: Sequelize.STRING,
+  username: { type: Sequelize.STRING, unique: true },
   password: Sequelize.STRING,
   role: Sequelize.STRING
 });

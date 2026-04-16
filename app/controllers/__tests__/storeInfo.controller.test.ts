@@ -73,7 +73,14 @@ describe('storeInfo controller', () => {
     it('calls create and cb', async () => {
       mockApi.storeInfo.create.mockResolvedValue(mockStoreInfo);
       const cb = vi.fn();
-      await createStoreInfoFn({ storeName: 'JoyVet Clinic', address: '123 Main Street', phoneNumber: '1234567890' }, cb);
+      await createStoreInfoFn(
+        {
+          storeName: 'JoyVet Clinic',
+          address: '123 Main Street',
+          phoneNumber: '1234567890',
+        },
+        cb
+      );
       expect(mockApi.storeInfo.create).toHaveBeenCalled();
       expect(cb).toHaveBeenCalled();
     });
@@ -109,7 +116,9 @@ describe('storeInfo controller', () => {
       mockApi.storeInfo.delete.mockResolvedValue(undefined);
       const cb = vi.fn();
       await deleteStoreInfoFn(1, cb);
-      expect(toast.success).toHaveBeenCalledWith('Store Info successfully deleted');
+      expect(toast.success).toHaveBeenCalledWith(
+        'Store Info successfully deleted'
+      );
       expect(cb).toHaveBeenCalled();
     });
 

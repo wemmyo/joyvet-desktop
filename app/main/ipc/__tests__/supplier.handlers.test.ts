@@ -19,6 +19,13 @@ vi.mock('../../runtime', () => ({
   ensureAuthReady: vi.fn(),
 }));
 
+vi.mock('../../database', () => ({
+  default: {
+    transaction: vi.fn((cb: Function) => cb({})),
+    sync: vi.fn(),
+  },
+}));
+
 vi.mock('../../../services/supplier.service', () => ({
   createSupplier: vi.fn(),
   getSupplierById: vi.fn(),
@@ -30,6 +37,7 @@ vi.mock('../../../models/supplier', () => ({
   default: {
     findAndCountAll: vi.fn(),
     findAll: vi.fn(),
+    destroy: vi.fn(),
   },
 }));
 
@@ -154,12 +162,14 @@ describe('supplier IPC handlers', () => {
   });
 
   describe('supplier:delete', () => {
-    it('calls deleteSupplier', async () => {
+    it('destroys the supplier inside a transaction', async () => {
       vi.mocked(PurchaseModel.count).mockResolvedValue(0 as any);
       vi.mocked(PaymentModel.count).mockResolvedValue(0 as any);
-      (supplierService.deleteSupplier as any).mockResolvedValue(undefined);
+      vi.mocked(SupplierModel.destroy).mockResolvedValue(1 as any);
       await handlers['supplier:delete'](mockEvent, 1);
-      expect(supplierService.deleteSupplier).toHaveBeenCalledWith(1);
+      expect(SupplierModel.destroy).toHaveBeenCalledWith(
+        expect.objectContaining({ where: { id: 1 } })
+      );
     });
 
     it('throws if supplier has purchases', async () => {
@@ -169,7 +179,7 @@ describe('supplier IPC handlers', () => {
       await expect(handlers['supplier:delete'](mockEvent, 1)).rejects.toThrow(
         'Cannot delete supplier with existing purchases'
       );
-      expect(supplierService.deleteSupplier).not.toHaveBeenCalled();
+      expect(SupplierModel.destroy).not.toHaveBeenCalled();
     });
 
     it('throws if supplier has payments', async () => {
@@ -179,17 +189,19 @@ describe('supplier IPC handlers', () => {
       await expect(handlers['supplier:delete'](mockEvent, 1)).rejects.toThrow(
         'Cannot delete supplier with existing payments'
       );
-      expect(supplierService.deleteSupplier).not.toHaveBeenCalled();
+      expect(SupplierModel.destroy).not.toHaveBeenCalled();
     });
 
     it('deletes successfully when no related records exist', async () => {
       vi.mocked(PurchaseModel.count).mockResolvedValue(0 as any);
       vi.mocked(PaymentModel.count).mockResolvedValue(0 as any);
-      vi.mocked(supplierService.deleteSupplier).mockResolvedValue(undefined as any);
+      vi.mocked(SupplierModel.destroy).mockResolvedValue(1 as any);
 
       await handlers['supplier:delete'](mockEvent, 1);
 
-      expect(supplierService.deleteSupplier).toHaveBeenCalledWith(1);
+      expect(SupplierModel.destroy).toHaveBeenCalledWith(
+        expect.objectContaining({ where: { id: 1 } })
+      );
     });
   });
 
@@ -199,14 +211,18 @@ describe('supplier IPC handlers', () => {
         rows: [mockSupplier],
         count: 1,
       });
-      const result = await handlers['supplier:search'](mockEvent, { search: 'Test' });
+      const result = await handlers['supplier:search'](mockEvent, {
+        search: 'Test',
+      });
       expect(result.rows).toEqual([mockSupplier.toJSON()]);
       const callArg = (SupplierModel.findAndCountAll as any).mock.calls[0][0];
       expect(callArg.where.fullName).toBeDefined();
     });
 
     it('returns empty result when no search term', async () => {
-      const result = await handlers['supplier:search'](mockEvent, { search: '' });
+      const result = await handlers['supplier:search'](mockEvent, {
+        search: '',
+      });
       expect(result).toEqual({ rows: [], total: 0, page: 1, pageSize: 25 });
     });
   });

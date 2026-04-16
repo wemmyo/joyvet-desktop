@@ -25,11 +25,8 @@
   flex-shrink: 0;
   min-height: 0;
   position: relative;
-  transition:
-    width 0.2s ease-out,
-    flex-basis 0.2s ease-out,
-    padding 0.2s ease-out,
-    border-color 0.2s ease-out;
+  transition: width 0.2s ease-out, flex-basis 0.2s ease-out, padding 0.2s
+    ease-out, border-color 0.2s ease-out;
 }
 
 .rightSidebar__open {

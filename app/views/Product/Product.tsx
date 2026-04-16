@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { useReactToPrint } from 'react-to-print';
 import { Plus, RefreshCw, Printer } from 'lucide-react';
+import { toast } from 'sonner';
 
 import DashboardLayout from '../../layouts/DashboardLayout/DashboardLayout';
 import PaginationControls from '../../components/PaginationControls/PaginationControls';
@@ -15,10 +16,7 @@ import {
   TableHead,
   TableCell,
 } from '../../components/ui/table';
-import {
-  TableEmptyRow,
-  TableFrame,
-} from '../../components/ui/table-helpers';
+import { TableEmptyRow, TableFrame } from '../../components/ui/table-helpers';
 
 import CreateProduct from './components/CreateProduct/CreateProduct';
 import { numberWithCommas } from '../../utils/helpers';
@@ -97,8 +95,15 @@ const ProductsScreen: React.FC = () => {
   }, [appliedSearch, page]);
 
   const handleNewProduct = async (values: Partial<IProduct>) => {
-    await createProductFn(values);
-    await fetchProducts();
+    try {
+      await createProductFn(values);
+      toast.success('Product created');
+      await fetchProducts();
+    } catch (err: unknown) {
+      toast.error(
+        err instanceof Error ? err.message : 'Failed to create product'
+      );
+    }
   };
 
   const openSingleProduct = (id: any) => {

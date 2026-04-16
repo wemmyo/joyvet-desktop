@@ -3,6 +3,7 @@ import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import dayjs from 'dayjs';
+import { toast } from 'sonner';
 import { useSidebarContext } from '../../../../contexts/SidebarContext';
 import {
   getSingleExpenseFn,
@@ -22,9 +23,9 @@ import {
 } from '../../../../components/ui/select';
 
 const schema = z.object({
-  type: z.string().optional().default(''),
-  amount: z.string().optional().default(''),
-  date: z.string().optional().default(''),
+  type: z.string().min(1, 'Required'),
+  amount: z.string().min(1, 'Required'),
+  date: z.string().min(1, 'Required'),
   note: z.string().optional().default(''),
 });
 
@@ -41,7 +42,13 @@ const EditExpense: React.FC<EditExpenseProps> = ({
 }: EditExpenseProps) => {
   const { closeSideContent } = useSidebarContext();
 
-  const { register, handleSubmit, control, reset } = useForm<FormValues>({
+  const {
+    register,
+    handleSubmit,
+    control,
+    reset,
+    formState: { errors },
+  } = useForm<FormValues>({
     resolver: zodResolver(schema),
   });
 
@@ -60,22 +67,36 @@ const EditExpense: React.FC<EditExpenseProps> = ({
   }, [expenseId, reset]);
 
   const handleDeleteExpense = async () => {
-    await deleteExpenseFn(expenseId);
-    refreshExpenses();
-    closeSideContent();
+    try {
+      await deleteExpenseFn(expenseId);
+      toast.success('Expense deleted');
+      refreshExpenses();
+      closeSideContent();
+    } catch (err: unknown) {
+      toast.error(
+        err instanceof Error ? err.message : 'Failed to delete expense'
+      );
+    }
   };
 
   const onSubmit = async (values: FormValues) => {
-    await updateExpenseFn(
-      {
-        ...values,
-        amount: Number(values.amount),
-        date: new Date(values.date || ''),
-      },
-      Number(expenseId)
-    );
-    refreshExpenses();
-    closeSideContent();
+    try {
+      await updateExpenseFn(
+        {
+          ...values,
+          amount: Number(values.amount),
+          date: new Date(values.date || ''),
+        },
+        Number(expenseId)
+      );
+      toast.success('Expense updated');
+      refreshExpenses();
+      closeSideContent();
+    } catch (err: unknown) {
+      toast.error(
+        err instanceof Error ? err.message : 'Failed to update expense'
+      );
+    }
   };
 
   return (
@@ -121,6 +142,9 @@ const EditExpense: React.FC<EditExpenseProps> = ({
             </Select>
           )}
         />
+        {errors.type && (
+          <p className="text-sm text-destructive mt-1">{errors.type.message}</p>
+        )}
       </div>
       <div className="space-y-1">
         <Label htmlFor="amount">Amount</Label>
@@ -129,11 +153,26 @@ const EditExpense: React.FC<EditExpenseProps> = ({
           placeholder="Amount"
           type="number"
           {...register('amount')}
+          className={errors.amount ? 'border-destructive' : ''}
         />
+        {errors.amount && (
+          <p className="text-sm text-destructive mt-1">
+            {errors.amount.message}
+          </p>
+        )}
       </div>
       <div className="space-y-1">
         <Label htmlFor="date">Date</Label>
-        <Input id="date" placeholder="Date" type="date" {...register('date')} />
+        <Input
+          id="date"
+          placeholder="Date"
+          type="date"
+          {...register('date')}
+          className={errors.date ? 'border-destructive' : ''}
+        />
+        {errors.date && (
+          <p className="text-sm text-destructive mt-1">{errors.date.message}</p>
+        )}
       </div>
       <div className="space-y-1">
         <Label htmlFor="note">Note</Label>

@@ -93,9 +93,15 @@ const AuditLog: React.FC<AuditLogProps> = ({ data }) => {
                 <TableCell className="whitespace-nowrap">
                   {dayjs(entry.createdAt).format('DD/MM/YYYY HH:mm')}
                 </TableCell>
-                <TableCell>{changeTypeLabel[entry.changeType] ?? entry.changeType}</TableCell>
-                <TableCell className="text-sm">{renderDetails(entry)}</TableCell>
-                <TableCell>{reasonLabel[entry.reason] ?? entry.reason}</TableCell>
+                <TableCell>
+                  {changeTypeLabel[entry.changeType] ?? entry.changeType}
+                </TableCell>
+                <TableCell className="text-sm">
+                  {renderDetails(entry)}
+                </TableCell>
+                <TableCell>
+                  {reasonLabel[entry.reason] ?? entry.reason}
+                </TableCell>
                 <TableCell>{renderReference(entry)}</TableCell>
                 <TableCell>{entry.postedBy}</TableCell>
               </TableRow>

@@ -3,6 +3,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Link } from 'react-router-dom';
+import { toast } from 'sonner';
 import { useSidebarContext } from '../../../../contexts/SidebarContext';
 import routes from '../../../../routing/routes';
 import { isAdmin } from '../../../../utils/helpers';
@@ -10,7 +11,6 @@ import { ICustomer } from '../../../../models/customer';
 import {
   getSingleCustomerFn,
   deleteCustomerFn,
-  getCustomersFn,
   updateCustomerFn,
 } from '../../../../controllers/customer.controller';
 import { Button } from '../../../../components/ui/button';
@@ -29,10 +29,12 @@ type FormValues = z.infer<typeof schema>;
 
 export interface EditCustomerProps {
   customerId: number;
+  onRefresh?: () => void;
 }
 
 const EditCustomer: React.FC<EditCustomerProps> = ({
   customerId,
+  onRefresh,
 }: EditCustomerProps) => {
   const [customer, setCustomer] = useState<ICustomer>({} as ICustomer);
 
@@ -64,22 +66,32 @@ const EditCustomer: React.FC<EditCustomerProps> = ({
   }, [customerId, reset]);
 
   const handleDeleteCustomer = async () => {
-    await deleteCustomerFn(Number(customerId));
-    closeSideContent();
-    await getCustomersFn();
+    try {
+      await deleteCustomerFn(Number(customerId));
+      toast.success('Customer deleted');
+      closeSideContent();
+      onRefresh?.();
+    } catch {
+      toast.error('Failed to delete customer');
+    }
   };
 
   const onSubmit = async (values: FormValues) => {
-    await updateCustomerFn(
-      {
-        ...values,
-        balance: Number(values.balance),
-        maxPriceLevel: Number(values.maxPriceLevel),
-      },
-      customerId
-    );
-    closeSideContent();
-    await getCustomersFn();
+    try {
+      await updateCustomerFn(
+        {
+          ...values,
+          balance: Number(values.balance),
+          maxPriceLevel: Number(values.maxPriceLevel),
+        },
+        customerId
+      );
+      toast.success('Customer updated');
+      closeSideContent();
+      onRefresh?.();
+    } catch {
+      toast.error('Failed to update customer');
+    }
   };
 
   return (

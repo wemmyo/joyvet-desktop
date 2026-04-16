@@ -53,7 +53,10 @@ const mockPaginated = {
 describe('supplier controller', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    localStorage.setItem('user:v1', JSON.stringify({ id: 1, fullName: 'Jane Doe', role: 'admin' }));
+    localStorage.setItem(
+      'user:v1',
+      JSON.stringify({ id: 1, fullName: 'Jane Doe', role: 'admin' })
+    );
   });
 
   describe('getSuppliersFn', () => {
@@ -104,11 +107,16 @@ describe('supplier controller', () => {
     it('passes postedBy from session; calls toast.success and cb', async () => {
       mockApi.supplier.create.mockResolvedValue(undefined);
       const cb = vi.fn();
-      await createSupplierFn({ fullName: 'Test Supplier', phoneNumber: '123', address: 'Addr' }, cb);
+      await createSupplierFn(
+        { fullName: 'Test Supplier', phoneNumber: '123', address: 'Addr' },
+        cb
+      );
       expect(mockApi.supplier.create).toHaveBeenCalledWith(
         expect.objectContaining({ postedBy: 'Jane Doe' })
       );
-      expect(toast.success).toHaveBeenCalledWith('Supplier successfully created');
+      expect(toast.success).toHaveBeenCalledWith(
+        'Supplier successfully created'
+      );
       expect(cb).toHaveBeenCalled();
     });
   });
@@ -138,7 +146,11 @@ describe('supplier controller', () => {
       const mockPayments = [{ id: 1, amount: 1000 }];
       mockApi.payment.getBySupplier.mockResolvedValue(mockPayments);
       const result = await getSupplierPaymentsFn(1, '2024-01-01', '2024-01-31');
-      expect(mockApi.payment.getBySupplier).toHaveBeenCalledWith(1, '2024-01-01', '2024-01-31');
+      expect(mockApi.payment.getBySupplier).toHaveBeenCalledWith(
+        1,
+        '2024-01-01',
+        '2024-01-31'
+      );
       expect(result).toEqual(mockPayments);
     });
 
@@ -153,8 +165,16 @@ describe('supplier controller', () => {
     it('calls window.api.purchase.getBySupplier', async () => {
       const mockPurchases = [{ id: 1, amount: 5000 }];
       mockApi.purchase.getBySupplier.mockResolvedValue(mockPurchases);
-      const result = await getSupplierPurchasesFn(1, '2024-01-01', '2024-01-31');
-      expect(mockApi.purchase.getBySupplier).toHaveBeenCalledWith(1, '2024-01-01', '2024-01-31');
+      const result = await getSupplierPurchasesFn(
+        1,
+        '2024-01-01',
+        '2024-01-31'
+      );
+      expect(mockApi.purchase.getBySupplier).toHaveBeenCalledWith(
+        1,
+        '2024-01-01',
+        '2024-01-31'
+      );
       expect(result).toEqual(mockPurchases);
     });
 

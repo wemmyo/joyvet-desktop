@@ -48,15 +48,30 @@ export default function RoutesComponent() {
               </PrivateRoute>
             }
           >
-            <Route path={`${routes.PRODUCT}/:id`} element={<ProductHistory />} />
-            <Route path={`${routes.SUPPLIER}/:id`} element={<SupplierHistory />} />
-            <Route path={`${routes.CUSTOMER}/:id`} element={<CustomerHistory />} />
-            <Route path={`${routes.INVOICE}/:id`} element={<EditInvoiceScreen />} />
+            <Route
+              path={`${routes.PRODUCT}/:id`}
+              element={<ProductHistory />}
+            />
+            <Route
+              path={`${routes.SUPPLIER}/:id`}
+              element={<SupplierHistory />}
+            />
+            <Route
+              path={`${routes.CUSTOMER}/:id`}
+              element={<CustomerHistory />}
+            />
+            <Route
+              path={`${routes.INVOICE}/:id`}
+              element={<EditInvoiceScreen />}
+            />
             <Route path={routes.STORE_INFO} element={<StoreInfoScreen />} />
             <Route path={routes.EXPENSE} element={<ExpenseScreen />} />
             <Route path={routes.USER} element={<UserScreen />} />
             <Route path={routes.SALES} element={<SalesScreen />} />
-            <Route path={routes.ALL_PURCHASES} element={<AllPurchasesScreen />} />
+            <Route
+              path={routes.ALL_PURCHASES}
+              element={<AllPurchasesScreen />}
+            />
             <Route path={routes.PURCHASE} element={<PurchaseScreen />} />
             <Route path={routes.PAYMENT} element={<PaymentScreen />} />
             <Route path={routes.RECEIPT} element={<ReceiptScreen />} />

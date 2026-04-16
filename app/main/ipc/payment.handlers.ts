@@ -105,11 +105,21 @@ export function registerPaymentHandlers(): void {
           throw new Error('Payment not found');
         }
 
+        // Reverse the old payment's effect on the original supplier.
         await Supplier.increment('balance', {
           by: (payment as any).amount,
           where: { id: (payment as any).supplierId },
           transaction: t,
         });
+
+        // Verify the target supplier exists before applying the new decrement.
+        const targetSupplier = await Supplier.findByPk(
+          parsedValues.supplierId,
+          { transaction: t }
+        );
+        if (!targetSupplier) {
+          throw new Error('Supplier not found');
+        }
 
         await Supplier.decrement('balance', {
           by: parsedValues.amount,

@@ -39,7 +39,9 @@ const LoginScreen = () => {
   if (hasUsers === null) {
     return (
       <div className="flex min-h-svh w-full items-center justify-center bg-muted/40 p-6 md:p-10">
-        <div className="text-sm text-muted-foreground">Loading workspace...</div>
+        <div className="text-sm text-muted-foreground">
+          Loading workspace...
+        </div>
       </div>
     );
   }

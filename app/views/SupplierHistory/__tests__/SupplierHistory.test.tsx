@@ -26,11 +26,15 @@ vi.mock('../../../layouts/DashboardLayout/DashboardLayout', () => ({
 }));
 
 vi.mock('../components/Payments/Payments', () => ({
-  default: ({ data }: any) => <div data-testid="payment-results">{data.length}</div>,
+  default: ({ data }: any) => (
+    <div data-testid="payment-results">{data.length}</div>
+  ),
 }));
 
 vi.mock('../components/Purchases/Purchases', () => ({
-  default: ({ data }: any) => <div data-testid="purchase-results">{data.length}</div>,
+  default: ({ data }: any) => (
+    <div data-testid="purchase-results">{data.length}</div>
+  ),
 }));
 
 describe('SupplierHistory route params', () => {

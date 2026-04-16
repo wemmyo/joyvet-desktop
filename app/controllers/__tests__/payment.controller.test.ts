@@ -44,7 +44,10 @@ const mockPaginated = {
 describe('payment controller', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    localStorage.setItem('user:v1', JSON.stringify({ id: 1, fullName: 'Jane Doe', role: 'admin' }));
+    localStorage.setItem(
+      'user:v1',
+      JSON.stringify({ id: 1, fullName: 'Jane Doe', role: 'admin' })
+    );
   });
 
   describe('getPaymentsFn', () => {
@@ -99,7 +102,9 @@ describe('payment controller', () => {
       expect(mockApi.payment.create).toHaveBeenCalledWith(
         expect.objectContaining({ postedBy: 'Jane Doe' })
       );
-      expect(toast.success).toHaveBeenCalledWith('Payment successfully created');
+      expect(toast.success).toHaveBeenCalledWith(
+        'Payment successfully created'
+      );
       expect(cb).toHaveBeenCalled();
     });
   });
@@ -118,7 +123,9 @@ describe('payment controller', () => {
     it('calls toast.success on success', async () => {
       mockApi.payment.delete.mockResolvedValue(undefined);
       await deletePaymentFn(1);
-      expect(toast.success).toHaveBeenCalledWith('Payment successfully deleted');
+      expect(toast.success).toHaveBeenCalledWith(
+        'Payment successfully deleted'
+      );
     });
 
     it('calls toast.error on failure', async () => {

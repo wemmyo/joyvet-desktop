@@ -191,8 +191,8 @@ const SideNav = () => {
           <SidebarMenu className="mt-3">
             <SidebarMenuItem>
               <SidebarMenuButton
-                onClick={() => {
-                  logoutFn();
+                onClick={async () => {
+                  await logoutFn();
                   navigate(routes.LOGIN);
                 }}
                 className="text-red-500 hover:bg-red-500/10 hover:text-red-600"

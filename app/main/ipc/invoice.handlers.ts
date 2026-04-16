@@ -145,79 +145,120 @@ export function registerInvoiceHandlers(): void {
           const customer = await Customer.findByPk(invoice?.customerId, {
             transaction: t,
           });
+          if (!customer) throw new Error('Customer not found');
+
+          // Validate all items sequentially so duplicate-product stock checks
+          // see each preceding decrement within this transaction.
+          let totalAmount = 0;
+          let totalProfit = 0;
+          const resolvedItems: Array<{
+            productId: number;
+            productTitle: string;
+            quantity: number;
+            unitPrice: number;
+            computedAmount: number;
+            computedProfit: number;
+            stockBefore: number;
+            stockAfter: number;
+          }> = [];
+
+          for (const item of invoiceItems) {
+            const product = await Product.findByPk(item.product?.id, {
+              transaction: t,
+            });
+            if (!product) {
+              throw new Error(`Product not found: ${item.product?.id}`);
+            }
+            if (!item.quantity) {
+              throw new Error(
+                `Quantity missing for ${(product as any).title}`
+              );
+            }
+            if (item.quantity > (product as any).stock) {
+              throw new Error(
+                `Not enough in stock for ${(product as any).title}. ${
+                  (product as any).stock
+                } remaining`
+              );
+            }
+
+            // Capture stock levels before decrement. Because we use findByPk
+            // inside the same transaction each iteration, each read reflects
+            // the decrements applied by previous iterations — ensuring
+            // duplicate-product quantities are checked cumulatively.
+            const stockBefore = (product as any).stock;
+            const stockAfter = stockBefore - item.quantity;
+
+            await Product.decrement('stock', {
+              by: item.quantity,
+              where: { id: (product as any).id },
+              transaction: t,
+            });
+
+            const computedAmount = item.quantity * item.unitPrice;
+            const computedProfit =
+              item.quantity * (item.unitPrice - (product as any).buyPrice);
+
+            totalAmount += computedAmount;
+            totalProfit += computedProfit;
+
+            resolvedItems.push({
+              productId: (product as any).id,
+              productTitle: (product as any).title,
+              quantity: item.quantity,
+              unitPrice: item.unitPrice,
+              computedAmount,
+              computedProfit,
+              stockBefore,
+              stockAfter,
+            });
+          }
 
           const customerInvoice = await (customer as any).createInvoice(
             {
               saleType: invoice?.saleType,
-              amount: invoice?.amount,
-              profit: invoice?.profit,
+              amount: totalAmount,
+              profit: totalProfit,
               postedBy: invoice?.postedBy ?? postedBy,
             },
             { transaction: t }
           );
 
-          await Promise.all(
-            invoiceItems.map(async (item) => {
-              const product = await Product.findByPk(item.product?.id, {
-                transaction: t,
-              });
-              if (!item.quantity) {
-                throw new Error(
-                  `Quantity missing for ${(product as any).title}`
-                );
-              }
-              if (item.quantity > (product as any).stock) {
-                throw new Error(
-                  `Not enough in stock for ${(product as any).title}. ${
-                    (product as any).stock
-                  } remaining`
-                );
-              }
+          for (const resolved of resolvedItems) {
+            await ProductAuditLog.create(
+              {
+                productId: resolved.productId,
+                changeType: 'stock_change',
+                delta: -resolved.quantity,
+                stockBefore: resolved.stockBefore,
+                stockAfter: resolved.stockAfter,
+                reason: 'invoice_create',
+                referenceId: (customerInvoice as any).id,
+                referenceType: 'invoice',
+                postedBy: invoice?.postedBy ?? postedBy ?? 'unknown',
+              },
+              { transaction: t }
+            );
 
-              const stockBefore = (product as any).stock;
-              const stockAfter = stockBefore - item.quantity;
-
-              await Product.decrement('stock', {
-                by: item.quantity,
-                where: { id: item.product?.id },
-                transaction: t,
-              });
-
-              await ProductAuditLog.create(
-                {
-                  productId: (product as any).id,
-                  changeType: 'stock_change',
-                  delta: -item.quantity,
-                  stockBefore,
-                  stockAfter,
-                  reason: 'invoice_create',
-                  referenceId: (customerInvoice as any).id,
-                  referenceType: 'invoice',
-                  postedBy: invoice?.postedBy ?? postedBy ?? 'unknown',
-                },
-                { transaction: t }
-              );
-
-              await InvoiceItem.create(
-                {
-                  invoiceId: (customerInvoice as any).id,
-                  productId: (product as any).id,
-                  quantity: item.quantity,
-                  unitPrice: item.unitPrice,
-                  amount: item.amount,
-                  profit: item.profit,
-                },
-                { transaction: t }
-              );
-            })
-          );
+            await InvoiceItem.create(
+              {
+                invoiceId: (customerInvoice as any).id,
+                productId: resolved.productId,
+                quantity: resolved.quantity,
+                unitPrice: resolved.unitPrice,
+                amount: resolved.computedAmount,
+                profit: resolved.computedProfit,
+              },
+              { transaction: t }
+            );
+          }
 
           if (
             invoice?.saleType === 'credit' ||
             invoice?.saleType === 'transfer'
           ) {
             await Customer.increment('balance', {
-              by: invoice.amount,
+              by: totalAmount,
               where: { id: invoice.customerId },
               transaction: t,
             });
@@ -226,7 +267,7 @@ export function registerInvoiceHandlers(): void {
           await createInvoiceAuditLog({
             invoiceId: (customerInvoice as any).id,
             action: 'created',
-            details: { saleType: invoice?.saleType, amount: invoice?.amount },
+            details: { saleType: invoice?.saleType, amount: totalAmount },
             performedBy: invoice?.postedBy ?? postedBy ?? 'unknown',
             transaction: t,
           });
@@ -264,24 +305,23 @@ export function registerInvoiceHandlers(): void {
               );
             }
 
-            const newStock = product.stock + invoiceItem.quantity;
-            if (newStock < 0) {
-              throw new Error(
-                `Can't delete invoice. Negative stock for: ${product.title}`
-              );
-            }
-            await Product.update(
-              { stock: newStock },
-              { where: { id: product.id }, transaction: t }
-            );
+            const stockBefore = product.stock;
+            const stockAfter = stockBefore + invoiceItem.quantity;
+
+            // Use atomic increment so concurrent writes don't overwrite each other.
+            await Product.increment('stock', {
+              by: invoiceItem.quantity,
+              where: { id: product.id },
+              transaction: t,
+            });
 
             await ProductAuditLog.create(
               {
                 productId: product.id,
                 changeType: 'stock_change',
                 delta: invoiceItem.quantity,
-                stockBefore: product.stock,
-                stockAfter: newStock,
+                stockBefore,
+                stockAfter,
                 reason: 'invoice_delete',
                 referenceId: id,
                 referenceType: 'invoice',
@@ -332,28 +372,23 @@ export function registerInvoiceHandlers(): void {
           const product = await Product.findByPk(productId, { transaction: t });
           if (!product) throw new Error('Product not found');
 
-          const newStock =
-            (product as any).stock + (invoiceItem as any).quantity;
-          if (newStock < 0) {
-            throw new Error(
-              `Deleting this item would result in negative stock for: ${
-                (product as any).title
-              }`
-            );
-          }
+          const stockBefore = (product as any).stock;
+          const stockAfter = stockBefore + (invoiceItem as any).quantity;
 
-          await Product.update(
-            { stock: newStock },
-            { where: { id: productId }, transaction: t }
-          );
+          // Use atomic increment to avoid overwriting concurrent stock changes.
+          await Product.increment('stock', {
+            by: (invoiceItem as any).quantity,
+            where: { id: productId },
+            transaction: t,
+          });
 
           await ProductAuditLog.create(
             {
               productId,
               changeType: 'stock_change',
               delta: (invoiceItem as any).quantity,
-              stockBefore: (product as any).stock,
-              stockAfter: newStock,
+              stockBefore,
+              stockAfter,
               reason: 'invoice_delete_item',
               referenceId: invoiceId,
               referenceType: 'invoice',
@@ -447,14 +482,21 @@ export function registerInvoiceHandlers(): void {
               { transaction: t }
             );
           } else {
+            // Compute amount and profit server-side rather than trusting client values.
+            const computedAmount =
+              currentInvoiceItem.quantity * currentInvoiceItem.unitPrice;
+            const computedProfit =
+              currentInvoiceItem.quantity *
+              (currentInvoiceItem.unitPrice - (product as any).buyPrice);
+
             await InvoiceItem.create(
               {
                 invoiceId: (invoice as any).id,
                 productId: (product as any).id,
                 quantity: currentInvoiceItem.quantity,
                 unitPrice: currentInvoiceItem.unitPrice,
-                amount: currentInvoiceItem.amount,
-                profit: currentInvoiceItem.profit,
+                amount: computedAmount,
+                profit: computedProfit,
               },
               { transaction: t }
             );
@@ -474,15 +516,19 @@ export function registerInvoiceHandlers(): void {
             0
           );
 
+          // Capture old amount before update so we can compute the exact balance delta.
+          const oldInvoiceAmount = (invoice as any).amount;
+
           await (invoice as any).update(
             { amount: totalAmount, profit: totalProfit },
             { transaction: t }
           );
 
-          await (product as any).update(
-            { stock: newStock },
-            { transaction: t }
-          );
+          await Product.decrement('stock', {
+            by: currentInvoiceItem.quantity,
+            where: { id: (product as any).id },
+            transaction: t,
+          });
 
           await ProductAuditLog.create(
             {
@@ -500,11 +546,22 @@ export function registerInvoiceHandlers(): void {
           );
 
           if (['credit', 'transfer'].includes(currentInvoice.saleType)) {
-            await Customer.increment('balance', {
-              by: currentInvoiceItem.amount,
-              where: { id: (invoice as any).customerId },
-              transaction: t,
-            });
+            // Use the actual invoice total change rather than the client-provided
+            // item amount. This handles merged items correctly.
+            const balanceDelta = totalAmount - oldInvoiceAmount;
+            if (balanceDelta > 0) {
+              await Customer.increment('balance', {
+                by: balanceDelta,
+                where: { id: (invoice as any).customerId },
+                transaction: t,
+              });
+            } else if (balanceDelta < 0) {
+              await Customer.decrement('balance', {
+                by: Math.abs(balanceDelta),
+                where: { id: (invoice as any).customerId },
+                transaction: t,
+              });
+            }
           }
 
           await createInvoiceAuditLog({
@@ -568,10 +625,19 @@ export function registerInvoiceHandlers(): void {
           const stockBefore = (product as any).stock;
           const stockAfter = stockBefore - delta;
 
-          await Product.update(
-            { stock: stockAfter },
-            { where: { id: productId }, transaction: t }
-          );
+          if (delta > 0) {
+            await Product.decrement('stock', {
+              by: delta,
+              where: { id: productId },
+              transaction: t,
+            });
+          } else if (delta < 0) {
+            await Product.increment('stock', {
+              by: Math.abs(delta),
+              where: { id: productId },
+              transaction: t,
+            });
+          }
 
           const unitPrice = (invoiceItem as any).unitPrice;
           const newAmount = newQuantity * unitPrice;

@@ -3,6 +3,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Link } from 'react-router-dom';
+import { toast } from 'sonner';
 
 import { Button } from '../../../../components/ui/button';
 import { Input } from '../../../../components/ui/input';
@@ -60,6 +61,7 @@ const EditProduct: React.FC<EditProductProps> = ({
   useEffect(() => {
     const fetchData = async () => {
       const response = await getSingleProductFn(Number(productId));
+      if (!response) return;
       setProduct(response);
       reset({
         title: response.title || '',
@@ -74,25 +76,39 @@ const EditProduct: React.FC<EditProductProps> = ({
   }, [productId, reset]);
 
   const onDeleteProduct = async () => {
-    await deleteProductFn(Number(productId));
-    closeSideContent();
-    refreshProducts();
+    try {
+      await deleteProductFn(Number(productId));
+      toast.success('Product deleted');
+      closeSideContent();
+      refreshProducts();
+    } catch (err: unknown) {
+      toast.error(
+        err instanceof Error ? err.message : 'Failed to delete product'
+      );
+    }
   };
 
   const onSubmit = async (values: EditProductFormValues) => {
-    await updateProductFn(
-      {
-        ...values,
-        stock: Number(values.stock),
-        sellPrice: Number(values.sellPrice),
-        sellPrice2: Number(values.sellPrice2),
-        sellPrice3: Number(values.sellPrice3),
-        buyPrice: Number(values.buyPrice),
-      },
-      Number(productId)
-    );
-    closeSideContent();
-    refreshProducts();
+    try {
+      await updateProductFn(
+        {
+          ...values,
+          stock: Number(values.stock),
+          sellPrice: Number(values.sellPrice),
+          sellPrice2: Number(values.sellPrice2),
+          sellPrice3: Number(values.sellPrice3),
+          buyPrice: Number(values.buyPrice),
+        },
+        Number(productId)
+      );
+      toast.success('Product updated');
+      closeSideContent();
+      refreshProducts();
+    } catch (err: unknown) {
+      toast.error(
+        err instanceof Error ? err.message : 'Failed to update product'
+      );
+    }
   };
 
   return (

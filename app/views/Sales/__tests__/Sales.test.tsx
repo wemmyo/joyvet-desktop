@@ -69,23 +69,25 @@ describe('SalesScreen', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    filterInvoiceFnMock.mockImplementation(async (query?: { search?: string }) => {
-      if (query?.search) {
+    filterInvoiceFnMock.mockImplementation(
+      async (query?: { search?: string }) => {
+        if (query?.search) {
+          return {
+            rows: searchedInvoices,
+            total: 1,
+            page: 1,
+            pageSize: 25,
+          };
+        }
+
         return {
-          rows: searchedInvoices,
+          rows: defaultInvoices,
           total: 1,
           page: 1,
           pageSize: 25,
         };
       }
-
-      return {
-        rows: defaultInvoices,
-        total: 1,
-        page: 1,
-        pageSize: 25,
-      };
-    });
+    );
     localStorage.clear();
   });
 

@@ -39,7 +39,10 @@ const ActivityTimeline: React.FC<ActivityTimelineProps> = ({ data }) => {
       <TableFrame>
         <Table>
           <TableBody>
-            <TableEmptyRow colSpan={6} message="No activity found for this period." />
+            <TableEmptyRow
+              colSpan={6}
+              message="No activity found for this period."
+            />
           </TableBody>
         </Table>
       </TableFrame>
@@ -88,9 +91,7 @@ const ActivityTimeline: React.FC<ActivityTimelineProps> = ({ data }) => {
                       ) : (
                         <Receipt className="h-4 w-4 text-green-500" />
                       )}
-                      {isInvoice
-                        ? `Invoice (${entry.saleType})`
-                        : 'Receipt'}
+                      {isInvoice ? `Invoice (${entry.saleType})` : 'Receipt'}
                     </span>
                   </TableCell>
                   <TableCell className="text-sm text-muted-foreground">
@@ -124,22 +125,33 @@ const ActivityTimeline: React.FC<ActivityTimelineProps> = ({ data }) => {
                               <tr className="text-muted-foreground border-b">
                                 <th className="text-left py-1 pr-4">Product</th>
                                 <th className="text-right py-1 pr-4">Qty</th>
-                                <th className="text-right py-1 pr-4">Unit Price</th>
+                                <th className="text-right py-1 pr-4">
+                                  Unit Price
+                                </th>
                                 <th className="text-right py-1">Amount</th>
                               </tr>
                             </thead>
                             <tbody>
                               {entry.products.map((product: any) => (
-                                <tr key={product.id} className="border-b border-muted">
+                                <tr
+                                  key={product.id}
+                                  className="border-b border-muted"
+                                >
                                   <td className="py-1 pr-4">{product.title}</td>
                                   <td className="text-right py-1 pr-4">
                                     {product.invoiceItem?.quantity}
                                   </td>
                                   <td className="text-right py-1 pr-4">
-                                    ₦{numberWithCommas(product.invoiceItem?.unitPrice)}
+                                    ₦
+                                    {numberWithCommas(
+                                      product.invoiceItem?.unitPrice
+                                    )}
                                   </td>
                                   <td className="text-right py-1">
-                                    ₦{numberWithCommas(product.invoiceItem?.amount)}
+                                    ₦
+                                    {numberWithCommas(
+                                      product.invoiceItem?.amount
+                                    )}
                                   </td>
                                 </tr>
                               ))}

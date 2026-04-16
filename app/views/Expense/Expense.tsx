@@ -2,6 +2,7 @@ import React, { useEffect, useState, useRef, useCallback } from 'react';
 import { useReactToPrint } from 'react-to-print';
 import dayjs from 'dayjs';
 import { Plus, Printer } from 'lucide-react';
+import { toast } from 'sonner';
 
 import DashboardLayout from '../../layouts/DashboardLayout/DashboardLayout';
 import { Button } from '../../components/ui/button';
@@ -16,10 +17,7 @@ import {
   TableHead,
   TableCell,
 } from '../../components/ui/table';
-import {
-  TableEmptyRow,
-  TableFrame,
-} from '../../components/ui/table-helpers';
+import { TableEmptyRow, TableFrame } from '../../components/ui/table-helpers';
 
 import CreateExpense from './components/CreateExpense/CreateExpense';
 import { numberWithCommas } from '../../utils/helpers';
@@ -110,8 +108,15 @@ const ExpensesScreen: React.FC = () => {
   }, [filterExpenses]);
 
   const handleNewExpense = async (values) => {
-    await createExpenseFn(values);
-    filterExpenses();
+    try {
+      await createExpenseFn(values);
+      toast.success('Expense created');
+      filterExpenses();
+    } catch (err: unknown) {
+      toast.error(
+        err instanceof Error ? err.message : 'Failed to create expense'
+      );
+    }
   };
 
   const openSingleExpense = (id: any) => {
@@ -226,12 +231,10 @@ const ExpensesScreen: React.FC = () => {
               Filter
             </Button>
             <Button
-              onClick={async () => {
-                const response = await filterExpensesFn({
-                  startDate: TODAYS_DATE,
-                  endDate: TODAYS_DATE,
-                });
-                setExpenses(response);
+              onClick={() => {
+                setStartDate(TODAYS_DATE);
+                setEndDate(TODAYS_DATE);
+                filterExpenses();
               }}
               type="button"
               variant="outline"

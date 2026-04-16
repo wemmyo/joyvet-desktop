@@ -56,8 +56,8 @@ interface InvoiceItem extends IInvoiceItem {
 }
 
 const schema = z.object({
-  quantity: z.string().optional().default(''),
-  unitPrice: z.string().optional().default(''),
+  quantity: z.string().min(1, 'Required'),
+  unitPrice: z.string().min(1, 'Required'),
   product: z.string().optional().default(''),
   id: z.string().optional().default(''),
   amount: z.string().optional().default(''),
@@ -88,11 +88,14 @@ const InvoiceScreen: React.FC = () => {
     {} as IInvoice
   );
   const [storeInfo, setStoreInfo] = useState<IStoreInfo | undefined>(undefined);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
-    getStoreInfoFn().then((records) => {
-      setStoreInfo(records[0]);
-    });
+    getStoreInfoFn()
+      .then((records) => {
+        setStoreInfo(records[0]);
+      })
+      .catch(() => {});
   }, []);
 
   const { register, handleSubmit, control, reset, watch, setValue } =
@@ -282,7 +285,11 @@ const InvoiceScreen: React.FC = () => {
     if (printInvoice) {
       return (
         <div style={{ display: 'none' }}>
-          <ComponentToPrint ref={componentRef} invoice={createdInvoice} storeInfo={storeInfo} />
+          <ComponentToPrint
+            ref={componentRef}
+            invoice={createdInvoice}
+            storeInfo={storeInfo}
+          />
         </div>
       );
     }
@@ -304,16 +311,25 @@ const InvoiceScreen: React.FC = () => {
       toast.error('Please select a sale type.');
       return;
     }
-    await createInvoiceFn(invoiceItems, invoice, async (id) => {
-      const response = await getSingleInvoiceFn(id);
-      reset();
-      setInvoiceItems([]);
-      setInvoice(undefined);
-      if (response) {
-        setCreatedInvoice(response);
-        setPrintInvoice(true);
-      }
-    });
+    setIsSubmitting(true);
+    try {
+      await createInvoiceFn(invoiceItems, invoice, async (id) => {
+        const response = await getSingleInvoiceFn(id);
+        reset();
+        setInvoiceItems([]);
+        setInvoice(undefined);
+        if (response) {
+          setCreatedInvoice(response);
+          setPrintInvoice(true);
+        }
+      });
+    } catch (err: unknown) {
+      toast.error(
+        err instanceof Error ? err.message : 'Failed to create invoice'
+      );
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const onSubmit = (values: FormValues) => {
@@ -467,7 +483,7 @@ const InvoiceScreen: React.FC = () => {
                 </Button>
               </div>
               <Button
-                disabled={invoiceItems.length < 1}
+                disabled={isSubmitting || invoiceItems.length < 1}
                 onClick={createInvoice}
                 type="button"
                 className="w-full"

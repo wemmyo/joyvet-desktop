@@ -129,6 +129,7 @@ describe('receipt IPC handlers', () => {
     it('reverses old amount and applies new amount', async () => {
       const existingReceipt = { ...mockReceipt, amount: 1500, customerId: 1 };
       (ReceiptModel.findByPk as any).mockResolvedValue(existingReceipt);
+      (CustomerModel.findByPk as any).mockResolvedValue({ id: 1 });
       (CustomerModel.increment as any).mockResolvedValue(undefined);
       (CustomerModel.decrement as any).mockResolvedValue(undefined);
       (receiptService.updateReceipt as any).mockResolvedValue(undefined);

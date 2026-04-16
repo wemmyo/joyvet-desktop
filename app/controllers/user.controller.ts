@@ -1,10 +1,7 @@
 import { toast } from 'sonner';
 import { IUser } from '../models/user';
 import { sanitizeUserSession, type UserSession } from '../types/session';
-import type {
-  PaginatedResult,
-  PaginationQuery,
-} from '../types/pagination';
+import type { PaginatedResult, PaginationQuery } from '../types/pagination';
 import { clearUserSession, setUserSession } from '../utils/session';
 
 export const loginUserFn = async (
@@ -28,7 +25,8 @@ export const loginUserFn = async (
   }
 };
 
-export const logoutFn = () => {
+export const logoutFn = async () => {
+  await window.api.user.logout();
   clearUserSession();
 };
 
@@ -63,6 +61,7 @@ export const getSingleUserFn = async (id: number, cb?: () => void) => {
 export const createUserFn = async (values: any, cb?: () => void) => {
   try {
     await window.api.user.create(values);
+    toast.success('User created successfully');
     if (cb) cb();
   } catch (error: any) {
     toast.error(error.message || '');
@@ -76,6 +75,7 @@ export const updateUserFn = async (
 ) => {
   try {
     await window.api.user.update(id, values);
+    toast.success('User updated successfully');
     if (cb) cb();
   } catch (error: any) {
     toast.error(error.message || '');

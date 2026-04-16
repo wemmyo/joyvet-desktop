@@ -128,6 +128,7 @@ describe('payment IPC handlers', () => {
     it('reverses old amount and applies new amount', async () => {
       const existingPayment = { ...mockPayment, amount: 2000, supplierId: 1 };
       (PaymentModel.findByPk as any).mockResolvedValue(existingPayment);
+      (SupplierModel.findByPk as any).mockResolvedValue({ id: 1 });
       (SupplierModel.increment as any).mockResolvedValue(undefined);
       (SupplierModel.decrement as any).mockResolvedValue(undefined);
       (paymentService.updatePayment as any).mockResolvedValue(undefined);

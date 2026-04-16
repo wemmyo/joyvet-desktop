@@ -8,6 +8,10 @@ vi.mock('electron', () => ({
   },
 }));
 
+vi.mock('../../runtime', () => ({
+  withAppReady: (fn: Function) => fn,
+}));
+
 vi.mock('../../../services/storeInfo.service', () => ({
   getStoreInfos: vi.fn(),
   getStoreInfoById: vi.fn(),
@@ -45,7 +49,9 @@ describe('storeInfo IPC handlers', () => {
 
   describe('storeInfo:getAll', () => {
     it('calls getStoreInfos', async () => {
-      (storeInfoService.getStoreInfos as any).mockResolvedValue([mockStoreInfo]);
+      (storeInfoService.getStoreInfos as any).mockResolvedValue([
+        mockStoreInfo,
+      ]);
       const result = await handlers['storeInfo:getAll'](mockEvent);
       expect(storeInfoService.getStoreInfos).toHaveBeenCalled();
       expect(result).toEqual([mockStoreInfo.toJSON()]);
@@ -54,7 +60,9 @@ describe('storeInfo IPC handlers', () => {
 
   describe('storeInfo:getById', () => {
     it('calls getStoreInfoById', async () => {
-      (storeInfoService.getStoreInfoById as any).mockResolvedValue(mockStoreInfo);
+      (storeInfoService.getStoreInfoById as any).mockResolvedValue(
+        mockStoreInfo
+      );
       const result = await handlers['storeInfo:getById'](mockEvent, 1);
       expect(storeInfoService.getStoreInfoById).toHaveBeenCalledWith(1);
       expect(result).toEqual(mockStoreInfo.toJSON());
@@ -63,7 +71,9 @@ describe('storeInfo IPC handlers', () => {
 
   describe('storeInfo:create', () => {
     it('validates storeName/address/phoneNumber (min 3 chars) and calls createStoreInfo', async () => {
-      (storeInfoService.createStoreInfo as any).mockResolvedValue(mockStoreInfo);
+      (storeInfoService.createStoreInfo as any).mockResolvedValue(
+        mockStoreInfo
+      );
       const result = await handlers['storeInfo:create'](mockEvent, {
         storeName: 'JoyVet Clinic',
         address: '123 Main Street',

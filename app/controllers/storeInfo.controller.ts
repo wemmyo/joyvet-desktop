@@ -36,6 +36,7 @@ export const createStoreInfoFn = async (
 ) => {
   try {
     await window.api.storeInfo.create(values);
+    toast.success('Store info created successfully');
     if (cb) cb();
   } catch (error: any) {
     toast.error(error.message || '');
@@ -49,6 +50,7 @@ export const updateStoreInfoFn = async (
 ) => {
   try {
     await window.api.storeInfo.update(id, values);
+    toast.success('Store info updated successfully');
     if (cb) cb();
   } catch (error: any) {
     toast.error(error.message || '');

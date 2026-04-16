@@ -15,7 +15,9 @@ const createRouteScreen = (loader: RouteLoader) => {
   return Screen;
 };
 
-export const LoginScreen = createRouteScreen(() => import('../views/Login/Login'));
+export const LoginScreen = createRouteScreen(
+  () => import('../views/Login/Login')
+);
 export const CustomersScreen = createRouteScreen(
   () => import('../views/Customer/Customer')
 );
@@ -40,7 +42,9 @@ export const PurchaseScreen = createRouteScreen(
 export const AllPurchasesScreen = createRouteScreen(
   () => import('../views/AllPurchases/AllPurchases')
 );
-export const SalesScreen = createRouteScreen(() => import('../views/Sales/Sales'));
+export const SalesScreen = createRouteScreen(
+  () => import('../views/Sales/Sales')
+);
 export const UserScreen = createRouteScreen(() => import('../views/User/User'));
 export const ExpenseScreen = createRouteScreen(
   () => import('../views/Expense/Expense')

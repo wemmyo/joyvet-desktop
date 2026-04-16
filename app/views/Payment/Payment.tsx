@@ -25,10 +25,7 @@ import {
   TableHead,
   TableCell,
 } from '../../components/ui/table';
-import {
-  TableEmptyRow,
-  TableFrame,
-} from '../../components/ui/table-helpers';
+import { TableEmptyRow, TableFrame } from '../../components/ui/table-helpers';
 
 const CONTENT_CREATE = 'create';
 const CONTENT_DETAIL = 'detail';
@@ -128,7 +125,12 @@ const PaymentsScreen: React.FC = () => {
       return <CreatePayment refreshPayments={fetchPayments} />;
     }
     if (sideContent === CONTENT_EDIT) {
-      return <EditPayment paymentId={paymentId} />;
+      return (
+        <EditPayment
+          paymentId={paymentId}
+          onRefresh={() => fetchPayments(page, appliedSearch)}
+        />
+      );
     }
     return null;
   };

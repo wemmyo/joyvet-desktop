@@ -42,7 +42,10 @@ const mockPaginated = {
 describe('purchase controller', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    localStorage.setItem('user:v1', JSON.stringify({ id: 1, fullName: 'Jane Doe', role: 'admin' }));
+    localStorage.setItem(
+      'user:v1',
+      JSON.stringify({ id: 1, fullName: 'Jane Doe', role: 'admin' })
+    );
   });
 
   describe('getPurchasesFn', () => {
@@ -93,7 +96,11 @@ describe('purchase controller', () => {
     it('passes postedBy from session; calls toast.success and cb', async () => {
       mockApi.purchase.create.mockResolvedValue(undefined);
       const cb = vi.fn();
-      await createPurchaseFn([], { supplierId: 1, invoiceNumber: 'INV-001', amount: 5000 } as any, cb);
+      await createPurchaseFn(
+        [],
+        { supplierId: 1, invoiceNumber: 'INV-001', amount: 5000 } as any,
+        cb
+      );
       expect(mockApi.purchase.create).toHaveBeenCalledWith(
         [],
         expect.objectContaining({ postedBy: 'Jane Doe' })

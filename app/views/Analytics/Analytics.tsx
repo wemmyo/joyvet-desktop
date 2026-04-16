@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import dayjs from 'dayjs';
 import { useNavigate } from 'react-router-dom';
 import { AlertTriangle } from 'lucide-react';
+import { toast } from 'sonner';
 
 import DashboardLayout from '../../layouts/DashboardLayout/DashboardLayout';
 import PaginationControls from '../../components/PaginationControls/PaginationControls';
@@ -16,10 +17,7 @@ import {
   TableHeader,
   TableRow,
 } from '../../components/ui/table';
-import {
-  TableEmptyRow,
-  TableFrame,
-} from '../../components/ui/table-helpers';
+import { TableEmptyRow, TableFrame } from '../../components/ui/table-helpers';
 import { numberWithCommas, isAdmin } from '../../utils/helpers';
 import routes from '../../routing/routes';
 import {
@@ -29,7 +27,6 @@ import {
   getTopSuppliersBySpendFn,
   getLowStockProductsFn,
   getRevenueOverTimeFn,
-  getExpenseBreakdownFn,
 } from '../../controllers/analytics.controller';
 
 const DEFAULT_START = dayjs().subtract(30, 'day').format('YYYY-MM-DD');
@@ -51,7 +48,6 @@ const Analytics: React.FC = () => {
   const [lowStockSearchInput, setLowStockSearchInput] = useState('');
   const LOW_STOCK_PAGE_SIZE = 25;
   const [revenueOverTime, setRevenueOverTime] = useState<any[]>([]);
-  const [expenseBreakdown, setExpenseBreakdown] = useState<any[]>([]);
 
   useEffect(() => {
     if (!isAdmin()) {
@@ -60,42 +56,51 @@ const Analytics: React.FC = () => {
   }, [navigate]);
 
   const fetchLowStock = async (page: number, search: string) => {
-    const res = await getLowStockProductsFn({ page, pageSize: LOW_STOCK_PAGE_SIZE, search });
-    setLowStock(res?.rows || []);
-    setLowStockTotal(res?.total || 0);
+    try {
+      const res = await getLowStockProductsFn({
+        page,
+        pageSize: LOW_STOCK_PAGE_SIZE,
+        search,
+      });
+      setLowStock(res?.rows || []);
+      setLowStockTotal(res?.total || 0);
+    } catch {
+      toast.error('Failed to load low stock data');
+    }
   };
 
   const fetchAll = async (start = startDate, end = endDate) => {
-    const input = { startDate: start, endDate: end };
-    const [
-      summaryRes,
-      topCustomersRes,
-      bestProductsRes,
-      topSuppliersRes,
-      lowStockRes,
-      revenueRes,
-      expenseRes,
-    ] = await Promise.all([
-      getAnalyticsSummaryFn(input),
-      getTopCustomersFn(input),
-      getBestSellingProductsFn(input),
-      getTopSuppliersBySpendFn(input),
-      getLowStockProductsFn({ page: 1, pageSize: LOW_STOCK_PAGE_SIZE }),
-      getRevenueOverTimeFn(),
-      getExpenseBreakdownFn(input),
-    ]);
+    try {
+      const input = { startDate: start, endDate: end };
+      const [
+        summaryRes,
+        topCustomersRes,
+        bestProductsRes,
+        topSuppliersRes,
+        lowStockRes,
+        revenueRes,
+      ] = await Promise.all([
+        getAnalyticsSummaryFn(input),
+        getTopCustomersFn(input),
+        getBestSellingProductsFn(input),
+        getTopSuppliersBySpendFn(input),
+        getLowStockProductsFn({ page: 1, pageSize: LOW_STOCK_PAGE_SIZE }),
+        getRevenueOverTimeFn(),
+      ]);
 
-    setSummary(summaryRes);
-    setTopCustomers(topCustomersRes || []);
-    setBestProducts(bestProductsRes || []);
-    setTopSuppliers(topSuppliersRes || []);
-    setLowStock(lowStockRes?.rows || []);
-    setLowStockTotal(lowStockRes?.total || 0);
-    setLowStockPage(1);
-    setLowStockSearch('');
-    setLowStockSearchInput('');
-    setRevenueOverTime(revenueRes || []);
-    setExpenseBreakdown(expenseRes || []);
+      setSummary(summaryRes);
+      setTopCustomers(topCustomersRes || []);
+      setBestProducts(bestProductsRes || []);
+      setTopSuppliers(topSuppliersRes || []);
+      setLowStock(lowStockRes?.rows || []);
+      setLowStockTotal(lowStockRes?.total || 0);
+      setLowStockPage(1);
+      setLowStockSearch('');
+      setLowStockSearchInput('');
+      setRevenueOverTime(revenueRes || []);
+    } catch {
+      toast.error('Failed to load analytics data');
+    }
   };
 
   useEffect(() => {
@@ -165,14 +170,46 @@ const Analytics: React.FC = () => {
       {summary && (
         <div className="grid grid-cols-2 gap-3 mb-6 sm:grid-cols-3 lg:grid-cols-4">
           {[
-            { label: 'Total Sales', value: summary.invoiceTotal, color: 'text-blue-600' },
-            { label: 'Total Profit', value: summary.invoiceProfit, color: 'text-green-600' },
-            { label: 'Total Purchases', value: summary.purchaseTotal, color: 'text-orange-600' },
-            { label: 'Total Expenses', value: summary.expenseTotal, color: 'text-red-600' },
-            { label: 'Total Receipts', value: summary.receiptTotal, color: 'text-teal-600' },
-            { label: 'Total Payments', value: summary.paymentTotal, color: 'text-purple-600' },
-            { label: 'Customer Balance', value: summary.customerBalanceSum, color: 'text-blue-700' },
-            { label: 'Supplier Balance', value: summary.supplierBalanceSum, color: 'text-orange-700' },
+            {
+              label: 'Total Sales',
+              value: summary.invoiceTotal,
+              color: 'text-blue-600',
+            },
+            {
+              label: 'Total Profit',
+              value: summary.invoiceProfit,
+              color: 'text-green-600',
+            },
+            {
+              label: 'Total Purchases',
+              value: summary.purchaseTotal,
+              color: 'text-orange-600',
+            },
+            {
+              label: 'Total Expenses',
+              value: summary.expenseTotal,
+              color: 'text-red-600',
+            },
+            {
+              label: 'Total Receipts',
+              value: summary.receiptTotal,
+              color: 'text-teal-600',
+            },
+            {
+              label: 'Total Payments',
+              value: summary.paymentTotal,
+              color: 'text-purple-600',
+            },
+            {
+              label: 'Customer Balance',
+              value: summary.customerBalanceSum,
+              color: 'text-blue-700',
+            },
+            {
+              label: 'Supplier Balance',
+              value: summary.supplierBalanceSum,
+              color: 'text-orange-700',
+            },
           ].map(({ label, value, color }) => (
             <div
               key={label}
@@ -188,81 +225,96 @@ const Analytics: React.FC = () => {
       )}
 
       {/* Income Statement */}
-      {summary && (() => {
-        const revenue = summary.invoiceTotal || 0;
-        const grossProfit = summary.invoiceProfit || 0;
-        const cogs = revenue - grossProfit;
-        const operatingExpenses = summary.expenseTotal || 0;
-        const operatingIncome = grossProfit - operatingExpenses;
-        const netIncome = operatingIncome;
-        const pct = (val: number) =>
-          revenue === 0 ? '—' : `${((val / revenue) * 100).toFixed(1)}%`;
+      {summary &&
+        (() => {
+          const revenue = summary.invoiceTotal || 0;
+          const grossProfit = summary.invoiceProfit || 0;
+          const cogs = revenue - grossProfit;
+          const operatingExpenses = summary.expenseTotal || 0;
+          const operatingIncome = grossProfit - operatingExpenses;
+          const netIncome = operatingIncome;
+          const pct = (val: number) =>
+            revenue === 0 ? '—' : `${((val / revenue) * 100).toFixed(1)}%`;
 
-        const rows: {
-          label: string;
-          value: number;
-          indent?: boolean;
-          bold?: boolean;
-          dimSign?: boolean;
-        }[] = [
-          { label: 'Revenue', value: revenue },
-          { label: 'Cost of Goods Sold', value: cogs, indent: true, dimSign: true },
-          { label: 'Gross Profit', value: grossProfit, bold: true },
-          { label: 'Operating Expenses', value: operatingExpenses, indent: true, dimSign: true },
-          { label: 'Operating Income', value: operatingIncome, bold: true },
-          { label: 'Net Income', value: netIncome, bold: true },
-        ];
+          const rows: {
+            label: string;
+            value: number;
+            indent?: boolean;
+            bold?: boolean;
+            dimSign?: boolean;
+          }[] = [
+            { label: 'Revenue', value: revenue },
+            {
+              label: 'Cost of Goods Sold',
+              value: cogs,
+              indent: true,
+              dimSign: true,
+            },
+            { label: 'Gross Profit', value: grossProfit, bold: true },
+            {
+              label: 'Operating Expenses',
+              value: operatingExpenses,
+              indent: true,
+              dimSign: true,
+            },
+            { label: 'Operating Income', value: operatingIncome, bold: true },
+            { label: 'Net Income', value: netIncome, bold: true },
+          ];
 
-        return (
-          <section className="mb-6">
-            <h2 className="text-base font-semibold mb-2">Income Statement</h2>
-            <TableFrame>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Line Item</TableHead>
-                    <TableHead className="text-right">Amount</TableHead>
-                    <TableHead className="text-right">% of Revenue</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {rows.map(({ label, value, indent, bold, dimSign }) => {
-                    const isNegative = value < 0;
-                    const valueColor =
-                      bold && !dimSign
-                        ? isNegative
-                          ? 'text-red-600'
-                          : 'text-green-600'
-                        : '';
-                    return (
-                      <TableRow key={label}>
-                        <TableCell
-                          className={`${indent ? 'pl-8' : ''} ${bold ? 'font-semibold' : ''}`}
-                        >
-                          {label}
-                        </TableCell>
-                        <TableCell
-                          className={`text-right ${bold ? 'font-semibold' : ''} ${valueColor} ${isNegative && !bold ? 'text-red-600' : ''}`}
-                        >
-                          ₦{numberWithCommas(Math.abs(value))}
-                          {isNegative && ' (loss)'}
-                        </TableCell>
-                        <TableCell className={`text-right ${bold ? 'font-semibold' : 'text-muted-foreground'}`}>
-                          {pct(value)}
-                        </TableCell>
-                      </TableRow>
-                    );
-                  })}
-                </TableBody>
-              </Table>
-            </TableFrame>
-          </section>
-        );
-      })()}
+          return (
+            <section className="mb-6">
+              <h2 className="text-base font-semibold mb-2">Income Statement</h2>
+              <TableFrame>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Line Item</TableHead>
+                      <TableHead className="text-right">Amount</TableHead>
+                      <TableHead className="text-right">% of Revenue</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {rows.map(({ label, value, indent, bold, dimSign }) => {
+                      const isNegative = value < 0;
+                      const valueColor =
+                        bold && !dimSign
+                          ? isNegative
+                            ? 'text-red-600'
+                            : 'text-green-600'
+                          : '';
+                      return (
+                        <TableRow key={label}>
+                          <TableCell
+                            className={`${indent ? 'pl-8' : ''} ${bold ? 'font-semibold' : ''}`}
+                          >
+                            {label}
+                          </TableCell>
+                          <TableCell
+                            className={`text-right ${bold ? 'font-semibold' : ''} ${valueColor} ${isNegative && !bold ? 'text-red-600' : ''}`}
+                          >
+                            ₦{numberWithCommas(Math.abs(value))}
+                            {isNegative && ' (loss)'}
+                          </TableCell>
+                          <TableCell
+                            className={`text-right ${bold ? 'font-semibold' : 'text-muted-foreground'}`}
+                          >
+                            {pct(value)}
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })}
+                  </TableBody>
+                </Table>
+              </TableFrame>
+            </section>
+          );
+        })()}
 
       {/* Revenue Over Time */}
       <section className="mb-6">
-        <h2 className="text-base font-semibold mb-2">Revenue Over Time (Last 12 Months)</h2>
+        <h2 className="text-base font-semibold mb-2">
+          Revenue Over Time (Last 12 Months)
+        </h2>
         <TableFrame>
           <Table>
             <TableHeader>
@@ -286,7 +338,10 @@ const Analytics: React.FC = () => {
                   </TableRow>
                 ))
               ) : (
-                <TableEmptyRow colSpan={3} message="No revenue data available." />
+                <TableEmptyRow
+                  colSpan={3}
+                  message="No revenue data available."
+                />
               )}
             </TableBody>
           </Table>
@@ -326,7 +381,9 @@ const Analytics: React.FC = () => {
         </section>
 
         <section>
-          <h2 className="text-base font-semibold mb-2">Best Selling Products</h2>
+          <h2 className="text-base font-semibold mb-2">
+            Best Selling Products
+          </h2>
           <TableFrame>
             <Table>
               <TableHeader>
@@ -344,11 +401,15 @@ const Analytics: React.FC = () => {
                     <TableRow key={row.productId}>
                       <TableCell>{i + 1}</TableCell>
                       <TableCell>{row.title}</TableCell>
-                      <TableCell className="text-right">{row.totalQty}</TableCell>
+                      <TableCell className="text-right">
+                        {row.totalQty}
+                      </TableCell>
                       <TableCell className="text-right">
                         ₦{numberWithCommas(row.revenue || 0)}
                       </TableCell>
-                      <TableCell className="text-right">{row.marginPct}%</TableCell>
+                      <TableCell className="text-right">
+                        {row.marginPct}%
+                      </TableCell>
                     </TableRow>
                   ))
                 ) : (
@@ -438,12 +499,19 @@ const Analytics: React.FC = () => {
                     <TableCell className="text-right font-medium">
                       {row.stock}
                     </TableCell>
-                    <TableCell className="text-right">{row.reorderLevel}</TableCell>
-                    <TableCell>{urgencyBadge(row.stock, row.reorderLevel)}</TableCell>
+                    <TableCell className="text-right">
+                      {row.reorderLevel}
+                    </TableCell>
+                    <TableCell>
+                      {urgencyBadge(row.stock, row.reorderLevel)}
+                    </TableCell>
                   </TableRow>
                 ))
               ) : (
-                <TableEmptyRow colSpan={4} message="All products are adequately stocked." />
+                <TableEmptyRow
+                  colSpan={4}
+                  message="All products are adequately stocked."
+                />
               )}
             </TableBody>
           </Table>
@@ -457,37 +525,6 @@ const Analytics: React.FC = () => {
             void fetchLowStock(nextPage, lowStockSearch);
           }}
         />
-      </section>
-
-      {/* Expense Breakdown */}
-      <section className="mb-6">
-        <h2 className="text-base font-semibold mb-2">Expense Breakdown</h2>
-        <TableFrame>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Type</TableHead>
-                <TableHead className="text-right">Amount</TableHead>
-                <TableHead className="text-right">% of Total</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {expenseBreakdown.length > 0 ? (
-                expenseBreakdown.map((row: any) => (
-                  <TableRow key={row.type}>
-                    <TableCell>{row.type}</TableCell>
-                    <TableCell className="text-right">
-                      ₦{numberWithCommas(row.total || 0)}
-                    </TableCell>
-                    <TableCell className="text-right">{row.pct}%</TableCell>
-                  </TableRow>
-                ))
-              ) : (
-                <TableEmptyRow colSpan={3} message="No expense data for this period." />
-              )}
-            </TableBody>
-          </Table>
-        </TableFrame>
       </section>
     </DashboardLayout>
   );

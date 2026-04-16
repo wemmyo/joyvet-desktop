@@ -3,6 +3,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { toast } from 'sonner';
+import { useNavigate } from 'react-router-dom';
 
 import DashboardLayout from '../../layouts/DashboardLayout/DashboardLayout';
 import {
@@ -14,6 +15,8 @@ import { IStoreInfo } from '../../models/storeInfo';
 import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
 import { Label } from '../../components/ui/label';
+import { isAdmin } from '../../utils/helpers';
+import routes from '../../routing/routes';
 
 const schema = z.object({
   storeName: z.string().min(1, 'Required'),
@@ -25,6 +28,7 @@ type FormValues = z.infer<typeof schema>;
 
 const StoreInfoScreen: React.FC = () => {
   const [storeInfo, setStoreInfo] = useState<IStoreInfo | undefined>();
+  const navigate = useNavigate();
 
   const {
     register,
@@ -37,29 +41,45 @@ const StoreInfoScreen: React.FC = () => {
   });
 
   useEffect(() => {
-    getStoreInfoFn().then((records) => {
-      const record = records?.[0];
-      setStoreInfo(record);
-      if (record) {
-        reset({
-          storeName: record.storeName,
-          address: record.address,
-          phoneNumber: record.phoneNumber,
-        });
-      }
-    });
+    if (!isAdmin()) navigate(routes.SALES);
+  }, [navigate]);
+
+  useEffect(() => {
+    getStoreInfoFn()
+      .then((records) => {
+        const record = records?.[0];
+        setStoreInfo(record);
+        if (record) {
+          reset({
+            storeName: record.storeName,
+            address: record.address,
+            phoneNumber: record.phoneNumber,
+          });
+        }
+      })
+      .catch((err: unknown) => {
+        toast.error(
+          err instanceof Error ? err.message : 'Failed to load store info'
+        );
+      });
   }, []);
 
   const onSubmit = async (values: FormValues) => {
-    if (storeInfo?.id) {
-      await updateStoreInfoFn(values, storeInfo.id);
-      toast.success('Store information updated');
-    } else {
-      await createStoreInfoFn(values, async () => {
-        const records = await getStoreInfoFn();
-        setStoreInfo(records?.[0]);
-      });
-      toast.success('Store information saved');
+    try {
+      if (storeInfo?.id) {
+        await updateStoreInfoFn(values, storeInfo.id);
+        toast.success('Store information updated');
+      } else {
+        await createStoreInfoFn(values, async () => {
+          const records = await getStoreInfoFn();
+          setStoreInfo(records?.[0]);
+        });
+        toast.success('Store information saved');
+      }
+    } catch (err: unknown) {
+      toast.error(
+        err instanceof Error ? err.message : 'Failed to save store info'
+      );
     }
   };
 

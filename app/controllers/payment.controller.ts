@@ -7,9 +7,7 @@ import type {
 } from '../types/pagination';
 import { getUserSession } from '../utils/session';
 
-const emptyPayments = (
-  query?: PaginationQuery
-): PaginatedResult<IPayment> => ({
+const emptyPayments = (query?: PaginationQuery): PaginatedResult<IPayment> => ({
   rows: [],
   total: 0,
   page: query?.page ?? 1,

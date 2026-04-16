@@ -44,7 +44,10 @@ const mockPaginated = {
 describe('receipt controller', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    localStorage.setItem('user:v1', JSON.stringify({ id: 1, fullName: 'Jane Doe', role: 'admin' }));
+    localStorage.setItem(
+      'user:v1',
+      JSON.stringify({ id: 1, fullName: 'Jane Doe', role: 'admin' })
+    );
   });
 
   describe('getReceiptsFn', () => {
@@ -95,11 +98,16 @@ describe('receipt controller', () => {
     it('passes postedBy from session; calls toast.success and cb', async () => {
       mockApi.receipt.create.mockResolvedValue(undefined);
       const cb = vi.fn();
-      await createReceiptFn({ amount: 2000, customerId: 1, paymentMethod: 'cash' }, cb);
+      await createReceiptFn(
+        { amount: 2000, customerId: 1, paymentMethod: 'cash' },
+        cb
+      );
       expect(mockApi.receipt.create).toHaveBeenCalledWith(
         expect.objectContaining({ postedBy: 'Jane Doe' })
       );
-      expect(toast.success).toHaveBeenCalledWith('Receipt successfully created');
+      expect(toast.success).toHaveBeenCalledWith(
+        'Receipt successfully created'
+      );
       expect(cb).toHaveBeenCalled();
     });
   });
@@ -108,7 +116,9 @@ describe('receipt controller', () => {
     it('calls toast.success on success', async () => {
       mockApi.receipt.delete.mockResolvedValue(undefined);
       await deleteReceiptFn(1);
-      expect(toast.success).toHaveBeenCalledWith('Receipt successfully deleted');
+      expect(toast.success).toHaveBeenCalledWith(
+        'Receipt successfully deleted'
+      );
     });
 
     it('calls toast.error on failure', async () => {
@@ -125,7 +135,10 @@ describe('receipt controller', () => {
       const thunk = updateReceiptFn({ amount: 2500 }, 1, cb);
       expect(typeof thunk).toBe('function');
       await thunk();
-      expect(mockApi.receipt.update).toHaveBeenCalledWith(1, expect.objectContaining({ amount: 2500 }));
+      expect(mockApi.receipt.update).toHaveBeenCalledWith(
+        1,
+        expect.objectContaining({ amount: 2500 })
+      );
       expect(toast.success).toHaveBeenCalledWith('Successfully updated');
       expect(cb).toHaveBeenCalled();
     });

@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react';
+import { toast } from 'sonner';
 import {
   getSingleReceiptFn,
   deleteReceiptFn,
-  getReceiptsFn,
 } from '../../../../controllers/receipt.controller';
 import { IReceipt } from '../../../../models/receipt';
 
@@ -39,9 +39,15 @@ const ReceiptDetail: React.FC<ReceiptDetailProps> = ({
   }, [receiptId]);
 
   const handleDelete = async () => {
-    await deleteReceiptFn(receiptId);
-    await getReceiptsFn();
-    closeSideContent();
+    try {
+      await deleteReceiptFn(receiptId);
+      toast.success('Receipt deleted');
+      closeSideContent();
+    } catch (err: unknown) {
+      toast.error(
+        err instanceof Error ? err.message : 'Failed to delete receipt'
+      );
+    }
   };
 
   const {

@@ -6,10 +6,10 @@ import Customer from '../../models/customer';
 import Invoice from '../../models/invoice';
 import Receipt from '../../models/receipt';
 import Product from '../../models/product';
+import database from '../database';
 import {
   createCustomer,
   updateCustomer,
-  deleteCustomer,
   getCustomerById,
 } from '../../services/customer.service';
 import { getReceipts } from '../../services/receipt.service';
@@ -83,21 +83,29 @@ export function registerCustomerHandlers(): void {
   ipcMain.handle(
     'customer:delete',
     withAppReady(async (_event, id: number) => {
-      const invoiceCount = await Invoice.count({ where: { customerId: id } });
-      if (invoiceCount > 0) {
-        throw new Error(
-          `Cannot delete customer with existing invoices (${invoiceCount} found). Remove invoices first.`
-        );
-      }
+      await database.transaction(async (t: any) => {
+        const invoiceCount = await Invoice.count({
+          where: { customerId: id },
+          transaction: t,
+        });
+        if (invoiceCount > 0) {
+          throw new Error(
+            `Cannot delete customer with existing invoices (${invoiceCount} found). Remove invoices first.`
+          );
+        }
 
-      const receiptCount = await Receipt.count({ where: { customerId: id } });
-      if (receiptCount > 0) {
-        throw new Error(
-          `Cannot delete customer with existing receipts (${receiptCount} found). Remove receipts first.`
-        );
-      }
+        const receiptCount = await Receipt.count({
+          where: { customerId: id },
+          transaction: t,
+        });
+        if (receiptCount > 0) {
+          throw new Error(
+            `Cannot delete customer with existing receipts (${receiptCount} found). Remove receipts first.`
+          );
+        }
 
-      await deleteCustomer(id);
+        await Customer.destroy({ where: { id }, transaction: t });
+      });
     })
   );
 
@@ -128,27 +136,39 @@ export function registerCustomerHandlers(): void {
 
   ipcMain.handle(
     'customer:getInvoices',
-    withAppReady(async (_event, customerId: number, startDate: string, endDate: string) => {
-      const invoices = await getInvoices({
-        where: {
-          customerId,
-          createdAt: {
-            [Op.between]: [
-              `${dayjs(startDate).format('YYYY-MM-DD')} 00:00:00`,
-              `${dayjs(endDate).format('YYYY-MM-DD')} 23:59:59`,
-            ],
+    withAppReady(
+      async (
+        _event,
+        customerId: number,
+        startDate: string,
+        endDate: string
+      ) => {
+        const invoices = await getInvoices({
+          where: {
+            customerId,
+            createdAt: {
+              [Op.between]: [
+                `${dayjs(startDate).format('YYYY-MM-DD')} 00:00:00`,
+                `${dayjs(endDate).format('YYYY-MM-DD')} 23:59:59`,
+              ],
+            },
           },
-        },
-        order: [['createdAt', 'DESC']],
-      });
-      return invoices.map((i: any) => (i.toJSON ? i.toJSON() : i));
-    })
+          order: [['createdAt', 'DESC']],
+        });
+        return invoices.map((i: any) => (i.toJSON ? i.toJSON() : i));
+      }
+    )
   );
 
   ipcMain.handle(
     'customer:getReceipts',
     withAppReady(
-      async (_event, customerId: number, startDate?: string, endDate?: string) => {
+      async (
+        _event,
+        customerId: number,
+        startDate?: string,
+        endDate?: string
+      ) => {
         const whereClause: any = { customerId };
         if (startDate && endDate) {
           whereClause.createdAt = {
@@ -170,7 +190,12 @@ export function registerCustomerHandlers(): void {
   ipcMain.handle(
     'customer:getActivityTimeline',
     withAppReady(
-      async (_event, customerId: number, startDate: string, endDate: string) => {
+      async (
+        _event,
+        customerId: number,
+        startDate: string,
+        endDate: string
+      ) => {
         const startStr = `${dayjs(startDate).format('YYYY-MM-DD')} 00:00:00`;
         const endStr = `${dayjs(endDate).format('YYYY-MM-DD')} 23:59:59`;
 

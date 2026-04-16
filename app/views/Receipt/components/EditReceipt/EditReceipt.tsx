@@ -1,11 +1,11 @@
 import React, { useEffect } from 'react';
+import { toast } from 'sonner';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import AsyncCombobox from '../../../../components/ui/async-combobox';
 import {
   updateReceiptFn,
-  getReceiptsFn,
   getSingleReceiptFn,
 } from '../../../../controllers/receipt.controller';
 import { ICustomer } from '../../../../models/customer';
@@ -22,8 +22,8 @@ import { useAsyncComboboxOptions } from '../../../../hooks/useAsyncComboboxOptio
 import { MAX_PAGE_SIZE } from '../../../../types/pagination';
 
 const schema = z.object({
-  customerId: z.string().optional().default(''),
-  amount: z.string().optional().default(''),
+  customerId: z.string().min(1, 'Required'),
+  amount: z.string().min(1, 'Required'),
   note: z.string().optional().default(''),
 });
 
@@ -31,10 +31,12 @@ type FormValues = z.infer<typeof schema>;
 
 export interface EditReceiptProps {
   receiptId: string | number;
+  onRefresh?: () => void;
 }
 
 const EditReceipt: React.FC<EditReceiptProps> = ({
   receiptId,
+  onRefresh,
 }: EditReceiptProps) => {
   const { closeSideContent } = useSidebarContext();
   const customerOptions = useAsyncComboboxOptions<ICustomer>({
@@ -48,7 +50,13 @@ const EditReceipt: React.FC<EditReceiptProps> = ({
     getOptionLabel: (customer) => customer.fullName,
   });
 
-  const { register, handleSubmit, control, reset } = useForm<FormValues>({
+  const {
+    register,
+    handleSubmit,
+    control,
+    reset,
+    formState: { errors },
+  } = useForm<FormValues>({
     resolver: zodResolver(schema),
   });
 
@@ -70,9 +78,14 @@ const EditReceipt: React.FC<EditReceiptProps> = ({
   }, [receiptId, reset]);
 
   const onSubmit = async (values: FormValues) => {
-    await updateReceiptFn(values, receiptId);
-    closeSideContent();
-    await getReceiptsFn();
+    try {
+      await updateReceiptFn(values, receiptId)();
+      toast.success('Receipt updated');
+      closeSideContent();
+      onRefresh?.();
+    } catch {
+      toast.error('Failed to update receipt');
+    }
   };
 
   return (
@@ -96,6 +109,11 @@ const EditReceipt: React.FC<EditReceiptProps> = ({
             />
           )}
         />
+        {errors.customerId && (
+          <p className="text-sm text-destructive mt-1">
+            {errors.customerId.message}
+          </p>
+        )}
       </div>
 
       <div className="space-y-1">
@@ -105,7 +123,13 @@ const EditReceipt: React.FC<EditReceiptProps> = ({
           placeholder="Amount Paid"
           type="text"
           {...register('amount')}
+          className={errors.amount ? 'border-destructive' : ''}
         />
+        {errors.amount && (
+          <p className="text-sm text-destructive mt-1">
+            {errors.amount.message}
+          </p>
+        )}
       </div>
       <div className="space-y-1">
         <Label htmlFor="note">Note</Label>

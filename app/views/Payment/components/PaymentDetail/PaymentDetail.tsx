@@ -8,6 +8,7 @@ import {
   deletePaymentFn,
 } from '../../../../controllers/payment.controller';
 import { IPayment } from '../../../../models/payment';
+import { toast } from 'sonner';
 import { Button } from '../../../../components/ui/button';
 import {
   Table,
@@ -39,9 +40,16 @@ const PaymentDetail = ({ paymentId, refreshPayments }: PaymentDetailProps) => {
   }, [paymentId]);
 
   const handleDelete = async () => {
-    await deletePaymentFn(paymentId);
-    refreshPayments();
-    closeSideContent();
+    try {
+      await deletePaymentFn(paymentId);
+      toast.success('Payment deleted');
+      refreshPayments();
+      closeSideContent();
+    } catch (err: unknown) {
+      toast.error(
+        err instanceof Error ? err.message : 'Failed to delete payment'
+      );
+    }
   };
 
   const { supplier, amount, note, createdAt, paymentMethod, bank } =

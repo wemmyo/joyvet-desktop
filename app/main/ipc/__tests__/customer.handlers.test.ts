@@ -40,6 +40,7 @@ vi.mock('../../../models/customer', () => ({
     findByPk: vi.fn(),
     increment: vi.fn(),
     decrement: vi.fn(),
+    destroy: vi.fn(),
   },
 }));
 
@@ -236,7 +237,7 @@ describe('customer IPC handlers', () => {
       await expect(handlers['customer:delete'](mockEvent, 1)).rejects.toThrow(
         'Cannot delete customer with existing invoices'
       );
-      expect(customerService.deleteCustomer).not.toHaveBeenCalled();
+      expect(CustomerModel.destroy).not.toHaveBeenCalled();
     });
 
     it('throws if customer has receipts', async () => {
@@ -246,19 +247,19 @@ describe('customer IPC handlers', () => {
       await expect(handlers['customer:delete'](mockEvent, 1)).rejects.toThrow(
         'Cannot delete customer with existing receipts'
       );
-      expect(customerService.deleteCustomer).not.toHaveBeenCalled();
+      expect(CustomerModel.destroy).not.toHaveBeenCalled();
     });
 
     it('deletes successfully when no related records exist', async () => {
       vi.mocked(InvoiceModel.count).mockResolvedValue(0 as any);
       vi.mocked(ReceiptModel.count).mockResolvedValue(0 as any);
-      vi.mocked(customerService.deleteCustomer).mockResolvedValue(
-        undefined as any
-      );
+      vi.mocked(CustomerModel.destroy).mockResolvedValue(1 as any);
 
       await handlers['customer:delete'](mockEvent, 1);
 
-      expect(customerService.deleteCustomer).toHaveBeenCalledWith(1);
+      expect(CustomerModel.destroy).toHaveBeenCalledWith(
+        expect.objectContaining({ where: { id: 1 } })
+      );
     });
   });
 

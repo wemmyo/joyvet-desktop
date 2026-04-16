@@ -61,7 +61,9 @@ describe('sidebar primitives', () => {
 
     const user = userEvent.setup();
     const { container } = render(<TestSidebar />);
-    const sidebar = container.querySelector('[data-sidebar="sidebar-container"]');
+    const sidebar = container.querySelector(
+      '[data-sidebar="sidebar-container"]'
+    );
     const inset = container.querySelector('[data-sidebar="inset"]');
 
     expect(sidebar?.getAttribute('data-state')).toBe('expanded');
@@ -86,7 +88,9 @@ describe('sidebar primitives', () => {
     expect(screen.getByRole('dialog')).toBeTruthy();
     expect(screen.getByText('Sidebar content')).toBeTruthy();
 
-    await user.click(screen.getByRole('button', { name: 'Close mobile sidebar' }));
+    await user.click(
+      screen.getByRole('button', { name: 'Close mobile sidebar' })
+    );
 
     await waitFor(() => {
       expect(screen.queryByRole('dialog')).toBeNull();

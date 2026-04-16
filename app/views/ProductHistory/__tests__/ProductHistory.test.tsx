@@ -10,8 +10,7 @@ const getProductAuditLogFn = vi.fn();
 
 vi.mock('../../../controllers/product.controller', () => ({
   getProductInvoicesFn: (...args: unknown[]) => getProductInvoicesFn(...args),
-  getProductPurchasesFn: (...args: unknown[]) =>
-    getProductPurchasesFn(...args),
+  getProductPurchasesFn: (...args: unknown[]) => getProductPurchasesFn(...args),
   getProductAuditLogFn: (...args: unknown[]) => getProductAuditLogFn(...args),
 }));
 
@@ -25,11 +24,15 @@ vi.mock('../../../layouts/DashboardLayout/DashboardLayout', () => ({
 }));
 
 vi.mock('../components/Invoices/Invoices', () => ({
-  default: ({ data }: any) => <div data-testid="invoice-results">{data.length}</div>,
+  default: ({ data }: any) => (
+    <div data-testid="invoice-results">{data.length}</div>
+  ),
 }));
 
 vi.mock('../components/Purchases/Purchases', () => ({
-  default: ({ data }: any) => <div data-testid="purchase-results">{data.length}</div>,
+  default: ({ data }: any) => (
+    <div data-testid="purchase-results">{data.length}</div>
+  ),
 }));
 
 describe('ProductHistory route params', () => {

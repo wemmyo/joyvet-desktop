@@ -293,7 +293,7 @@ let appReadyPromise = null;
 let associationsRegistered = false;
 const loadAuthModel = async () => {
   return {
-    User: (await Promise.resolve().then(() => require("./chunks/user-DoEgQ7As.js"))).default
+    User: (await Promise.resolve().then(() => require("./chunks/user-BvhgydGB.js"))).default
   };
 };
 const loadCoreModels = async () => {
@@ -309,8 +309,9 @@ const loadCoreModels = async () => {
     Supplier: (await Promise.resolve().then(() => require("./chunks/supplier-D6HH6Jzr.js"))).default,
     InvoiceItem: (await Promise.resolve().then(() => require("./chunks/invoiceItem-nbCLMwgg.js"))).default,
     PurchaseItem: (await Promise.resolve().then(() => require("./chunks/purchaseItem-CTTHQz2J.js"))).default,
-    User: (await Promise.resolve().then(() => require("./chunks/user-DoEgQ7As.js"))).default,
+    User: (await Promise.resolve().then(() => require("./chunks/user-BvhgydGB.js"))).default,
     ProductAuditLog: (await Promise.resolve().then(() => require("./chunks/productAuditLog-DrnoXAKA.js"))).default,
+    InvoiceAuditLog: (await Promise.resolve().then(() => require("./chunks/invoiceAuditLog-_cdIy4q-.js"))).default,
     StoreInfo: (await Promise.resolve().then(() => require("./chunks/storeInfo-Bg_7gZyj.js"))).default,
     Expense: (await Promise.resolve().then(() => require("./chunks/expense-e9NOTXMw.js"))).default,
     ExpenseType: (await Promise.resolve().then(() => require("./chunks/expenseType-BdnVKnYp.js"))).default
@@ -330,7 +331,8 @@ const registerAssociations = (models) => {
     PurchaseItem,
     Receipt,
     Supplier,
-    ProductAuditLog
+    ProductAuditLog,
+    InvoiceAuditLog
   } = models;
   Invoice.belongsToMany(Product, { through: InvoiceItem });
   Product.belongsToMany(Invoice, { through: InvoiceItem });
@@ -346,6 +348,8 @@ const registerAssociations = (models) => {
   Product.belongsToMany(Purchase, { through: PurchaseItem });
   Product.hasMany(ProductAuditLog, { foreignKey: "productId" });
   ProductAuditLog.belongsTo(Product, { foreignKey: "productId" });
+  Invoice.hasMany(InvoiceAuditLog, { foreignKey: "invoiceId" });
+  InvoiceAuditLog.belongsTo(Invoice, { foreignKey: "invoiceId" });
   associationsRegistered = true;
 };
 const ensureAuthReady = async () => {
@@ -492,14 +496,17 @@ electron.app.whenReady().then(async () => {
     }, 0);
   });
   void (async () => {
-    const { registerInvoiceHandlers } = await Promise.resolve().then(() => require("./chunks/invoice.handlers-C4Kh1z8h.js"));
-    const { registerCustomerHandlers } = await Promise.resolve().then(() => require("./chunks/customer.handlers-DOGbPBU1.js"));
-    const { registerProductHandlers } = await Promise.resolve().then(() => require("./chunks/product.handlers-BlU2_t0o.js"));
-    const { registerUserHandlers } = await Promise.resolve().then(() => require("./chunks/user.handlers-DymXi95W.js"));
-    const { registerSupplierHandlers } = await Promise.resolve().then(() => require("./chunks/supplier.handlers-DfN6Ltym.js"));
-    const { registerPurchaseHandlers } = await Promise.resolve().then(() => require("./chunks/purchase.handlers-CwUgD83N.js"));
-    const { registerPaymentHandlers } = await Promise.resolve().then(() => require("./chunks/payment.handlers-CjVM6TV1.js"));
-    const { registerReceiptHandlers } = await Promise.resolve().then(() => require("./chunks/receipt.handlers-DO8cWS7m.js"));
+    const { registerInvoiceHandlers } = await Promise.resolve().then(() => require("./chunks/invoice.handlers-CcWTvjMK.js"));
+    const { registerCustomerHandlers } = await Promise.resolve().then(() => require("./chunks/customer.handlers-8Sj-_nR8.js"));
+    const { registerProductHandlers } = await Promise.resolve().then(() => require("./chunks/product.handlers-CVcuHjXU.js"));
+    const { registerUserHandlers } = await Promise.resolve().then(() => require("./chunks/user.handlers-DolyxgWS.js"));
+    const { registerSupplierHandlers } = await Promise.resolve().then(() => require("./chunks/supplier.handlers-DkRalX5K.js"));
+    const { registerPurchaseHandlers } = await Promise.resolve().then(() => require("./chunks/purchase.handlers-B08waKmr.js"));
+    const { registerPaymentHandlers } = await Promise.resolve().then(() => require("./chunks/payment.handlers-CmzDN32K.js"));
+    const { registerReceiptHandlers } = await Promise.resolve().then(() => require("./chunks/receipt.handlers-DbBryOEZ.js"));
+    const { registerExpenseHandlers } = await Promise.resolve().then(() => require("./chunks/expense.handlers-BsPDIZvN.js"));
+    const { registerStoreInfoHandlers } = await Promise.resolve().then(() => require("./chunks/storeInfo.handlers-BKdtrY2y.js"));
+    const { registerAnalyticsHandlers } = await Promise.resolve().then(() => require("./chunks/analytics.handlers-XJYXNBBh.js"));
     registerInvoiceHandlers();
     registerCustomerHandlers();
     registerProductHandlers();
@@ -508,13 +515,10 @@ electron.app.whenReady().then(async () => {
     registerPurchaseHandlers();
     registerPaymentHandlers();
     registerReceiptHandlers();
-    await ensureAppReady();
-    const { registerExpenseHandlers } = await Promise.resolve().then(() => require("./chunks/expense.handlers-iDJfPTDN.js"));
-    const { registerStoreInfoHandlers } = await Promise.resolve().then(() => require("./chunks/storeInfo.handlers-B3PwoOMv.js"));
     registerExpenseHandlers();
     registerStoreInfoHandlers();
-    const { registerAnalyticsHandlers } = await Promise.resolve().then(() => require("./chunks/analytics.handlers-XJYXNBBh.js"));
     registerAnalyticsHandlers();
+    await ensureAppReady();
   })().catch((error) => {
     log.error("App initialization failed", error);
   });

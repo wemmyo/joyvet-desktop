@@ -2,6 +2,7 @@
 
 import { render, screen, waitFor } from '@testing-library/react';
 import type { ReactNode } from 'react';
+import { MemoryRouter } from 'react-router-dom';
 
 import { DEFAULT_PAGE, DEFAULT_PAGE_SIZE } from '../../../types/pagination';
 import UserScreen from '../User';
@@ -56,7 +57,11 @@ describe('UserScreen', () => {
   it('renders an empty row when there are no users', async () => {
     getUsersFn.mockResolvedValue({ rows: [], total: 0 });
 
-    render(<UserScreen />);
+    render(
+      <MemoryRouter>
+        <UserScreen />
+      </MemoryRouter>
+    );
 
     await waitFor(() => {
       expect(getUsersFn).toHaveBeenCalledWith({

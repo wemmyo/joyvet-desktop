@@ -26,10 +26,7 @@ import {
   TableHeader,
   TableRow,
 } from '../../components/ui/table';
-import {
-  TableEmptyRow,
-  TableFrame,
-} from '../../components/ui/table-helpers';
+import { TableEmptyRow, TableFrame } from '../../components/ui/table-helpers';
 
 const CONTENT_CREATE = 'create';
 const CONTENT_EDIT = 'edit';
@@ -130,7 +127,12 @@ const CustomersScreen: React.FC = () => {
       return <CreateCustomer createCustomerFn={handleNewCustomer} />;
     }
     if (sideContent === CONTENT_EDIT) {
-      return <EditCustomer customerId={Number(customerId)} />;
+      return (
+        <EditCustomer
+          customerId={Number(customerId)}
+          onRefresh={() => fetchCustomers(page, appliedSearch)}
+        />
+      );
     }
     return null;
   };

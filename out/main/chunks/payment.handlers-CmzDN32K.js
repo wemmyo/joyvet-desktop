@@ -7,7 +7,7 @@ const zod = require("zod");
 const payment = require("./payment-9-9dtC0H.js");
 const supplier = require("./supplier-D6HH6Jzr.js");
 const database = require("./database-Dx0B-evc.js");
-const listing = require("./listing-fG59YslC.js");
+const listing = require("./listing-iK2d8TQt.js");
 const index = require("../index.js");
 require("fs");
 require("path");
@@ -38,6 +38,7 @@ const paymentInputSchema = zod.z.object({
   bank: zod.z.string().optional().nullable(),
   note: zod.z.string().optional().nullable()
 });
+const MAX_DATE_RANGE = 90;
 function registerPaymentHandlers() {
   electron.ipcMain.handle(
     "payment:getAll",
@@ -51,7 +52,9 @@ function registerPaymentHandlers() {
         order: [["createdAt", "DESC"]]
       });
       return listing.toPaginatedResult(
-        rows.map((payment2) => payment2.toJSON ? payment2.toJSON() : payment2),
+        rows.map(
+          (payment2) => payment2.toJSON ? payment2.toJSON() : payment2
+        ),
         count,
         page,
         pageSize
@@ -75,7 +78,7 @@ function registerPaymentHandlers() {
     "payment:create",
     index.withAppReady(async (_event, values) => {
       const parsedValues = paymentInputSchema.parse(values);
-      await database.database.transaction(async (t) => {
+      return await database.database.transaction(async (t) => {
         const payment$1 = await payment.default.create(
           {
             supplierId: parsedValues.supplierId,
@@ -111,6 +114,13 @@ function registerPaymentHandlers() {
           where: { id: payment$1.supplierId },
           transaction: t
         });
+        const targetSupplier = await supplier.default.findByPk(
+          parsedValues.supplierId,
+          { transaction: t }
+        );
+        if (!targetSupplier) {
+          throw new Error("Supplier not found");
+        }
         await supplier.default.decrement("balance", {
           by: parsedValues.amount,
           where: { id: parsedValues.supplierId },
@@ -153,6 +163,12 @@ function registerPaymentHandlers() {
       const { endDate, page, pageSize, startDate, supplierId } = query;
       const whereClause = {};
       if (startDate && endDate) {
+        const dateDifference = dayjs(endDate).diff(dayjs(startDate), "days");
+        if (dateDifference > MAX_DATE_RANGE) {
+          throw new Error(
+            `Date range too large. Please select a range smaller than ${MAX_DATE_RANGE} days.`
+          );
+        }
         whereClause.createdAt = {
           [sequelize.Op.between]: [
             `${dayjs(startDate).format("YYYY-MM-DD")} 00:00:00`,
@@ -171,7 +187,9 @@ function registerPaymentHandlers() {
         order: [["createdAt", "DESC"]]
       });
       return listing.toPaginatedResult(
-        rows.map((payment2) => payment2.toJSON ? payment2.toJSON() : payment2),
+        rows.map(
+          (payment2) => payment2.toJSON ? payment2.toJSON() : payment2
+        ),
         count,
         page,
         pageSize
@@ -195,7 +213,9 @@ function registerPaymentHandlers() {
         order: [["createdAt", "DESC"]]
       });
       return listing.toPaginatedResult(
-        rows.map((payment2) => payment2.toJSON ? payment2.toJSON() : payment2),
+        rows.map(
+          (payment2) => payment2.toJSON ? payment2.toJSON() : payment2
+        ),
         count,
         page,
         pageSize

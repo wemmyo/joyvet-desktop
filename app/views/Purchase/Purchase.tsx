@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
+import { toast } from 'sonner';
 
 import DashboardLayout from '../../layouts/DashboardLayout/DashboardLayout';
 import { Button } from '../../components/ui/button';
@@ -59,6 +60,7 @@ interface PurchaseOrder extends IProduct {
 
 const PurchaseScreen: React.FC = () => {
   const [orders, setOrders] = useState<PurchaseOrder[]>([]);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const {
     register,
@@ -164,7 +166,7 @@ const PurchaseScreen: React.FC = () => {
       newSellPrice: values.newSellPrice,
       newSellPrice2: values.newSellPrice2,
       newSellPrice3: values.newSellPrice3,
-      orderId: new Date().getUTCMilliseconds(),
+      orderId: Date.now(),
     });
     reset({
       supplierId: values.supplierId,
@@ -179,17 +181,27 @@ const PurchaseScreen: React.FC = () => {
   };
 
   const createPurchase = async () => {
-    await createPurchaseFn(
-      orders as any,
-      {
-        supplierId: Number(watchedValues.supplierId),
-        invoiceNumber: watchedValues.invoiceNumber,
-        amount: sumOfOrders(),
-        products: orders,
-      } as any
-    );
-    reset();
-    setOrders([]);
+    setIsSubmitting(true);
+    try {
+      await createPurchaseFn(
+        orders as any,
+        {
+          supplierId: Number(watchedValues.supplierId),
+          invoiceNumber: watchedValues.invoiceNumber,
+          amount: sumOfOrders(),
+          products: orders,
+        } as any
+      );
+      toast.success('Purchase created');
+      reset();
+      setOrders([]);
+    } catch (err: unknown) {
+      toast.error(
+        err instanceof Error ? err.message : 'Failed to create purchase'
+      );
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -385,6 +397,7 @@ const PurchaseScreen: React.FC = () => {
                 </div>
 
                 <Button
+                  disabled={isSubmitting || orders.length < 1}
                   onClick={createPurchase}
                   type="button"
                   className="w-full"

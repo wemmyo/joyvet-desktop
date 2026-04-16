@@ -2,12 +2,15 @@ import React, { useEffect, useRef, useState } from 'react';
 import { useReactToPrint } from 'react-to-print';
 import { Link } from 'react-router-dom';
 import dayjs from 'dayjs';
+import { toast } from 'sonner';
 
 import {
   deleteInvoiceFn,
   getSingleInvoiceFn,
 } from '../../../controllers/invoice.controller';
+import { getStoreInfoFn } from '../../../controllers/storeInfo.controller';
 import { numberWithCommas, isAdmin } from '../../../utils/helpers';
+import { IStoreInfo } from '../../../models/storeInfo';
 import ComponentToPrint from '../../../components/PrintedReceipt/ReceiptWrapper';
 import { useSidebarContext } from '../../../contexts/SidebarContext';
 import routes from '../../../routing/routes';
@@ -39,6 +42,7 @@ const SalesDetail = ({ salesId, onRefresh }: SalesDetailProps) => {
   const [printInvoice, setPrintInvoice] = useState(false);
   const [loading, setLoading] = useState(false);
   const [sales, setSales] = useState<IInvoice>({} as IInvoice);
+  const [storeInfo, setStoreInfo] = useState<IStoreInfo | undefined>(undefined);
 
   const handlePrint = useReactToPrint({
     contentRef: componentRef,
@@ -48,6 +52,12 @@ const SalesDetail = ({ salesId, onRefresh }: SalesDetailProps) => {
   const handlePrintFn = () => {
     setPrintInvoice(true);
   };
+
+  useEffect(() => {
+    getStoreInfoFn()
+      .then((records) => setStoreInfo(records[0]))
+      .catch(() => {});
+  }, []);
 
   useEffect(() => {
     setPrintInvoice(false);
@@ -71,16 +81,23 @@ const SalesDetail = ({ salesId, onRefresh }: SalesDetailProps) => {
   }, [salesId]);
 
   const handleDeleteInvoice = async () => {
-    await deleteInvoiceFn(Number(salesId));
-    closeSideContent();
-    onRefresh?.();
+    try {
+      await deleteInvoiceFn(Number(salesId));
+      toast.success('Invoice deleted');
+      closeSideContent();
+      onRefresh?.();
+    } catch (err: unknown) {
+      toast.error(
+        err instanceof Error ? err.message : 'Failed to delete invoice'
+      );
+    }
   };
 
   const renderInvoiceToPrint = () => {
     if (printInvoice) {
       return (
         <div style={{ display: 'none' }}>
-          <ComponentToPrint ref={componentRef} invoice={sales} />
+          <ComponentToPrint ref={componentRef} invoice={sales} storeInfo={storeInfo} />
         </div>
       );
     }
@@ -110,7 +127,9 @@ const SalesDetail = ({ salesId, onRefresh }: SalesDetailProps) => {
             </TableRow>
             <TableRow>
               <TableCell className="font-medium">Date</TableCell>
-              <TableCell>{dayjs(sales.createdAt).format('DD/MM/YYYY')}</TableCell>
+              <TableCell>
+                {dayjs(sales.createdAt).format('DD/MM/YYYY')}
+              </TableCell>
             </TableRow>
             <TableRow>
               <TableCell className="font-medium">Time</TableCell>

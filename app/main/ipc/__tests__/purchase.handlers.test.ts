@@ -54,6 +54,14 @@ vi.mock('../../../models/product', () => ({
   },
 }));
 
+vi.mock('../../../models/purchaseItem', () => ({
+  default: { create: vi.fn(), findAll: vi.fn() },
+}));
+
+vi.mock('../../../models/productAuditLog', () => ({
+  default: { create: vi.fn() },
+}));
+
 import PurchaseModel from '../../../models/purchase';
 import SupplierModel from '../../../models/supplier';
 import ProductModel from '../../../models/product';
@@ -130,7 +138,11 @@ describe('purchase IPC handlers', () => {
       });
 
       expect(createPurchaseMock).toHaveBeenCalledWith(
-        expect.objectContaining({ postedBy: 'Jane Doe', invoiceNumber: 'INV-001', amount: 5000 }),
+        expect.objectContaining({
+          postedBy: 'Jane Doe',
+          invoiceNumber: 'INV-001',
+          amount: 5000,
+        }),
         expect.anything()
       );
       expect(SupplierModel.increment).toHaveBeenCalledWith(
@@ -153,9 +165,9 @@ describe('purchase IPC handlers', () => {
   describe('purchase:delete', () => {
     it('throws when purchase not found', async () => {
       (PurchaseModel.findByPk as any).mockResolvedValue(null);
-      await expect(
-        handlers['purchase:delete'](mockEvent, 999)
-      ).rejects.toThrow('Purchase not found');
+      await expect(handlers['purchase:delete'](mockEvent, 999)).rejects.toThrow(
+        'Purchase not found'
+      );
     });
   });
 
@@ -165,7 +177,9 @@ describe('purchase IPC handlers', () => {
         rows: [mockPurchase],
         count: 1,
       });
-      const result = await handlers['purchase:filter'](mockEvent, { supplierId: 1 });
+      const result = await handlers['purchase:filter'](mockEvent, {
+        supplierId: 1,
+      });
       expect(result).toEqual({
         rows: [mockPurchase.toJSON()],
         total: 1,
@@ -179,7 +193,9 @@ describe('purchase IPC handlers', () => {
 
   describe('purchase:search', () => {
     it('returns empty when no search term', async () => {
-      const result = await handlers['purchase:search'](mockEvent, { search: '' });
+      const result = await handlers['purchase:search'](mockEvent, {
+        search: '',
+      });
       expect(result).toEqual({ rows: [], total: 0, page: 1, pageSize: 25 });
     });
   });

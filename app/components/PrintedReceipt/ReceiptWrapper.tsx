@@ -1,12 +1,12 @@
 /* eslint-disable react/jsx-indent */
 
-import * as React from "react";
-import dayjs from "dayjs";
+import * as React from 'react';
+import dayjs from 'dayjs';
 
-import styles from "./PrintedReceipt.module.css";
-import { numberWithCommas } from "../../utils/helpers";
-import type { IInvoice } from "../../models/invoice";
-import type { IStoreInfo } from "../../models/storeInfo";
+import styles from './PrintedReceipt.module.css';
+import { numberWithCommas } from '../../utils/helpers';
+import type { IInvoice } from '../../models/invoice';
+import type { IStoreInfo } from '../../models/storeInfo';
 
 interface ReceiptWrapperProps {
   invoice: IInvoice;
@@ -18,11 +18,11 @@ const ReceiptWrapper = React.forwardRef<HTMLDivElement, ReceiptWrapperProps>(
     return (
       <div ref={ref} className={styles.receipt}>
         <div className={styles.receipt__companyInfo}>
-          <h5>{storeInfo?.storeName ?? "JOY VETERINARY"}</h5>
+          <h5>{storeInfo?.storeName}</h5>
           <p>
-            {storeInfo?.address ?? "37, Iganmode Road, Ota, Ogun State"}
+            {storeInfo?.address}
             <br />
-            {storeInfo?.phoneNumber ?? "08027634893"}
+            {storeInfo?.phoneNumber}
           </p>
           <p>
             <b>Sales Invoice!</b>
@@ -31,7 +31,7 @@ const ReceiptWrapper = React.forwardRef<HTMLDivElement, ReceiptWrapperProps>(
         </div>
         <p>
           Customer:
-          {invoice?.customer?.fullName || "VALUED CUSTOMER"}
+          {invoice?.customer?.fullName || 'VALUED CUSTOMER'}
         </p>
         <p>
           Invoice#:
@@ -39,7 +39,7 @@ const ReceiptWrapper = React.forwardRef<HTMLDivElement, ReceiptWrapperProps>(
         </p>
         <p>
           Transaction Date:
-          {dayjs(invoice.createdAt).format("DD/MM/YYYY")}
+          {dayjs(invoice.createdAt).format('DD/MM/YYYY')}
         </p>
         <table>
           <thead>
@@ -98,8 +98,8 @@ const ReceiptWrapper = React.forwardRef<HTMLDivElement, ReceiptWrapperProps>(
         </p>
       </div>
     );
-  },
+  }
 );
 
 export default ReceiptWrapper;
-ReceiptWrapper.displayName = "ReceiptWrapper";
+ReceiptWrapper.displayName = 'ReceiptWrapper';

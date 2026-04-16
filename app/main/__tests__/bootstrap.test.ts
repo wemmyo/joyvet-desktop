@@ -6,7 +6,11 @@ vi.mock('bcryptjs', () => ({
   hash: hashMock,
 }));
 
-import { createInitialAdmin, hasUsers, maybeSeedDevelopmentAdmin } from '../bootstrap';
+import {
+  createInitialAdmin,
+  hasUsers,
+  maybeSeedDevelopmentAdmin,
+} from '../bootstrap';
 
 const createUserModel = () => ({
   count: vi.fn(),

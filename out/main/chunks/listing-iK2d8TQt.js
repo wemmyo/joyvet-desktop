@@ -34,6 +34,10 @@ const receiptListQuerySchema = searchPaginationSchema.extend({
 const productListQuerySchema = searchPaginationSchema.extend({
   filter: zod.z.enum(["inStock"]).optional()
 });
+const expenseListQuerySchema = searchPaginationSchema.extend({
+  startDate: zod.z.string().optional(),
+  endDate: zod.z.string().optional()
+});
 const toPaginationOptions = ({
   page,
   pageSize
@@ -47,6 +51,7 @@ const toPaginatedResult = (rows, total, page, pageSize) => ({
   page,
   pageSize
 });
+exports.expenseListQuerySchema = expenseListQuerySchema;
 exports.invoiceListQuerySchema = invoiceListQuerySchema;
 exports.paymentListQuerySchema = paymentListQuerySchema;
 exports.productListQuerySchema = productListQuerySchema;

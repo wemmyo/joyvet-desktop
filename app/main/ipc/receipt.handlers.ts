@@ -117,11 +117,21 @@ export function registerReceiptHandlers(): void {
           throw new Error('Receipt not found');
         }
 
+        // Reverse the old receipt's effect on the original customer.
         await Customer.increment('balance', {
           by: (receipt as any).amount,
           where: { id: (receipt as any).customerId },
           transaction: t,
         });
+
+        // Verify the target customer exists before applying the new decrement.
+        const targetCustomer = await Customer.findByPk(
+          parsedValues.customerId,
+          { transaction: t }
+        );
+        if (!targetCustomer) {
+          throw new Error('Customer not found');
+        }
 
         await Customer.decrement('balance', {
           by: parsedValues.amount,

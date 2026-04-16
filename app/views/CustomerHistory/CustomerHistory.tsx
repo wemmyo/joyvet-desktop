@@ -28,6 +28,7 @@ const CustomerHistory: React.FC = () => {
   const [invoices, setInvoices] = useState<IInvoice[]>([]);
   const [activityTimeline, setActivityTimeline] = useState<any[]>([]);
   const [activeTab, setActiveTab] = useState('Receipts');
+  const [error, setError] = useState<string | null>(null);
   const { id } = useParams<{ id: string }>();
   const customerId = Number(id);
   const hasValidCustomerId = Number.isInteger(customerId) && customerId > 0;
@@ -47,15 +48,20 @@ const CustomerHistory: React.FC = () => {
     }
 
     const fetchData = async () => {
-      const [invoicesResponse, receiptsResponse, timelineResponse] =
-        await Promise.all([
-          getCustomerInvoicesFn(customerId, startDate, endDate),
-          getCustomerReceiptsFn(customerId, startDate, endDate),
-          getCustomerActivityTimelineFn(customerId, startDate, endDate),
-        ]);
-      setInvoices(invoicesResponse || []);
-      setReceipts(receiptsResponse || []);
-      setActivityTimeline(timelineResponse || []);
+      setError(null);
+      try {
+        const [invoicesResponse, receiptsResponse, timelineResponse] =
+          await Promise.all([
+            getCustomerInvoicesFn(customerId, startDate, endDate),
+            getCustomerReceiptsFn(customerId, startDate, endDate),
+            getCustomerActivityTimelineFn(customerId, startDate, endDate),
+          ]);
+        setInvoices(invoicesResponse || []);
+        setReceipts(receiptsResponse || []);
+        setActivityTimeline(timelineResponse || []);
+      } catch (err: unknown) {
+        setError(err instanceof Error ? err.message : 'Failed to load data');
+      }
     };
 
     fetchData();
@@ -80,6 +86,7 @@ const CustomerHistory: React.FC = () => {
 
   return (
     <DashboardLayout screenTitle="Customer History">
+      {error && <p className="text-destructive text-sm p-4">{error}</p>}
       <div ref={componentRef}>
         <div className="flex items-center gap-3 mb-4">
           <Button variant="outline" size="icon" onClick={handlePrint}>

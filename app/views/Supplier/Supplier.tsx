@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { useReactToPrint } from 'react-to-print';
 import { Plus, RefreshCw, Printer } from 'lucide-react';
+import { toast } from 'sonner';
 
 import DashboardLayout from '../../layouts/DashboardLayout/DashboardLayout';
 import PaginationControls from '../../components/PaginationControls/PaginationControls';
@@ -26,10 +27,7 @@ import {
   TableHeader,
   TableRow,
 } from '../../components/ui/table';
-import {
-  TableEmptyRow,
-  TableFrame,
-} from '../../components/ui/table-helpers';
+import { TableEmptyRow, TableFrame } from '../../components/ui/table-helpers';
 
 const CONTENT_CREATE = 'create';
 const CONTENT_EDIT = 'edit';
@@ -96,8 +94,15 @@ const SuppliersScreen: React.FC = () => {
   }, [appliedSearch, page]);
 
   const handleNewSupplier = async (values) => {
-    await createSupplierFn(values);
-    fetchSuppliers();
+    try {
+      await createSupplierFn(values);
+      toast.success('Supplier created');
+      fetchSuppliers();
+    } catch (err: unknown) {
+      toast.error(
+        err instanceof Error ? err.message : 'Failed to create supplier'
+      );
+    }
   };
 
   const openSingleSupplier = (id) => {
@@ -130,7 +135,12 @@ const SuppliersScreen: React.FC = () => {
       return <CreateSupplier createSupplierFn={handleNewSupplier} />;
     }
     if (sideContent === CONTENT_EDIT) {
-      return <EditSupplier supplierId={Number(supplierId)} />;
+      return (
+        <EditSupplier
+          supplierId={Number(supplierId)}
+          onRefresh={() => fetchSuppliers(page, appliedSearch)}
+        />
+      );
     }
     return null;
   };

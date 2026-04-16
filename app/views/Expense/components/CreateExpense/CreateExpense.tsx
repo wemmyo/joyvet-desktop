@@ -15,15 +15,15 @@ import {
 
 const schema = z.object({
   type: z.string().min(1, 'Required'),
-  amount: z.string().optional().default(''),
-  date: z.string().optional().default(''),
+  amount: z.string().min(1, 'Required'),
+  date: z.string().min(1, 'Required'),
   note: z.string().optional().default(''),
 });
 
 type FormValues = z.infer<typeof schema>;
 
 export interface CreateExpenseProps {
-  createExpenseFn: (values: any) => void;
+  createExpenseFn: (values: any) => Promise<void>;
 }
 
 const CreateExpense: React.FC<CreateExpenseProps> = ({
@@ -45,8 +45,8 @@ const CreateExpense: React.FC<CreateExpenseProps> = ({
     },
   });
 
-  const onSubmit = (values: FormValues) => {
-    createExpenseFn(values);
+  const onSubmit = async (values: FormValues) => {
+    await createExpenseFn(values);
     reset();
   };
 

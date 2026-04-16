@@ -24,6 +24,7 @@ const SuppplierHistory: React.FC = () => {
   const [purchases, setPurchases] = useState<any[]>([]);
   const [activityTimeline, setActivityTimeline] = useState<any[]>([]);
   const [activeTab, setActiveTab] = useState('Purchases');
+  const [error, setError] = useState<string | null>(null);
   const { id } = useParams<{ id: string }>();
   const supplierId = Number(id);
   const hasValidSupplierId = Number.isInteger(supplierId) && supplierId > 0;
@@ -37,15 +38,20 @@ const SuppplierHistory: React.FC = () => {
     }
 
     const fetchData = async () => {
-      const [paymentsResponse, purchasesResponse, timelineResponse] =
-        await Promise.all([
-          getSupplierPaymentsFn(supplierId, startDate, endDate),
-          getSupplierPurchasesFn(supplierId, startDate, endDate),
-          getSupplierActivityTimelineFn(supplierId, startDate, endDate),
-        ]);
-      setPayments(paymentsResponse || []);
-      setPurchases(purchasesResponse || []);
-      setActivityTimeline(timelineResponse || []);
+      setError(null);
+      try {
+        const [paymentsResponse, purchasesResponse, timelineResponse] =
+          await Promise.all([
+            getSupplierPaymentsFn(supplierId, startDate, endDate),
+            getSupplierPurchasesFn(supplierId, startDate, endDate),
+            getSupplierActivityTimelineFn(supplierId, startDate, endDate),
+          ]);
+        setPayments(paymentsResponse || []);
+        setPurchases(purchasesResponse || []);
+        setActivityTimeline(timelineResponse || []);
+      } catch (err: unknown) {
+        setError(err instanceof Error ? err.message : 'Failed to load data');
+      }
     };
     fetchData();
   }, [endDate, hasValidSupplierId, startDate, supplierId]);
@@ -69,6 +75,7 @@ const SuppplierHistory: React.FC = () => {
 
   return (
     <DashboardLayout screenTitle="Supplier History">
+      {error && <p className="text-destructive text-sm p-4">{error}</p>}
       <div className="flex items-end gap-3 mb-4">
         <div className="flex flex-col gap-1">
           <Label htmlFor="startDate">Start Date</Label>

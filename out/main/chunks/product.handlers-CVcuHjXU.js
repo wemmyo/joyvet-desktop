@@ -4,13 +4,13 @@ const electron = require("electron");
 const sequelize = require("sequelize");
 const dayjs = require("dayjs");
 const zod = require("zod");
+const database = require("./database-Dx0B-evc.js");
 const product = require("./product-D77rVCIx.js");
 const productAuditLog = require("./productAuditLog-DrnoXAKA.js");
 const purchaseItem = require("./purchaseItem-CTTHQz2J.js");
 const invoiceItem = require("./invoiceItem-nbCLMwgg.js");
-const listing = require("./listing-fG59YslC.js");
+const listing = require("./listing-iK2d8TQt.js");
 const index = require("../index.js");
-require("./database-Dx0B-evc.js");
 require("fs");
 require("path");
 require("electron-updater");
@@ -18,15 +18,6 @@ require("electron-log");
 require("bcryptjs");
 const getProductById = (id) => {
   return product.default.findByPk(id, {}).then((data) => {
-    return data;
-  });
-};
-const deleteProduct = (id) => {
-  return product.default.destroy({
-    where: {
-      id
-    }
-  }).then((data) => {
     return data;
   });
 };
@@ -101,54 +92,100 @@ function registerProductHandlers() {
   electron.ipcMain.handle(
     "product:update",
     index.withAppReady(async (_event, id, values) => {
+      const updateSchema = zod.z.object({
+        title: zod.z.string().min(1).max(255).optional(),
+        stock: zod.z.number().min(0).optional(),
+        buyPrice: zod.z.number().optional(),
+        sellPrice: zod.z.number().optional(),
+        sellPrice2: zod.z.number().optional(),
+        sellPrice3: zod.z.number().optional(),
+        reorderLevel: zod.z.number().optional(),
+        productCode: zod.z.string().optional().nullable(),
+        numberInPack: zod.z.number().optional().nullable(),
+        _postedBy: zod.z.string().optional()
+      });
+      updateSchema.parse(values);
       const { _postedBy, ...productValues } = values;
       const postedBy = _postedBy || "unknown";
-      const product$1 = await product.default.findByPk(id);
-      if (!product$1) {
-        throw new Error("Product not found");
-      }
-      const stockBefore = product$1.stock;
-      const stockChanged = productValues.stock !== void 0 && productValues.stock !== stockBefore;
-      const priceFields = ["buyPrice", "sellPrice", "sellPrice2", "sellPrice3"];
-      const priceChanges = [];
-      priceFields.forEach((field) => {
-        if (productValues[field] !== void 0 && productValues[field] !== product$1[field]) {
-          priceChanges.push({
-            field,
-            before: product$1[field],
-            after: productValues[field]
-          });
+      await database.database.transaction(async (t) => {
+        const product$1 = await product.default.findByPk(id, { transaction: t });
+        if (!product$1) {
+          throw new Error("Product not found");
+        }
+        const stockBefore = product$1.stock;
+        const stockChanged = productValues.stock !== void 0 && productValues.stock !== stockBefore;
+        const priceFields = [
+          "buyPrice",
+          "sellPrice",
+          "sellPrice2",
+          "sellPrice3"
+        ];
+        const priceChanges = [];
+        priceFields.forEach((field) => {
+          if (productValues[field] !== void 0 && productValues[field] !== product$1[field]) {
+            priceChanges.push({
+              field,
+              before: product$1[field],
+              after: productValues[field]
+            });
+          }
+        });
+        await product.default.update(productValues, { where: { id }, transaction: t });
+        if (stockChanged) {
+          await productAuditLog.default.create(
+            {
+              productId: id,
+              changeType: "stock_change",
+              delta: productValues.stock - stockBefore,
+              stockBefore,
+              stockAfter: productValues.stock,
+              reason: "manual_edit",
+              referenceType: "manual",
+              postedBy
+            },
+            { transaction: t }
+          );
+        }
+        if (priceChanges.length > 0) {
+          await productAuditLog.default.create(
+            {
+              productId: id,
+              changeType: "price_change",
+              priceChanges: JSON.stringify(priceChanges),
+              reason: "manual_edit",
+              referenceType: "manual",
+              postedBy
+            },
+            { transaction: t }
+          );
         }
       });
-      await product.default.update(productValues, { where: { id } });
-      if (stockChanged) {
-        await productAuditLog.default.create({
-          productId: id,
-          changeType: "stock_change",
-          delta: productValues.stock - stockBefore,
-          stockBefore,
-          stockAfter: productValues.stock,
-          reason: "manual_edit",
-          referenceType: "manual",
-          postedBy
-        });
-      }
-      if (priceChanges.length > 0) {
-        await productAuditLog.default.create({
-          productId: id,
-          changeType: "price_change",
-          priceChanges: JSON.stringify(priceChanges),
-          reason: "manual_edit",
-          referenceType: "manual",
-          postedBy
-        });
-      }
     })
   );
   electron.ipcMain.handle(
     "product:delete",
     index.withAppReady(async (_event, id) => {
-      await deleteProduct(id);
+      await database.database.transaction(async (t) => {
+        const invoiceItemCount = await invoiceItem.default.count({
+          where: { productId: id },
+          transaction: t
+        });
+        if (invoiceItemCount > 0) {
+          throw new Error(
+            `Cannot delete product referenced by existing invoices (${invoiceItemCount} line items). Remove invoices first.`
+          );
+        }
+        const purchaseItemCount = await purchaseItem.default.count({
+          where: { productId: id },
+          transaction: t
+        });
+        if (purchaseItemCount > 0) {
+          throw new Error(
+            `Cannot delete product referenced by existing purchases (${purchaseItemCount} line items). Remove purchases first.`
+          );
+        }
+        await product.default.destroy({ where: { id }, transaction: t });
+      });
     })
   );
   electron.ipcMain.handle(
@@ -188,7 +225,7 @@ function registerProductHandlers() {
             createdAt: {
               [sequelize.Op.between]: [
                 `${dayjs(startDate).format("YYYY-MM-DD")} 00:00:00`,
-                `${dayjs(endDate).format("YYYY-MM-DD")} 23:00:00`
+                `${dayjs(endDate).format("YYYY-MM-DD")} 23:59:59`
               ]
             }
           },
@@ -208,7 +245,7 @@ function registerProductHandlers() {
             createdAt: {
               [sequelize.Op.between]: [
                 `${dayjs(startDate).format("YYYY-MM-DD")} 00:00:00`,
-                `${dayjs(endDate).format("YYYY-MM-DD")} 23:00:00`
+                `${dayjs(endDate).format("YYYY-MM-DD")} 23:59:59`
               ]
             }
           },

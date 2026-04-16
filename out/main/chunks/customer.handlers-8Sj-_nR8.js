@@ -8,11 +8,11 @@ const customer = require("./customer-CS2lwHZV.js");
 const invoice = require("./invoice-Civ-gfB_.js");
 const receipt = require("./receipt-CgVNnpBY.js");
 const product = require("./product-D77rVCIx.js");
+const database = require("./database-Dx0B-evc.js");
 const receipt_service = require("./receipt.service-DcZJQlU4.js");
 const invoice_service = require("./invoice.service-plxLdCio.js");
-const listing = require("./listing-fG59YslC.js");
+const listing = require("./listing-iK2d8TQt.js");
 const index = require("../index.js");
-require("./database-Dx0B-evc.js");
 require("fs");
 require("path");
 require("electron-updater");
@@ -25,15 +25,6 @@ const getCustomerById = (id) => {
 };
 const updateCustomer = (id, customer$1) => {
   return customer.default.update(customer$1, {
-    where: {
-      id
-    }
-  }).then((data) => {
-    return data;
-  });
-};
-const deleteCustomer = (id) => {
-  return customer.default.destroy({
     where: {
       id
     }
@@ -89,13 +80,41 @@ function registerCustomerHandlers() {
   electron.ipcMain.handle(
     "customer:update",
     index.withAppReady(async (_event, id, values) => {
-      await updateCustomer(id, values);
+      const updateSchema = zod.z.object({
+        fullName: zod.z.string().min(1).max(255).optional(),
+        phoneNumber: zod.z.string().max(50).optional().nullable(),
+        address: zod.z.string().max(500).optional().nullable(),
+        balance: zod.z.number().optional(),
+        maxPriceLevel: zod.z.number().min(0).max(3).optional()
+      });
+      const parsed = updateSchema.parse(values);
+      await updateCustomer(id, parsed);
     })
   );
   electron.ipcMain.handle(
     "customer:delete",
     index.withAppReady(async (_event, id) => {
-      await deleteCustomer(id);
+      await database.database.transaction(async (t) => {
+        const invoiceCount = await invoice.default.count({
+          where: { customerId: id },
+          transaction: t
+        });
+        if (invoiceCount > 0) {
+          throw new Error(
+            `Cannot delete customer with existing invoices (${invoiceCount} found). Remove invoices first.`
+          );
+        }
+        const receiptCount = await receipt.default.count({
+          where: { customerId: id },
+          transaction: t
+        });
+        if (receiptCount > 0) {
+          throw new Error(
+            `Cannot delete customer with existing receipts (${receiptCount} found). Remove receipts first.`
+          );
+        }
+        await customer.default.destroy({ where: { id }, transaction: t });
+      });
     })
   );
   electron.ipcMain.handle(
@@ -121,36 +140,39 @@ function registerCustomerHandlers() {
   );
   electron.ipcMain.handle(
     "customer:getInvoices",
-    index.withAppReady(async (_event, customerId, startDate, endDate) => {
-      const invoices = await invoice_service.getInvoices({
-        where: {
-          customerId,
-          createdAt: {
-            [sequelize.Op.between]: [
-              `${dayjs(startDate).format("YYYY-MM-DD")} 00:00:00`,
-              `${dayjs(endDate).format("YYYY-MM-DD")} 23:00:00`
-            ]
-          }
-        },
-        order: [["createdAt", "DESC"]]
-      });
-      return invoices.map((i) => i.toJSON ? i.toJSON() : i);
-    })
-  );
-  electron.ipcMain.handle(
-    "customer:getReceipts",
     index.withAppReady(
       async (_event, customerId, startDate, endDate) => {
-        const receipts = await receipt_service.getReceipts({
+        const invoices = await invoice_service.getInvoices({
           where: {
             customerId,
             createdAt: {
               [sequelize.Op.between]: [
                 `${dayjs(startDate).format("YYYY-MM-DD")} 00:00:00`,
-                `${dayjs(endDate).format("YYYY-MM-DD")} 23:00:00`
+                `${dayjs(endDate).format("YYYY-MM-DD")} 23:59:59`
               ]
             }
           },
+          order: [["createdAt", "DESC"]]
+        });
+        return invoices.map((i) => i.toJSON ? i.toJSON() : i);
+      }
+    )
+  );
+  electron.ipcMain.handle(
+    "customer:getReceipts",
+    index.withAppReady(
+      async (_event, customerId, startDate, endDate) => {
+        const whereClause = { customerId };
+        if (startDate && endDate) {
+          whereClause.createdAt = {
+            [sequelize.Op.between]: [
+              `${dayjs(startDate).format("YYYY-MM-DD")} 00:00:00`,
+              `${dayjs(endDate).format("YYYY-MM-DD")} 23:59:59`
+            ]
+          };
+        }
+        const receipts = await receipt_service.getReceipts({
+          where: whereClause,
           order: [["createdAt", "DESC"]]
         });
         return receipts.map((r) => r.toJSON ? r.toJSON() : r);

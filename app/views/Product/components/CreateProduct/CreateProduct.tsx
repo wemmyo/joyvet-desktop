@@ -42,8 +42,8 @@ const CreateProduct: React.FC<CreateProductProps> = ({
     },
   });
 
-  const onSubmit = (values: FormValues) => {
-    createProductFn({
+  const onSubmit = async (values: FormValues) => {
+    await createProductFn({
       ...values,
       sellPrice: Number(values.sellPrice),
       sellPrice2: Number(values.sellPrice2),

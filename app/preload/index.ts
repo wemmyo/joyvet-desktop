@@ -106,6 +106,7 @@ const api = {
     delete: (id: number) => ipcRenderer.invoke('user:delete', id),
     login: (credentials: { username: string; password: string }) =>
       ipcRenderer.invoke('user:login', credentials),
+    logout: () => ipcRenderer.invoke('user:logout'),
   },
   supplier: {
     getAll: (query?: PaginationQuery) =>
@@ -196,7 +197,8 @@ const api = {
     search: (query: ExpenseListQuery) =>
       ipcRenderer.invoke('expense:search', query),
     getTypes: () => ipcRenderer.invoke('expense:getTypes'),
-    createType: (values: { type: string }) => ipcRenderer.invoke('expense:createType', values),
+    createType: (values: { type: string }) =>
+      ipcRenderer.invoke('expense:createType', values),
   },
   storeInfo: {
     getAll: () => ipcRenderer.invoke('storeInfo:getAll'),

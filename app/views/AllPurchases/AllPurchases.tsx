@@ -14,10 +14,7 @@ import {
   TableHead,
   TableCell,
 } from '../../components/ui/table';
-import {
-  TableEmptyRow,
-  TableFrame,
-} from '../../components/ui/table-helpers';
+import { TableEmptyRow, TableFrame } from '../../components/ui/table-helpers';
 
 import { numberWithCommas } from '../../utils/helpers';
 import { useSidebarContext } from '../../contexts/SidebarContext';
@@ -39,6 +36,7 @@ const AllPurchasesScreen: React.FC = () => {
   const [searchValue, setSearchValue] = useState('');
   const [appliedSearch, setAppliedSearch] = useState('');
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [purchases, setPurchases] = useState<IPurchase[]>([]);
   const [page, setPage] = useState(DEFAULT_PAGE);
   const [total, setTotal] = useState(0);
@@ -50,19 +48,25 @@ const AllPurchasesScreen: React.FC = () => {
 
   const fetchPurchases = async (nextPage = page, search = appliedSearch) => {
     setLoading(true);
-    const paginatedResponse = search
-      ? await searchPurchaseFn({
-          page: nextPage,
-          pageSize: DEFAULT_PAGE_SIZE,
-          search,
-        })
-      : await getPurchasesFn({
-          page: nextPage,
-          pageSize: DEFAULT_PAGE_SIZE,
-        });
-    setPurchases(paginatedResponse.rows ?? []);
-    setTotal(paginatedResponse.total ?? 0);
-    setLoading(false);
+    setError(null);
+    try {
+      const paginatedResponse = search
+        ? await searchPurchaseFn({
+            page: nextPage,
+            pageSize: DEFAULT_PAGE_SIZE,
+            search,
+          })
+        : await getPurchasesFn({
+            page: nextPage,
+            pageSize: DEFAULT_PAGE_SIZE,
+          });
+      setPurchases(paginatedResponse.rows ?? []);
+      setTotal(paginatedResponse.total ?? 0);
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Failed to load purchases');
+    } finally {
+      setLoading(false);
+    }
   };
 
   useEffect(() => {
@@ -102,7 +106,9 @@ const AllPurchasesScreen: React.FC = () => {
 
   const renderSideContent = () => {
     if (sideContent === CONTENT_DETAIL) {
-      return <PurchaseDetail purchaseId={purchaseId} onRefresh={fetchPurchases} />;
+      return (
+        <PurchaseDetail purchaseId={purchaseId} onRefresh={fetchPurchases} />
+      );
     }
     return null;
   };
@@ -151,6 +157,7 @@ const AllPurchasesScreen: React.FC = () => {
       rightSidebar={renderSideContent()}
       headerContent={headerContent()}
     >
+      {error && <p className="text-destructive text-sm p-4">{error}</p>}
       {loading ? (
         <div className="flex items-center justify-center p-8">
           <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />

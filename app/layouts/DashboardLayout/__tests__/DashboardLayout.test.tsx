@@ -51,13 +51,13 @@ describe('DashboardLayout', () => {
     const { container } = render(
       <MemoryRouter initialEntries={['/invoice']}>
         <SidebarProvider>
-        <DashboardLayout
-          screenTitle="Invoices"
-          headerContent={<div>Header actions</div>}
-          rightSidebar={<div>Details panel body</div>}
-        >
-          <div>Page body</div>
-        </DashboardLayout>
+          <DashboardLayout
+            screenTitle="Invoices"
+            headerContent={<div>Header actions</div>}
+            rightSidebar={<div>Details panel body</div>}
+          >
+            <div>Page body</div>
+          </DashboardLayout>
         </SidebarProvider>
       </MemoryRouter>
     );
