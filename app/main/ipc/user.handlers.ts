@@ -1,25 +1,25 @@
-import { ipcMain } from 'electron';
 import { compare, hash } from 'bcryptjs';
+import { ipcMain } from 'electron';
 import { z } from 'zod';
 import User from '../../models/user';
-import database from '../database';
 import {
-  getUserById,
-  updateUser,
   createUser,
   findOneUser,
+  getUserById,
+  updateUser,
 } from '../../services/user.service';
-import { sanitizeUserSession, type UserSession } from '../../types/session';
+import { type UserSession, sanitizeUserSession } from '../../types/session';
+import database from '../database';
+import { ensureAuthReady, withAppReady } from '../runtime';
+import { requireRole, setActiveSession } from '../session';
 import {
   searchPaginationSchema,
   toPaginatedResult,
   toPaginationOptions,
 } from './listing';
-import { ensureAuthReady, withAppReady } from '../runtime';
-import { setActiveSession, requireRole } from '../session';
 
 const toRendererUser = (user: any): Record<string, unknown> | null => {
-  const serializedUser = user && user.toJSON ? user.toJSON() : user;
+  const serializedUser = user?.toJSON ? user.toJSON() : user;
 
   if (!serializedUser || typeof serializedUser !== 'object') {
     return null;

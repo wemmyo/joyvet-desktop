@@ -1,4 +1,4 @@
-import Payment, { IPayment } from '../models/payment';
+import Payment, { type IPayment } from '../models/payment';
 
 export const getPayments = (args: any) => {
   return Payment.findAll({

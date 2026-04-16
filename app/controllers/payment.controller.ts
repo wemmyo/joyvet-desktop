@@ -1,5 +1,5 @@
 import { toast } from 'sonner';
-import { IPayment } from '../models/payment';
+import type { IPayment } from '../models/payment';
 import type {
   PaginatedResult,
   PaginationQuery,
@@ -19,8 +19,8 @@ export const searchPaymentFn = async (
 ): Promise<PaginatedResult<IPayment>> => {
   try {
     return await window.api.payment.search(query);
-  } catch (error: any) {
-    toast.error(error.message || '');
+  } catch (error: unknown) {
+    toast.error(error instanceof Error ? error.message : '');
     return emptyPayments(query);
   }
 };
@@ -34,8 +34,8 @@ export const updatePaymentFn = async (
     await window.api.payment.update(id, values);
     toast.success('Successfully updated');
     if (cb) cb();
-  } catch (error: any) {
-    toast.error(error.message || '');
+  } catch (error: unknown) {
+    toast.error(error instanceof Error ? error.message : '');
   }
 };
 
@@ -44,8 +44,8 @@ export const getSinglePaymentFn = async (id: number, cb?: () => void) => {
     const payment = await window.api.payment.getById(id);
     if (cb) cb();
     return payment;
-  } catch (error: any) {
-    toast.error(error.message || '');
+  } catch (error: unknown) {
+    toast.error(error instanceof Error ? error.message : '');
     return null;
   }
 };
@@ -55,22 +55,25 @@ export const getPaymentsFn = async (
 ): Promise<PaginatedResult<IPayment>> => {
   try {
     return await window.api.payment.getAll(query);
-  } catch (error: any) {
-    toast.error(error.message || '');
+  } catch (error: unknown) {
+    toast.error(error instanceof Error ? error.message : '');
     return emptyPayments(query);
   }
 };
 
-export const deletePaymentFn = async (id: string | number) => {
+export const deletePaymentFn = async (id: number) => {
   try {
-    await window.api.payment.delete(id as number);
+    await window.api.payment.delete(id);
     toast.success('Payment successfully deleted');
-  } catch (error: any) {
-    toast.error(error.message || '');
+  } catch (error: unknown) {
+    toast.error(error instanceof Error ? error.message : '');
   }
 };
 
-export const createPaymentFn = async (values: any, cb?: () => void) => {
+export const createPaymentFn = async (
+  values: Partial<IPayment>,
+  cb?: () => void
+) => {
   try {
     const user = getUserSession();
     await window.api.payment.create({
@@ -79,7 +82,7 @@ export const createPaymentFn = async (values: any, cb?: () => void) => {
     });
     toast.success('Payment successfully created');
     if (cb) cb();
-  } catch (error: any) {
-    toast.error(error.message || '');
+  } catch (error: unknown) {
+    toast.error(error instanceof Error ? error.message : '');
   }
 };

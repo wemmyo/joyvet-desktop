@@ -1,21 +1,10 @@
-import React, { useEffect, useRef, useState } from 'react';
+import { Plus, Printer, RefreshCw } from 'lucide-react';
+import type React from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useReactToPrint } from 'react-to-print';
-import { Plus, RefreshCw, Printer } from 'lucide-react';
 import { toast } from 'sonner';
 
-import DashboardLayout from '../../layouts/DashboardLayout/DashboardLayout';
 import PaginationControls from '../../components/PaginationControls/PaginationControls';
-import CreateSupplier from './components/CreateSupplier/CreateSupplier';
-import { numberWithCommas, isAdmin, sum } from '../../utils/helpers';
-import { useSidebarContext } from '../../contexts/SidebarContext';
-import EditSupplier from './components/EditSupplier/EditSupplier';
-import {
-  getSuppliersFn,
-  createSupplierFn,
-  searchSupplierFn,
-} from '../../controllers/supplier.controller';
-import { ISupplier } from '../../models/supplier';
-import { DEFAULT_PAGE, DEFAULT_PAGE_SIZE } from '../../types/pagination';
 import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
 import {
@@ -28,6 +17,18 @@ import {
   TableRow,
 } from '../../components/ui/table';
 import { TableEmptyRow, TableFrame } from '../../components/ui/table-helpers';
+import { useSidebarContext } from '../../contexts/SidebarContext';
+import {
+  createSupplierFn,
+  getSuppliersFn,
+  searchSupplierFn,
+} from '../../controllers/supplier.controller';
+import DashboardLayout from '../../layouts/DashboardLayout/DashboardLayout';
+import type { ISupplier } from '../../models/supplier';
+import { DEFAULT_PAGE, DEFAULT_PAGE_SIZE } from '../../types/pagination';
+import { isAdmin, numberWithCommas, sum } from '../../utils/helpers';
+import CreateSupplier from './components/CreateSupplier/CreateSupplier';
+import EditSupplier from './components/EditSupplier/EditSupplier';
 
 const CONTENT_CREATE = 'create';
 const CONTENT_EDIT = 'edit';
@@ -80,6 +81,7 @@ const SuppliersScreen: React.FC = () => {
     setSideContent(content);
   };
 
+  // biome-ignore lint/correctness/useExhaustiveDependencies: fetchSuppliers and closeSideBar are stable
   useEffect(() => {
     void fetchSuppliers(page, appliedSearch);
 

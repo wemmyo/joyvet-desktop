@@ -288,9 +288,9 @@ describe('user IPC handlers', () => {
       const adminUser = { id: 1, role: 'admin' };
       (UserModel.findByPk as any).mockResolvedValue(adminUser);
       (UserModel.count as any).mockResolvedValue(1);
-      await expect(
-        handlers['user:delete'](mockEvent, 1)
-      ).rejects.toThrow('Cannot delete the last admin account');
+      await expect(handlers['user:delete'](mockEvent, 1)).rejects.toThrow(
+        'Cannot delete the last admin account'
+      );
       expect(UserModel.destroy).not.toHaveBeenCalled();
     });
 

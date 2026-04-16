@@ -1,18 +1,11 @@
-import React, { useEffect, useState } from 'react';
 import dayjs from 'dayjs';
 import { Plus } from 'lucide-react';
+import type React from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
-import DashboardLayout from '../../layouts/DashboardLayout/DashboardLayout';
 import PaginationControls from '../../components/PaginationControls/PaginationControls';
-import EditUser from './components/EditUser/EditUser';
-import { IUser } from '../../models/user';
-import { getUsersFn, createUserFn } from '../../controllers/user.controller';
-import { useSidebarContext } from '../../contexts/SidebarContext';
-import CreateUser from './components/CreateUser/CreateUser';
 import { Button } from '../../components/ui/button';
-import { isAdmin } from '../../utils/helpers';
-import routes from '../../routing/routes';
 import {
   Table,
   TableBody,
@@ -22,7 +15,15 @@ import {
   TableRow,
 } from '../../components/ui/table';
 import { TableEmptyRow, TableFrame } from '../../components/ui/table-helpers';
+import { useSidebarContext } from '../../contexts/SidebarContext';
+import { createUserFn, getUsersFn } from '../../controllers/user.controller';
+import DashboardLayout from '../../layouts/DashboardLayout/DashboardLayout';
+import type { IUser } from '../../models/user';
+import routes from '../../routing/routes';
 import { DEFAULT_PAGE, DEFAULT_PAGE_SIZE } from '../../types/pagination';
+import { isAdmin } from '../../utils/helpers';
+import CreateUser from './components/CreateUser/CreateUser';
+import EditUser from './components/EditUser/EditUser';
 // import { createStoreInfoTable } from '../../controllers/storeInfo.controller';
 
 const CONTENT_CREATE = 'create';
@@ -67,6 +68,7 @@ const UserScreen: React.FC = () => {
     setSideContent(content);
   };
 
+  // biome-ignore lint/correctness/useExhaustiveDependencies: fetchUsers and closeSideBar are stable
   useEffect(() => {
     void fetchUsers(page);
 

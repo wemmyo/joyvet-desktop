@@ -1,7 +1,7 @@
 import { toast } from 'sonner';
-import { IUser } from '../models/user';
-import { sanitizeUserSession, type UserSession } from '../types/session';
+import type { IUser } from '../models/user';
 import type { PaginatedResult, PaginationQuery } from '../types/pagination';
+import { type UserSession, sanitizeUserSession } from '../types/session';
 import { clearUserSession, setUserSession } from '../utils/session';
 
 export const loginUserFn = async (
@@ -19,8 +19,8 @@ export const loginUserFn = async (
     setUserSession(session);
     if (cb) cb();
     return session;
-  } catch (error: any) {
-    toast.error(error.message || '');
+  } catch (error: unknown) {
+    toast.error(error instanceof Error ? error.message : '');
     return null;
   }
 };
@@ -42,8 +42,8 @@ export const getUsersFn = async (
 ): Promise<PaginatedResult<IUser>> => {
   try {
     return await window.api.user.getAll(query);
-  } catch (error: any) {
-    toast.error(error.message || '');
+  } catch (error: unknown) {
+    toast.error(error instanceof Error ? error.message : '');
     return emptyUsers(query);
   }
 };
@@ -53,18 +53,22 @@ export const getSingleUserFn = async (id: number, cb?: () => void) => {
     const user = await window.api.user.getById(id);
     if (cb) cb();
     return user;
-  } catch (error: any) {
-    toast.error(error.message || '');
+  } catch (error: unknown) {
+    toast.error(error instanceof Error ? error.message : '');
+    return undefined;
   }
 };
 
-export const createUserFn = async (values: any, cb?: () => void) => {
+export const createUserFn = async (
+  values: Omit<IUser, 'id' | 'createdAt' | 'updatedAt'>,
+  cb?: () => void
+) => {
   try {
     await window.api.user.create(values);
     toast.success('User created successfully');
     if (cb) cb();
-  } catch (error: any) {
-    toast.error(error.message || '');
+  } catch (error: unknown) {
+    toast.error(error instanceof Error ? error.message : '');
   }
 };
 
@@ -77,8 +81,8 @@ export const updateUserFn = async (
     await window.api.user.update(id, values);
     toast.success('User updated successfully');
     if (cb) cb();
-  } catch (error: any) {
-    toast.error(error.message || '');
+  } catch (error: unknown) {
+    toast.error(error instanceof Error ? error.message : '');
   }
 };
 
@@ -87,7 +91,7 @@ export const deleteUserFn = async (userId: number, cb?: () => void) => {
     await window.api.user.delete(userId);
     toast.success('User successfully deleted');
     if (cb) cb();
-  } catch (error: any) {
-    toast.error(error.message || '');
+  } catch (error: unknown) {
+    toast.error(error instanceof Error ? error.message : '');
   }
 };

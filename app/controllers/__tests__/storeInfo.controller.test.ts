@@ -18,11 +18,11 @@ Object.defineProperty(global, 'window', {
 
 import { toast } from 'sonner';
 import {
-  getStoreInfoFn,
-  getSingleStoreInfoFn,
   createStoreInfoFn,
-  updateStoreInfoFn,
   deleteStoreInfoFn,
+  getSingleStoreInfoFn,
+  getStoreInfoFn,
+  updateStoreInfoFn,
 } from '../storeInfo.controller';
 
 const mockStoreInfo = {

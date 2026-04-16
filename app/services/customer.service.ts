@@ -1,6 +1,8 @@
-import Customer, { ICustomer } from '../models/customer';
+import type { FindOptions, Transaction } from 'sequelize';
 
-export const getCustomers = (args: any) => {
+import Customer, { type ICustomer } from '../models/customer';
+
+export const getCustomers = (args: FindOptions) => {
   return Customer.findAll({
     ...args,
   }).then((data: ICustomer[]) => {
@@ -16,11 +18,16 @@ export const getCustomerById = (id: number) => {
   });
 };
 
-export const updateCustomer = (id: number, customer: Partial<ICustomer>) => {
+export const updateCustomer = (
+  id: number,
+  customer: Partial<ICustomer>,
+  transaction?: Transaction
+) => {
   return Customer.update(customer, {
     where: {
       id,
     },
+    transaction,
   }).then((data: ICustomer) => {
     return data;
   });

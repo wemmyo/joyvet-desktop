@@ -1,20 +1,21 @@
-import React, { useEffect, useState } from 'react';
 import dayjs from 'dayjs';
+import type React from 'react';
+import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 
-import DashboardLayout from '../../layouts/DashboardLayout/DashboardLayout';
 import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
 import { Label } from '../../components/ui/label';
+import DashboardLayout from '../../layouts/DashboardLayout/DashboardLayout';
 
-import ProductHistoryInvoices from './components/Invoices/Invoices';
-import ProductHistoryPurchases from './components/Purchases/Purchases';
-import AuditLog from './components/AuditLog/AuditLog';
 import {
+  getProductAuditLogFn,
   getProductInvoicesFn,
   getProductPurchasesFn,
-  getProductAuditLogFn,
 } from '../../controllers/product.controller';
+import AuditLog from './components/AuditLog/AuditLog';
+import ProductHistoryInvoices from './components/Invoices/Invoices';
+import ProductHistoryPurchases from './components/Purchases/Purchases';
 
 const TODAYS_DATE = `${dayjs().format('YYYY-MM-DD')}`;
 

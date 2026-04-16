@@ -1,5 +1,5 @@
 import { toast } from 'sonner';
-import { sanitizeUserSession, type UserSession } from '../types/session';
+import { type UserSession, sanitizeUserSession } from '../types/session';
 import { setUserSession } from '../utils/session';
 
 export interface BootstrapStatus {
@@ -19,8 +19,8 @@ export const getBootstrapStatusFn = async (): Promise<BootstrapStatus> => {
     return {
       hasUsers: Boolean(status?.hasUsers),
     };
-  } catch (error: any) {
-    toast.error(error.message || '');
+  } catch (error: unknown) {
+    toast.error(error instanceof Error ? error.message : '');
     return { hasUsers: true };
   }
 };
@@ -40,8 +40,8 @@ export const createInitialAdminFn = async (
     setUserSession(session);
     if (cb) cb();
     return session;
-  } catch (error: any) {
-    toast.error(error.message || '');
+  } catch (error: unknown) {
+    toast.error(error instanceof Error ? error.message : '');
     return null;
   }
 };

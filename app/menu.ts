@@ -1,9 +1,9 @@
 import {
-  app,
+  type BrowserWindow,
   Menu,
+  type MenuItemConstructorOptions,
+  app,
   shell,
-  BrowserWindow,
-  MenuItemConstructorOptions,
 } from 'electron';
 
 interface DarwinMenuItemConstructorOptions extends MenuItemConstructorOptions {

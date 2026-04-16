@@ -1,10 +1,10 @@
-import React, { useEffect, useState } from 'react';
 import dayjs from 'dayjs';
-import { useNavigate } from 'react-router-dom';
 import { AlertTriangle } from 'lucide-react';
+import type React from 'react';
+import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 
-import DashboardLayout from '../../layouts/DashboardLayout/DashboardLayout';
 import PaginationControls from '../../components/PaginationControls/PaginationControls';
 import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
@@ -18,16 +18,17 @@ import {
   TableRow,
 } from '../../components/ui/table';
 import { TableEmptyRow, TableFrame } from '../../components/ui/table-helpers';
-import { numberWithCommas, isAdmin } from '../../utils/helpers';
-import routes from '../../routing/routes';
 import {
   getAnalyticsSummaryFn,
-  getTopCustomersFn,
   getBestSellingProductsFn,
-  getTopSuppliersBySpendFn,
   getLowStockProductsFn,
   getRevenueOverTimeFn,
+  getTopCustomersFn,
+  getTopSuppliersBySpendFn,
 } from '../../controllers/analytics.controller';
+import DashboardLayout from '../../layouts/DashboardLayout/DashboardLayout';
+import routes from '../../routing/routes';
+import { isAdmin, numberWithCommas } from '../../utils/helpers';
 
 const DEFAULT_START = dayjs().subtract(30, 'day').format('YYYY-MM-DD');
 const DEFAULT_END = dayjs().format('YYYY-MM-DD');
@@ -103,6 +104,7 @@ const Analytics: React.FC = () => {
     }
   };
 
+  // biome-ignore lint/correctness/useExhaustiveDependencies: fetchAll is stable
   useEffect(() => {
     void fetchAll();
   }, []);

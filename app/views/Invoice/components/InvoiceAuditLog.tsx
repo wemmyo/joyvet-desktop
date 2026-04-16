@@ -1,6 +1,6 @@
-import React, { useEffect, useState } from 'react';
 import dayjs from 'dayjs';
-import { getUserSession } from '../../../utils/session';
+import type React from 'react';
+import { useEffect, useState } from 'react';
 import {
   Table,
   TableBody,
@@ -13,6 +13,7 @@ import {
   TableEmptyRow,
   TableFrame,
 } from '../../../components/ui/table-helpers';
+import { getUserSession } from '../../../utils/session';
 
 interface InvoiceAuditLogProps {
   invoiceId: number;
@@ -22,6 +23,7 @@ const InvoiceAuditLog: React.FC<InvoiceAuditLogProps> = ({ invoiceId }) => {
   const session = getUserSession();
   const [logs, setLogs] = useState<any[]>([]);
 
+  // biome-ignore lint/correctness/useExhaustiveDependencies: session is stable after mount
   useEffect(() => {
     if (session?.role !== 'admin') return;
     window.api.invoice

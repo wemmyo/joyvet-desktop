@@ -1,8 +1,8 @@
-import React from 'react';
+import type React from 'react';
 import { Outlet } from 'react-router-dom';
 import { SidebarProvider } from '../components/ui/sidebar';
-import SideNav from './DashboardLayout/SideNav/SideNav';
 import { RightPanelProvider } from '../contexts/SidebarContext';
+import SideNav from './DashboardLayout/SideNav/SideNav';
 
 const AppShell: React.FC = () => {
   return (

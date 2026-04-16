@@ -22,10 +22,10 @@ Object.defineProperty(global, 'window', {
 
 import { toast } from 'sonner';
 import {
-  getInvoicesFn,
-  filterInvoiceFn,
-  deleteInvoiceFn,
   createInvoiceFn,
+  deleteInvoiceFn,
+  filterInvoiceFn,
+  getInvoicesFn,
 } from '../invoice.controller';
 
 const mockInvoice = {
@@ -64,13 +64,21 @@ describe('invoice controller', () => {
   describe('filterInvoiceFn', () => {
     it('filters invoices by date range and saleType all', async () => {
       mockApi.invoice.filter.mockResolvedValue([mockInvoice]);
-      const result = await filterInvoiceFn('2024-01-01', '2024-01-31', 'all');
+      const result = await filterInvoiceFn({
+        startDate: '2024-01-01',
+        endDate: '2024-01-31',
+        saleType: 'all',
+      });
       expect(result).toEqual([mockInvoice]);
     });
 
     it('filters invoices by saleType only', async () => {
       mockApi.invoice.filter.mockResolvedValue([mockInvoice]);
-      const result = await filterInvoiceFn('', '', 'cash');
+      const result = await filterInvoiceFn({
+        startDate: '',
+        endDate: '',
+        saleType: 'cash',
+      });
       expect(result).toEqual([mockInvoice]);
     });
 
@@ -79,7 +87,11 @@ describe('invoice controller', () => {
         new Error('Date range too large')
       );
       await expect(
-        filterInvoiceFn('2024-01-01', '2024-06-01', 'all')
+        filterInvoiceFn({
+          startDate: '2024-01-01',
+          endDate: '2024-06-01',
+          saleType: 'all',
+        })
       ).rejects.toThrow('Date range too large');
       expect(toast.error).toHaveBeenCalled();
     });

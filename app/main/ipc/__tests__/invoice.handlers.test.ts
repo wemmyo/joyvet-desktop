@@ -81,10 +81,10 @@ vi.mock('../../../services/invoiceAuditLog.service', () => ({
   getInvoiceAuditLogs: vi.fn(),
 }));
 
-import InvoiceModel from '../../../models/invoice';
 import CustomerModel from '../../../models/customer';
-import ProductModel from '../../../models/product';
+import InvoiceModel from '../../../models/invoice';
 import InvoiceItemModel from '../../../models/invoiceItem';
+import ProductModel from '../../../models/product';
 import ProductAuditLogModel from '../../../models/productAuditLog';
 import * as invoiceService from '../../../services/invoice.service';
 import { registerInvoiceHandlers } from '../invoice.handlers';
@@ -341,11 +341,20 @@ describe('invoice IPC handlers', () => {
       // Mock invoice with a product
       const mockInvoiceWithProducts = {
         ...mockInvoice,
-        products: [{ id: 10, title: 'Widget', stock: 5, invoiceItem: { quantity: 2, amount: 1000, profit: 200 } }],
+        products: [
+          {
+            id: 10,
+            title: 'Widget',
+            stock: 5,
+            invoiceItem: { quantity: 2, amount: 1000, profit: 200 },
+          },
+        ],
         destroy: vi.fn().mockResolvedValue(undefined),
         update: vi.fn(),
       };
-      vi.mocked(InvoiceModel.findByPk).mockResolvedValue(mockInvoiceWithProducts as any);
+      vi.mocked(InvoiceModel.findByPk).mockResolvedValue(
+        mockInvoiceWithProducts as any
+      );
       vi.mocked(ProductModel.increment).mockResolvedValue([1] as any);
       await handlers['invoice:delete'](mockEvent, 1);
       // Stock is now restored via atomic increment, not a direct update.
@@ -358,13 +367,18 @@ describe('invoice IPC handlers', () => {
 
     it('throws when invoice not found', async () => {
       vi.mocked(InvoiceModel.findByPk).mockResolvedValue(null as any);
-      await expect(handlers['invoice:delete'](mockEvent, 999)).rejects.toThrow('Invoice not found');
+      await expect(handlers['invoice:delete'](mockEvent, 999)).rejects.toThrow(
+        'Invoice not found'
+      );
     });
 
     it('decrements customer balance for credit invoices', async () => {
       const creditInvoice = {
-        ...mockInvoice, saleType: 'credit', products: [],
-        destroy: vi.fn().mockResolvedValue(undefined), update: vi.fn(),
+        ...mockInvoice,
+        saleType: 'credit',
+        products: [],
+        destroy: vi.fn().mockResolvedValue(undefined),
+        update: vi.fn(),
       };
       vi.mocked(InvoiceModel.findByPk).mockResolvedValue(creditInvoice as any);
       await handlers['invoice:delete'](mockEvent, 1);
@@ -378,8 +392,17 @@ describe('invoice IPC handlers', () => {
   // ------------------------------------------------------------------ addItem
   describe('invoice:addItem', () => {
     it('creates a new invoice item and updates totals', async () => {
-      const inv = { ...mockInvoice, update: vi.fn().mockResolvedValue(undefined) };
-      const prod = { id: 10, title: 'Widget', stock: 20, buyPrice: 50, update: vi.fn().mockResolvedValue(undefined) };
+      const inv = {
+        ...mockInvoice,
+        update: vi.fn().mockResolvedValue(undefined),
+      };
+      const prod = {
+        id: 10,
+        title: 'Widget',
+        stock: 20,
+        buyPrice: 50,
+        update: vi.fn().mockResolvedValue(undefined),
+      };
       vi.mocked(InvoiceModel.findByPk).mockResolvedValue(inv as any);
       vi.mocked(ProductModel.findByPk).mockResolvedValue(prod as any);
       vi.mocked(InvoiceItemModel.findOne).mockResolvedValue(null as any);
@@ -387,22 +410,44 @@ describe('invoice IPC handlers', () => {
       vi.mocked(InvoiceItemModel.findAll).mockResolvedValue([
         { amount: 1000, profit: 200 } as any,
       ]);
-      await handlers['invoice:addItem'](mockEvent, { id: 1, saleType: 'cash', postedBy: 'admin' }, {
-        product: { id: 10 }, quantity: 2, unitPrice: 500, amount: 1000, profit: 200,
-      });
+      await handlers['invoice:addItem'](
+        mockEvent,
+        { id: 1, saleType: 'cash', postedBy: 'admin' },
+        {
+          product: { id: 10 },
+          quantity: 2,
+          unitPrice: 500,
+          amount: 1000,
+          profit: 200,
+        }
+      );
       expect(InvoiceItemModel.create).toHaveBeenCalled();
       expect(inv.update).toHaveBeenCalled();
     });
 
     it('throws when stock is insufficient', async () => {
       const inv = { ...mockInvoice, update: vi.fn() };
-      const prod = { id: 10, title: 'Widget', stock: 1, buyPrice: 50, update: vi.fn() };
+      const prod = {
+        id: 10,
+        title: 'Widget',
+        stock: 1,
+        buyPrice: 50,
+        update: vi.fn(),
+      };
       vi.mocked(InvoiceModel.findByPk).mockResolvedValue(inv as any);
       vi.mocked(ProductModel.findByPk).mockResolvedValue(prod as any);
       await expect(
-        handlers['invoice:addItem'](mockEvent, { id: 1, saleType: 'cash', postedBy: 'admin' }, {
-          product: { id: 10 }, quantity: 5, unitPrice: 500, amount: 2500, profit: 500,
-        })
+        handlers['invoice:addItem'](
+          mockEvent,
+          { id: 1, saleType: 'cash', postedBy: 'admin' },
+          {
+            product: { id: 10 },
+            quantity: 5,
+            unitPrice: 500,
+            amount: 2500,
+            profit: 500,
+          }
+        )
       ).rejects.toThrow('Not enough stock');
       // IMPORTANT: because stock guard fires before writes, InvoiceItem.create must NOT have been called
       expect(InvoiceItemModel.create).not.toHaveBeenCalled();
@@ -412,23 +457,41 @@ describe('invoice IPC handlers', () => {
   // --------------------------------------------------------------- updateItem
   describe('invoice:updateItem', () => {
     it('updates quantity and adjusts stock and invoice totals', async () => {
-      const inv = { ...mockInvoice, update: vi.fn().mockResolvedValue(undefined) };
-      const item = { id: 1, quantity: 2, unitPrice: 500, amount: 1000, profit: 200, update: vi.fn().mockResolvedValue(undefined) };
+      const inv = {
+        ...mockInvoice,
+        update: vi.fn().mockResolvedValue(undefined),
+      };
+      const item = {
+        id: 1,
+        quantity: 2,
+        unitPrice: 500,
+        amount: 1000,
+        profit: 200,
+        update: vi.fn().mockResolvedValue(undefined),
+      };
       const prod = { id: 10, stock: 20, buyPrice: 50 };
       vi.mocked(InvoiceModel.findByPk).mockResolvedValue(inv as any);
       vi.mocked(InvoiceItemModel.findByPk).mockResolvedValue(item as any);
       vi.mocked(ProductModel.findByPk).mockResolvedValue(prod as any);
       vi.mocked(ProductModel.decrement).mockResolvedValue([1] as any);
-      vi.mocked(InvoiceItemModel.findAll).mockResolvedValue([{ amount: 1500, profit: 300 } as any]);
+      vi.mocked(InvoiceItemModel.findAll).mockResolvedValue([
+        { amount: 1500, profit: 300 } as any,
+      ]);
       await handlers['invoice:updateItem'](mockEvent, {
-        invoiceItemId: 1, invoiceId: 1, productId: 10, newQuantity: 3, postedBy: 'admin',
+        invoiceItemId: 1,
+        invoiceId: 1,
+        productId: 10,
+        newQuantity: 3,
+        postedBy: 'admin',
       });
       expect(item.update).toHaveBeenCalledWith(
-        expect.objectContaining({ quantity: 3 }), expect.anything()
+        expect.objectContaining({ quantity: 3 }),
+        expect.anything()
       );
       // delta = 3 - 2 = 1 (positive), so stock is decremented atomically
       expect(ProductModel.decrement).toHaveBeenCalledWith(
-        'stock', expect.objectContaining({ by: 1, where: { id: 10 } })
+        'stock',
+        expect.objectContaining({ by: 1, where: { id: 10 } })
       );
     });
   });
@@ -436,14 +499,27 @@ describe('invoice IPC handlers', () => {
   // --------------------------------------------------------------- deleteItem
   describe('invoice:deleteItem', () => {
     it('removes item and restores stock', async () => {
-      const inv = { ...mockInvoice, update: vi.fn().mockResolvedValue(undefined) };
-      const item = { id: 1, quantity: 2, amount: 1000, profit: 200, destroy: vi.fn().mockResolvedValue(undefined) };
+      const inv = {
+        ...mockInvoice,
+        update: vi.fn().mockResolvedValue(undefined),
+      };
+      const item = {
+        id: 1,
+        quantity: 2,
+        amount: 1000,
+        profit: 200,
+        destroy: vi.fn().mockResolvedValue(undefined),
+      };
       const prod = { id: 10, title: 'Widget', stock: 5 };
       vi.mocked(InvoiceModel.findByPk).mockResolvedValue(inv as any);
       vi.mocked(InvoiceItemModel.findByPk).mockResolvedValue(item as any);
       vi.mocked(ProductModel.findByPk).mockResolvedValue(prod as any);
       vi.mocked(ProductModel.increment).mockResolvedValue([1] as any);
-      await handlers['invoice:deleteItem'](mockEvent, { productId: 10, invoiceId: 1, invoiceItemId: 1 });
+      await handlers['invoice:deleteItem'](mockEvent, {
+        productId: 10,
+        invoiceId: 1,
+        invoiceItemId: 1,
+      });
       // Stock is now restored via atomic increment, not a direct update.
       expect(ProductModel.increment).toHaveBeenCalledWith(
         'stock',
@@ -456,7 +532,9 @@ describe('invoice IPC handlers', () => {
   // ------------------------------------------------------------ getAuditLog
   describe('invoice:getAuditLog', () => {
     it('calls getInvoiceAuditLogs with the invoiceId', async () => {
-      const { getInvoiceAuditLogs } = await import('../../../services/invoiceAuditLog.service');
+      const { getInvoiceAuditLogs } = await import(
+        '../../../services/invoiceAuditLog.service'
+      );
       vi.mocked(getInvoiceAuditLogs).mockResolvedValue([]);
       await handlers['invoice:getAuditLog'](mockEvent, 42);
       expect(getInvoiceAuditLogs).toHaveBeenCalledWith(42);

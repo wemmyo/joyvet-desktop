@@ -1,10 +1,10 @@
-import path from 'path';
-import { app, BrowserWindow, dialog, ipcMain } from 'electron';
-import { autoUpdater } from 'electron-updater';
+import path from 'node:path';
+import { BrowserWindow, app, dialog, ipcMain } from 'electron';
 import log from 'electron-log';
+import { autoUpdater } from 'electron-updater';
 import MenuBuilder from '../menu';
-import { ensureAppReady } from './runtime';
 import { registerAuthHandlers } from './ipc/auth.handlers';
+import { ensureAppReady } from './runtime';
 
 class AppUpdater {
   constructor() {
@@ -49,9 +49,9 @@ const createWindow = async () => {
 
   if (
     process.env.NODE_ENV === 'development' &&
-    process.env['ELECTRON_RENDERER_URL']
+    process.env.ELECTRON_RENDERER_URL
   ) {
-    mainWindow.loadURL(process.env['ELECTRON_RENDERER_URL']);
+    mainWindow.loadURL(process.env.ELECTRON_RENDERER_URL);
   } else {
     mainWindow.loadFile(path.join(__dirname, '../renderer/index.html'));
   }

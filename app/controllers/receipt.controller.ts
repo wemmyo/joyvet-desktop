@@ -1,4 +1,5 @@
 import { toast } from 'sonner';
+import type { IReceipt } from '../models/receipt';
 import type {
   PaginatedResult,
   PaginationQuery,
@@ -6,7 +7,7 @@ import type {
 } from '../types/pagination';
 import { getUserSession } from '../utils/session';
 
-const emptyReceipts = (query?: PaginationQuery): PaginatedResult<any> => ({
+const emptyReceipts = (query?: PaginationQuery): PaginatedResult<IReceipt> => ({
   rows: [],
   total: 0,
   page: query?.page ?? 1,
@@ -16,33 +17,34 @@ const emptyReceipts = (query?: PaginationQuery): PaginatedResult<any> => ({
 export const searchReceiptFn = async (query: SearchPaginationQuery) => {
   try {
     return await window.api.receipt.search(query);
-  } catch (error: any) {
-    toast.error(error.message || '');
+  } catch (error: unknown) {
+    toast.error(error instanceof Error ? error.message : '');
     return emptyReceipts(query);
   }
 };
 
 export const updateReceiptFn =
-  (values: any, id: string | number, cb?: () => void) => async () => {
+  (values: Partial<IReceipt>, id: number | string, cb?: () => void) =>
+  async () => {
     try {
       await window.api.receipt.update(id as number, values);
       toast.success('Successfully updated');
       if (cb) cb();
-    } catch (error: any) {
-      toast.error(error.message || '');
+    } catch (error: unknown) {
+      toast.error(error instanceof Error ? error.message : '');
     }
   };
 
 export const getSingleReceiptFn = async (
-  id: string | number,
+  id: number | string,
   cb?: () => void
 ) => {
   try {
     const receipt = await window.api.receipt.getById(id as number);
     if (cb) cb();
     return receipt;
-  } catch (error: any) {
-    toast.error(error.message || '');
+  } catch (error: unknown) {
+    toast.error(error instanceof Error ? error.message : '');
     return null;
   }
 };
@@ -50,22 +52,25 @@ export const getSingleReceiptFn = async (
 export const getReceiptsFn = async (query?: PaginationQuery) => {
   try {
     return await window.api.receipt.getAll(query);
-  } catch (error: any) {
-    toast.error(error.message || '');
+  } catch (error: unknown) {
+    toast.error(error instanceof Error ? error.message : '');
     return emptyReceipts(query);
   }
 };
 
-export const deleteReceiptFn = async (id: string | number) => {
+export const deleteReceiptFn = async (id: number | string) => {
   try {
     await window.api.receipt.delete(id as number);
     toast.success('Receipt successfully deleted');
-  } catch (error: any) {
-    toast.error(error.message || '');
+  } catch (error: unknown) {
+    toast.error(error instanceof Error ? error.message : '');
   }
 };
 
-export const createReceiptFn = async (values: any, cb?: () => void) => {
+export const createReceiptFn = async (
+  values: Partial<IReceipt>,
+  cb?: () => void
+) => {
   try {
     const user = getUserSession();
     await window.api.receipt.create({
@@ -74,7 +79,7 @@ export const createReceiptFn = async (values: any, cb?: () => void) => {
     });
     toast.success('Receipt successfully created');
     if (cb) cb();
-  } catch (error: any) {
-    toast.error(error.message || '');
+  } catch (error: unknown) {
+    toast.error(error instanceof Error ? error.message : '');
   }
 };

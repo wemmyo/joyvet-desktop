@@ -1,12 +1,12 @@
 import { toast } from 'sonner';
-import { IExpense } from '../models/expense';
+import type { IExpense } from '../models/expense';
 
 export const searchExpenseFn = async (value: string): Promise<IExpense[]> => {
   try {
     const result = await window.api.expense.search({ search: value });
     return result.rows ?? [];
-  } catch (error: any) {
-    toast.error(error.message || '');
+  } catch (error: unknown) {
+    toast.error(error instanceof Error ? error.message : '');
     return [];
   }
 };
@@ -16,8 +16,8 @@ export const deleteExpenseFn = async (id: number, cb?: () => void) => {
     await window.api.expense.delete(id);
     toast.success('Successfully deleted');
     if (cb) cb();
-  } catch (error: any) {
-    toast.error(error.message || '');
+  } catch (error: unknown) {
+    toast.error(error instanceof Error ? error.message : '');
   }
 };
 
@@ -30,8 +30,8 @@ export const updateExpenseFn = async (
     await window.api.expense.update(id, values);
     toast.success('Successfully updated');
     if (cb) cb();
-  } catch (error: any) {
-    toast.error(error.message || '');
+  } catch (error: unknown) {
+    toast.error(error instanceof Error ? error.message : '');
   }
 };
 
@@ -40,8 +40,8 @@ export const getSingleExpenseFn = async (id: number, cb?: () => void) => {
     const response = await window.api.expense.getById(id);
     if (cb) cb();
     return response;
-  } catch (error: any) {
-    toast.error(error.message || '');
+  } catch (error: unknown) {
+    toast.error(error instanceof Error ? error.message : '');
     return null;
   }
 };
@@ -55,19 +55,23 @@ export const filterExpensesFn = async ({
 }) => {
   try {
     return await window.api.expense.filter(startDate, endDate);
-  } catch (error: any) {
-    toast.error(error.message || '');
+  } catch (error: unknown) {
+    toast.error(error instanceof Error ? error.message : '');
     return [];
   }
 };
 
-export const createExpenseFn = async (values: any, cb?: () => void) => {
+export const createExpenseFn = async (
+  values: Partial<IExpense>,
+  cb?: () => void
+) => {
   try {
     const response = await window.api.expense.create(values);
     toast.success('Expense created successfully');
     if (cb) cb();
     return response;
-  } catch (error: any) {
-    toast.error(error.message || '');
+  } catch (error: unknown) {
+    toast.error(error instanceof Error ? error.message : '');
+    return undefined;
   }
 };

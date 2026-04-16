@@ -1,4 +1,4 @@
-import StoreInfo, { IStoreInfo } from '../models/storeInfo';
+import StoreInfo, { type IStoreInfo } from '../models/storeInfo';
 
 export const createStoreInfo = (values: Partial<IStoreInfo>) => {
   return StoreInfo.create(values).then((data: IStoreInfo) => {

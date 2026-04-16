@@ -1,12 +1,6 @@
-import React, { useEffect, useState } from 'react';
+import type React from 'react';
+import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
-import { useSidebarContext } from '../../../../contexts/SidebarContext';
-import {
-  getSingleUserFn,
-  deleteUserFn,
-  updateUserFn,
-} from '../../../../controllers/user.controller';
-import { IUser } from '../../../../models/user';
 import { Button } from '../../../../components/ui/button';
 import { Input } from '../../../../components/ui/input';
 import { Label } from '../../../../components/ui/label';
@@ -17,6 +11,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from '../../../../components/ui/select';
+import { useSidebarContext } from '../../../../contexts/SidebarContext';
+import {
+  deleteUserFn,
+  getSingleUserFn,
+  updateUserFn,
+} from '../../../../controllers/user.controller';
+import type { IUser } from '../../../../models/user';
 
 export interface EditUserProps {
   userId: string | number;

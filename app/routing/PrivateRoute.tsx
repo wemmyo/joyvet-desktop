@@ -1,7 +1,7 @@
-import React from 'react';
+import type React from 'react';
 import { Navigate } from 'react-router-dom';
-import routes from './routes';
 import { getUserSession } from '../utils/session';
+import routes from './routes';
 
 type Props = {
   children: React.ReactNode;

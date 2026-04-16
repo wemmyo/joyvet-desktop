@@ -64,9 +64,9 @@ vi.mock('../../../models/product', () => ({
   },
 }));
 
-import SupplierModel from '../../../models/supplier';
 import PaymentModel from '../../../models/payment';
 import PurchaseModel from '../../../models/purchase';
+import SupplierModel from '../../../models/supplier';
 import * as supplierService from '../../../services/supplier.service';
 import { registerSupplierHandlers } from '../supplier.handlers';
 

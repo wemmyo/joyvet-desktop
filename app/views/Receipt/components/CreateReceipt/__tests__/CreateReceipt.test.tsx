@@ -1,11 +1,11 @@
 // @vitest-environment jsdom
 
-import React from 'react';
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import React from 'react';
 
-import CreateReceipt from '../CreateReceipt';
 import { MAX_PAGE_SIZE } from '../../../../../types/pagination';
+import CreateReceipt from '../CreateReceipt';
 
 const getCustomersFn = vi.fn();
 const searchCustomerFn = vi.fn();

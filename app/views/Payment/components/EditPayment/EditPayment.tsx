@@ -1,14 +1,14 @@
-import React, { useEffect } from 'react';
-import { toast } from 'sonner';
-import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
+import type React from 'react';
+import { useEffect } from 'react';
+import { Controller, useForm } from 'react-hook-form';
+import { toast } from 'sonner';
 import { z } from 'zod';
 
 import AsyncCombobox from '../../../../components/ui/async-combobox';
 import { Button } from '../../../../components/ui/button';
 import { Input } from '../../../../components/ui/input';
 import { Label } from '../../../../components/ui/label';
-import { useAsyncComboboxOptions } from '../../../../hooks/useAsyncComboboxOptions';
 import { useSidebarContext } from '../../../../contexts/SidebarContext';
 import {
   getSinglePaymentFn,
@@ -18,8 +18,9 @@ import {
   getSuppliersFn,
   searchSupplierFn,
 } from '../../../../controllers/supplier.controller';
+import { useAsyncComboboxOptions } from '../../../../hooks/useAsyncComboboxOptions';
 import { IPayment } from '../../../../models/payment';
-import { ISupplier } from '../../../../models/supplier';
+import type { ISupplier } from '../../../../models/supplier';
 import { MAX_PAGE_SIZE } from '../../../../types/pagination';
 
 export interface EditPaymentProps {
@@ -66,9 +67,11 @@ const EditPayment: React.FC<EditPaymentProps> = ({
     },
   });
 
+  // biome-ignore lint/correctness/useExhaustiveDependencies: getSinglePaymentFn and supplierOptions are stable
   useEffect(() => {
     const fetchData = async () => {
       const paymentResponse = await getSinglePaymentFn(Number(paymentId));
+      if (!paymentResponse) return;
       reset({
         supplierId: paymentResponse.supplierId
           ? String(paymentResponse.supplierId)

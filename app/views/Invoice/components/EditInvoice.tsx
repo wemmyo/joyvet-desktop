@@ -1,16 +1,16 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { useReactToPrint } from 'react-to-print';
-import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
+import type React from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { Controller, useForm } from 'react-hook-form';
 import { useParams } from 'react-router-dom';
+import { useReactToPrint } from 'react-to-print';
 import { toast } from 'sonner';
+import { z } from 'zod';
 
-import DashboardLayout from '../../../layouts/DashboardLayout/DashboardLayout';
-import { Button } from '../../../components/ui/button';
 import AsyncCombobox from '../../../components/ui/async-combobox';
-import { Label } from '../../../components/ui/label';
+import { Button } from '../../../components/ui/button';
 import { Input } from '../../../components/ui/input';
+import { Label } from '../../../components/ui/label';
 import {
   Select,
   SelectContent,
@@ -20,25 +20,21 @@ import {
 } from '../../../components/ui/select';
 import {
   Table,
-  TableHeader,
   TableBody,
-  TableFooter,
-  TableRow,
-  TableHead,
   TableCell,
+  TableFooter,
+  TableHead,
+  TableHeader,
+  TableRow,
 } from '../../../components/ui/table';
 import {
   TableEmptyRow,
   TableFrame,
 } from '../../../components/ui/table-helpers';
 import { useAsyncComboboxOptions } from '../../../hooks/useAsyncComboboxOptions';
+import DashboardLayout from '../../../layouts/DashboardLayout/DashboardLayout';
 
-import { numberWithCommas } from '../../../utils/helpers';
-import { isAdmin } from '../../../utils/helpers';
 import ComponentToPrint from '../../../components/PrintedReceipt/ReceiptWrapper';
-import { IProduct } from '../../../models/product';
-import { IInvoiceItem } from '../../../models/invoiceItem';
-import { IInvoice } from '../../../models/invoice';
 import {
   addInvoiceItemFn,
   deleteInvoiceItemFn,
@@ -49,10 +45,15 @@ import {
   getProductsFn,
   searchProductFn,
 } from '../../../controllers/product.controller';
-import { ICustomer } from '../../../models/customer';
-import { IStoreInfo } from '../../../models/storeInfo';
 import { getStoreInfoFn } from '../../../controllers/storeInfo.controller';
+import type { ICustomer } from '../../../models/customer';
+import type { IInvoice } from '../../../models/invoice';
+import type { IInvoiceItem } from '../../../models/invoiceItem';
+import type { IProduct } from '../../../models/product';
+import type { IStoreInfo } from '../../../models/storeInfo';
 import { MAX_PAGE_SIZE } from '../../../types/pagination';
+import { numberWithCommas } from '../../../utils/helpers';
+import { isAdmin } from '../../../utils/helpers';
 import InvoiceAuditLog from './InvoiceAuditLog';
 
 interface InvoiceItem extends IInvoiceItem {
@@ -119,6 +120,7 @@ const InvoiceScreen: React.FC = () => {
     getOptionLabel: (product) => product.title,
   });
 
+  // biome-ignore lint/correctness/useExhaustiveDependencies: productOptions and setters are stable
   const fetchData = useCallback(async () => {
     if (!hasValidInvoiceId) {
       setInvoiceItems([]);
@@ -135,7 +137,7 @@ const InvoiceScreen: React.FC = () => {
 
     setInvoice({
       ...singleInvoiceResponse,
-      customerId: singleInvoiceResponse.customer.id,
+      customerId: singleInvoiceResponse.customer?.id ?? 0,
       saleType: singleInvoiceResponse.saleType,
       id: singleInvoiceResponse.id,
       createdAt: singleInvoiceResponse.createdAt,
@@ -143,8 +145,9 @@ const InvoiceScreen: React.FC = () => {
 
     const invoiceItemList: InvoiceItem[] = [];
 
-    singleInvoiceResponse.products.forEach((product) => {
+    for (const product of singleInvoiceResponse.products ?? []) {
       const { invoiceItem } = product;
+      if (!invoiceItem) continue;
       const item: InvoiceItem = {
         id: invoiceItem.id,
         quantity: invoiceItem.quantity,
@@ -154,13 +157,14 @@ const InvoiceScreen: React.FC = () => {
         product,
       };
       invoiceItemList.push(item);
-    });
+    }
 
     setInvoiceItems(invoiceItemList);
-    setSingleCustomer(singleInvoiceResponse.customer);
-    productOptions.primeItems(singleInvoiceResponse.products);
+    setSingleCustomer(singleInvoiceResponse.customer ?? ({} as ICustomer));
+    productOptions.primeItems(singleInvoiceResponse.products ?? []);
   }, [hasValidInvoiceId, invoiceId]);
 
+  // biome-ignore lint/correctness/useExhaustiveDependencies: intentional dep list
   useEffect(() => {
     fetchData();
   }, [invoiceId, fetchData]);
@@ -230,7 +234,7 @@ const InvoiceScreen: React.FC = () => {
 
     if (singleCustomer?.maxPriceLevel) {
       const availablePrices = productPrices.filter(
-        (price) => singleCustomer.maxPriceLevel >= price.priceLevel
+        (price) => (singleCustomer.maxPriceLevel ?? 0) >= price.priceLevel
       );
       filteredPriceLevel = availablePrices;
     } else {

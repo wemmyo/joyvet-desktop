@@ -1,22 +1,22 @@
-import React, { useEffect, useState } from 'react';
 import dayjs from 'dayjs';
+import React, { useEffect, useState } from 'react';
 
-import { numberWithCommas } from '../../../../utils/helpers';
-import { useSidebarContext } from '../../../../contexts/SidebarContext';
-import {
-  getSinglePaymentFn,
-  deletePaymentFn,
-} from '../../../../controllers/payment.controller';
-import { IPayment } from '../../../../models/payment';
 import { toast } from 'sonner';
 import { Button } from '../../../../components/ui/button';
 import {
   Table,
   TableBody,
-  TableRow,
   TableCell,
+  TableRow,
 } from '../../../../components/ui/table';
 import { TableFrame } from '../../../../components/ui/table-helpers';
+import { useSidebarContext } from '../../../../contexts/SidebarContext';
+import {
+  deletePaymentFn,
+  getSinglePaymentFn,
+} from '../../../../controllers/payment.controller';
+import type { IPayment } from '../../../../models/payment';
+import { numberWithCommas } from '../../../../utils/helpers';
 
 export interface PaymentDetailProps {
   paymentId: number;
@@ -32,7 +32,7 @@ const PaymentDetail = ({ paymentId, refreshPayments }: PaymentDetailProps) => {
     const fetchData = async () => {
       setLoading(true);
       const response = await getSinglePaymentFn(Number(paymentId));
-      setSinglePayment(response);
+      if (response !== null) setSinglePayment(response);
       setLoading(false);
     };
 

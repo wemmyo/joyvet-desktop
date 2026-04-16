@@ -1,24 +1,24 @@
+import dayjs from 'dayjs';
 import { ipcMain } from 'electron';
 import { Op } from 'sequelize';
-import dayjs from 'dayjs';
-import database from '../database';
-import Invoice from '../../models/invoice';
 import Customer from '../../models/customer';
-import Product from '../../models/product';
+import Invoice from '../../models/invoice';
 import InvoiceItem from '../../models/invoiceItem';
+import Product from '../../models/product';
 import ProductAuditLog from '../../models/productAuditLog';
 import { getInvoiceById } from '../../services/invoice.service';
+import {
+  createInvoiceAuditLog,
+  getInvoiceAuditLogs,
+} from '../../services/invoiceAuditLog.service';
 import { createInvoiceValidation } from '../../sliceValidation/index';
+import database from '../database';
+import { withAppReady } from '../runtime';
 import {
   invoiceListQuerySchema,
   toPaginatedResult,
   toPaginationOptions,
 } from './listing';
-import { withAppReady } from '../runtime';
-import {
-  createInvoiceAuditLog,
-  getInvoiceAuditLogs,
-} from '../../services/invoiceAuditLog.service';
 
 export function registerInvoiceHandlers(): void {
   ipcMain.handle(
@@ -170,9 +170,7 @@ export function registerInvoiceHandlers(): void {
               throw new Error(`Product not found: ${item.product?.id}`);
             }
             if (!item.quantity) {
-              throw new Error(
-                `Quantity missing for ${(product as any).title}`
-              );
+              throw new Error(`Quantity missing for ${(product as any).title}`);
             }
             if (item.quantity > (product as any).stock) {
               throw new Error(
@@ -298,7 +296,7 @@ export function registerInvoiceHandlers(): void {
             }
             if (
               typeof invoiceItem.quantity !== 'number' ||
-              isNaN(invoiceItem.quantity)
+              Number.isNaN(invoiceItem.quantity)
             ) {
               throw new Error(
                 `Invalid invoice item quantity for product: ${product.title}. Cannot safely restore stock.`

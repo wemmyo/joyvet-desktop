@@ -1,11 +1,11 @@
-import * as React from 'react';
-import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
+import type * as React from 'react';
+import { useForm } from 'react-hook-form';
 import { z } from 'zod';
-import { IProduct } from '../../../../models/product';
 import { Button } from '../../../../components/ui/button';
 import { Input } from '../../../../components/ui/input';
 import { Label } from '../../../../components/ui/label';
+import type { IProduct } from '../../../../models/product';
 
 const schema = z.object({
   title: z.string().min(1, 'Required'),

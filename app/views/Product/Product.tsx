@@ -1,34 +1,35 @@
-import React, { useEffect, useState, useRef } from 'react';
+import { Plus, Printer, RefreshCw } from 'lucide-react';
+import type React from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useReactToPrint } from 'react-to-print';
-import { Plus, RefreshCw, Printer } from 'lucide-react';
 import { toast } from 'sonner';
 
-import DashboardLayout from '../../layouts/DashboardLayout/DashboardLayout';
 import PaginationControls from '../../components/PaginationControls/PaginationControls';
 import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
 import {
   Table,
-  TableHeader,
   TableBody,
-  TableFooter,
-  TableRow,
-  TableHead,
   TableCell,
+  TableFooter,
+  TableHead,
+  TableHeader,
+  TableRow,
 } from '../../components/ui/table';
 import { TableEmptyRow, TableFrame } from '../../components/ui/table-helpers';
+import DashboardLayout from '../../layouts/DashboardLayout/DashboardLayout';
 
-import CreateProduct from './components/CreateProduct/CreateProduct';
-import { numberWithCommas } from '../../utils/helpers';
 import { useSidebarContext } from '../../contexts/SidebarContext';
-import EditProduct from './components/EditProduct/EditProduct';
 import {
   createProductFn,
   getProductsFn,
   searchProductFn,
 } from '../../controllers/product.controller';
-import { IProduct } from '../../models/product';
+import type { IProduct } from '../../models/product';
 import { DEFAULT_PAGE, DEFAULT_PAGE_SIZE } from '../../types/pagination';
+import { numberWithCommas } from '../../utils/helpers';
+import CreateProduct from './components/CreateProduct/CreateProduct';
+import EditProduct from './components/EditProduct/EditProduct';
 
 const CONTENT_CREATE = 'create';
 const CONTENT_EDIT = 'edit';
@@ -81,6 +82,7 @@ const ProductsScreen: React.FC = () => {
     setSideContent(content);
   };
 
+  // biome-ignore lint/correctness/useExhaustiveDependencies: fetchProducts and closeSideBar are stable
   useEffect(() => {
     void fetchProducts(page, appliedSearch);
 

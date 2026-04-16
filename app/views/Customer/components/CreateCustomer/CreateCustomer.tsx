@@ -1,12 +1,12 @@
-import * as React from 'react';
-import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
+import type * as React from 'react';
+import { useForm } from 'react-hook-form';
 import { toast } from 'sonner';
-import { ICustomer } from '../../../../models/customer';
+import { z } from 'zod';
 import { Button } from '../../../../components/ui/button';
 import { Input } from '../../../../components/ui/input';
 import { Label } from '../../../../components/ui/label';
+import type { ICustomer } from '../../../../models/customer';
 
 const schema = z.object({
   fullName: z.string().min(1, 'Required'),

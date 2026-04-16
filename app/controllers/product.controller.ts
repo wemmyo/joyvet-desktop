@@ -19,8 +19,8 @@ export const getProductsFn = async (
 ): Promise<PaginatedResult<IProduct>> => {
   try {
     return await window.api.product.getAll(query);
-  } catch (error: any) {
-    toast.error(error.message || '');
+  } catch (error: unknown) {
+    toast.error(error instanceof Error ? error.message : '');
     return emptyProducts(query);
   }
 };
@@ -37,8 +37,8 @@ export const createProductFn = async (
     });
     toast.success('Successfully created');
     if (cb) cb();
-  } catch (error: any) {
-    toast.error(error.message || '');
+  } catch (error: unknown) {
+    toast.error(error instanceof Error ? error.message : '');
   }
 };
 
@@ -51,8 +51,8 @@ export const updateProductFn = async (
     await window.api.product.update(id, values);
     toast.success('Successfully updated');
     if (cb) cb();
-  } catch (error: any) {
-    toast.error(error.message || '');
+  } catch (error: unknown) {
+    toast.error(error instanceof Error ? error.message : '');
   }
 };
 
@@ -61,8 +61,9 @@ export const getSingleProductFn = async (id: number, cb?: () => void) => {
     const product = await window.api.product.getById(id);
     if (cb) cb();
     return product;
-  } catch (error: any) {
-    toast.error(error.message || '');
+  } catch (error: unknown) {
+    toast.error(error instanceof Error ? error.message : '');
+    return undefined;
   }
 };
 
@@ -71,8 +72,8 @@ export const deleteProductFn = async (id: number, cb?: () => void) => {
     await window.api.product.delete(id);
     toast.success('Successfully deleted');
     if (cb) cb();
-  } catch (error: any) {
-    toast.error(error.message || '');
+  } catch (error: unknown) {
+    toast.error(error instanceof Error ? error.message : '');
   }
 };
 
@@ -81,8 +82,8 @@ export const searchProductFn = async (
 ): Promise<PaginatedResult<IProduct>> => {
   try {
     return await window.api.product.search(query);
-  } catch (error: any) {
-    toast.error(error.message || '');
+  } catch (error: unknown) {
+    toast.error(error instanceof Error ? error.message : '');
     return emptyProducts(query);
   }
 };
@@ -94,8 +95,8 @@ export const getProductInvoicesFn = async (
 ) => {
   try {
     return await window.api.product.getInvoices(productId, startDate, endDate);
-  } catch (error: any) {
-    toast.error(error.message || '');
+  } catch (error: unknown) {
+    toast.error(error instanceof Error ? error.message : '');
     return [];
   }
 };
@@ -111,8 +112,8 @@ export const getProductPurchasesFn = async (
       startDate as string,
       endDate as string
     );
-  } catch (error: any) {
-    toast.error(error.message || '');
+  } catch (error: unknown) {
+    toast.error(error instanceof Error ? error.message : '');
     return [];
   }
 };
@@ -124,8 +125,8 @@ export const getProductAuditLogFn = async (
 ) => {
   try {
     return await window.api.product.getAuditLog(productId, startDate, endDate);
-  } catch (error: any) {
-    toast.error(error.message || '');
+  } catch (error: unknown) {
+    toast.error(error instanceof Error ? error.message : '');
     return [];
   }
 };

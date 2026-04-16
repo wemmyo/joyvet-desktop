@@ -6,11 +6,11 @@ const Sequelize = require('sequelize');
 export interface ICustomer {
   id: number;
   fullName: string;
-  address: string;
-  phoneNumber: string;
-  balance: number;
-  postedBy: string;
-  maxPriceLevel: number;
+  address?: string | null;
+  phoneNumber?: string | null;
+  balance?: number;
+  postedBy?: string;
+  maxPriceLevel?: number;
 }
 
 export default sequelize.define(

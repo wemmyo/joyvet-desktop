@@ -47,8 +47,8 @@ vi.mock('../../../models/customer', () => ({
   },
 }));
 
-import ReceiptModel from '../../../models/receipt';
 import CustomerModel from '../../../models/customer';
+import ReceiptModel from '../../../models/receipt';
 import * as receiptService from '../../../services/receipt.service';
 import { registerReceiptHandlers } from '../receipt.handlers';
 

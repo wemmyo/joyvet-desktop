@@ -1,11 +1,11 @@
 // @vitest-environment jsdom
 
-import React from 'react';
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import React from 'react';
 
-import CreatePayment from '../CreatePayment';
 import { MAX_PAGE_SIZE } from '../../../../../types/pagination';
+import CreatePayment from '../CreatePayment';
 
 const getSuppliersFn = vi.fn();
 const searchSupplierFn = vi.fn();

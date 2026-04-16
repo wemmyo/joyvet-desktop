@@ -223,7 +223,9 @@ describe('customer IPC handlers', () => {
 
     it('throws when phoneNumber exceeds 50 characters', async () => {
       await expect(
-        handlers['customer:update'](mockEvent, 1, { phoneNumber: 'x'.repeat(51) })
+        handlers['customer:update'](mockEvent, 1, {
+          phoneNumber: 'x'.repeat(51),
+        })
       ).rejects.toThrow();
     });
   });

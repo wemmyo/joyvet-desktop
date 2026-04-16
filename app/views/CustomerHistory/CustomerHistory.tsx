@@ -1,23 +1,24 @@
-import React, { useEffect, useState, useRef } from 'react';
 import dayjs from 'dayjs';
-import { useReactToPrint } from 'react-to-print';
 import { Printer } from 'lucide-react';
+import type React from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useParams } from 'react-router-dom';
+import { useReactToPrint } from 'react-to-print';
 
-import DashboardLayout from '../../layouts/DashboardLayout/DashboardLayout';
-import CustomerHistoryInvoices from './components/Invoices/Invoices';
-import CustomerHistoryReceipts from './components/Receipts/Receipts';
-import ActivityTimeline from './components/ActivityTimeline/ActivityTimeline';
-import {
-  getCustomerInvoicesFn,
-  getCustomerReceiptsFn,
-  getCustomerActivityTimelineFn,
-} from '../../controllers/customer.controller';
-import { IReceipt } from '../../models/receipt';
-import { IInvoice } from '../../models/invoice';
 import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
 import { Label } from '../../components/ui/label';
+import {
+  getCustomerActivityTimelineFn,
+  getCustomerInvoicesFn,
+  getCustomerReceiptsFn,
+} from '../../controllers/customer.controller';
+import DashboardLayout from '../../layouts/DashboardLayout/DashboardLayout';
+import type { IInvoice } from '../../models/invoice';
+import type { IReceipt } from '../../models/receipt';
+import ActivityTimeline from './components/ActivityTimeline/ActivityTimeline';
+import CustomerHistoryInvoices from './components/Invoices/Invoices';
+import CustomerHistoryReceipts from './components/Receipts/Receipts';
 
 const TODAYS_DATE = `${dayjs().format('YYYY-MM-DD')}`;
 

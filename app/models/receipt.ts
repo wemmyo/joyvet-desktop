@@ -1,5 +1,5 @@
 import sequelize from '../utils/database';
-import { ICustomer } from './customer';
+import type { ICustomer } from './customer';
 
 const Sequelize = require('sequelize');
 

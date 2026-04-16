@@ -1,5 +1,3 @@
-import React from 'react';
-import { NavLink, useNavigate } from 'react-router-dom';
 import {
   BadgeDollarSign,
   BarChart2,
@@ -9,11 +7,13 @@ import {
   Package,
   ReceiptText,
   ShoppingBag,
-  Store,
   Stethoscope,
+  Store,
   Truck,
   Users,
 } from 'lucide-react';
+import React from 'react';
+import { NavLink, useNavigate } from 'react-router-dom';
 
 import { Avatar, AvatarFallback } from '../../../components/ui/avatar';
 import {

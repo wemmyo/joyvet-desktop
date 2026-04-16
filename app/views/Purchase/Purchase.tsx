@@ -1,39 +1,40 @@
-import React, { useState } from 'react';
-import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
+import type React from 'react';
+import { useState } from 'react';
+import { Controller, useForm } from 'react-hook-form';
 import { toast } from 'sonner';
+import { z } from 'zod';
 
-import DashboardLayout from '../../layouts/DashboardLayout/DashboardLayout';
-import { Button } from '../../components/ui/button';
 import AsyncCombobox from '../../components/ui/async-combobox';
-import { Label } from '../../components/ui/label';
+import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
+import { Label } from '../../components/ui/label';
 import {
   Table,
-  TableHeader,
   TableBody,
-  TableFooter,
-  TableRow,
-  TableHead,
   TableCell,
+  TableFooter,
+  TableHead,
+  TableHeader,
+  TableRow,
 } from '../../components/ui/table';
 import { TableEmptyRow, TableFrame } from '../../components/ui/table-helpers';
 import { useAsyncComboboxOptions } from '../../hooks/useAsyncComboboxOptions';
+import DashboardLayout from '../../layouts/DashboardLayout/DashboardLayout';
 
-import {
-  getSuppliersFn,
-  searchSupplierFn,
-} from '../../controllers/supplier.controller';
 import {
   getProductsFn,
   searchProductFn,
 } from '../../controllers/product.controller';
-import { ISupplier } from '../../models/supplier';
-import { IProduct } from '../../models/product';
-import { numberWithCommas } from '../../utils/helpers';
 import { createPurchaseFn } from '../../controllers/purchase.controller';
+import {
+  getSuppliersFn,
+  searchSupplierFn,
+} from '../../controllers/supplier.controller';
+import type { IProduct } from '../../models/product';
+import type { ISupplier } from '../../models/supplier';
 import { MAX_PAGE_SIZE } from '../../types/pagination';
+import { numberWithCommas } from '../../utils/helpers';
 
 const itemSchema = z.object({
   supplierId: z.string().min(1, 'Supplier is required'),

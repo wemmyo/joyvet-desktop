@@ -1,19 +1,20 @@
-import React, { useEffect, useState } from 'react';
 import dayjs from 'dayjs';
+import type React from 'react';
+import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 
-import DashboardLayout from '../../layouts/DashboardLayout/DashboardLayout';
-import SuppplierHistoryPayments from './components/Payments/Payments';
-import SuppplierHistoryPurchases from './components/Purchases/Purchases';
-import ActivityTimeline from './components/ActivityTimeline/ActivityTimeline';
-import {
-  getSupplierPaymentsFn,
-  getSupplierPurchasesFn,
-  getSupplierActivityTimelineFn,
-} from '../../controllers/supplier.controller';
 import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
 import { Label } from '../../components/ui/label';
+import {
+  getSupplierActivityTimelineFn,
+  getSupplierPaymentsFn,
+  getSupplierPurchasesFn,
+} from '../../controllers/supplier.controller';
+import DashboardLayout from '../../layouts/DashboardLayout/DashboardLayout';
+import ActivityTimeline from './components/ActivityTimeline/ActivityTimeline';
+import SuppplierHistoryPayments from './components/Payments/Payments';
+import SuppplierHistoryPurchases from './components/Purchases/Purchases';
 
 const TODAYS_DATE = `${dayjs().format('YYYY-MM-DD')}`;
 

@@ -1,5 +1,5 @@
-import React from 'react';
 import dayjs from 'dayjs';
+import type React from 'react';
 import {
   Table,
   TableBody,
@@ -14,8 +14,28 @@ import {
 } from '../../../../components/ui/table-helpers';
 import { numberWithCommas } from '../../../../utils/helpers';
 
+interface PriceChange {
+  field: string;
+  before: number;
+  after: number;
+}
+
+interface AuditEntry {
+  id: number;
+  createdAt: string;
+  changeType: string;
+  reason: string;
+  postedBy: string;
+  delta?: number | null;
+  stockBefore?: number | null;
+  stockAfter?: number | null;
+  priceChanges?: string | null;
+  referenceType?: string | null;
+  referenceId?: number | null;
+}
+
 interface AuditLogProps {
-  data: any[];
+  data: AuditEntry[];
 }
 
 const changeTypeLabel: Record<string, string> = {
@@ -37,7 +57,7 @@ const reasonLabel: Record<string, string> = {
 };
 
 const AuditLog: React.FC<AuditLogProps> = ({ data }) => {
-  const renderDetails = (entry: any) => {
+  const renderDetails = (entry: AuditEntry) => {
     const parts: string[] = [];
 
     if (entry.delta !== null && entry.delta !== undefined) {
@@ -51,12 +71,12 @@ const AuditLog: React.FC<AuditLogProps> = ({ data }) => {
 
     if (entry.priceChanges) {
       try {
-        const changes = JSON.parse(entry.priceChanges);
-        changes.forEach((c: any) => {
+        const changes = JSON.parse(entry.priceChanges) as PriceChange[];
+        for (const c of changes) {
           parts.push(
             `${c.field}: ₦${numberWithCommas(c.before)} → ₦${numberWithCommas(c.after)}`
           );
-        });
+        }
       } catch {
         // ignore parse errors
       }
@@ -65,7 +85,7 @@ const AuditLog: React.FC<AuditLogProps> = ({ data }) => {
     return parts.join(' | ') || '—';
   };
 
-  const renderReference = (entry: any) => {
+  const renderReference = (entry: AuditEntry) => {
     if (!entry.referenceType || entry.referenceType === 'manual') return '—';
     if (entry.referenceId) {
       return `${entry.referenceType} #${entry.referenceId}`;
@@ -88,7 +108,7 @@ const AuditLog: React.FC<AuditLogProps> = ({ data }) => {
         </TableHeader>
         <TableBody>
           {data.length > 0 ? (
-            data.map((entry: any) => (
+            data.map((entry) => (
               <TableRow key={entry.id}>
                 <TableCell className="whitespace-nowrap">
                   {dayjs(entry.createdAt).format('DD/MM/YYYY HH:mm')}

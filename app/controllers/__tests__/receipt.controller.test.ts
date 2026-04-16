@@ -19,11 +19,11 @@ Object.defineProperty(global, 'window', {
 
 import { toast } from 'sonner';
 import {
-  getReceiptsFn,
-  searchReceiptFn,
-  getSingleReceiptFn,
   createReceiptFn,
   deleteReceiptFn,
+  getReceiptsFn,
+  getSingleReceiptFn,
+  searchReceiptFn,
   updateReceiptFn,
 } from '../receipt.controller';
 

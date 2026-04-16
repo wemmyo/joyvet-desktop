@@ -1,4 +1,4 @@
-import InvoiceItem, { IInvoiceItem } from '../models/invoiceItem';
+import InvoiceItem, { type IInvoiceItem } from '../models/invoiceItem';
 
 export const getInvoiceItems = (args: any) => {
   return InvoiceItem.findAll({

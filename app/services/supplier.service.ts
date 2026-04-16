@@ -1,4 +1,4 @@
-import Supplier, { ISupplier } from '../models/supplier';
+import Supplier, { type ISupplier } from '../models/supplier';
 
 export const getSuppliers = (args: any) => {
   return Supplier.findAll({

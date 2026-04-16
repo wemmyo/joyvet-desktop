@@ -1,25 +1,25 @@
+import dayjs from 'dayjs';
 import { ipcMain } from 'electron';
 import { Op } from 'sequelize';
-import dayjs from 'dayjs';
 import { z } from 'zod';
 import Customer from '../../models/customer';
 import Invoice from '../../models/invoice';
-import Receipt from '../../models/receipt';
 import Product from '../../models/product';
-import database from '../database';
+import Receipt from '../../models/receipt';
 import {
   createCustomer,
-  updateCustomer,
   getCustomerById,
+  updateCustomer,
 } from '../../services/customer.service';
-import { getReceipts } from '../../services/receipt.service';
 import { getInvoices } from '../../services/invoice.service';
+import { getReceipts } from '../../services/receipt.service';
+import database from '../database';
+import { withAppReady } from '../runtime';
 import {
   searchPaginationSchema,
   toPaginatedResult,
   toPaginationOptions,
 } from './listing';
-import { withAppReady } from '../runtime';
 
 export function registerCustomerHandlers(): void {
   ipcMain.handle(

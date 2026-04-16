@@ -1,6 +1,6 @@
-import * as React from 'react';
-import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
+import type * as React from 'react';
+import { Controller, useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { Button } from '../../../../components/ui/button';
 import { Input } from '../../../../components/ui/input';

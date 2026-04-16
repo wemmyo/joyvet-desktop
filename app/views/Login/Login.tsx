@@ -1,11 +1,11 @@
 import * as React from 'react';
 import { useNavigate } from 'react-router-dom';
 
-import routes from '../../routing/routes';
 import { getBootstrapStatusFn } from '../../controllers/auth.controller';
+import routes from '../../routing/routes';
 import { getUserSession } from '../../utils/session';
-import LoginForm from './components/LoginForm/LoginForm';
 import InitialAdminSetupForm from './components/InitialAdminSetupForm';
+import LoginForm from './components/LoginForm/LoginForm';
 
 // export interface LoginScreenProps {}
 

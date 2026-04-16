@@ -1,27 +1,28 @@
-import React, { useEffect, useState } from 'react';
 import dayjs from 'dayjs';
+import type React from 'react';
+import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 
-import { isAdmin, numberWithCommas } from '../../../utils/helpers';
-import { useSidebarContext } from '../../../contexts/SidebarContext';
-import { IPurchase } from '../../../models/purchase';
-import {
-  deletePurchaseFn,
-  getSinglePurchaseFn,
-} from '../../../controllers/purchase.controller';
 import { Button } from '../../../components/ui/button';
 import {
   Table,
-  TableHeader,
   TableBody,
-  TableRow,
-  TableHead,
   TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
 } from '../../../components/ui/table';
 import {
   TableEmptyRow,
   TableFrame,
 } from '../../../components/ui/table-helpers';
+import { useSidebarContext } from '../../../contexts/SidebarContext';
+import {
+  deletePurchaseFn,
+  getSinglePurchaseFn,
+} from '../../../controllers/purchase.controller';
+import type { IPurchase } from '../../../models/purchase';
+import { isAdmin, numberWithCommas } from '../../../utils/helpers';
 import EditPurchase from './EditPurchase';
 
 interface SalesDetailProps {
@@ -42,10 +43,11 @@ const SalesDetail: React.FC<SalesDetailProps> = ({
   const fetchPurchase = async () => {
     setLoading(true);
     const response = await getSinglePurchaseFn(Number(purchaseId));
-    setPurchase(response);
+    if (response) setPurchase(response);
     setLoading(false);
   };
 
+  // biome-ignore lint/correctness/useExhaustiveDependencies: fetchPurchase is stable
   useEffect(() => {
     fetchPurchase();
     setMode('view');

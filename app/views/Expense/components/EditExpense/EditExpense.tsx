@@ -1,16 +1,10 @@
-import React, { useEffect } from 'react';
-import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
 import dayjs from 'dayjs';
+import type React from 'react';
+import { useEffect } from 'react';
+import { Controller, useForm } from 'react-hook-form';
 import { toast } from 'sonner';
-import { useSidebarContext } from '../../../../contexts/SidebarContext';
-import {
-  getSingleExpenseFn,
-  deleteExpenseFn,
-  updateExpenseFn,
-} from '../../../../controllers/expense.controller';
-import { IExpense } from '../../../../models/expense';
+import { z } from 'zod';
 import { Button } from '../../../../components/ui/button';
 import { Input } from '../../../../components/ui/input';
 import { Label } from '../../../../components/ui/label';
@@ -21,6 +15,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from '../../../../components/ui/select';
+import { useSidebarContext } from '../../../../contexts/SidebarContext';
+import {
+  deleteExpenseFn,
+  getSingleExpenseFn,
+  updateExpenseFn,
+} from '../../../../controllers/expense.controller';
+import type { IExpense } from '../../../../models/expense';
 
 const schema = z.object({
   type: z.string().min(1, 'Required'),
@@ -55,6 +56,7 @@ const EditExpense: React.FC<EditExpenseProps> = ({
   useEffect(() => {
     const fetchData = async () => {
       const response = await getSingleExpenseFn(expenseId);
+      if (!response) return;
       const expense: IExpense = response;
       reset({
         type: expense.type || '',

@@ -35,9 +35,9 @@ export function useAsyncComboboxOptions<T>({
 
   const mergeItems = useCallback(
     (items: T[]) => {
-      items.forEach((item) => {
+      for (const item of items) {
         itemCacheRef.current.set(getOptionValue(item), item);
-      });
+      }
     },
     [getOptionValue]
   );

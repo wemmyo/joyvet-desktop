@@ -1,4 +1,4 @@
-import { numberWithCommas, isAdmin, sum } from '../helpers';
+import { isAdmin, numberWithCommas, sum } from '../helpers';
 import { setUserSession } from '../session';
 
 describe('numberWithCommas', () => {

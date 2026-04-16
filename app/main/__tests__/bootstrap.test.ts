@@ -61,12 +61,12 @@ describe('main bootstrap helpers', () => {
       })
     );
 
-    delete process.env.SEED_DEV_ADMIN;
+    process.env.SEED_DEV_ADMIN = undefined;
   });
 
   it('does not seed in development when SEED_DEV_ADMIN is not set', async () => {
     const UserModel = createUserModel();
-    delete process.env.SEED_DEV_ADMIN;
+    process.env.SEED_DEV_ADMIN = undefined;
 
     await expect(maybeSeedDevelopmentAdmin(UserModel, true)).resolves.toBe(
       false

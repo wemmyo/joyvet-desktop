@@ -1,6 +1,5 @@
-import * as React from 'react';
 import dayjs from 'dayjs';
-import { numberWithCommas, isAdmin, sum } from '../../../../utils/helpers';
+import type * as React from 'react';
 import {
   Table,
   TableBody,
@@ -14,6 +13,7 @@ import {
   TableEmptyRow,
   TableFrame,
 } from '../../../../components/ui/table-helpers';
+import { isAdmin, numberWithCommas, sum } from '../../../../utils/helpers';
 
 export interface CustomerHistoryPaymentsProps {
   data: any[];

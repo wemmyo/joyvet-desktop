@@ -84,15 +84,17 @@ export const createInvoiceValidation = (
   }
 
   //  For each product if not quantity, unitPrice,Amount
-  values.forEach((each: InvoiceValidationItem) => {
+  for (const each of values) {
     if (!each.quantity) {
       throw new Error('Each quantity validation failed');
-    } else if (!each.amount) {
+    }
+    if (!each.amount) {
       throw new Error('Each amount validation failed');
-    } else if (each.quantity * each.unitPrice !== each.amount) {
+    }
+    if (each.quantity * each.unitPrice !== each.amount) {
       throw new Error("Product of quantity and unit price doesn't add up");
     }
-  });
+  }
 };
 
 export const test = () => {};

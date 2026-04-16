@@ -21,12 +21,12 @@ Object.defineProperty(global, 'window', {
 
 import { toast } from 'sonner';
 import {
-  getProductsFn,
   createProductFn,
-  updateProductFn,
   deleteProductFn,
+  getProductsFn,
   getSingleProductFn,
   searchProductFn,
+  updateProductFn,
 } from '../product.controller';
 
 const mockProduct = {

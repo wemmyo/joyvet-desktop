@@ -1,20 +1,20 @@
-import * as React from 'react';
 import dayjs from 'dayjs';
-import { numberWithCommas, isAdmin, sum } from '../../../../utils/helpers';
-import { IInvoiceItem } from '../../../../models/invoiceItem';
+import type * as React from 'react';
 import {
   Table,
-  TableHeader,
   TableBody,
-  TableFooter,
-  TableRow,
-  TableHead,
   TableCell,
+  TableFooter,
+  TableHead,
+  TableHeader,
+  TableRow,
 } from '../../../../components/ui/table';
 import {
   TableEmptyRow,
   TableFrame,
 } from '../../../../components/ui/table-helpers';
+import type { IInvoiceItem } from '../../../../models/invoiceItem';
+import { isAdmin, numberWithCommas, sum } from '../../../../utils/helpers';
 
 export interface ProductHistoryInvoicesProps {
   data: IInvoiceItem[];

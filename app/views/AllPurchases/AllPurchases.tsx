@@ -1,30 +1,31 @@
-import React, { useEffect, useState } from 'react';
 import dayjs from 'dayjs';
 import { RefreshCw } from 'lucide-react';
+import type React from 'react';
+import { useEffect, useState } from 'react';
 
-import DashboardLayout from '../../layouts/DashboardLayout/DashboardLayout';
 import PaginationControls from '../../components/PaginationControls/PaginationControls';
 import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
 import {
   Table,
-  TableHeader,
   TableBody,
-  TableRow,
-  TableHead,
   TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
 } from '../../components/ui/table';
 import { TableEmptyRow, TableFrame } from '../../components/ui/table-helpers';
+import DashboardLayout from '../../layouts/DashboardLayout/DashboardLayout';
 
-import { numberWithCommas } from '../../utils/helpers';
 import { useSidebarContext } from '../../contexts/SidebarContext';
-import PurchaseDetail from './components/PurchaseDetail';
-import { IPurchase } from '../../models/purchase';
 import {
   getPurchasesFn,
   searchPurchaseFn,
 } from '../../controllers/purchase.controller';
+import type { IPurchase } from '../../models/purchase';
 import { DEFAULT_PAGE, DEFAULT_PAGE_SIZE } from '../../types/pagination';
+import { numberWithCommas } from '../../utils/helpers';
+import PurchaseDetail from './components/PurchaseDetail';
 
 const CONTENT_DETAIL = 'detail';
 
@@ -69,6 +70,7 @@ const AllPurchasesScreen: React.FC = () => {
     }
   };
 
+  // biome-ignore lint/correctness/useExhaustiveDependencies: fetchPurchases and closeSideBar are stable
   useEffect(() => {
     void fetchPurchases(page, appliedSearch);
 

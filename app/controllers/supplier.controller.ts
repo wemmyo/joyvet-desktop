@@ -1,5 +1,5 @@
 import { toast } from 'sonner';
-import { ISupplier } from '../models/supplier';
+import type { ISupplier } from '../models/supplier';
 import type {
   PaginatedResult,
   PaginationQuery,
@@ -27,8 +27,8 @@ export const getSupplierActivityTimelineFn = async (
       startDate,
       endDate
     );
-  } catch (error: any) {
-    toast.error(error.message || '');
+  } catch (error: unknown) {
+    toast.error(error instanceof Error ? error.message : '');
     return [];
   }
 };
@@ -44,8 +44,8 @@ export const getSupplierPaymentsFn = async (
       startDate || '',
       endDate || ''
     );
-  } catch (error: any) {
-    toast.error(error.message || '');
+  } catch (error: unknown) {
+    toast.error(error instanceof Error ? error.message : '');
     return [];
   }
 };
@@ -61,8 +61,8 @@ export const getSupplierPurchasesFn = async (
       startDate,
       endDate
     );
-  } catch (error: any) {
-    toast.error(error.message || '');
+  } catch (error: unknown) {
+    toast.error(error instanceof Error ? error.message : '');
     return [];
   }
 };
@@ -72,8 +72,8 @@ export const searchSupplierFn = async (
 ): Promise<PaginatedResult<ISupplier>> => {
   try {
     return await window.api.supplier.search(query);
-  } catch (error: any) {
-    toast.error(error.message || '');
+  } catch (error: unknown) {
+    toast.error(error instanceof Error ? error.message : '');
     return emptySuppliers(query);
   }
 };
@@ -83,13 +83,13 @@ export const deleteSupplierFn = async (id: number, cb?: () => void) => {
     await window.api.supplier.delete(id);
     toast.success('Successfully deleted');
     if (cb) cb();
-  } catch (error: any) {
-    toast.error(error.message || '');
+  } catch (error: unknown) {
+    toast.error(error instanceof Error ? error.message : '');
   }
 };
 
 export const updateSupplierFn = async (
-  values: any,
+  values: Partial<ISupplier>,
   id: number,
   cb?: () => void
 ) => {
@@ -99,16 +99,16 @@ export const updateSupplierFn = async (
       duration: 5000,
     });
     if (cb) cb();
-  } catch (error: any) {
-    toast.error(error.message || '');
+  } catch (error: unknown) {
+    toast.error(error instanceof Error ? error.message : '');
   }
 };
 
 export const getSingleSupplierFn = async (id: number) => {
   try {
     return await window.api.supplier.getById(id);
-  } catch (error: any) {
-    toast.error(error.message || '');
+  } catch (error: unknown) {
+    toast.error(error instanceof Error ? error.message : '');
     return null;
   }
 };
@@ -118,8 +118,8 @@ export const getSuppliersFn = async (
 ): Promise<PaginatedResult<ISupplier>> => {
   try {
     return await window.api.supplier.getAll(query);
-  } catch (error: any) {
-    toast.error(error.message || '');
+  } catch (error: unknown) {
+    toast.error(error instanceof Error ? error.message : '');
     return emptySuppliers(query);
   }
 };
@@ -136,7 +136,7 @@ export const createSupplierFn = async (
     });
     toast.success('Supplier successfully created');
     if (cb) cb();
-  } catch (error: any) {
-    toast.error(error.message || '');
+  } catch (error: unknown) {
+    toast.error(error instanceof Error ? error.message : '');
   }
 };

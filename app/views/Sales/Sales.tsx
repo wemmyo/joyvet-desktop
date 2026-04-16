@@ -1,6 +1,6 @@
-import React, { useCallback, useEffect, useState } from 'react';
 import dayjs from 'dayjs';
-import DashboardLayout from '../../layouts/DashboardLayout/DashboardLayout';
+import type React from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import PaginationControls from '../../components/PaginationControls/PaginationControls';
 import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
@@ -14,20 +14,21 @@ import {
 } from '../../components/ui/select';
 import {
   Table,
-  TableHeader,
   TableBody,
-  TableFooter,
-  TableRow,
-  TableHead,
   TableCell,
+  TableFooter,
+  TableHead,
+  TableHeader,
+  TableRow,
 } from '../../components/ui/table';
 import { TableEmptyRow, TableFrame } from '../../components/ui/table-helpers';
-import { numberWithCommas, isAdmin } from '../../utils/helpers';
 import { useSidebarContext } from '../../contexts/SidebarContext';
-import SalesDetail from './components/SalesDetail';
 import { filterInvoiceFn } from '../../controllers/invoice.controller';
-import { IInvoice } from '../../models/invoice';
+import DashboardLayout from '../../layouts/DashboardLayout/DashboardLayout';
+import type { IInvoice } from '../../models/invoice';
 import { DEFAULT_PAGE, DEFAULT_PAGE_SIZE } from '../../types/pagination';
+import { isAdmin, numberWithCommas } from '../../utils/helpers';
+import SalesDetail from './components/SalesDetail';
 
 const TODAYS_DATE = `${dayjs().format('YYYY-MM-DD')}`;
 const CONTENT_DETAIL = 'detail';

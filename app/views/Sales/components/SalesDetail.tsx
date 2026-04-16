@@ -1,33 +1,33 @@
-import React, { useEffect, useRef, useState } from 'react';
-import { useReactToPrint } from 'react-to-print';
-import { Link } from 'react-router-dom';
 import dayjs from 'dayjs';
+import React, { useEffect, useRef, useState } from 'react';
+import { Link } from 'react-router-dom';
+import { useReactToPrint } from 'react-to-print';
 import { toast } from 'sonner';
 
-import {
-  deleteInvoiceFn,
-  getSingleInvoiceFn,
-} from '../../../controllers/invoice.controller';
-import { getStoreInfoFn } from '../../../controllers/storeInfo.controller';
-import { numberWithCommas, isAdmin } from '../../../utils/helpers';
-import { IStoreInfo } from '../../../models/storeInfo';
 import ComponentToPrint from '../../../components/PrintedReceipt/ReceiptWrapper';
-import { useSidebarContext } from '../../../contexts/SidebarContext';
-import routes from '../../../routing/routes';
-import { IInvoice } from '../../../models/invoice';
 import { Button } from '../../../components/ui/button';
 import {
   Table,
-  TableHeader,
   TableBody,
-  TableRow,
-  TableHead,
   TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
 } from '../../../components/ui/table';
 import {
   TableEmptyRow,
   TableFrame,
 } from '../../../components/ui/table-helpers';
+import { useSidebarContext } from '../../../contexts/SidebarContext';
+import {
+  deleteInvoiceFn,
+  getSingleInvoiceFn,
+} from '../../../controllers/invoice.controller';
+import { getStoreInfoFn } from '../../../controllers/storeInfo.controller';
+import type { IInvoice } from '../../../models/invoice';
+import type { IStoreInfo } from '../../../models/storeInfo';
+import routes from '../../../routing/routes';
+import { isAdmin, numberWithCommas } from '../../../utils/helpers';
 
 interface SalesDetailProps {
   salesId: number;
@@ -59,6 +59,7 @@ const SalesDetail = ({ salesId, onRefresh }: SalesDetailProps) => {
       .catch(() => {});
   }, []);
 
+  // biome-ignore lint/correctness/useExhaustiveDependencies: setPrintInvoice is a stable setter
   useEffect(() => {
     setPrintInvoice(false);
   }, [salesId]);
@@ -74,7 +75,7 @@ const SalesDetail = ({ salesId, onRefresh }: SalesDetailProps) => {
       setLoading(true);
       const response = await getSingleInvoiceFn(Number(salesId));
 
-      setSales(response);
+      if (response) setSales(response);
       setLoading(false);
     };
     fetchData();
@@ -97,7 +98,11 @@ const SalesDetail = ({ salesId, onRefresh }: SalesDetailProps) => {
     if (printInvoice) {
       return (
         <div style={{ display: 'none' }}>
-          <ComponentToPrint ref={componentRef} invoice={sales} storeInfo={storeInfo} />
+          <ComponentToPrint
+            ref={componentRef}
+            invoice={sales}
+            storeInfo={storeInfo}
+          />
         </div>
       );
     }

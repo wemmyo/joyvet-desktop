@@ -1,4 +1,4 @@
-import PurchaseItem, { IPurchaseItem } from '../models/purchaseItem';
+import PurchaseItem, { type IPurchaseItem } from '../models/purchaseItem';
 
 export const getPurchaseItems = (args: any) => {
   return PurchaseItem.findAll({

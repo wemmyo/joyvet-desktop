@@ -1,24 +1,21 @@
+import dayjs from 'dayjs';
 import { ipcMain } from 'electron';
 import { Op } from 'sequelize';
-import dayjs from 'dayjs';
 import { z } from 'zod';
-import database from '../database';
+import InvoiceItem from '../../models/invoiceItem';
 import Product from '../../models/product';
 import ProductAuditLog from '../../models/productAuditLog';
-import {
-  createProduct,
-  getProductById,
-} from '../../services/product.service';
-import { getPurchaseItems } from '../../services/purchaseItem.service';
+import PurchaseItem from '../../models/purchaseItem';
 import { getInvoiceItems } from '../../services/invoiceItem.service';
+import { createProduct, getProductById } from '../../services/product.service';
+import { getPurchaseItems } from '../../services/purchaseItem.service';
+import database from '../database';
+import { withAppReady } from '../runtime';
 import {
   productListQuerySchema,
   toPaginatedResult,
   toPaginationOptions,
 } from './listing';
-import { withAppReady } from '../runtime';
-import InvoiceItem from '../../models/invoiceItem';
-import PurchaseItem from '../../models/purchaseItem';
 
 export function registerProductHandlers(): void {
   ipcMain.handle(
@@ -107,7 +104,7 @@ export function registerProductHandlers(): void {
           'sellPrice3',
         ];
         const priceChanges: any[] = [];
-        priceFields.forEach((field) => {
+        for (const field of priceFields) {
           if (
             productValues[field] !== undefined &&
             productValues[field] !== (product as any)[field]
@@ -118,7 +115,7 @@ export function registerProductHandlers(): void {
               after: productValues[field],
             });
           }
-        });
+        }
 
         await Product.update(productValues, { where: { id }, transaction: t });
 

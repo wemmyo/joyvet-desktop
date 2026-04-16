@@ -1,13 +1,13 @@
+import dayjs from 'dayjs';
 import { ipcMain } from 'electron';
 import { Op, QueryTypes } from 'sequelize';
-import dayjs from 'dayjs';
 import { z } from 'zod';
-import Invoice from '../../models/invoice';
-import Receipt from '../../models/receipt';
-import Purchase from '../../models/purchase';
-import Payment from '../../models/payment';
-import Expense from '../../models/expense';
 import Customer from '../../models/customer';
+import Expense from '../../models/expense';
+import Invoice from '../../models/invoice';
+import Payment from '../../models/payment';
+import Purchase from '../../models/purchase';
+import Receipt from '../../models/receipt';
 import Supplier from '../../models/supplier';
 import database from '../database';
 import { withAppReady } from '../runtime';
@@ -154,7 +154,7 @@ export function registerAnalyticsHandlers(): void {
         .parse(input);
 
       const offset = (page - 1) * pageSize;
-      const searchClause = search ? `AND LOWER(title) LIKE LOWER(:search)` : '';
+      const searchClause = search ? 'AND LOWER(title) LIKE LOWER(:search)' : '';
       const replacements: any = search ? { search: `%${search}%` } : {};
 
       const [rows, countRows]: any = await Promise.all([

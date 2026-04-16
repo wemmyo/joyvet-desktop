@@ -1,4 +1,4 @@
-import User, { IUser } from '../models/user';
+import User, { type IUser } from '../models/user';
 
 export const findOneUser = (args: any) => {
   return User.findOne({

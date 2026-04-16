@@ -1,11 +1,11 @@
 import { toast } from 'sonner';
-import { IStoreInfo } from '../models/storeInfo';
+import type { IStoreInfo } from '../models/storeInfo';
 
 export const getStoreInfoFn = async () => {
   try {
     return await window.api.storeInfo.getAll();
-  } catch (error: any) {
-    toast.error(error.message || '');
+  } catch (error: unknown) {
+    toast.error(error instanceof Error ? error.message : '');
     return [];
   }
 };
@@ -15,8 +15,9 @@ export const getSingleStoreInfoFn = async (id: number, cb?: () => void) => {
     const response = await window.api.storeInfo.getById(id);
     if (cb) cb();
     return response;
-  } catch (error: any) {
-    toast.error(error.message || '');
+  } catch (error: unknown) {
+    toast.error(error instanceof Error ? error.message : '');
+    return undefined;
   }
 };
 
@@ -25,8 +26,8 @@ export const deleteStoreInfoFn = async (id: number, cb?: () => void) => {
     await window.api.storeInfo.delete(id);
     toast.success('Store Info successfully deleted');
     if (cb) cb();
-  } catch (error: any) {
-    toast.error(error.message || '');
+  } catch (error: unknown) {
+    toast.error(error instanceof Error ? error.message : '');
   }
 };
 
@@ -38,8 +39,8 @@ export const createStoreInfoFn = async (
     await window.api.storeInfo.create(values);
     toast.success('Store info created successfully');
     if (cb) cb();
-  } catch (error: any) {
-    toast.error(error.message || '');
+  } catch (error: unknown) {
+    toast.error(error instanceof Error ? error.message : '');
   }
 };
 
@@ -52,7 +53,7 @@ export const updateStoreInfoFn = async (
     await window.api.storeInfo.update(id, values);
     toast.success('Store info updated successfully');
     if (cb) cb();
-  } catch (error: any) {
-    toast.error(error.message || '');
+  } catch (error: unknown) {
+    toast.error(error instanceof Error ? error.message : '');
   }
 };

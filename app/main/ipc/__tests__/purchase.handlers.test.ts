@@ -62,9 +62,9 @@ vi.mock('../../../models/productAuditLog', () => ({
   default: { create: vi.fn() },
 }));
 
+import ProductModel from '../../../models/product';
 import PurchaseModel from '../../../models/purchase';
 import SupplierModel from '../../../models/supplier';
-import ProductModel from '../../../models/product';
 import * as purchaseService from '../../../services/purchase.service';
 import { registerPurchaseHandlers } from '../purchase.handlers';
 

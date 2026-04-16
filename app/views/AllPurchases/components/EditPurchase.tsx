@@ -1,8 +1,7 @@
-import React, { useState } from 'react';
-import { toast } from 'sonner';
 import { Trash2 } from 'lucide-react';
-import { IPurchase } from '../../../models/purchase';
-import { updatePurchaseFn } from '../../../controllers/purchase.controller';
+import type React from 'react';
+import { useState } from 'react';
+import { toast } from 'sonner';
 import { Button } from '../../../components/ui/button';
 import { Input } from '../../../components/ui/input';
 import { Label } from '../../../components/ui/label';
@@ -18,6 +17,8 @@ import {
   TableEmptyRow,
   TableFrame,
 } from '../../../components/ui/table-helpers';
+import { updatePurchaseFn } from '../../../controllers/purchase.controller';
+import type { IPurchase } from '../../../models/purchase';
 import { numberWithCommas } from '../../../utils/helpers';
 
 interface EditPurchaseProps {

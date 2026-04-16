@@ -1,4 +1,4 @@
-import Expense, { IExpense } from '../models/expense';
+import Expense, { type IExpense } from '../models/expense';
 
 export const getExpenses = (args: any) => {
   return Expense.findAll({

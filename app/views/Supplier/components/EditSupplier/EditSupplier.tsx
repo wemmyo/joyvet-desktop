@@ -1,21 +1,22 @@
-import React, { useEffect } from 'react';
-import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
+import type React from 'react';
+import { useEffect } from 'react';
+import { useForm } from 'react-hook-form';
 import { Link } from 'react-router-dom';
 import { toast } from 'sonner';
+import { z } from 'zod';
 
-import { useSidebarContext } from '../../../../contexts/SidebarContext';
-import routes from '../../../../routing/routes';
-import { isAdmin } from '../../../../utils/helpers';
-import {
-  getSingleSupplierFn,
-  deleteSupplierFn,
-  updateSupplierFn,
-} from '../../../../controllers/supplier.controller';
 import { Button } from '../../../../components/ui/button';
 import { Input } from '../../../../components/ui/input';
 import { Label } from '../../../../components/ui/label';
+import { useSidebarContext } from '../../../../contexts/SidebarContext';
+import {
+  deleteSupplierFn,
+  getSingleSupplierFn,
+  updateSupplierFn,
+} from '../../../../controllers/supplier.controller';
+import routes from '../../../../routing/routes';
+import { isAdmin } from '../../../../utils/helpers';
 
 const schema = z.object({
   fullName: z.string().min(1, 'Required'),

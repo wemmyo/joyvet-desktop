@@ -1,10 +1,10 @@
 import { ipcMain } from 'electron';
 import { z } from 'zod';
 import {
+  createStoreInfo,
   deleteStoreInfo,
   getStoreInfoById,
   getStoreInfos,
-  createStoreInfo,
   updateStoreInfo,
 } from '../../services/storeInfo.service';
 import { withAppReady } from '../runtime';

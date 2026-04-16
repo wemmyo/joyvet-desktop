@@ -1,4 +1,19 @@
+import type { ICustomer } from '../../../models/customer';
+import type { IExpense } from '../../../models/expense';
+import type { ExpenseType } from '../../../models/expenseType';
+import type { IInvoice } from '../../../models/invoice';
+import type { IInvoiceAuditLog } from '../../../models/invoiceAuditLog';
+import type { IInvoiceItem } from '../../../models/invoiceItem';
+import type { IPayment } from '../../../models/payment';
+import type { IProduct } from '../../../models/product';
+import type { IPurchase } from '../../../models/purchase';
+import type { IPurchaseItem } from '../../../models/purchaseItem';
+import type { IReceipt } from '../../../models/receipt';
+import type { IStoreInfo } from '../../../models/storeInfo';
+import type { ISupplier } from '../../../models/supplier';
+import type { IUser } from '../../../models/user';
 import type {
+  ExpenseListQuery,
   InvoiceListQuery,
   PaginatedResult,
   PaginationQuery,
@@ -18,16 +33,23 @@ declare global {
           fullName: string;
           username: string;
           password: string;
-        }) => Promise<any>;
+        }) => Promise<IUser>;
       };
       invoice: {
-        getAll: (query?: PaginationQuery) => Promise<PaginatedResult<any>>;
-        create: (invoiceItems: any[], invoice: any) => Promise<any>;
+        getAll: (query?: PaginationQuery) => Promise<PaginatedResult<IInvoice>>;
+        create: (
+          invoiceItems: Omit<IInvoiceItem, 'id' | 'createdAt' | 'updatedAt'>[],
+          invoice: Partial<IInvoice>
+        ) => Promise<{ id: number }>;
         delete: (id: number) => Promise<void>;
-        deleteItem: (args: any) => Promise<void>;
+        deleteItem: (args: {
+          productId: number;
+          invoiceId: number;
+          invoiceItemId: number;
+        }) => Promise<void>;
         addItem: (
-          currentInvoice: any,
-          currentInvoiceItem: any
+          currentInvoice: IInvoice,
+          currentInvoiceItem: Partial<IInvoiceItem>
         ) => Promise<void>;
         updateItem: (args: {
           invoiceItemId: number;
@@ -36,27 +58,34 @@ declare global {
           newQuantity: number;
           postedBy: string;
         }) => Promise<void>;
-        filter: (query: InvoiceListQuery) => Promise<PaginatedResult<any>>;
-        filterById: (query: InvoiceListQuery) => Promise<PaginatedResult<any>>;
-        getSingle: (id: number) => Promise<any>;
+        filter: (query: InvoiceListQuery) => Promise<PaginatedResult<IInvoice>>;
+        filterById: (
+          query: InvoiceListQuery
+        ) => Promise<PaginatedResult<IInvoice>>;
+        getSingle: (id: number) => Promise<IInvoice>;
+        getAuditLog: (invoiceId?: number) => Promise<IInvoiceAuditLog[]>;
       };
       customer: {
-        getAll: (query?: PaginationQuery) => Promise<PaginatedResult<any>>;
-        getById: (id: number) => Promise<any>;
-        create: (values: any) => Promise<any>;
-        update: (id: number, values: any) => Promise<void>;
+        getAll: (
+          query?: PaginationQuery
+        ) => Promise<PaginatedResult<ICustomer>>;
+        getById: (id: number) => Promise<ICustomer>;
+        create: (values: Partial<ICustomer>) => Promise<ICustomer>;
+        update: (id: number, values: Partial<ICustomer>) => Promise<void>;
         delete: (id: number) => Promise<void>;
-        search: (query: SearchPaginationQuery) => Promise<PaginatedResult<any>>;
+        search: (
+          query: SearchPaginationQuery
+        ) => Promise<PaginatedResult<ICustomer>>;
         getInvoices: (
           customerId: number,
           startDate: string,
           endDate: string
-        ) => Promise<any[]>;
+        ) => Promise<IInvoice[]>;
         getReceipts: (
           customerId: number,
           startDate?: string,
           endDate?: string
-        ) => Promise<any[]>;
+        ) => Promise<IReceipt[]>;
         getActivityTimeline: (
           customerId: number,
           startDate: string,
@@ -64,22 +93,24 @@ declare global {
         ) => Promise<any[]>;
       };
       product: {
-        getAll: (query?: ProductListQuery) => Promise<PaginatedResult<any>>;
-        getById: (id: number) => Promise<any>;
-        create: (values: any) => Promise<void>;
-        update: (id: number, values: any) => Promise<void>;
+        getAll: (
+          query?: ProductListQuery
+        ) => Promise<PaginatedResult<IProduct>>;
+        getById: (id: number) => Promise<IProduct>;
+        create: (values: Partial<IProduct>) => Promise<void>;
+        update: (id: number, values: Partial<IProduct>) => Promise<void>;
         delete: (id: number) => Promise<void>;
-        search: (query: ProductListQuery) => Promise<PaginatedResult<any>>;
+        search: (query: ProductListQuery) => Promise<PaginatedResult<IProduct>>;
         getInvoices: (
           productId: number,
           startDate: string,
           endDate: string
-        ) => Promise<any[]>;
+        ) => Promise<IInvoice[]>;
         getPurchases: (
           productId: number,
           startDate: string,
           endDate: string
-        ) => Promise<any[]>;
+        ) => Promise<IPurchase[]>;
         getAuditLog: (
           productId: number,
           startDate: string,
@@ -87,24 +118,30 @@ declare global {
         ) => Promise<any[]>;
       };
       user: {
-        getAll: (query?: PaginationQuery) => Promise<PaginatedResult<any>>;
-        getById: (id: number) => Promise<any>;
-        create: (values: any) => Promise<void>;
-        update: (id: number, values: any) => Promise<void>;
+        getAll: (query?: PaginationQuery) => Promise<PaginatedResult<IUser>>;
+        getById: (id: number) => Promise<IUser>;
+        create: (
+          values: Omit<IUser, 'id' | 'createdAt' | 'updatedAt'>
+        ) => Promise<void>;
+        update: (id: number, values: Partial<IUser>) => Promise<void>;
         delete: (id: number) => Promise<void>;
         login: (credentials: {
           username: string;
           password: string;
-        }) => Promise<any>;
+        }) => Promise<IUser>;
         logout: () => Promise<void>;
       };
       supplier: {
-        getAll: (query?: PaginationQuery) => Promise<PaginatedResult<any>>;
-        getById: (id: number) => Promise<any>;
-        create: (values: any) => Promise<void>;
-        update: (id: number, values: any) => Promise<void>;
+        getAll: (
+          query?: PaginationQuery
+        ) => Promise<PaginatedResult<ISupplier>>;
+        getById: (id: number) => Promise<ISupplier>;
+        create: (values: Partial<ISupplier>) => Promise<void>;
+        update: (id: number, values: Partial<ISupplier>) => Promise<void>;
         delete: (id: number) => Promise<void>;
-        search: (query: SearchPaginationQuery) => Promise<PaginatedResult<any>>;
+        search: (
+          query: SearchPaginationQuery
+        ) => Promise<PaginatedResult<ISupplier>>;
         getActivityTimeline: (
           supplierId: number,
           startDate: string,
@@ -112,58 +149,88 @@ declare global {
         ) => Promise<any[]>;
       };
       purchase: {
-        getAll: (query?: PaginationQuery) => Promise<PaginatedResult<any>>;
-        getById: (id: number) => Promise<any>;
-        create: (purchaseItems: any[], purchase: any) => Promise<any>;
-        update: (id: number, purchaseItems: any[], meta: any) => Promise<void>;
+        getAll: (
+          query?: PaginationQuery
+        ) => Promise<PaginatedResult<IPurchase>>;
+        getById: (id: number) => Promise<IPurchase>;
+        create: (
+          purchaseItems: IPurchaseItem[],
+          purchase: Omit<
+            IPurchase,
+            'id' | 'createdAt' | 'updatedAt' | 'products' | 'supplier'
+          >
+        ) => Promise<{ id: number }>;
+        update: (
+          id: number,
+          purchaseItems: IPurchaseItem[],
+          meta: Omit<
+            IPurchase,
+            | 'id'
+            | 'createdAt'
+            | 'updatedAt'
+            | 'products'
+            | 'supplier'
+            | 'supplierId'
+          >
+        ) => Promise<void>;
         delete: (id: number) => Promise<void>;
-        search: (query: SearchPaginationQuery) => Promise<PaginatedResult<any>>;
-        filter: (query: PurchaseListQuery) => Promise<PaginatedResult<any>>;
+        search: (
+          query: SearchPaginationQuery
+        ) => Promise<PaginatedResult<IPurchase>>;
+        filter: (
+          query: PurchaseListQuery
+        ) => Promise<PaginatedResult<IPurchase>>;
         getBySupplier: (
           supplierId: number,
           startDate: string,
           endDate: string
-        ) => Promise<any[]>;
+        ) => Promise<IPurchase[]>;
       };
       payment: {
-        getAll: (query?: PaginationQuery) => Promise<PaginatedResult<any>>;
-        getById: (id: number) => Promise<any>;
-        create: (values: any) => Promise<any>;
-        update: (id: number, values: any) => Promise<void>;
+        getAll: (query?: PaginationQuery) => Promise<PaginatedResult<IPayment>>;
+        getById: (id: number) => Promise<IPayment>;
+        create: (values: Partial<IPayment>) => Promise<IPayment>;
+        update: (id: number, values: Partial<IPayment>) => Promise<void>;
         delete: (id: number) => Promise<void>;
-        search: (query: SearchPaginationQuery) => Promise<PaginatedResult<any>>;
-        filter: (query: PaymentListQuery) => Promise<PaginatedResult<any>>;
+        search: (
+          query: SearchPaginationQuery
+        ) => Promise<PaginatedResult<IPayment>>;
+        filter: (query: PaymentListQuery) => Promise<PaginatedResult<IPayment>>;
         getBySupplier: (
           supplierId: number,
           startDate: string,
           endDate: string
-        ) => Promise<any[]>;
+        ) => Promise<IPayment[]>;
       };
       receipt: {
-        getAll: (query?: PaginationQuery) => Promise<PaginatedResult<any>>;
-        getById: (id: number) => Promise<any>;
-        create: (values: any) => Promise<any>;
-        update: (id: number, values: any) => Promise<void>;
+        getAll: (query?: PaginationQuery) => Promise<PaginatedResult<IReceipt>>;
+        getById: (id: number) => Promise<IReceipt>;
+        create: (values: Partial<IReceipt>) => Promise<IReceipt>;
+        update: (id: number, values: Partial<IReceipt>) => Promise<void>;
         delete: (id: number) => Promise<void>;
-        search: (query: SearchPaginationQuery) => Promise<PaginatedResult<any>>;
-        filter: (query: ReceiptListQuery) => Promise<PaginatedResult<any>>;
+        search: (
+          query: SearchPaginationQuery
+        ) => Promise<PaginatedResult<IReceipt>>;
+        filter: (query: ReceiptListQuery) => Promise<PaginatedResult<IReceipt>>;
       };
       expense: {
-        getAll: () => Promise<any[]>;
-        getById: (id: number) => Promise<any>;
-        create: (values: any) => Promise<any>;
-        update: (id: number, values: any) => Promise<void>;
+        getAll: (
+          query?: ExpenseListQuery
+        ) => Promise<PaginatedResult<IExpense>>;
+        getById: (id: number) => Promise<IExpense>;
+        create: (values: Partial<IExpense>) => Promise<IExpense>;
+        update: (id: number, values: Partial<IExpense>) => Promise<void>;
         delete: (id: number) => Promise<void>;
-        search: (value: string) => Promise<any[]>;
-        filter: (startDate: string, endDate: string) => Promise<any[]>;
-        getTypes: () => Promise<any[]>;
-        createType: (values: any) => Promise<any>;
+        search: (query: ExpenseListQuery) => Promise<PaginatedResult<IExpense>>;
+        filter: (startDate: string, endDate: string) => Promise<IExpense[]>;
+        getTypes: () => Promise<ExpenseType[]>;
+        createType: (values: Pick<ExpenseType, 'type'>) => Promise<ExpenseType>;
       };
       storeInfo: {
-        getAll: () => Promise<any[]>;
-        getById: (id: number) => Promise<any>;
-        update: (id: number, values: any) => Promise<void>;
-        create: (values: any) => Promise<any>;
+        getAll: () => Promise<IStoreInfo[]>;
+        getById: (id: number) => Promise<IStoreInfo>;
+        update: (id: number, values: Partial<IStoreInfo>) => Promise<void>;
+        create: (values: Partial<IStoreInfo>) => Promise<IStoreInfo>;
         delete: (id: number) => Promise<void>;
       };
       analytics: {
@@ -192,7 +259,11 @@ declare global {
           startDate: string;
           endDate: string;
         }) => Promise<any[]>;
-        getLowStockProducts: () => Promise<any[]>;
+        getLowStockProducts: (input?: {
+          page?: number;
+          pageSize?: number;
+          search?: string;
+        }) => Promise<PaginatedResult<IProduct>>;
         getRevenueOverTime: () => Promise<any[]>;
         getExpenseBreakdown: (input: {
           startDate: string;
@@ -205,5 +276,3 @@ declare global {
     };
   }
 }
-
-export {};

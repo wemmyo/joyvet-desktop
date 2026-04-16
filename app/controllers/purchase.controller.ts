@@ -1,6 +1,6 @@
 import { toast } from 'sonner';
-import { IPurchase } from '../models/purchase';
-import { IPurchaseItem } from '../models/purchaseItem';
+import type { IPurchase } from '../models/purchase';
+import type { IPurchaseItem } from '../models/purchaseItem';
 import type {
   PaginatedResult,
   PaginationQuery,
@@ -22,8 +22,8 @@ export const searchPurchaseFn = async (
 ): Promise<PaginatedResult<IPurchase>> => {
   try {
     return await window.api.purchase.search(query);
-  } catch (error: any) {
-    toast.error(error.message || '');
+  } catch (error: unknown) {
+    toast.error(error instanceof Error ? error.message : '');
     return emptyPurchases(query);
   }
 };
@@ -33,8 +33,9 @@ export const getSinglePurchaseFn = async (id: number, cb?: () => void) => {
     const purchase = await window.api.purchase.getById(id);
     if (cb) cb();
     return purchase;
-  } catch (error: any) {
-    toast.error(error.message || '');
+  } catch (error: unknown) {
+    toast.error(error instanceof Error ? error.message : '');
+    return undefined;
   }
 };
 
@@ -43,8 +44,8 @@ export const getPurchasesFn = async (
 ): Promise<PaginatedResult<IPurchase>> => {
   try {
     return await window.api.purchase.getAll(query);
-  } catch (error: any) {
-    toast.error(error.message || '');
+  } catch (error: unknown) {
+    toast.error(error instanceof Error ? error.message : '');
     return emptyPurchases(query);
   }
 };
@@ -62,8 +63,8 @@ export const createPurchaseFn = async (
     });
     toast.success('Purchase created');
     if (cb) cb();
-  } catch (error: any) {
-    toast.error(error.message || '');
+  } catch (error: unknown) {
+    toast.error(error instanceof Error ? error.message : '');
   }
 };
 
@@ -81,21 +82,21 @@ export const updatePurchaseFn = async (
     });
     toast.success('Purchase updated');
     if (cb) cb();
-  } catch (error: any) {
-    toast.error(error.message || '');
+  } catch (error: unknown) {
+    toast.error(error instanceof Error ? error.message : '');
     throw error;
   }
 };
 
 export const deletePurchaseFn = async (
-  id: string | number,
+  id: number | string,
   cb?: () => void
 ) => {
   try {
     await window.api.purchase.delete(id as number);
     toast.success('Purchase deleted');
     if (cb) cb();
-  } catch (error: any) {
-    toast.error(error.message || '');
+  } catch (error: unknown) {
+    toast.error(error instanceof Error ? error.message : '');
   }
 };

@@ -18,13 +18,13 @@ Object.defineProperty(global, 'window', {
 });
 
 import { toast } from 'sonner';
+import { getUserSession } from '../../utils/session';
 import {
-  loginUserFn,
-  getUsersFn,
   createUserFn,
   deleteUserFn,
+  getUsersFn,
+  loginUserFn,
 } from '../user.controller';
-import { getUserSession } from '../../utils/session';
 
 const mockUser = {
   id: 1,

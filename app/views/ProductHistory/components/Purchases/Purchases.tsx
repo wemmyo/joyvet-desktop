@@ -1,20 +1,20 @@
-import * as React from 'react';
 import dayjs from 'dayjs';
-import { numberWithCommas, isAdmin, sum } from '../../../../utils/helpers';
-import { IPurchaseItem } from '../../../../models/purchaseItem';
+import type * as React from 'react';
 import {
   Table,
-  TableHeader,
   TableBody,
-  TableFooter,
-  TableRow,
-  TableHead,
   TableCell,
+  TableFooter,
+  TableHead,
+  TableHeader,
+  TableRow,
 } from '../../../../components/ui/table';
 import {
   TableEmptyRow,
   TableFrame,
 } from '../../../../components/ui/table-helpers';
+import type { IPurchaseItem } from '../../../../models/purchaseItem';
+import { isAdmin, numberWithCommas, sum } from '../../../../utils/helpers';
 
 export interface ProductHistoryPurchasesProps {
   data: IPurchaseItem[];

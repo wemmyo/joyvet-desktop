@@ -1,5 +1,5 @@
 import sequelize from '../utils/database';
-import { ISupplier } from './supplier';
+import type { ISupplier } from './supplier';
 
 const Sequelize = require('sequelize');
 

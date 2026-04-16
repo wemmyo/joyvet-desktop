@@ -1,6 +1,6 @@
 import { toast } from 'sonner';
-import { IInvoice } from '../models/invoice';
-import { IInvoiceItem } from '../models/invoiceItem';
+import type { IInvoice } from '../models/invoice';
+import type { IInvoiceItem } from '../models/invoiceItem';
 import type {
   InvoiceListQuery,
   PaginatedResult,
@@ -22,8 +22,8 @@ export const getInvoicesFn = async (
 ): Promise<PaginatedResult<IInvoice>> => {
   try {
     return await window.api.invoice.getAll(query);
-  } catch (error: any) {
-    toast.error(error.message || '');
+  } catch (error: unknown) {
+    toast.error(error instanceof Error ? error.message : '');
     return emptyPaginatedInvoices(query);
   }
 };
@@ -31,8 +31,8 @@ export const getInvoicesFn = async (
 export const filterInvoiceFn = async (query: InvoiceListQuery) => {
   try {
     return await window.api.invoice.filter(query);
-  } catch (error: any) {
-    toast.error(error.message || '');
+  } catch (error: unknown) {
+    toast.error(error instanceof Error ? error.message : '');
     throw error;
   }
 };
@@ -40,8 +40,8 @@ export const filterInvoiceFn = async (query: InvoiceListQuery) => {
 export const filterInvoiceById = async (query: InvoiceListQuery) => {
   try {
     return await window.api.invoice.filterById(query);
-  } catch (error: any) {
-    toast.error(error.message || '');
+  } catch (error: unknown) {
+    toast.error(error instanceof Error ? error.message : '');
     throw error;
   }
 };
@@ -51,8 +51,9 @@ export const getSingleInvoiceFn = async (id: number, cb?: () => void) => {
     const invoice = await window.api.invoice.getSingle(id);
     if (cb) cb();
     return invoice;
-  } catch (error: any) {
-    toast.error(error.message || '');
+  } catch (error: unknown) {
+    toast.error(error instanceof Error ? error.message : '');
+    return undefined;
   }
 };
 
@@ -61,8 +62,8 @@ export const deleteInvoiceFn = async (id: number, cb?: () => void) => {
     await window.api.invoice.delete(id);
     toast.success('Invoice deleted successfully.');
     if (cb) cb();
-  } catch (error: any) {
-    toast.error(error.message || '');
+  } catch (error: unknown) {
+    toast.error(error instanceof Error ? error.message : '');
     throw error;
   }
 };
@@ -72,7 +73,12 @@ export const deleteInvoiceItemFn = async ({
   invoiceId,
   invoiceItemId,
   cb,
-}: any) => {
+}: {
+  productId: number;
+  invoiceId: number;
+  invoiceItemId: number;
+  cb?: () => void;
+}) => {
   try {
     await window.api.invoice.deleteItem({
       productId,
@@ -81,21 +87,21 @@ export const deleteInvoiceItemFn = async ({
     });
     toast.success('Invoice item deleted successfully');
     if (cb) cb();
-  } catch (error: any) {
-    toast.error(error.message || '');
+  } catch (error: unknown) {
+    toast.error(error instanceof Error ? error.message : '');
     throw error;
   }
 };
 
 export const addInvoiceItemFn = async (
-  currentInvoice: any,
-  currentInvoiceItem: any
+  currentInvoice: IInvoice,
+  currentInvoiceItem: Partial<IInvoiceItem>
 ) => {
   try {
     await window.api.invoice.addItem(currentInvoice, currentInvoiceItem);
     toast.success('Successfully updated item in the invoice');
-  } catch (error: any) {
-    toast.error(error.message || '');
+  } catch (error: unknown) {
+    toast.error(error instanceof Error ? error.message : '');
     throw error;
   }
 };
@@ -113,8 +119,8 @@ export const updateInvoiceItemFn = async (args: {
       postedBy: user?.fullName ?? '',
     });
     toast.success('Item quantity updated');
-  } catch (error: any) {
-    toast.error(error.message || '');
+  } catch (error: unknown) {
+    toast.error(error instanceof Error ? error.message : '');
     throw error;
   }
 };
@@ -132,7 +138,7 @@ export const createInvoiceFn = async (
     });
     toast.success('Invoice created');
     if (cb && result?.id) await cb(result.id);
-  } catch (error: any) {
-    toast.error(error.message || '');
+  } catch (error: unknown) {
+    toast.error(error instanceof Error ? error.message : '');
   }
 };

@@ -1,4 +1,4 @@
-import Receipt, { IReceipt } from '../models/receipt';
+import Receipt, { type IReceipt } from '../models/receipt';
 
 export const getReceipts = async (args: any) => {
   return Receipt.findAll({

@@ -1,17 +1,17 @@
+import dayjs from 'dayjs';
 import { ipcMain } from 'electron';
 import { Op } from 'sequelize';
-import dayjs from 'dayjs';
 import { z } from 'zod';
 import Payment from '../../models/payment';
 import Supplier from '../../models/supplier';
-import database from '../database';
 import { getPaymentById, updatePayment } from '../../services/payment.service';
+import database from '../database';
+import { withAppReady } from '../runtime';
 import {
   paymentListQuerySchema,
   toPaginatedResult,
   toPaginationOptions,
 } from './listing';
-import { withAppReady } from '../runtime';
 
 const paymentInputSchema = z.object({
   amount: z.number().min(1),

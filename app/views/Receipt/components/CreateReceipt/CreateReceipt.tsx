@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
-import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
+import type React from 'react';
+import { useState } from 'react';
+import { Controller, useForm } from 'react-hook-form';
 import { z } from 'zod';
 
 import AsyncCombobox from '../../../../components/ui/async-combobox';
@@ -14,15 +15,15 @@ import {
   SelectTrigger,
   SelectValue,
 } from '../../../../components/ui/select';
-import { useAsyncComboboxOptions } from '../../../../hooks/useAsyncComboboxOptions';
-import { numberWithCommas } from '../../../../utils/helpers';
 import {
   getCustomersFn,
   searchCustomerFn,
 } from '../../../../controllers/customer.controller';
 import { createReceiptFn } from '../../../../controllers/receipt.controller';
-import { ICustomer } from '../../../../models/customer';
+import { useAsyncComboboxOptions } from '../../../../hooks/useAsyncComboboxOptions';
+import type { ICustomer } from '../../../../models/customer';
 import { MAX_PAGE_SIZE } from '../../../../types/pagination';
+import { numberWithCommas } from '../../../../utils/helpers';
 
 const createReceiptSchema = z.object({
   customerId: z.string().min(1, 'Customer is required'),

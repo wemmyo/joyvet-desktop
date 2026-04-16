@@ -1,13 +1,13 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { useReactToPrint } from 'react-to-print';
-import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
+import type React from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { Controller, useForm } from 'react-hook-form';
+import { useReactToPrint } from 'react-to-print';
 import { toast } from 'sonner';
+import { z } from 'zod';
 
-import DashboardLayout from '../../layouts/DashboardLayout/DashboardLayout';
-import { Button } from '../../components/ui/button';
 import AsyncCombobox from '../../components/ui/async-combobox';
+import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
 import { Label } from '../../components/ui/label';
 import {
@@ -19,21 +19,18 @@ import {
 } from '../../components/ui/select';
 import {
   Table,
-  TableHeader,
   TableBody,
-  TableFooter,
-  TableRow,
-  TableHead,
   TableCell,
+  TableFooter,
+  TableHead,
+  TableHeader,
+  TableRow,
 } from '../../components/ui/table';
 import { TableEmptyRow, TableFrame } from '../../components/ui/table-helpers';
 import { useAsyncComboboxOptions } from '../../hooks/useAsyncComboboxOptions';
+import DashboardLayout from '../../layouts/DashboardLayout/DashboardLayout';
 
-import { numberWithCommas } from '../../utils/helpers';
 import ComponentToPrint from '../../components/PrintedReceipt/ReceiptWrapper';
-import { IProduct } from '../../models/product';
-import { IInvoiceItem } from '../../models/invoiceItem';
-import { IInvoice } from '../../models/invoice';
 import {
   getCustomersFn,
   searchCustomerFn,
@@ -46,10 +43,14 @@ import {
   getProductsFn,
   searchProductFn,
 } from '../../controllers/product.controller';
-import { ICustomer } from '../../models/customer';
-import { IStoreInfo } from '../../models/storeInfo';
 import { getStoreInfoFn } from '../../controllers/storeInfo.controller';
+import type { ICustomer } from '../../models/customer';
+import type { IInvoice } from '../../models/invoice';
+import type { IInvoiceItem } from '../../models/invoiceItem';
+import type { IProduct } from '../../models/product';
+import type { IStoreInfo } from '../../models/storeInfo';
 import { MAX_PAGE_SIZE } from '../../types/pagination';
+import { numberWithCommas } from '../../utils/helpers';
 
 interface InvoiceItem extends IInvoiceItem {
   product: IProduct;
@@ -201,7 +202,7 @@ const InvoiceScreen: React.FC = () => {
 
     if (singleCustomer?.maxPriceLevel) {
       const availablePrices = productPrices.filter(
-        (price) => singleCustomer.maxPriceLevel >= price.priceLevel
+        (price) => (singleCustomer.maxPriceLevel ?? 0) >= price.priceLevel
       );
       filteredPriceLevel = availablePrices;
     } else {

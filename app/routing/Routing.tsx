@@ -1,9 +1,11 @@
 /* eslint react/jsx-props-no-spreading: off */
 import React, { Suspense } from 'react';
-import { Routes, Route } from 'react-router-dom';
+import { Route, Routes } from 'react-router-dom';
 import { Toaster } from 'sonner';
 
-import routes from './routes';
+import AppShell from '../layouts/AppShell';
+import App from '../views/App';
+import PrivateRoute from './PrivateRoute';
 import {
   AllPurchasesScreen,
   AnalyticsScreen,
@@ -24,9 +26,7 @@ import {
   SupplierScreen,
   UserScreen,
 } from './routeScreens';
-import App from '../views/App';
-import AppShell from '../layouts/AppShell';
-import PrivateRoute from './PrivateRoute';
+import routes from './routes';
 
 const routeFallback = (
   <div className="flex min-h-screen items-center justify-center text-sm text-muted-foreground">

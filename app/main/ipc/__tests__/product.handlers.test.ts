@@ -69,12 +69,12 @@ vi.mock('../../../models/purchaseItem', () => ({
   default: { count: vi.fn() },
 }));
 
+import InvoiceItemModel from '../../../models/invoiceItem';
 import ProductModel from '../../../models/product';
 import ProductAuditLogModel from '../../../models/productAuditLog';
-import InvoiceItemModel from '../../../models/invoiceItem';
 import PurchaseItemModel from '../../../models/purchaseItem';
-import * as productService from '../../../services/product.service';
 import * as invoiceItemService from '../../../services/invoiceItem.service';
+import * as productService from '../../../services/product.service';
 import * as purchaseItemService from '../../../services/purchaseItem.service';
 import { registerProductHandlers } from '../product.handlers';
 
@@ -360,7 +360,12 @@ describe('product IPC handlers', () => {
   describe('product:getAuditLog', () => {
     it('calls ProductAuditLog.findAll with date-range where clause', async () => {
       vi.mocked(ProductAuditLogModel.findAll).mockResolvedValue([]);
-      await handlers['product:getAuditLog'](mockEvent, 1, '2024-01-01', '2024-01-31');
+      await handlers['product:getAuditLog'](
+        mockEvent,
+        1,
+        '2024-01-01',
+        '2024-01-31'
+      );
       expect(ProductAuditLogModel.findAll).toHaveBeenCalledWith(
         expect.objectContaining({
           where: expect.objectContaining({ productId: 1 }),
@@ -370,9 +375,20 @@ describe('product IPC handlers', () => {
     });
 
     it('returns mapped toJSON results', async () => {
-      const mockLog = { id: 1, changeType: 'stock_change', toJSON: () => ({ id: 1, changeType: 'stock_change' }) };
-      vi.mocked(ProductAuditLogModel.findAll).mockResolvedValue([mockLog as any]);
-      const result = await handlers['product:getAuditLog'](mockEvent, 1, '2024-01-01', '2024-01-31');
+      const mockLog = {
+        id: 1,
+        changeType: 'stock_change',
+        toJSON: () => ({ id: 1, changeType: 'stock_change' }),
+      };
+      vi.mocked(ProductAuditLogModel.findAll).mockResolvedValue([
+        mockLog as any,
+      ]);
+      const result = await handlers['product:getAuditLog'](
+        mockEvent,
+        1,
+        '2024-01-01',
+        '2024-01-31'
+      );
       expect(result).toEqual([{ id: 1, changeType: 'stock_change' }]);
     });
   });

@@ -1,4 +1,4 @@
-import Product, { IProduct } from '../models/product';
+import Product, { type IProduct } from '../models/product';
 
 export const getProducts = (args: any) => {
   return Product.findAll({

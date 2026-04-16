@@ -1,4 +1,4 @@
-import { sanitizeUserSession, type UserSession } from '../types/session';
+import { type UserSession, sanitizeUserSession } from '../types/session';
 
 export const USER_SESSION_STORAGE_KEY = 'user:v1';
 const LEGACY_USER_SESSION_STORAGE_KEY = 'user';

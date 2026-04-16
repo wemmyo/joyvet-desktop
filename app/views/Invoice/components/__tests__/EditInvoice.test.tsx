@@ -1,11 +1,11 @@
 // @vitest-environment jsdom
 
-import React from 'react';
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import React from 'react';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
-import EditInvoice from '../EditInvoice';
 import { MAX_PAGE_SIZE } from '../../../../types/pagination';
+import EditInvoice from '../EditInvoice';
 
 const getSingleInvoiceFn = vi.fn();
 const getProductsFn = vi.fn();

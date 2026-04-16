@@ -1,7 +1,7 @@
 import { toast } from 'sonner';
-import { ICustomer } from '../models/customer';
-import { IInvoice } from '../models/invoice';
-import { IReceipt } from '../models/receipt';
+import type { ICustomer } from '../models/customer';
+import type { IInvoice } from '../models/invoice';
+import type { IReceipt } from '../models/receipt';
 import type {
   PaginatedResult,
   PaginationQuery,
@@ -23,8 +23,8 @@ export const getCustomersFn = async (
 ): Promise<PaginatedResult<ICustomer>> => {
   try {
     return await window.api.customer.getAll(query);
-  } catch (error: any) {
-    toast.error(error.message || '');
+  } catch (error: unknown) {
+    toast.error(error instanceof Error ? error.message : '');
     return emptyCustomers(query);
   }
 };
@@ -42,8 +42,9 @@ export const createCustomerFn = async (
     toast.success('Successfully created');
     if (cb) cb();
     return customer;
-  } catch (error: any) {
-    toast.error(error.message || '');
+  } catch (error: unknown) {
+    toast.error(error instanceof Error ? error.message : '');
+    return undefined;
   }
 };
 
@@ -56,8 +57,8 @@ export const updateCustomerFn = async (
     await window.api.customer.update(id, values);
     toast.success('Successfully updated, refresh to see changes');
     if (cb) cb();
-  } catch (error: any) {
-    toast.error(error.message || '');
+  } catch (error: unknown) {
+    toast.error(error instanceof Error ? error.message : '');
   }
 };
 
@@ -66,8 +67,8 @@ export const deleteCustomerFn = async (id: number, cb?: () => void) => {
     await window.api.customer.delete(id);
     toast.success('Successfully deleted');
     if (cb) cb();
-  } catch (error: any) {
-    toast.error(error.message || '');
+  } catch (error: unknown) {
+    toast.error(error instanceof Error ? error.message : '');
   }
 };
 
@@ -76,8 +77,9 @@ export const getSingleCustomerFn = async (id: number, cb?: () => void) => {
     const customer = await window.api.customer.getById(id);
     if (cb) cb();
     return customer;
-  } catch (error: any) {
-    toast.error(error.message || '');
+  } catch (error: unknown) {
+    toast.error(error instanceof Error ? error.message : '');
+    return undefined;
   }
 };
 
@@ -86,8 +88,8 @@ export const searchCustomerFn = async (
 ): Promise<PaginatedResult<ICustomer>> => {
   try {
     return await window.api.customer.search(query);
-  } catch (error: any) {
-    toast.error(error.message || '');
+  } catch (error: unknown) {
+    toast.error(error instanceof Error ? error.message : '');
     return emptyCustomers(query);
   }
 };
@@ -103,8 +105,8 @@ export const getCustomerInvoicesFn = async (
       startDate,
       endDate
     );
-  } catch (error: any) {
-    toast.error(error.message || '');
+  } catch (error: unknown) {
+    toast.error(error instanceof Error ? error.message : '');
     return [];
   }
 };
@@ -120,8 +122,8 @@ export const getCustomerActivityTimelineFn = async (
       startDate,
       endDate
     );
-  } catch (error: any) {
-    toast.error(error.message || '');
+  } catch (error: unknown) {
+    toast.error(error instanceof Error ? error.message : '');
     return [];
   }
 };
@@ -137,8 +139,8 @@ export const getCustomerReceiptsFn = async (
       startDate,
       endDate
     );
-  } catch (error: any) {
-    toast.error(error.message || '');
+  } catch (error: unknown) {
+    toast.error(error instanceof Error ? error.message : '');
     return [];
   }
 };

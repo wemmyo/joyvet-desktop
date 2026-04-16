@@ -1,22 +1,23 @@
-import React, { useEffect, useState } from 'react';
-import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
-import { toast } from 'sonner';
+import type React from 'react';
+import { useEffect, useState } from 'react';
+import { useForm } from 'react-hook-form';
 import { useNavigate } from 'react-router-dom';
+import { toast } from 'sonner';
+import { z } from 'zod';
 
-import DashboardLayout from '../../layouts/DashboardLayout/DashboardLayout';
+import { Button } from '../../components/ui/button';
+import { Input } from '../../components/ui/input';
+import { Label } from '../../components/ui/label';
 import {
   createStoreInfoFn,
   getStoreInfoFn,
   updateStoreInfoFn,
 } from '../../controllers/storeInfo.controller';
-import { IStoreInfo } from '../../models/storeInfo';
-import { Button } from '../../components/ui/button';
-import { Input } from '../../components/ui/input';
-import { Label } from '../../components/ui/label';
-import { isAdmin } from '../../utils/helpers';
+import DashboardLayout from '../../layouts/DashboardLayout/DashboardLayout';
+import type { IStoreInfo } from '../../models/storeInfo';
 import routes from '../../routing/routes';
+import { isAdmin } from '../../utils/helpers';
 
 const schema = z.object({
   storeName: z.string().min(1, 'Required'),
@@ -44,6 +45,7 @@ const StoreInfoScreen: React.FC = () => {
     if (!isAdmin()) navigate(routes.SALES);
   }, [navigate]);
 
+  // biome-ignore lint/correctness/useExhaustiveDependencies: getStoreInfoFn and reset are stable
   useEffect(() => {
     getStoreInfoFn()
       .then((records) => {

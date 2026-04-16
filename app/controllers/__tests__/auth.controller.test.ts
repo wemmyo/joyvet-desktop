@@ -15,8 +15,8 @@ Object.defineProperty(global, 'window', {
 });
 
 import { toast } from 'sonner';
-import { createInitialAdminFn, getBootstrapStatusFn } from '../auth.controller';
 import { getUserSession } from '../../utils/session';
+import { createInitialAdminFn, getBootstrapStatusFn } from '../auth.controller';
 
 describe('auth controller', () => {
   beforeEach(() => {

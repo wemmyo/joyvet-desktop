@@ -19,12 +19,12 @@ Object.defineProperty(global, 'window', {
 
 import { toast } from 'sonner';
 import {
-  getPaymentsFn,
-  searchPaymentFn,
-  getSinglePaymentFn,
   createPaymentFn,
-  updatePaymentFn,
   deletePaymentFn,
+  getPaymentsFn,
+  getSinglePaymentFn,
+  searchPaymentFn,
+  updatePaymentFn,
 } from '../payment.controller';
 
 const mockPayment = {

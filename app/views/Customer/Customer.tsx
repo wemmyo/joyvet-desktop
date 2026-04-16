@@ -1,20 +1,9 @@
-import React, { useEffect, useRef, useState } from 'react';
+import { Plus, Printer, RefreshCw } from 'lucide-react';
+import type React from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useReactToPrint } from 'react-to-print';
-import { Plus, RefreshCw, Printer } from 'lucide-react';
 
-import DashboardLayout from '../../layouts/DashboardLayout/DashboardLayout';
 import PaginationControls from '../../components/PaginationControls/PaginationControls';
-import CreateCustomer from './components/CreateCustomer/CreateCustomer';
-import { numberWithCommas, isAdmin, sum } from '../../utils/helpers';
-import { useSidebarContext } from '../../contexts/SidebarContext';
-import EditCustomer from './components/EditCustomer/EditCustomer';
-import {
-  createCustomerFn,
-  getCustomersFn,
-  searchCustomerFn,
-} from '../../controllers/customer.controller';
-import { ICustomer } from '../../models/customer';
-import { DEFAULT_PAGE, DEFAULT_PAGE_SIZE } from '../../types/pagination';
 import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
 import {
@@ -27,6 +16,18 @@ import {
   TableRow,
 } from '../../components/ui/table';
 import { TableEmptyRow, TableFrame } from '../../components/ui/table-helpers';
+import { useSidebarContext } from '../../contexts/SidebarContext';
+import {
+  createCustomerFn,
+  getCustomersFn,
+  searchCustomerFn,
+} from '../../controllers/customer.controller';
+import DashboardLayout from '../../layouts/DashboardLayout/DashboardLayout';
+import type { ICustomer } from '../../models/customer';
+import { DEFAULT_PAGE, DEFAULT_PAGE_SIZE } from '../../types/pagination';
+import { isAdmin, numberWithCommas, sum } from '../../utils/helpers';
+import CreateCustomer from './components/CreateCustomer/CreateCustomer';
+import EditCustomer from './components/EditCustomer/EditCustomer';
 
 const CONTENT_CREATE = 'create';
 const CONTENT_EDIT = 'edit';
@@ -79,6 +80,7 @@ const CustomersScreen: React.FC = () => {
     setSideContent(content);
   };
 
+  // biome-ignore lint/correctness/useExhaustiveDependencies: fetchCustomers and closeSideBar are stable
   useEffect(() => {
     void fetchCustomers(page, appliedSearch);
 
@@ -114,7 +116,7 @@ const CustomersScreen: React.FC = () => {
           <TableCell>{each.address}</TableCell>
           <TableCell>{each.phoneNumber}</TableCell>
           <TableCell className="text-right">
-            {numberWithCommas(each.balance)}
+            {numberWithCommas(each.balance ?? 0)}
           </TableCell>
         </TableRow>
       );

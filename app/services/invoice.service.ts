@@ -1,4 +1,4 @@
-import Invoice, { IInvoice } from '../models/invoice';
+import Invoice, { type IInvoice } from '../models/invoice';
 
 export const getInvoices = async (args: any) => {
   return Invoice.findAll({

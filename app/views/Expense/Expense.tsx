@@ -1,33 +1,34 @@
-import React, { useEffect, useState, useRef, useCallback } from 'react';
-import { useReactToPrint } from 'react-to-print';
 import dayjs from 'dayjs';
 import { Plus, Printer } from 'lucide-react';
+import type React from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { useReactToPrint } from 'react-to-print';
 import { toast } from 'sonner';
 
-import DashboardLayout from '../../layouts/DashboardLayout/DashboardLayout';
 import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
 import { Label } from '../../components/ui/label';
 import {
   Table,
-  TableHeader,
   TableBody,
-  TableFooter,
-  TableRow,
-  TableHead,
   TableCell,
+  TableFooter,
+  TableHead,
+  TableHeader,
+  TableRow,
 } from '../../components/ui/table';
 import { TableEmptyRow, TableFrame } from '../../components/ui/table-helpers';
+import DashboardLayout from '../../layouts/DashboardLayout/DashboardLayout';
 
-import CreateExpense from './components/CreateExpense/CreateExpense';
-import { numberWithCommas } from '../../utils/helpers';
 import { useSidebarContext } from '../../contexts/SidebarContext';
-import EditExpense from './components/EditExpense/EditExpense';
-import { IExpense } from '../../models/expense';
 import {
-  filterExpensesFn,
   createExpenseFn,
+  filterExpensesFn,
 } from '../../controllers/expense.controller';
+import type { IExpense } from '../../models/expense';
+import { numberWithCommas } from '../../utils/helpers';
+import CreateExpense from './components/CreateExpense/CreateExpense';
+import EditExpense from './components/EditExpense/EditExpense';
 
 const CONTENT_CREATE = 'create';
 const CONTENT_EDIT = 'edit';
@@ -72,20 +73,21 @@ const ExpensesScreen: React.FC = () => {
     if (values.length === 0) {
       return 0;
     }
-    return values
-      .map((item: any) => {
-        return item.amount;
-      })
-      .reduce(sum);
+    return values.map((item) => item.amount).reduce(sum);
   };
 
-  const groupBy = (xs: any[] = [], key: string): { [key: string]: any[] } => {
+  const groupBy = (
+    xs: IExpense[],
+    key: keyof IExpense
+  ): Record<string, IExpense[]> => {
     return xs.reduce(
-      (rv: { [key: string]: any[] }, x) => {
-        (rv[x[key]] = rv[x[key]] || []).push(x);
+      (rv: Record<string, IExpense[]>, x) => {
+        const k = String(x[key]);
+        if (!rv[k]) rv[k] = [];
+        rv[k].push(x);
         return rv;
       },
-      {} as { [key: string]: any[] }
+      {}
     );
   };
 
@@ -94,6 +96,7 @@ const ExpensesScreen: React.FC = () => {
     setSideContent(content);
   };
 
+  // biome-ignore lint/correctness/useExhaustiveDependencies: closeSideBar is stable
   useEffect(() => {
     filterExpenses();
 

@@ -1,21 +1,22 @@
-import React, { useEffect, useState } from 'react';
-import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
+import type React from 'react';
+import { useEffect, useState } from 'react';
+import { useForm } from 'react-hook-form';
 import { Link } from 'react-router-dom';
 import { toast } from 'sonner';
-import { useSidebarContext } from '../../../../contexts/SidebarContext';
-import routes from '../../../../routing/routes';
-import { isAdmin } from '../../../../utils/helpers';
-import { ICustomer } from '../../../../models/customer';
-import {
-  getSingleCustomerFn,
-  deleteCustomerFn,
-  updateCustomerFn,
-} from '../../../../controllers/customer.controller';
+import { z } from 'zod';
 import { Button } from '../../../../components/ui/button';
 import { Input } from '../../../../components/ui/input';
 import { Label } from '../../../../components/ui/label';
+import { useSidebarContext } from '../../../../contexts/SidebarContext';
+import {
+  deleteCustomerFn,
+  getSingleCustomerFn,
+  updateCustomerFn,
+} from '../../../../controllers/customer.controller';
+import type { ICustomer } from '../../../../models/customer';
+import routes from '../../../../routing/routes';
+import { isAdmin } from '../../../../utils/helpers';
 
 const schema = z.object({
   fullName: z.string().min(1, 'Required'),
@@ -52,6 +53,7 @@ const EditCustomer: React.FC<EditCustomerProps> = ({
   useEffect(() => {
     const fetchData = async () => {
       const response = await getSingleCustomerFn(Number(customerId));
+      if (!response) return;
       setCustomer(response);
       reset({
         fullName: response.fullName || '',

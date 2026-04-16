@@ -1,31 +1,32 @@
-import React, { useEffect, useState } from 'react';
 import dayjs from 'dayjs';
 import { Plus, RefreshCw } from 'lucide-react';
+import type React from 'react';
+import { useEffect, useState } from 'react';
 
-import DashboardLayout from '../../layouts/DashboardLayout/DashboardLayout';
 import PaginationControls from '../../components/PaginationControls/PaginationControls';
-import CreatePayment from './components/CreatePayment/CreatePayment';
-import { numberWithCommas } from '../../utils/helpers';
-import PaymentDetail from './components/PaymentDetail/PaymentDetail';
-import { useSidebarContext } from '../../contexts/SidebarContext';
-import EditPayment from './components/EditPayment/EditPayment';
-import {
-  getPaymentsFn,
-  searchPaymentFn,
-} from '../../controllers/payment.controller';
-import { IPayment } from '../../models/payment';
-import { DEFAULT_PAGE, DEFAULT_PAGE_SIZE } from '../../types/pagination';
 import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
 import {
   Table,
-  TableHeader,
   TableBody,
-  TableRow,
-  TableHead,
   TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
 } from '../../components/ui/table';
 import { TableEmptyRow, TableFrame } from '../../components/ui/table-helpers';
+import { useSidebarContext } from '../../contexts/SidebarContext';
+import {
+  getPaymentsFn,
+  searchPaymentFn,
+} from '../../controllers/payment.controller';
+import DashboardLayout from '../../layouts/DashboardLayout/DashboardLayout';
+import type { IPayment } from '../../models/payment';
+import { DEFAULT_PAGE, DEFAULT_PAGE_SIZE } from '../../types/pagination';
+import { numberWithCommas } from '../../utils/helpers';
+import CreatePayment from './components/CreatePayment/CreatePayment';
+import EditPayment from './components/EditPayment/EditPayment';
+import PaymentDetail from './components/PaymentDetail/PaymentDetail';
 
 const CONTENT_CREATE = 'create';
 const CONTENT_DETAIL = 'detail';
@@ -73,6 +74,7 @@ const PaymentsScreen: React.FC = () => {
     setSideContent(content);
   };
 
+  // biome-ignore lint/correctness/useExhaustiveDependencies: fetchPayments and closeSideBar are stable
   useEffect(() => {
     void fetchPayments(page, appliedSearch);
 

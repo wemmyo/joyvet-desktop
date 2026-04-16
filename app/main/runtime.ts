@@ -1,5 +1,5 @@
+import type { Model, ModelStatic, Sequelize } from 'sequelize';
 import { maybeSeedDevelopmentAdmin } from './bootstrap';
-import type { ModelStatic, Model, Sequelize } from 'sequelize';
 
 type AnyModel = ModelStatic<Model>;
 

@@ -1,4 +1,4 @@
-import React from 'react';
+import type React from 'react';
 import { Button } from '../../components/ui/button';
 import { SidebarInset, SidebarTrigger } from '../../components/ui/sidebar';
 import { useSidebarContext } from '../../contexts/SidebarContext';
@@ -6,10 +6,10 @@ import { getUserSession } from '../../utils/session';
 import styles from './DashboardLayout.module.css';
 
 export interface DashboardLayoutProps {
-  children?: any;
+  children?: React.ReactNode;
   screenTitle: string;
-  rightSidebar?: any;
-  headerContent?: any;
+  rightSidebar?: React.ReactNode;
+  headerContent?: React.ReactNode;
 }
 
 const DashboardLayout: React.FC<DashboardLayoutProps> = ({

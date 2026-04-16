@@ -1,24 +1,25 @@
-import React, { useEffect } from 'react';
-import { toast } from 'sonner';
-import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
+import type React from 'react';
+import { useEffect } from 'react';
+import { Controller, useForm } from 'react-hook-form';
+import { toast } from 'sonner';
 import { z } from 'zod';
 import AsyncCombobox from '../../../../components/ui/async-combobox';
-import {
-  updateReceiptFn,
-  getSingleReceiptFn,
-} from '../../../../controllers/receipt.controller';
-import { ICustomer } from '../../../../models/customer';
-import { IReceipt } from '../../../../models/receipt';
+import { Button } from '../../../../components/ui/button';
+import { Input } from '../../../../components/ui/input';
+import { Label } from '../../../../components/ui/label';
 import { useSidebarContext } from '../../../../contexts/SidebarContext';
 import {
   getCustomersFn,
   searchCustomerFn,
 } from '../../../../controllers/customer.controller';
-import { Button } from '../../../../components/ui/button';
-import { Input } from '../../../../components/ui/input';
-import { Label } from '../../../../components/ui/label';
+import {
+  getSingleReceiptFn,
+  updateReceiptFn,
+} from '../../../../controllers/receipt.controller';
 import { useAsyncComboboxOptions } from '../../../../hooks/useAsyncComboboxOptions';
+import type { ICustomer } from '../../../../models/customer';
+import type { IReceipt } from '../../../../models/receipt';
 import { MAX_PAGE_SIZE } from '../../../../types/pagination';
 
 const schema = z.object({
@@ -60,10 +61,12 @@ const EditReceipt: React.FC<EditReceiptProps> = ({
     resolver: zodResolver(schema),
   });
 
+  // biome-ignore lint/correctness/useExhaustiveDependencies: getSingleReceiptFn and customerOptions are stable
   useEffect(() => {
     const fetchData = async () => {
       const getSingleReceipt = getSingleReceiptFn(receiptId);
       const receiptResponse = await getSingleReceipt;
+      if (!receiptResponse) return;
       const receipt: IReceipt = receiptResponse;
       reset({
         customerId: receipt.customerId ? String(receipt.customerId) : '',
@@ -79,7 +82,14 @@ const EditReceipt: React.FC<EditReceiptProps> = ({
 
   const onSubmit = async (values: FormValues) => {
     try {
-      await updateReceiptFn(values, receiptId)();
+      await updateReceiptFn(
+        {
+          ...values,
+          customerId: Number(values.customerId),
+          amount: Number(values.amount),
+        },
+        receiptId
+      )();
       toast.success('Receipt updated');
       closeSideContent();
       onRefresh?.();

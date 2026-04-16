@@ -1,22 +1,23 @@
-import React, { useEffect, useState } from 'react';
-import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
+import type React from 'react';
+import { useEffect, useState } from 'react';
+import { useForm } from 'react-hook-form';
 import { Link } from 'react-router-dom';
 import { toast } from 'sonner';
+import { z } from 'zod';
 
 import { Button } from '../../../../components/ui/button';
 import { Input } from '../../../../components/ui/input';
 import { Label } from '../../../../components/ui/label';
 import { useSidebarContext } from '../../../../contexts/SidebarContext';
-import routes from '../../../../routing/routes';
-import { isAdmin } from '../../../../utils/helpers';
 import {
+  deleteProductFn,
   getSingleProductFn,
   updateProductFn,
-  deleteProductFn,
 } from '../../../../controllers/product.controller';
-import { IProduct } from '../../../../models/product';
+import type { IProduct } from '../../../../models/product';
+import routes from '../../../../routing/routes';
+import { isAdmin } from '../../../../utils/helpers';
 
 export interface EditProductProps {
   productId: string | number;

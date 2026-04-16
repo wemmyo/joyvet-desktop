@@ -1,20 +1,21 @@
-import React, { useEffect, useState } from 'react';
+import type React from 'react';
+import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 import {
-  getSingleReceiptFn,
   deleteReceiptFn,
+  getSingleReceiptFn,
 } from '../../../../controllers/receipt.controller';
-import { IReceipt } from '../../../../models/receipt';
+import type { IReceipt } from '../../../../models/receipt';
 
-import { useSidebarContext } from '../../../../contexts/SidebarContext';
 import { Button } from '../../../../components/ui/button';
 import {
   Table,
   TableBody,
-  TableRow,
   TableCell,
+  TableRow,
 } from '../../../../components/ui/table';
 import { TableFrame } from '../../../../components/ui/table-helpers';
+import { useSidebarContext } from '../../../../contexts/SidebarContext';
 
 export interface ReceiptDetailProps {
   receiptId: string | number;
@@ -31,7 +32,7 @@ const ReceiptDetail: React.FC<ReceiptDetailProps> = ({
     const fetchData = async () => {
       setLoading(true);
       const response = await getSingleReceiptFn(receiptId);
-      setSingleReceipt(response);
+      if (response !== null) setSingleReceipt(response);
       setLoading(false);
     };
 

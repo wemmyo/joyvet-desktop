@@ -1,31 +1,32 @@
-import React, { useEffect, useState } from 'react';
 import dayjs from 'dayjs';
 import { Plus, RefreshCw } from 'lucide-react';
+import type React from 'react';
+import { useEffect, useState } from 'react';
 
-import DashboardLayout from '../../layouts/DashboardLayout/DashboardLayout';
 import PaginationControls from '../../components/PaginationControls/PaginationControls';
-import CreateReceipt from './components/CreateReceipt/CreateReceipt';
-import { numberWithCommas } from '../../utils/helpers';
-import { useSidebarContext } from '../../contexts/SidebarContext';
-import EditReceipt from './components/EditReceipt/EditReceipt';
-import ReceiptDetail from './components/ReceiptDetail/ReceiptDetail';
-import { IReceipt } from '../../models/receipt';
-import {
-  getReceiptsFn,
-  searchReceiptFn,
-} from '../../controllers/receipt.controller';
-import { DEFAULT_PAGE, DEFAULT_PAGE_SIZE } from '../../types/pagination';
 import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
 import {
   Table,
-  TableHeader,
   TableBody,
-  TableRow,
-  TableHead,
   TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
 } from '../../components/ui/table';
 import { TableEmptyRow, TableFrame } from '../../components/ui/table-helpers';
+import { useSidebarContext } from '../../contexts/SidebarContext';
+import {
+  getReceiptsFn,
+  searchReceiptFn,
+} from '../../controllers/receipt.controller';
+import DashboardLayout from '../../layouts/DashboardLayout/DashboardLayout';
+import type { IReceipt } from '../../models/receipt';
+import { DEFAULT_PAGE, DEFAULT_PAGE_SIZE } from '../../types/pagination';
+import { numberWithCommas } from '../../utils/helpers';
+import CreateReceipt from './components/CreateReceipt/CreateReceipt';
+import EditReceipt from './components/EditReceipt/EditReceipt';
+import ReceiptDetail from './components/ReceiptDetail/ReceiptDetail';
 
 const CONTENT_CREATE = 'create';
 const CONTENT_EDIT = 'edit';
@@ -73,6 +74,7 @@ const ReceiptsScreen: React.FC = () => {
     setSideContent(content);
   };
 
+  // biome-ignore lint/correctness/useExhaustiveDependencies: fetchReceipts and closeSideBar are stable
   useEffect(() => {
     void fetchReceipts(page, appliedSearch);
 

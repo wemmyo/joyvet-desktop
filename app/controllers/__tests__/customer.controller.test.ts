@@ -22,12 +22,12 @@ Object.defineProperty(global, 'window', {
 
 import { toast } from 'sonner';
 import {
-  getCustomersFn,
   createCustomerFn,
-  updateCustomerFn,
   deleteCustomerFn,
+  getCustomersFn,
   getSingleCustomerFn,
   searchCustomerFn,
+  updateCustomerFn,
 } from '../customer.controller';
 
 const mockCustomer = {

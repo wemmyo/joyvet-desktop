@@ -25,14 +25,14 @@ Object.defineProperty(global, 'window', {
 
 import { toast } from 'sonner';
 import {
-  getSuppliersFn,
-  searchSupplierFn,
-  getSingleSupplierFn,
   createSupplierFn,
-  updateSupplierFn,
   deleteSupplierFn,
+  getSingleSupplierFn,
   getSupplierPaymentsFn,
   getSupplierPurchasesFn,
+  getSuppliersFn,
+  searchSupplierFn,
+  updateSupplierFn,
 } from '../supplier.controller';
 
 const mockSupplier = {

@@ -1,17 +1,17 @@
+import dayjs from 'dayjs';
 import { ipcMain } from 'electron';
 import { Op } from 'sequelize';
-import dayjs from 'dayjs';
 import { z } from 'zod';
-import Receipt from '../../models/receipt';
 import Customer from '../../models/customer';
-import database from '../database';
+import Receipt from '../../models/receipt';
 import { getReceiptById, updateReceipt } from '../../services/receipt.service';
+import database from '../database';
+import { withAppReady } from '../runtime';
 import {
   receiptListQuerySchema,
   toPaginatedResult,
   toPaginationOptions,
 } from './listing';
-import { withAppReady } from '../runtime';
 
 const receiptInputSchema = z.object({
   amount: z.number().min(1),

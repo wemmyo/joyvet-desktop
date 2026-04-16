@@ -1,12 +1,12 @@
 /* eslint-disable react/jsx-indent */
 
-import * as React from 'react';
 import dayjs from 'dayjs';
+import * as React from 'react';
 
-import styles from './PrintedReceipt.module.css';
-import { numberWithCommas } from '../../utils/helpers';
 import type { IInvoice } from '../../models/invoice';
 import type { IStoreInfo } from '../../models/storeInfo';
+import { numberWithCommas } from '../../utils/helpers';
+import styles from './PrintedReceipt.module.css';
 
 interface ReceiptWrapperProps {
   invoice: IInvoice;
