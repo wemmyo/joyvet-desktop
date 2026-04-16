@@ -16,7 +16,7 @@
     "lint": "biome check .",
     "format": "biome format .",
     "start": "cross-env NODE_ENV=production electron ./app/out/main/index.js",
-    "postinstall": "electron-builder install-app-deps",
+    "postinstall": "electron-rebuild",
     "test": "vitest run",
     "typecheck:renderer": "tsc -p tsconfig.renderer.json --noEmit",
     "typecheck:electron": "tsc -p tsconfig.electron.json --noEmit",
@@ -138,11 +138,6 @@
     "tailwindcss": "^3.4.0",
     "tailwindcss-animate": "^1.0.7",
     "zod": "^3.20.6"
-  },
-  "devEngines": {
-    "node": ">=18.x",
-    "npm": ">=8.x",
-    "yarn": ">=1.22.0"
   },
   "browserslist": []
 }
