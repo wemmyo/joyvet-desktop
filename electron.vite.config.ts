@@ -6,6 +6,7 @@ export default defineConfig({
   main: {
     plugins: [externalizeDepsPlugin()],
     build: {
+      outDir: join(__dirname, 'app/out/main'),
       rollupOptions: {
         input: {
           index: join(__dirname, 'app/main/index.ts'),
@@ -16,6 +17,7 @@ export default defineConfig({
   preload: {
     plugins: [externalizeDepsPlugin()],
     build: {
+      outDir: join(__dirname, 'app/out/preload'),
       rollupOptions: {
         input: {
           index: join(__dirname, 'app/preload/index.ts'),
@@ -26,6 +28,7 @@ export default defineConfig({
   renderer: {
     root: join(__dirname, 'app/renderer'),
     build: {
+      outDir: join(__dirname, 'app/out/renderer'),
       rollupOptions: {
         input: {
           index: join(__dirname, 'app/renderer/index.html'),

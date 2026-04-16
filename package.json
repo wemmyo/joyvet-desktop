@@ -3,7 +3,7 @@
   "productName": "JoyvetSales",
   "version": "2.0.0",
   "description": "Joyvet Sales Desktop Application",
-  "main": "out/main/index.js",
+  "main": "app/out/main/index.js",
   "scripts": {
     "dev": "electron-vite dev",
     "build": "electron-vite build",
@@ -15,7 +15,7 @@
     "package-win": "npm run build && electron-builder build --win --x64",
     "lint": "biome check .",
     "format": "biome format .",
-    "start": "cross-env NODE_ENV=production electron ./out/main/index.js",
+    "start": "cross-env NODE_ENV=production electron ./app/out/main/index.js",
     "postinstall": "electron-builder install-app-deps",
     "test": "vitest run",
     "typecheck:renderer": "tsc -p tsconfig.renderer.json --noEmit",
@@ -27,8 +27,7 @@
     "productName": "JoyvetSales",
     "appId": "org.develar.JoyvetSales",
     "files": [
-      "out/",
-      "app/package.json"
+      "out/**"
     ],
     "dmg": {
       "contents": [
