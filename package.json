@@ -1,7 +1,7 @@
 {
   "name": "joyvet-sales",
   "productName": "JoyvetSales",
-  "version": "1.4.0",
+  "version": "2.0.0",
   "description": "Joyvet Sales Desktop Application",
   "main": "out/main/index.js",
   "scripts": {
@@ -26,7 +26,10 @@
   "build": {
     "productName": "JoyvetSales",
     "appId": "org.develar.JoyvetSales",
-    "files": ["out/", "app/package.json"],
+    "files": [
+      "out/",
+      "app/package.json"
+    ],
     "dmg": {
       "contents": [
         {
@@ -42,10 +45,17 @@
       ]
     },
     "win": {
-      "target": ["nsis", "msi"]
+      "target": [
+        "nsis",
+        "msi"
+      ]
     },
     "linux": {
-      "target": ["deb", "rpm", "AppImage"],
+      "target": [
+        "deb",
+        "rpm",
+        "AppImage"
+      ],
       "category": "Development"
     },
     "directories": {
@@ -72,7 +82,13 @@
   "bugs": {
     "url": "https://github.com/wemmyo/joyvet-desktop/issues"
   },
-  "keywords": ["electron", "react", "typescript", "vite", "electron-vite"],
+  "keywords": [
+    "electron",
+    "react",
+    "typescript",
+    "vite",
+    "electron-vite"
+  ],
   "homepage": "https://github.com/wemmyo/joyvet-desktop#readme",
   "devDependencies": {
     "@biomejs/biome": "^1.9.4",
