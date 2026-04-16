@@ -13,6 +13,8 @@
   "license": "MIT",
   "dependencies": {
     "bcryptjs": "^2.4.3",
+    "dayjs": "^1.11.13",
+    "zod": "^3.20.6",
     "electron-log": "^4.2.2",
     "electron-updater": "^6.3.0",
     "sequelize": "^6.37.8",
