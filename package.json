@@ -125,6 +125,7 @@
     "dayjs": "^1.11.13",
     "electron-log": "^4.2.2",
     "electron-updater": "^6.3.0",
+    "got": "^11.8.6",
     "lucide-react": "^0.460.0",
     "react": "^18.3.0",
     "react-dom": "^18.3.0",
