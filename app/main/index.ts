@@ -1,4 +1,4 @@
-import path from 'node:path';
+import path from 'path';
 import { BrowserWindow, app, dialog, ipcMain } from 'electron';
 import log from 'electron-log';
 import { autoUpdater } from 'electron-updater';
