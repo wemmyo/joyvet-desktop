@@ -59,7 +59,7 @@ export function registerInvoiceHandlers(): void {
       const query = invoiceListQuerySchema.parse(input);
       const { endDate, page, pageSize, saleType, search, startDate } = query;
       const whereClause: Record<string, unknown> = {};
-      const MAX_DATE_RANGE = 90;
+      const MAX_DATE_RANGE = 365;
 
       if (startDate && endDate) {
         const dateDifference = dayjs(endDate).diff(dayjs(startDate), 'days');

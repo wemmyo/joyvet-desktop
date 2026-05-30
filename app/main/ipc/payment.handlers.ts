@@ -21,7 +21,7 @@ const paymentInputSchema = z.object({
   note: z.string().optional().nullable(),
 });
 
-const MAX_DATE_RANGE = 90;
+const MAX_DATE_RANGE = 365;
 
 export function registerPaymentHandlers(): void {
   ipcMain.handle(

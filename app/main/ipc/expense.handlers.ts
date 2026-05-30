@@ -18,7 +18,7 @@ import {
   toPaginationOptions,
 } from './listing';
 
-const MAX_DATE_RANGE = 90;
+const MAX_DATE_RANGE = 365;
 
 export function registerExpenseHandlers(): void {
   // Paginated list — replaces the old unbounded getAll
