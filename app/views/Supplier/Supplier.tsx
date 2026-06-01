@@ -26,7 +26,7 @@ import {
 import DashboardLayout from '../../layouts/DashboardLayout/DashboardLayout';
 import type { ISupplier } from '../../models/supplier';
 import { DEFAULT_PAGE, DEFAULT_PAGE_SIZE } from '../../types/pagination';
-import { isAdmin, numberWithCommas, sum } from '../../utils/helpers';
+import { isAdmin, numberWithCommas } from '../../utils/helpers';
 import CreateSupplier from './components/CreateSupplier/CreateSupplier';
 import EditSupplier from './components/EditSupplier/EditSupplier';
 
@@ -43,6 +43,8 @@ const SuppliersScreen: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [page, setPage] = useState(DEFAULT_PAGE);
   const [total, setTotal] = useState(0);
+  const [balanceTotal, setBalanceTotal] = useState(0);
+  const [printRows, setPrintRows] = useState<ISupplier[]>([]);
 
   const { openSideContent: openSideBar, closeSideContent: closeSideBar } =
     useSidebarContext();
@@ -51,6 +53,7 @@ const SuppliersScreen: React.FC = () => {
 
   const handlePrint = useReactToPrint({
     contentRef: componentRef,
+    onAfterPrint: () => setPrintRows([]),
   });
 
   const fetchSuppliers = async (nextPage = page, search = appliedSearch) => {
@@ -69,12 +72,41 @@ const SuppliersScreen: React.FC = () => {
           });
       setSuppliers(response.rows ?? []);
       setTotal(response.total ?? 0);
+      setBalanceTotal(response.totals?.balance ?? 0);
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'Failed to load data');
     } finally {
       setLoading(false);
     }
   };
+
+  // Fetch the entire filtered set and print it (all pages, not just the current one).
+  const handlePrintAll = async () => {
+    try {
+      const response = appliedSearch
+        ? await searchSupplierFn({
+            page: DEFAULT_PAGE,
+            pageSize: DEFAULT_PAGE_SIZE,
+            search: appliedSearch,
+            all: true,
+          })
+        : await getSuppliersFn({
+            page: DEFAULT_PAGE,
+            pageSize: DEFAULT_PAGE_SIZE,
+            all: true,
+          });
+      setPrintRows(response.rows ?? []);
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : 'Failed to prepare print');
+    }
+  };
+
+  // biome-ignore lint/correctness/useExhaustiveDependencies: handlePrint is stable
+  useEffect(() => {
+    if (printRows.length > 0) {
+      handlePrint?.();
+    }
+  }, [printRows]);
 
   const openSideContent = (content: string) => {
     openSideBar();
@@ -112,8 +144,8 @@ const SuppliersScreen: React.FC = () => {
     openSideContent(CONTENT_EDIT);
   };
 
-  const renderRows = () => {
-    const rows = suppliers.map((each) => {
+  const renderRows = (list: ISupplier[]) => {
+    const rows = list.map((each) => {
       return (
         <TableRow
           key={each.id}
@@ -132,6 +164,40 @@ const SuppliersScreen: React.FC = () => {
     return rows;
   };
 
+  // Shared table markup. `showEmpty` renders the empty-state row when there are
+  // no rows (used for the on-screen table; the hidden print table omits it).
+  const renderSuppliersTable = (list: ISupplier[], showEmpty: boolean) => (
+    <TableFrame>
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead>Full Name</TableHead>
+            <TableHead>Address</TableHead>
+            <TableHead>Phone Number</TableHead>
+            <TableHead className="text-right">Balance</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {list.length > 0 ? (
+            renderRows(list)
+          ) : showEmpty ? (
+            <TableEmptyRow colSpan={4} message="No suppliers found." />
+          ) : null}
+        </TableBody>
+        {isAdmin() ? (
+          <TableFooter>
+            <TableRow>
+              <TableCell colSpan={3}>Total</TableCell>
+              <TableCell className="text-right">
+                ₦{numberWithCommas(balanceTotal)}
+              </TableCell>
+            </TableRow>
+          </TableFooter>
+        ) : null}
+      </Table>
+    </TableFrame>
+  );
+
   const renderSideContent = () => {
     if (sideContent === CONTENT_CREATE) {
       return <CreateSupplier createSupplierFn={handleNewSupplier} />;
@@ -145,17 +211,6 @@ const SuppliersScreen: React.FC = () => {
       );
     }
     return null;
-  };
-
-  const sumOfBalances = () => {
-    if (suppliers.length === 0) {
-      return 0;
-    }
-    return suppliers
-      .map((item: any) => {
-        return item.balance;
-      })
-      .reduce(sum);
   };
 
   const headerContent = () => {
@@ -181,7 +236,13 @@ const SuppliersScreen: React.FC = () => {
           <RefreshCw className="mr-2 h-4 w-4" />
           Refresh
         </Button>
-        <Button variant="outline" size="icon" onClick={handlePrint}>
+        <Button
+          variant="outline"
+          size="icon"
+          onClick={() => {
+            void handlePrintAll();
+          }}
+        >
           <Printer className="h-4 w-4" />
         </Button>
         <div className="flex gap-2">
@@ -222,36 +283,8 @@ const SuppliersScreen: React.FC = () => {
           <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
         </div>
       ) : (
-        <div ref={componentRef}>
-          <TableFrame>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Full Name</TableHead>
-                  <TableHead>Address</TableHead>
-                  <TableHead>Phone Number</TableHead>
-                  <TableHead className="text-right">Balance</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {suppliers.length > 0 ? (
-                  renderRows()
-                ) : (
-                  <TableEmptyRow colSpan={4} message="No suppliers found." />
-                )}
-              </TableBody>
-              {isAdmin() ? (
-                <TableFooter>
-                  <TableRow>
-                    <TableCell colSpan={3}>Total</TableCell>
-                    <TableCell className="text-right">
-                      ₦{numberWithCommas(sumOfBalances())}
-                    </TableCell>
-                  </TableRow>
-                </TableFooter>
-              ) : null}
-            </Table>
-          </TableFrame>
+        <div>
+          {renderSuppliersTable(suppliers, true)}
           <PaginationControls
             page={page}
             pageSize={DEFAULT_PAGE_SIZE}
@@ -260,6 +293,10 @@ const SuppliersScreen: React.FC = () => {
           />
         </div>
       )}
+      {/* Hidden full-dataset table used only for printing all pages. */}
+      <div style={{ display: 'none' }}>
+        <div ref={componentRef}>{renderSuppliersTable(printRows, false)}</div>
+      </div>
     </DashboardLayout>
   );
 };

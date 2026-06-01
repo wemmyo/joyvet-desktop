@@ -26,9 +26,9 @@ export function registerCustomerHandlers(): void {
     'customer:getAll',
     withAppReady(async (_event, input: unknown = {}) => {
       const query = searchPaginationSchema.parse(input);
-      const { page, pageSize } = query;
+      const { page, pageSize, all } = query;
       const { rows, count } = await Customer.findAndCountAll({
-        ...toPaginationOptions({ page, pageSize }),
+        ...toPaginationOptions({ page, pageSize, all }),
         order: [['fullName', 'ASC']],
       });
 
@@ -36,7 +36,8 @@ export function registerCustomerHandlers(): void {
         rows.map((customer: any) => customer.toJSON()),
         count,
         page,
-        pageSize
+        pageSize,
+        { totals: { balance: Number((await Customer.sum('balance')) ?? 0) } }
       );
     })
   );
@@ -113,15 +114,18 @@ export function registerCustomerHandlers(): void {
     'customer:search',
     withAppReady(async (_event, input: unknown = {}) => {
       const query = searchPaginationSchema.parse(input);
-      const { page, pageSize, search } = query;
+      const { page, pageSize, search, all } = query;
 
       if (!search) {
-        return toPaginatedResult([], 0, page, pageSize);
+        return toPaginatedResult([], 0, page, pageSize, {
+          totals: { balance: 0 },
+        });
       }
 
+      const where = { fullName: { [Op.substring]: search } };
       const { rows, count } = await Customer.findAndCountAll({
-        ...toPaginationOptions({ page, pageSize }),
-        where: { fullName: { [Op.substring]: search } },
+        ...toPaginationOptions({ page, pageSize, all }),
+        where,
         order: [['fullName', 'ASC']],
       });
 
@@ -129,7 +133,8 @@ export function registerCustomerHandlers(): void {
         rows.map((customer: any) => customer.toJSON()),
         count,
         page,
-        pageSize
+        pageSize,
+        { totals: { balance: Number((await Customer.sum('balance', { where })) ?? 0) } }
       );
     })
   );

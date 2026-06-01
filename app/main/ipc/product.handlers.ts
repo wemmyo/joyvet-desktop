@@ -1,6 +1,6 @@
 import dayjs from 'dayjs';
 import { ipcMain } from 'electron';
-import { Op } from 'sequelize';
+import { fn, literal, Op } from 'sequelize';
 import { z } from 'zod';
 import InvoiceItem from '../../models/invoiceItem';
 import Product from '../../models/product';
@@ -17,16 +17,26 @@ import {
   toPaginationOptions,
 } from './listing';
 
+// Sum of (stock * buyPrice) over the entire filtered set, regardless of paging.
+const sumStockValue = async (where: any): Promise<number> => {
+  const result: any = await Product.findOne({
+    attributes: [[fn('SUM', literal('stock * buyPrice')), 'value']],
+    where,
+    raw: true,
+  });
+  return Number(result?.value ?? 0);
+};
+
 export function registerProductHandlers(): void {
   ipcMain.handle(
     'product:getAll',
     withAppReady(async (_event, input: unknown = {}) => {
       const query = productListQuerySchema.parse(input);
-      const { filter, page, pageSize } = query;
+      const { filter, page, pageSize, all } = query;
       const where =
         filter === 'inStock' ? { stock: { [Op.gt]: 0 } } : undefined;
       const { rows, count } = await Product.findAndCountAll({
-        ...toPaginationOptions({ page, pageSize }),
+        ...toPaginationOptions({ page, pageSize, all }),
         where,
         order: [['title', 'ASC']],
       });
@@ -37,7 +47,8 @@ export function registerProductHandlers(): void {
         ),
         count,
         page,
-        pageSize
+        pageSize,
+        { totals: { stockValue: await sumStockValue(where) } }
       );
     })
   );
@@ -185,10 +196,12 @@ export function registerProductHandlers(): void {
     'product:search',
     withAppReady(async (_event, input: unknown = {}) => {
       const query = productListQuerySchema.parse(input);
-      const { filter, page, pageSize, search } = query;
+      const { filter, page, pageSize, search, all } = query;
 
       if (!search) {
-        return toPaginatedResult([], 0, page, pageSize);
+        return toPaginatedResult([], 0, page, pageSize, {
+          totals: { stockValue: 0 },
+        });
       }
 
       const where = {
@@ -197,7 +210,7 @@ export function registerProductHandlers(): void {
       };
 
       const { rows, count } = await Product.findAndCountAll({
-        ...toPaginationOptions({ page, pageSize }),
+        ...toPaginationOptions({ page, pageSize, all }),
         where,
         order: [['title', 'ASC']],
       });
@@ -208,7 +221,8 @@ export function registerProductHandlers(): void {
         ),
         count,
         page,
-        pageSize
+        pageSize,
+        { totals: { stockValue: await sumStockValue(where) } }
       );
     })
   );

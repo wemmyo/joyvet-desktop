@@ -37,6 +37,7 @@ vi.mock('../../../models/supplier', () => ({
   default: {
     findAndCountAll: vi.fn(),
     findAll: vi.fn(),
+    sum: vi.fn(),
     destroy: vi.fn(),
   },
 }));
@@ -94,6 +95,8 @@ describe('supplier IPC handlers', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
+    // Default aggregate (SUM of balance) used by the totals feature.
+    (SupplierModel.sum as any).mockResolvedValue(0);
   });
 
   describe('supplier:getAll', () => {
@@ -108,6 +111,7 @@ describe('supplier IPC handlers', () => {
         total: 1,
         page: 1,
         pageSize: 25,
+        totals: { balance: 0 },
       });
       const callArg = (SupplierModel.findAndCountAll as any).mock.calls[0][0];
       expect(callArg.order).toEqual([['fullName', 'ASC']]);
@@ -223,7 +227,13 @@ describe('supplier IPC handlers', () => {
       const result = await handlers['supplier:search'](mockEvent, {
         search: '',
       });
-      expect(result).toEqual({ rows: [], total: 0, page: 1, pageSize: 25 });
+      expect(result).toEqual({
+        rows: [],
+        total: 0,
+        page: 1,
+        pageSize: 25,
+        totals: { balance: 0 },
+      });
     });
   });
 

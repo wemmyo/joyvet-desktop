@@ -475,6 +475,7 @@ const InvoiceScreen: React.FC = () => {
                     id="quantity"
                     placeholder="Quantity"
                     type="number"
+                    step="any"
                     {...register('quantity')}
                   />
                 </div>

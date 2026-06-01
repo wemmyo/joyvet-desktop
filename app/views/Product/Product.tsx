@@ -44,6 +44,8 @@ const ProductsScreen: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [page, setPage] = useState(DEFAULT_PAGE);
   const [total, setTotal] = useState(0);
+  const [stockValue, setStockValue] = useState(0);
+  const [printRows, setPrintRows] = useState<IProduct[]>([]);
 
   const { openSideContent: openSideBar, closeSideContent: closeSideBar } =
     useSidebarContext();
@@ -52,6 +54,7 @@ const ProductsScreen: React.FC = () => {
 
   const handlePrint = useReactToPrint({
     contentRef: componentRef,
+    onAfterPrint: () => setPrintRows([]),
   });
 
   const fetchProducts = async (nextPage = page, search = appliedSearch) => {
@@ -70,12 +73,41 @@ const ProductsScreen: React.FC = () => {
           });
       setProducts(response.rows ?? []);
       setTotal(response.total ?? 0);
+      setStockValue(response.totals?.stockValue ?? 0);
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'Failed to load data');
     } finally {
       setLoading(false);
     }
   };
+
+  // Fetch the entire filtered set and print it (all pages, not just the current one).
+  const handlePrintAll = async () => {
+    try {
+      const response = appliedSearch
+        ? await searchProductFn({
+            page: DEFAULT_PAGE,
+            pageSize: DEFAULT_PAGE_SIZE,
+            search: appliedSearch,
+            all: true,
+          })
+        : await getProductsFn({
+            page: DEFAULT_PAGE,
+            pageSize: DEFAULT_PAGE_SIZE,
+            all: true,
+          });
+      setPrintRows(response.rows ?? []);
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : 'Failed to prepare print');
+    }
+  };
+
+  // biome-ignore lint/correctness/useExhaustiveDependencies: handlePrint is stable
+  useEffect(() => {
+    if (printRows.length > 0) {
+      handlePrint?.();
+    }
+  }, [printRows]);
 
   const openSideContent = (content: string) => {
     openSideBar();
@@ -113,23 +145,8 @@ const ProductsScreen: React.FC = () => {
     openSideContent(CONTENT_EDIT);
   };
 
-  const sum = (prev: number, next: number) => {
-    return prev + next;
-  };
-
-  const sumOfStockValue = () => {
-    if (products.length === 0) {
-      return 0;
-    }
-    return products
-      .map((item) => {
-        return item.stock * item.buyPrice;
-      })
-      .reduce(sum);
-  };
-
-  const renderRows = () => {
-    const rows = products.map((each) => {
+  const renderRows = (list: IProduct[]) => {
+    const rows = list.map((each) => {
       return (
         <TableRow
           onClick={() => openSingleProduct(each.id)}
@@ -158,6 +175,42 @@ const ProductsScreen: React.FC = () => {
     });
     return rows;
   };
+
+  // Shared table markup. `showEmpty` renders the empty-state row when there are
+  // no rows (used for the on-screen table; the hidden print table omits it).
+  const renderProductsTable = (list: IProduct[], showEmpty: boolean) => (
+    <TableFrame>
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead>Title</TableHead>
+            <TableHead className="text-right">Quantity</TableHead>
+            <TableHead className="text-right">Buy Price</TableHead>
+            <TableHead className="text-right">Sell Price</TableHead>
+            <TableHead className="text-right">Sell Price 2</TableHead>
+            <TableHead className="text-right">Sell Price 3</TableHead>
+            <TableHead className="text-right">Stock Value</TableHead>
+          </TableRow>
+        </TableHeader>
+
+        <TableBody>
+          {list.length > 0 ? (
+            renderRows(list)
+          ) : showEmpty ? (
+            <TableEmptyRow colSpan={7} message="No products found." />
+          ) : null}
+        </TableBody>
+        <TableFooter>
+          <TableRow>
+            <TableCell colSpan={6}>Total</TableCell>
+            <TableCell className="text-right">
+              ₦{numberWithCommas(stockValue)}
+            </TableCell>
+          </TableRow>
+        </TableFooter>
+      </Table>
+    </TableFrame>
+  );
 
   const renderSideContent = () => {
     if (sideContent === CONTENT_CREATE) {
@@ -191,7 +244,13 @@ const ProductsScreen: React.FC = () => {
           <Plus className="mr-1 h-4 w-4" />
           Create
         </Button>
-        <Button variant="outline" size="icon" onClick={handlePrint}>
+        <Button
+          variant="outline"
+          size="icon"
+          onClick={() => {
+            void handlePrintAll();
+          }}
+        >
           <Printer className="h-4 w-4" />
         </Button>
         <Button
@@ -238,38 +297,8 @@ const ProductsScreen: React.FC = () => {
           <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
         </div>
       ) : (
-        <div ref={componentRef}>
-          <TableFrame>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Title</TableHead>
-                  <TableHead className="text-right">Quantity</TableHead>
-                  <TableHead className="text-right">Buy Price</TableHead>
-                  <TableHead className="text-right">Sell Price</TableHead>
-                  <TableHead className="text-right">Sell Price 2</TableHead>
-                  <TableHead className="text-right">Sell Price 3</TableHead>
-                  <TableHead className="text-right">Stock Value</TableHead>
-                </TableRow>
-              </TableHeader>
-
-              <TableBody>
-                {products.length > 0 ? (
-                  renderRows()
-                ) : (
-                  <TableEmptyRow colSpan={7} message="No products found." />
-                )}
-              </TableBody>
-              <TableFooter>
-                <TableRow>
-                  <TableCell colSpan={6}>Total</TableCell>
-                  <TableCell className="text-right">
-                    ₦{numberWithCommas(sumOfStockValue())}
-                  </TableCell>
-                </TableRow>
-              </TableFooter>
-            </Table>
-          </TableFrame>
+        <div>
+          {renderProductsTable(products, true)}
           <PaginationControls
             page={page}
             pageSize={DEFAULT_PAGE_SIZE}
@@ -278,6 +307,10 @@ const ProductsScreen: React.FC = () => {
           />
         </div>
       )}
+      {/* Hidden full-dataset table used only for printing all pages. */}
+      <div style={{ display: 'none' }}>
+        <div ref={componentRef}>{renderProductsTable(printRows, false)}</div>
+      </div>
     </DashboardLayout>
   );
 };

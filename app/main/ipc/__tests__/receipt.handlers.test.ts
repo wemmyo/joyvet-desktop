@@ -196,14 +196,14 @@ describe('receipt IPC handlers', () => {
       );
     });
 
-    it('throws error when date range exceeds 90 days', async () => {
+    it('throws error when date range exceeds 365 days', async () => {
       await expect(
         handlers['receipt:filter'](mockEvent, {
           startDate: '2024-01-01',
-          endDate: '2024-04-01',
+          endDate: '2025-06-01',
         })
       ).rejects.toThrow(
-        'Date range too large. Please select a range smaller than 90 days.'
+        'Date range too large. Please select a range smaller than 365 days.'
       );
     });
   });

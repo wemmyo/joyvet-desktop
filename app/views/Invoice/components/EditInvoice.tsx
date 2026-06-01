@@ -61,7 +61,7 @@ interface InvoiceItem extends IInvoiceItem {
 }
 
 const invoiceItemSchema = z.object({
-  quantity: z.coerce.number().min(1, 'Quantity is required'),
+  quantity: z.coerce.number().positive('Quantity is required'),
   unitPrice: z.coerce.number().min(0, 'Unit price is required'),
   product: z.string().min(1, 'Product is required'),
 });
@@ -286,7 +286,8 @@ const InvoiceScreen: React.FC = () => {
             <div className="flex items-center gap-1 justify-end">
               <Input
                 type="number"
-                min={1}
+                min={0}
+                step="any"
                 value={editingQtyValue}
                 onChange={(e) => setEditingQtyValue(Number(e.target.value))}
                 className="w-16 text-right"
@@ -521,6 +522,7 @@ const InvoiceScreen: React.FC = () => {
                     <Input
                       id="quantity"
                       type="number"
+                      step="any"
                       placeholder="Quantity"
                       {...register('quantity')}
                     />

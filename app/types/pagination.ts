@@ -5,6 +5,8 @@ export const MAX_PAGE_SIZE = 100;
 export interface PaginationQuery {
   page?: number;
   pageSize?: number;
+  /** When true, return every matching row (ignores page/pageSize). Used for printing. */
+  all?: boolean;
 }
 
 export interface SearchPaginationQuery extends PaginationQuery {
@@ -45,6 +47,8 @@ export interface PaginatedResult<T> {
   total: number;
   page: number;
   pageSize: number;
+  /** Aggregate sums computed over the entire filtered set (not just this page). */
+  totals?: Record<string, number>;
 }
 
 export interface ExpenseListQuery extends SearchPaginationQuery {

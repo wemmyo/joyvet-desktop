@@ -66,9 +66,9 @@ describe('expense:getAll', () => {
 });
 
 describe('expense:filter', () => {
-  it('throws when date range exceeds 90 days', async () => {
+  it('throws when date range exceeds 365 days', async () => {
     await expect(
-      handlers['expense:filter'](mockEvent, '2025-01-01', '2025-05-01')
+      handlers['expense:filter'](mockEvent, '2024-01-01', '2025-06-01')
     ).rejects.toThrow('Date range too large');
   });
 

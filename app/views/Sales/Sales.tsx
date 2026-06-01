@@ -1,6 +1,8 @@
 import dayjs from 'dayjs';
+import { Printer } from 'lucide-react';
 import type React from 'react';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { useReactToPrint } from 'react-to-print';
 import PaginationControls from '../../components/PaginationControls/PaginationControls';
 import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
@@ -44,8 +46,18 @@ const SalesScreen: React.FC = () => {
   const [invoices, setInvoices] = useState<IInvoice[]>([]);
   const [page, setPage] = useState(DEFAULT_PAGE);
   const [total, setTotal] = useState(0);
+  const [amountTotal, setAmountTotal] = useState(0);
+  const [profitTotal, setProfitTotal] = useState(0);
+  const [printRows, setPrintRows] = useState<IInvoice[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const componentRef = useRef<HTMLDivElement>(null);
+
+  const handlePrint = useReactToPrint({
+    contentRef: componentRef,
+    onAfterPrint: () => setPrintRows([]),
+  });
 
   const { openSideContent: openSideBar, closeSideContent: closeSideBar } =
     useSidebarContext();
@@ -70,6 +82,8 @@ const SalesScreen: React.FC = () => {
         });
         setInvoices(response.rows ?? []);
         setTotal(response.total ?? 0);
+        setAmountTotal(response.totals?.amount ?? 0);
+        setProfitTotal(response.totals?.profit ?? 0);
       } catch (err: unknown) {
         setError(err instanceof Error ? err.message : 'Failed to load sales');
       } finally {
@@ -78,6 +92,31 @@ const SalesScreen: React.FC = () => {
     },
     [appliedSearch, endDate, saleType, startDate]
   );
+
+  // Fetch the entire filtered set and print it (all pages, not just the current one).
+  const handlePrintAll = async () => {
+    try {
+      const response = await filterInvoiceFn({
+        page: DEFAULT_PAGE,
+        pageSize: DEFAULT_PAGE_SIZE,
+        startDate,
+        endDate,
+        saleType,
+        search: appliedSearch || undefined,
+        all: true,
+      });
+      setPrintRows(response.rows ?? []);
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Failed to prepare print');
+    }
+  };
+
+  // biome-ignore lint/correctness/useExhaustiveDependencies: handlePrint is stable
+  useEffect(() => {
+    if (printRows.length > 0) {
+      handlePrint?.();
+    }
+  }, [printRows]);
 
   useEffect(() => {
     void loadInvoices(page);
@@ -96,8 +135,8 @@ const SalesScreen: React.FC = () => {
     openSideContent(CONTENT_DETAIL);
   };
 
-  const renderRows = invoices.map((each) => {
-    return (
+  const renderRows = (list: IInvoice[]) =>
+    list.map((each) => (
       <TableRow
         onClick={() => openSingleSale(each.id)}
         key={each.id}
@@ -116,8 +155,7 @@ const SalesScreen: React.FC = () => {
         ) : null}
         <TableCell>{dayjs(each.createdAt).format('DD/MM/YYYY')}</TableCell>
       </TableRow>
-    );
-  });
+    ));
 
   const renderSideContent = () => {
     if (sideContent === CONTENT_DETAIL) {
@@ -146,6 +184,15 @@ const SalesScreen: React.FC = () => {
       <div className="flex items-end gap-2 flex-wrap">
         <Button variant="outline" onClick={resetFilters}>
           Reset
+        </Button>
+        <Button
+          variant="outline"
+          size="icon"
+          onClick={() => {
+            void handlePrintAll();
+          }}
+        >
+          <Printer className="h-4 w-4" />
         </Button>
 
         <div className="flex items-end gap-2 flex-wrap">
@@ -210,30 +257,57 @@ const SalesScreen: React.FC = () => {
     );
   };
 
-  const sum = (prev: number, next: number) => {
-    return prev + next;
-  };
+  // Shared table markup. `showEmpty` renders the empty-state row when there are
+  // no rows (used for the on-screen table; the hidden print table omits it).
+  const renderSalesTable = (list: IInvoice[], showEmpty: boolean) => (
+    <TableFrame>
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead>Customer</TableHead>
+            <TableHead>Invoice Number</TableHead>
+            <TableHead>Type</TableHead>
+            <TableHead className="text-right">Amount</TableHead>
+            {isAdmin() ? (
+              <TableHead className="text-right">Profit</TableHead>
+            ) : null}
+            <TableHead>Date</TableHead>
+          </TableRow>
+        </TableHeader>
 
-  const sumOfAmount = () => {
-    if (invoices.length === 0) {
-      return 0;
-    }
-    return invoices
-      .map((item) => {
-        return item.amount;
-      })
-      .reduce(sum);
-  };
-  const sumOfProfit = () => {
-    if (invoices.length === 0) {
-      return 0;
-    }
-    return invoices
-      .map((item) => {
-        return item.profit;
-      })
-      .reduce(sum);
-  };
+        <TableBody>
+          {list.length > 0 ? (
+            renderRows(list)
+          ) : showEmpty ? (
+            <TableEmptyRow
+              colSpan={isAdmin() ? 6 : 5}
+              message="No sales found."
+            />
+          ) : null}
+        </TableBody>
+        <TableFooter>
+          <TableRow>
+            <TableCell colSpan={isAdmin() ? 4 : 3}>Total</TableCell>
+            {isAdmin() ? (
+              <>
+                <TableCell className="text-right">
+                  ₦{numberWithCommas(amountTotal)}
+                </TableCell>
+                <TableCell className="text-right">
+                  ₦{numberWithCommas(profitTotal)}
+                </TableCell>
+              </>
+            ) : (
+              <TableCell className="text-right">
+                ₦{numberWithCommas(amountTotal)}
+              </TableCell>
+            )}
+            <TableCell />
+          </TableRow>
+        </TableFooter>
+      </Table>
+    </TableFrame>
+  );
 
   return (
     <DashboardLayout
@@ -248,53 +322,7 @@ const SalesScreen: React.FC = () => {
         </div>
       ) : (
         <>
-          <TableFrame>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Customer</TableHead>
-                  <TableHead>Invoice Number</TableHead>
-                  <TableHead>Type</TableHead>
-                  <TableHead className="text-right">Amount</TableHead>
-                  {isAdmin() ? (
-                    <TableHead className="text-right">Profit</TableHead>
-                  ) : null}
-                  <TableHead>Date</TableHead>
-                </TableRow>
-              </TableHeader>
-
-              <TableBody>
-                {invoices.length > 0 ? (
-                  renderRows
-                ) : (
-                  <TableEmptyRow
-                    colSpan={isAdmin() ? 6 : 5}
-                    message="No sales found."
-                  />
-                )}
-              </TableBody>
-              <TableFooter>
-                <TableRow>
-                  <TableCell colSpan={isAdmin() ? 4 : 3}>Total</TableCell>
-                  {isAdmin() ? (
-                    <>
-                      <TableCell className="text-right">
-                        ₦{numberWithCommas(sumOfAmount())}
-                      </TableCell>
-                      <TableCell className="text-right">
-                        ₦{numberWithCommas(sumOfProfit())}
-                      </TableCell>
-                    </>
-                  ) : (
-                    <TableCell className="text-right">
-                      ₦{numberWithCommas(sumOfAmount())}
-                    </TableCell>
-                  )}
-                  <TableCell />
-                </TableRow>
-              </TableFooter>
-            </Table>
-          </TableFrame>
+          {renderSalesTable(invoices, true)}
           <PaginationControls
             page={page}
             pageSize={DEFAULT_PAGE_SIZE}
@@ -303,6 +331,10 @@ const SalesScreen: React.FC = () => {
           />
         </>
       )}
+      {/* Hidden full-dataset table used only for printing all pages. */}
+      <div style={{ display: 'none' }}>
+        <div ref={componentRef}>{renderSalesTable(printRows, false)}</div>
+      </div>
     </DashboardLayout>
   );
 };

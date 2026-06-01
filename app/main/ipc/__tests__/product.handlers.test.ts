@@ -45,6 +45,7 @@ vi.mock('../../../services/product.service', () => ({
 vi.mock('../../../models/product', () => ({
   default: {
     findAndCountAll: vi.fn(),
+    findOne: vi.fn(),
     findByPk: vi.fn(),
     update: vi.fn(),
     decrement: vi.fn(),
@@ -106,6 +107,8 @@ describe('product IPC handlers', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
+    // Default aggregate (SUM of stock * buyPrice) used by the totals feature.
+    (ProductModel.findOne as any).mockResolvedValue({ value: 0 });
   });
 
   // ------------------------------------------------------------------ getAll
@@ -121,6 +124,7 @@ describe('product IPC handlers', () => {
         total: 1,
         page: 1,
         pageSize: 25,
+        totals: { stockValue: 0 },
       });
     });
 
@@ -283,6 +287,7 @@ describe('product IPC handlers', () => {
         total: 1,
         page: 1,
         pageSize: 25,
+        totals: { stockValue: 0 },
       });
     });
 
@@ -320,7 +325,13 @@ describe('product IPC handlers', () => {
       const result = await handlers['product:search'](mockEvent, {
         search: '',
       });
-      expect(result).toEqual({ rows: [], total: 0, page: 1, pageSize: 25 });
+      expect(result).toEqual({
+        rows: [],
+        total: 0,
+        page: 1,
+        pageSize: 25,
+        totals: { stockValue: 0 },
+      });
     });
   });
 

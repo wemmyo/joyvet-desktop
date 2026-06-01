@@ -28,10 +28,10 @@ export function registerPaymentHandlers(): void {
     'payment:getAll',
     withAppReady(async (_event, input: unknown = {}) => {
       const query = paymentListQuerySchema.parse(input);
-      const { page, pageSize } = query;
+      const { page, pageSize, all } = query;
       const { rows, count } = await Payment.findAndCountAll({
         distinct: true,
-        ...toPaginationOptions({ page, pageSize }),
+        ...toPaginationOptions({ page, pageSize, all }),
         include: [{ model: Supplier }],
         order: [['createdAt', 'DESC']],
       });
@@ -213,7 +213,7 @@ export function registerPaymentHandlers(): void {
     'payment:search',
     withAppReady(async (_event, input: unknown = {}) => {
       const query = paymentListQuerySchema.parse(input);
-      const { page, pageSize, search } = query;
+      const { page, pageSize, search, all } = query;
       const paymentId = Number(search);
 
       if (!search || Number.isNaN(paymentId)) {
@@ -222,7 +222,7 @@ export function registerPaymentHandlers(): void {
 
       const { rows, count } = await Payment.findAndCountAll({
         distinct: true,
-        ...toPaginationOptions({ page, pageSize }),
+        ...toPaginationOptions({ page, pageSize, all }),
         where: { id: paymentId },
         include: [{ model: Supplier }],
         order: [['createdAt', 'DESC']],

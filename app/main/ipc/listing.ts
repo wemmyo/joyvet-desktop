@@ -14,6 +14,8 @@ const basePaginationSchema = z.object({
     .min(1)
     .max(MAX_PAGE_SIZE)
     .default(DEFAULT_PAGE_SIZE),
+  // When true, return every matching row (limit/offset omitted). Used for printing.
+  all: z.coerce.boolean().optional(),
 });
 
 export const searchPaginationSchema = basePaginationSchema.extend({
@@ -57,22 +59,23 @@ export const expenseListQuerySchema = searchPaginationSchema.extend({
 export const toPaginationOptions = ({
   page,
   pageSize,
+  all,
 }: {
   page: number;
   pageSize: number;
-}) => ({
-  limit: pageSize,
-  offset: (page - 1) * pageSize,
-});
+  all?: boolean;
+}) => (all ? {} : { limit: pageSize, offset: (page - 1) * pageSize });
 
 export const toPaginatedResult = <TRow>(
   rows: TRow[],
   total: number,
   page: number,
-  pageSize: number
+  pageSize: number,
+  extra?: Partial<PaginatedResult<TRow>>
 ): PaginatedResult<TRow> => ({
   rows,
   total,
   page,
   pageSize,
+  ...extra,
 });

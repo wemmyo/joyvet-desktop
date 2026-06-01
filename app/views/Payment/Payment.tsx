@@ -1,7 +1,9 @@
 import dayjs from 'dayjs';
-import { Plus, RefreshCw } from 'lucide-react';
+import { Plus, Printer, RefreshCw } from 'lucide-react';
 import type React from 'react';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import { useReactToPrint } from 'react-to-print';
+import { toast } from 'sonner';
 
 import PaginationControls from '../../components/PaginationControls/PaginationControls';
 import { Button } from '../../components/ui/button';
@@ -42,6 +44,14 @@ const PaymentsScreen: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [page, setPage] = useState(DEFAULT_PAGE);
   const [total, setTotal] = useState(0);
+  const [printRows, setPrintRows] = useState<IPayment[]>([]);
+
+  const componentRef = useRef<HTMLDivElement>(null);
+
+  const handlePrint = useReactToPrint({
+    contentRef: componentRef,
+    onAfterPrint: () => setPrintRows([]),
+  });
 
   const { openSideContent: openSideBar, closeSideContent: closeSideBar } =
     useSidebarContext();
@@ -69,6 +79,34 @@ const PaymentsScreen: React.FC = () => {
     }
   };
 
+  // Fetch the entire filtered set and print it (all pages, not just the current one).
+  const handlePrintAll = async () => {
+    try {
+      const response = appliedSearch
+        ? await searchPaymentFn({
+            page: DEFAULT_PAGE,
+            pageSize: DEFAULT_PAGE_SIZE,
+            search: appliedSearch,
+            all: true,
+          })
+        : await getPaymentsFn({
+            page: DEFAULT_PAGE,
+            pageSize: DEFAULT_PAGE_SIZE,
+            all: true,
+          });
+      setPrintRows(response.rows ?? []);
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : 'Failed to prepare print');
+    }
+  };
+
+  // biome-ignore lint/correctness/useExhaustiveDependencies: handlePrint is stable
+  useEffect(() => {
+    if (printRows.length > 0) {
+      handlePrint?.();
+    }
+  }, [printRows]);
+
   const openSideContent = (content: string) => {
     openSideBar();
     setSideContent(content);
@@ -93,8 +131,8 @@ const PaymentsScreen: React.FC = () => {
     openSideContent(CONTENT_DETAIL);
   };
 
-  const renderRows = () => {
-    const rows = payments.map((each) => {
+  const renderRows = (list: IPayment[]) => {
+    const rows = list.map((each) => {
       return (
         <TableRow
           key={each.id}
@@ -113,6 +151,31 @@ const PaymentsScreen: React.FC = () => {
     });
     return rows;
   };
+
+  // Shared table markup. `showEmpty` renders the empty-state row when there are
+  // no rows (used for the on-screen table; the hidden print table omits it).
+  const renderPaymentsTable = (list: IPayment[], showEmpty: boolean) => (
+    <TableFrame>
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead>Payment no</TableHead>
+            <TableHead className="text-right">Amount</TableHead>
+            <TableHead>Payment Method</TableHead>
+            <TableHead>Bank</TableHead>
+            <TableHead>Date</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {list.length > 0 ? (
+            renderRows(list)
+          ) : showEmpty ? (
+            <TableEmptyRow colSpan={5} message="No payments found." />
+          ) : null}
+        </TableBody>
+      </Table>
+    </TableFrame>
+  );
 
   const renderSideContent = () => {
     if (sideContent === CONTENT_DETAIL) {
@@ -161,6 +224,15 @@ const PaymentsScreen: React.FC = () => {
           <RefreshCw className="mr-1 h-4 w-4" />
           Refresh
         </Button>
+        <Button
+          variant="outline"
+          size="icon"
+          onClick={() => {
+            void handlePrintAll();
+          }}
+        >
+          <Printer className="h-4 w-4" />
+        </Button>
         <form
           onSubmit={(e) => {
             e.preventDefault();
@@ -197,26 +269,7 @@ const PaymentsScreen: React.FC = () => {
         </div>
       ) : (
         <>
-          <TableFrame>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Payment no</TableHead>
-                  <TableHead className="text-right">Amount</TableHead>
-                  <TableHead>Payment Method</TableHead>
-                  <TableHead>Bank</TableHead>
-                  <TableHead>Date</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {payments.length > 0 ? (
-                  renderRows()
-                ) : (
-                  <TableEmptyRow colSpan={5} message="No payments found." />
-                )}
-              </TableBody>
-            </Table>
-          </TableFrame>
+          {renderPaymentsTable(payments, true)}
           <PaginationControls
             page={page}
             pageSize={DEFAULT_PAGE_SIZE}
@@ -225,6 +278,10 @@ const PaymentsScreen: React.FC = () => {
           />
         </>
       )}
+      {/* Hidden full-dataset table used only for printing all pages. */}
+      <div style={{ display: 'none' }}>
+        <div ref={componentRef}>{renderPaymentsTable(printRows, false)}</div>
+      </div>
     </DashboardLayout>
   );
 };

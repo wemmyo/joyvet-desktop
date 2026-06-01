@@ -57,7 +57,8 @@ export function registerInvoiceHandlers(): void {
     'invoice:filter',
     withAppReady(async (_event, input: unknown = {}) => {
       const query = invoiceListQuerySchema.parse(input);
-      const { endDate, page, pageSize, saleType, search, startDate } = query;
+      const { all, endDate, page, pageSize, saleType, search, startDate } =
+        query;
       const whereClause: Record<string, unknown> = {};
       const MAX_DATE_RANGE = 365;
 
@@ -91,19 +92,28 @@ export function registerInvoiceHandlers(): void {
         whereClause.id = invoiceId;
       }
 
+      const where =
+        Object.keys(whereClause).length > 0 ? whereClause : undefined;
+
       const { rows, count } = await Invoice.findAndCountAll({
         distinct: true,
-        ...toPaginationOptions({ page, pageSize }),
-        where: Object.keys(whereClause).length > 0 ? whereClause : undefined,
+        ...toPaginationOptions({ page, pageSize, all }),
+        where,
         order: [['createdAt', 'DESC']],
         include: [{ model: Customer }],
       });
+
+      const [amount, profit] = await Promise.all([
+        Invoice.sum('amount', { where }),
+        Invoice.sum('profit', { where }),
+      ]);
 
       return toPaginatedResult(
         rows.map((invoice: any) => invoice.toJSON()),
         count,
         page,
-        pageSize
+        pageSize,
+        { totals: { amount: Number(amount ?? 0), profit: Number(profit ?? 0) } }
       );
     })
   );

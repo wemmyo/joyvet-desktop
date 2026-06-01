@@ -39,6 +39,7 @@ vi.mock('../../../models/invoice', () => ({
     findByPk: vi.fn(),
     findAll: vi.fn(),
     findAndCountAll: vi.fn(),
+    sum: vi.fn(),
     create: vi.fn(),
     update: vi.fn(),
     destroy: vi.fn(),
@@ -115,6 +116,8 @@ describe('invoice IPC handlers', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
+    // Default aggregates (SUM of amount/profit) used by the totals feature.
+    (InvoiceModel.sum as any).mockResolvedValue(0);
   });
 
   // ------------------------------------------------------------------ getAll
@@ -177,6 +180,7 @@ describe('invoice IPC handlers', () => {
         total: 1,
         page: 1,
         pageSize: 25,
+        totals: { amount: 0, profit: 0 },
       });
     });
 
@@ -193,6 +197,7 @@ describe('invoice IPC handlers', () => {
         total: 1,
         page: 1,
         pageSize: 25,
+        totals: { amount: 0, profit: 0 },
       });
       // When no dates, no where clause should be added for createdAt
       const callArg = (InvoiceModel.findAndCountAll as any).mock.calls[0][0];
@@ -209,17 +214,17 @@ describe('invoice IPC handlers', () => {
       expect(callArg.where).toEqual({ saleType: 'credit' });
     });
 
-    it('throws when date range exceeds 90 days', async () => {
+    it('throws when date range exceeds 365 days', async () => {
       await expect(
         handlers['invoice:filter'](mockEvent, {
           startDate: '2024-01-01',
-          endDate: '2024-06-01',
+          endDate: '2025-06-01',
           saleType: 'all',
         })
       ).rejects.toThrow('Date range too large');
     });
 
-    it('does not throw when date range is exactly 90 days', async () => {
+    it('does not throw when date range is within 365 days', async () => {
       (InvoiceModel.findAndCountAll as any).mockResolvedValue({
         rows: [],
         count: 0,

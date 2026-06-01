@@ -38,6 +38,7 @@ vi.mock('../../../models/customer', () => ({
   default: {
     findAndCountAll: vi.fn(),
     findByPk: vi.fn(),
+    sum: vi.fn(),
     increment: vi.fn(),
     decrement: vi.fn(),
     destroy: vi.fn(),
@@ -115,6 +116,8 @@ describe('customer IPC handlers', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
+    // Default aggregate (SUM of balance) used by the totals feature.
+    (CustomerModel.sum as any).mockResolvedValue(0);
   });
 
   // ------------------------------------------------------------------ getAll
@@ -130,6 +133,7 @@ describe('customer IPC handlers', () => {
         total: 1,
         page: 1,
         pageSize: 25,
+        totals: { balance: 0 },
       });
     });
 
@@ -280,6 +284,7 @@ describe('customer IPC handlers', () => {
         total: 1,
         page: 1,
         pageSize: 25,
+        totals: { balance: 0 },
       });
     });
 
@@ -298,7 +303,13 @@ describe('customer IPC handlers', () => {
       const result = await handlers['customer:search'](mockEvent, {
         search: '',
       });
-      expect(result).toEqual({ rows: [], total: 0, page: 1, pageSize: 25 });
+      expect(result).toEqual({
+        rows: [],
+        total: 0,
+        page: 1,
+        pageSize: 25,
+        totals: { balance: 0 },
+      });
     });
   });
 
