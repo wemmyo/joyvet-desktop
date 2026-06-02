@@ -270,8 +270,9 @@ declare global {
           endDate: string;
         }) => Promise<any[]>;
       };
-      dialog: {
-        selectDbPath: () => Promise<string | undefined>;
+      database: {
+        getPath: () => Promise<string | undefined>;
+        changeFile: () => Promise<{ changed: boolean; path?: string }>;
       };
     };
   }

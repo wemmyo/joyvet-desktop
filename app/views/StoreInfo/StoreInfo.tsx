@@ -29,6 +29,7 @@ type FormValues = z.infer<typeof schema>;
 
 const StoreInfoScreen: React.FC = () => {
   const [storeInfo, setStoreInfo] = useState<IStoreInfo | undefined>();
+  const [dbPath, setDbPath] = useState('');
   const navigate = useNavigate();
 
   const {
@@ -44,6 +45,26 @@ const StoreInfoScreen: React.FC = () => {
   useEffect(() => {
     if (!isAdmin()) navigate(routes.SALES);
   }, [navigate]);
+
+  useEffect(() => {
+    window.api.database
+      .getPath()
+      .then((p) => setDbPath(p ?? ''))
+      .catch(() => {});
+  }, []);
+
+  const handleChangeDatabase = async () => {
+    try {
+      const result = await window.api.database.changeFile();
+      if (result.changed) {
+        toast.success('Database updated. Restarting the app…');
+      }
+    } catch (err: unknown) {
+      toast.error(
+        err instanceof Error ? err.message : 'Failed to change database'
+      );
+    }
+  };
 
   // biome-ignore lint/correctness/useExhaustiveDependencies: getStoreInfoFn and reset are stable
   useEffect(() => {
@@ -133,6 +154,31 @@ const StoreInfoScreen: React.FC = () => {
           </div>
           <Button type="submit">Save</Button>
         </form>
+
+        <div className="mt-8 border-t pt-6 flex flex-col gap-2">
+          <h2 className="text-lg font-semibold">Database</h2>
+          <div className="flex flex-col gap-1">
+            <Label htmlFor="dbPath">Current database file</Label>
+            <Input
+              id="dbPath"
+              type="text"
+              readOnly
+              value={dbPath || 'Not set'}
+            />
+          </div>
+          <p className="text-sm text-muted-foreground">
+            Select a different database file (e.g. from Downloads). The app will
+            restart to load the selected database.
+          </p>
+          <Button
+            type="button"
+            variant="outline"
+            className="self-start"
+            onClick={handleChangeDatabase}
+          >
+            Change Database File
+          </Button>
+        </div>
       </div>
     </DashboardLayout>
   );

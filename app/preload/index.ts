@@ -224,8 +224,9 @@ const api = {
     getExpenseBreakdown: (input: { startDate: string; endDate: string }) =>
       ipcRenderer.invoke('analytics:getExpenseBreakdown', input),
   },
-  dialog: {
-    selectDbPath: () => ipcRenderer.invoke('dialog:selectDbPath'),
+  database: {
+    getPath: () => ipcRenderer.invoke('database:getPath'),
+    changeFile: () => ipcRenderer.invoke('database:changeFile'),
   },
 };
 

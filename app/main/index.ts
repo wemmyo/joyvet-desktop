@@ -1,3 +1,4 @@
+import fs from 'fs';
 import path from 'path';
 import { BrowserWindow, app, dialog, ipcMain } from 'electron';
 import log from 'electron-log';
@@ -83,12 +84,42 @@ app.on('window-all-closed', () => {
 app.whenReady().then(async () => {
   registerAuthHandlers();
 
-  ipcMain.handle('dialog:selectDbPath', async () => {
+  // Location of the file that stores the chosen SQLite DB path. Must match the
+  // path read by checkForDB() in app/utils/database.ts.
+  const dbPointerPath = path.join(app.getPath('userData'), 'pathToDB');
+
+  ipcMain.handle('database:getPath', () => {
+    try {
+      if (fs.existsSync(dbPointerPath)) {
+        return fs.readFileSync(dbPointerPath, 'utf8');
+      }
+    } catch (error) {
+      log.error('Failed to read database path', error);
+    }
+    return '';
+  });
+
+  ipcMain.handle('database:changeFile', async () => {
     const result = await dialog.showOpenDialog({
       properties: ['openFile'],
       filters: [{ name: 'Database', extensions: ['db', 'sqlite', 'sql'] }],
     });
-    return result.filePaths[0];
+
+    const selectedPath = result.filePaths[0];
+    if (result.canceled || !selectedPath) {
+      return { changed: false };
+    }
+
+    fs.writeFileSync(dbPointerPath, selectedPath);
+
+    // Relaunch so the singleton Sequelize instance re-initialises against the
+    // new database. Defer so this IPC response reaches the renderer first.
+    setTimeout(() => {
+      app.relaunch();
+      app.exit(0);
+    }, 0);
+
+    return { changed: true, path: selectedPath };
   });
 
   await createWindow();

@@ -158,7 +158,8 @@ const EditPurchase: React.FC<EditPurchaseProps> = ({
                   <TableCell className="text-right">
                     <Input
                       type="number"
-                      min={1}
+                      min={0}
+                      step="any"
                       value={item.quantity}
                       onChange={(e) =>
                         updateItem(index, 'quantity', Number(e.target.value))
@@ -170,6 +171,7 @@ const EditPurchase: React.FC<EditPurchaseProps> = ({
                     <Input
                       type="number"
                       min={0}
+                      step="any"
                       value={item.unitPrice}
                       onChange={(e) =>
                         updateItem(index, 'unitPrice', Number(e.target.value))
