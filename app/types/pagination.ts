@@ -1,5 +1,5 @@
 export const DEFAULT_PAGE = 1;
-export const DEFAULT_PAGE_SIZE = 25;
+export const DEFAULT_PAGE_SIZE = 50;
 export const MAX_PAGE_SIZE = 100;
 
 export interface PaginationQuery {
@@ -39,7 +39,7 @@ export interface ReceiptListQuery extends SearchPaginationQuery {
 }
 
 export interface ProductListQuery extends SearchPaginationQuery {
-  filter?: 'inStock';
+  filter?: "inStock";
 }
 
 export interface PaginatedResult<T> {
