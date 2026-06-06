@@ -1,6 +1,9 @@
 export const DEFAULT_PAGE = 1;
 export const DEFAULT_PAGE_SIZE = 50;
-export const MAX_PAGE_SIZE = 100;
+export const MAX_PAGE_SIZE = 250;
+
+/** Selectable results-per-page options shown in list views. */
+export const PAGE_SIZE_OPTIONS = [50, 100, 250] as const;
 
 export interface PaginationQuery {
   page?: number;
@@ -39,7 +42,7 @@ export interface ReceiptListQuery extends SearchPaginationQuery {
 }
 
 export interface ProductListQuery extends SearchPaginationQuery {
-  filter?: "inStock";
+  filter?: 'inStock';
 }
 
 export interface PaginatedResult<T> {

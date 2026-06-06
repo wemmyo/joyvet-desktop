@@ -6,6 +6,7 @@ import { useReactToPrint } from 'react-to-print';
 import { toast } from 'sonner';
 
 import PaginationControls from '../../components/PaginationControls/PaginationControls';
+import { usePagination } from '../../hooks/usePagination';
 import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
 import {
@@ -42,7 +43,14 @@ const PaymentsScreen: React.FC = () => {
   const [payments, setPayments] = useState<IPayment[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [page, setPage] = useState(DEFAULT_PAGE);
+  const {
+    page,
+    setPage,
+    pageSize,
+    showAll,
+    onPageSizeChange,
+    onShowAllChange,
+  } = usePagination();
   const [total, setTotal] = useState(0);
   const [printRows, setPrintRows] = useState<IPayment[]>([]);
 
@@ -63,12 +71,14 @@ const PaymentsScreen: React.FC = () => {
       const response = search
         ? await searchPaymentFn({
             page: nextPage,
-            pageSize: DEFAULT_PAGE_SIZE,
+            pageSize,
+            all: showAll || undefined,
             search,
           })
         : await getPaymentsFn({
             page: nextPage,
-            pageSize: DEFAULT_PAGE_SIZE,
+            pageSize,
+            all: showAll || undefined,
           });
       setPayments(response.rows ?? []);
       setTotal(response.total ?? 0);
@@ -96,7 +106,9 @@ const PaymentsScreen: React.FC = () => {
           });
       setPrintRows(response.rows ?? []);
     } catch (err: unknown) {
-      toast.error(err instanceof Error ? err.message : 'Failed to prepare print');
+      toast.error(
+        err instanceof Error ? err.message : 'Failed to prepare print'
+      );
     }
   };
 
@@ -124,7 +136,7 @@ const PaymentsScreen: React.FC = () => {
       };
       closeSideContent();
     };
-  }, [appliedSearch, page]);
+  }, [appliedSearch, page, pageSize, showAll]);
 
   const viewPaymentReceipt = (id) => {
     setPaymentId(id);
@@ -272,9 +284,12 @@ const PaymentsScreen: React.FC = () => {
           {renderPaymentsTable(payments, true)}
           <PaginationControls
             page={page}
-            pageSize={DEFAULT_PAGE_SIZE}
+            pageSize={pageSize}
             total={total}
             onPageChange={setPage}
+            onPageSizeChange={onPageSizeChange}
+            showAll={showAll}
+            onShowAllChange={onShowAllChange}
           />
         </>
       )}

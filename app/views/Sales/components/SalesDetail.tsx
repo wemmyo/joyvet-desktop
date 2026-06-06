@@ -113,6 +113,12 @@ const SalesDetail = ({ salesId, onRefresh }: SalesDetailProps) => {
     return <p>Loading...</p>;
   }
 
+  // Non-admins can only edit a sale created today; admins can edit any sale.
+  const isLocked =
+    !isAdmin() &&
+    !!sales.createdAt &&
+    new Date(sales.createdAt).toDateString() !== new Date().toDateString();
+
   return (
     <div className="space-y-3">
       <TableFrame>
@@ -202,9 +208,15 @@ const SalesDetail = ({ salesId, onRefresh }: SalesDetailProps) => {
           Print
         </Button>
 
-        <Button variant="secondary" asChild>
-          <Link to={`${routes.INVOICE}/${salesId}`}>Edit</Link>
-        </Button>
+        {isLocked ? (
+          <Button variant="secondary" disabled>
+            Edit
+          </Button>
+        ) : (
+          <Button variant="secondary" asChild>
+            <Link to={`${routes.INVOICE}/${salesId}`}>Edit</Link>
+          </Button>
+        )}
         {isAdmin() ? (
           <Button
             onClick={handleDeleteInvoice}
@@ -215,6 +227,11 @@ const SalesDetail = ({ salesId, onRefresh }: SalesDetailProps) => {
           </Button>
         ) : null}
       </div>
+      {isLocked ? (
+        <p className="text-sm text-destructive">
+          This sale is from a previous day and can no longer be edited.
+        </p>
+      ) : null}
       {renderInvoiceToPrint()}
     </div>
   );

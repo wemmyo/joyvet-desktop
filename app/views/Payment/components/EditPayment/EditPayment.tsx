@@ -138,6 +138,7 @@ const EditPayment: React.FC<EditPaymentProps> = ({
           <Input
             id="amount"
             type="number"
+            step="any"
             placeholder="Amount"
             {...register('amount')}
           />

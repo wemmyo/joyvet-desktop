@@ -262,6 +262,15 @@ declare global {
         getPath: () => Promise<string | undefined>;
         changeFile: () => Promise<{ changed: boolean; path?: string }>;
       };
+      backup: {
+        getConfig: () => Promise<{
+          location: string;
+          lastBackupAt: string | null;
+        }>;
+        chooseLocation: () => Promise<{ changed: boolean; location?: string }>;
+        now: () => Promise<{ path: string; backedUpAt: string }>;
+        restore: () => Promise<{ restored: boolean }>;
+      };
     };
   }
 }

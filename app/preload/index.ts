@@ -228,6 +228,12 @@ const api = {
     getPath: () => ipcRenderer.invoke('database:getPath'),
     changeFile: () => ipcRenderer.invoke('database:changeFile'),
   },
+  backup: {
+    getConfig: () => ipcRenderer.invoke('backup:getConfig'),
+    chooseLocation: () => ipcRenderer.invoke('backup:chooseLocation'),
+    now: () => ipcRenderer.invoke('backup:now'),
+    restore: () => ipcRenderer.invoke('backup:restore'),
+  },
 };
 
 contextBridge.exposeInMainWorld('api', api);

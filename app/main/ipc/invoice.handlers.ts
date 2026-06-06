@@ -14,11 +14,23 @@ import {
 import { createInvoiceValidation } from '../../sliceValidation/index';
 import database from '../database';
 import { withAppReady } from '../runtime';
+import { getActiveSession } from '../session';
 import {
   invoiceListQuerySchema,
   toPaginatedResult,
   toPaginationOptions,
 } from './listing';
+
+// Non-admins may only edit a sale created today. Admins can edit any sale.
+// This prevents staff from rewriting historical totals/stock on past sales.
+const assertEditable = (invoice: any) => {
+  if (getActiveSession()?.role === 'admin') return;
+  if (!dayjs(invoice.createdAt).isSame(dayjs(), 'day')) {
+    throw new Error(
+      'This sale is from a previous day and can no longer be edited.'
+    );
+  }
+};
 
 export function registerInvoiceHandlers(): void {
   ipcMain.handle(
@@ -296,6 +308,7 @@ export function registerInvoiceHandlers(): void {
         });
 
         if (!invoice) throw new Error('Invoice not found');
+        assertEditable(invoice);
 
         await Promise.all(
           (invoice as any).products.map(async (product: any) => {
@@ -371,6 +384,7 @@ export function registerInvoiceHandlers(): void {
         await database.transaction(async (t: any) => {
           const invoice = await Invoice.findByPk(invoiceId, { transaction: t });
           if (!invoice) throw new Error('Invoice not found');
+          assertEditable(invoice);
 
           const invoiceItem = await InvoiceItem.findByPk(invoiceItemId, {
             transaction: t,
@@ -446,6 +460,7 @@ export function registerInvoiceHandlers(): void {
             transaction: t,
           });
           if (!invoice) throw new Error('Invoice not found');
+          assertEditable(invoice);
 
           const product = await Product.findByPk(
             currentInvoiceItem.product?.id,
@@ -610,6 +625,7 @@ export function registerInvoiceHandlers(): void {
         await database.transaction(async (t: any) => {
           const invoice = await Invoice.findByPk(invoiceId, { transaction: t });
           if (!invoice) throw new Error('Invoice not found');
+          assertEditable(invoice);
 
           const invoiceItem = await InvoiceItem.findByPk(invoiceItemId, {
             transaction: t,

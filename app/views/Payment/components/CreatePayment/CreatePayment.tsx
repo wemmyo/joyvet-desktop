@@ -164,6 +164,7 @@ const CreatePayment = ({ refreshPayments }: ICreatePayment) => {
           <Input
             id="amount"
             type="number"
+            step="any"
             placeholder="Amount"
             {...register('amount')}
           />

@@ -103,6 +103,7 @@ const CreateExpense: React.FC<CreateExpenseProps> = ({
           id="amount"
           placeholder="Amount"
           type="number"
+          step="any"
           {...register('amount')}
           className={errors.amount ? 'border-destructive' : ''}
         />

@@ -147,6 +147,7 @@ const EditCustomer: React.FC<EditCustomerProps> = ({
             id="balance"
             placeholder="Balance"
             type="number"
+            step="any"
             {...register('balance')}
             disabled={!isAdmin()}
           />

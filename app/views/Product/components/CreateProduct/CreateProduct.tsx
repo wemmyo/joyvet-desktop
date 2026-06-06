@@ -77,6 +77,7 @@ const CreateProduct: React.FC<CreateProductProps> = ({
           id="buyPrice"
           placeholder="Buy Price"
           type="number"
+          step="any"
           {...register('buyPrice')}
           className={errors.buyPrice ? 'border-destructive' : ''}
         />
@@ -92,6 +93,7 @@ const CreateProduct: React.FC<CreateProductProps> = ({
           id="sellPrice"
           placeholder="Sell Price"
           type="number"
+          step="any"
           {...register('sellPrice')}
           className={errors.sellPrice ? 'border-destructive' : ''}
         />
@@ -107,6 +109,7 @@ const CreateProduct: React.FC<CreateProductProps> = ({
           id="sellPrice2"
           placeholder="Sell Price 2"
           type="number"
+          step="any"
           {...register('sellPrice2')}
           className={errors.sellPrice2 ? 'border-destructive' : ''}
         />
@@ -122,6 +125,7 @@ const CreateProduct: React.FC<CreateProductProps> = ({
           id="sellPrice3"
           placeholder="Sell Price 3"
           type="number"
+          step="any"
           {...register('sellPrice3')}
           className={errors.sellPrice3 ? 'border-destructive' : ''}
         />

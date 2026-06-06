@@ -79,9 +79,9 @@ export function registerUserHandlers(): void {
     'user:getAll',
     withAppReady(async (_event, input: unknown = {}) => {
       const query = searchPaginationSchema.parse(input);
-      const { page, pageSize } = query;
+      const { page, pageSize, all } = query;
       const { rows, count } = await User.findAndCountAll({
-        ...toPaginationOptions({ page, pageSize }),
+        ...toPaginationOptions({ page, pageSize, all }),
         order: [['createdAt', 'DESC']],
       });
 

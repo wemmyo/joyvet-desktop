@@ -5,6 +5,7 @@ import { useReactToPrint } from 'react-to-print';
 import { toast } from 'sonner';
 
 import PaginationControls from '../../components/PaginationControls/PaginationControls';
+import { usePagination } from '../../hooks/usePagination';
 import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
 import {
@@ -41,7 +42,14 @@ const SuppliersScreen: React.FC = () => {
   const [suppliers, setSuppliers] = useState<ISupplier[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [page, setPage] = useState(DEFAULT_PAGE);
+  const {
+    page,
+    setPage,
+    pageSize,
+    showAll,
+    onPageSizeChange,
+    onShowAllChange,
+  } = usePagination();
   const [total, setTotal] = useState(0);
   const [balanceTotal, setBalanceTotal] = useState(0);
   const [printRows, setPrintRows] = useState<ISupplier[]>([]);
@@ -63,12 +71,14 @@ const SuppliersScreen: React.FC = () => {
       const response = search
         ? await searchSupplierFn({
             page: nextPage,
-            pageSize: DEFAULT_PAGE_SIZE,
+            pageSize,
+            all: showAll || undefined,
             search,
           })
         : await getSuppliersFn({
             page: nextPage,
-            pageSize: DEFAULT_PAGE_SIZE,
+            pageSize,
+            all: showAll || undefined,
           });
       setSuppliers(response.rows ?? []);
       setTotal(response.total ?? 0);
@@ -97,7 +107,9 @@ const SuppliersScreen: React.FC = () => {
           });
       setPrintRows(response.rows ?? []);
     } catch (err: unknown) {
-      toast.error(err instanceof Error ? err.message : 'Failed to prepare print');
+      toast.error(
+        err instanceof Error ? err.message : 'Failed to prepare print'
+      );
     }
   };
 
@@ -125,7 +137,7 @@ const SuppliersScreen: React.FC = () => {
       };
       closeSideContent();
     };
-  }, [appliedSearch, page]);
+  }, [appliedSearch, page, pageSize, showAll]);
 
   const handleNewSupplier = async (values) => {
     try {
@@ -287,9 +299,12 @@ const SuppliersScreen: React.FC = () => {
           {renderSuppliersTable(suppliers, true)}
           <PaginationControls
             page={page}
-            pageSize={DEFAULT_PAGE_SIZE}
+            pageSize={pageSize}
             total={total}
             onPageChange={setPage}
+            onPageSizeChange={onPageSizeChange}
+            showAll={showAll}
+            onShowAllChange={onShowAllChange}
           />
         </div>
       )}

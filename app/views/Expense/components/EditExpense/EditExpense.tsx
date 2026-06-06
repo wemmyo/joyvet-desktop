@@ -154,6 +154,7 @@ const EditExpense: React.FC<EditExpenseProps> = ({
           id="amount"
           placeholder="Amount"
           type="number"
+          step="any"
           {...register('amount')}
           className={errors.amount ? 'border-destructive' : ''}
         />

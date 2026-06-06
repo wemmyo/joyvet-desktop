@@ -136,6 +136,7 @@ const EditSupplier: React.FC<EditSupplierProps> = ({
           id="balance"
           placeholder="Balance"
           type="number"
+          step="any"
           {...register('balance')}
           disabled={!isAdmin()}
         />

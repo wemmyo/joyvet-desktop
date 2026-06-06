@@ -133,6 +133,7 @@ const EditProduct: React.FC<EditProductProps> = ({
           <Input
             id="stock"
             type="number"
+            step="any"
             placeholder="Number In Stock"
             disabled={!isAdmin()}
             {...register('stock')}
@@ -147,6 +148,7 @@ const EditProduct: React.FC<EditProductProps> = ({
           <Input
             id="buyPrice"
             type="number"
+            step="any"
             placeholder="Buy Price"
             {...register('buyPrice')}
           />
@@ -162,6 +164,7 @@ const EditProduct: React.FC<EditProductProps> = ({
           <Input
             id="sellPrice"
             type="number"
+            step="any"
             placeholder="Sell Price"
             {...register('sellPrice')}
           />
@@ -177,6 +180,7 @@ const EditProduct: React.FC<EditProductProps> = ({
           <Input
             id="sellPrice2"
             type="number"
+            step="any"
             placeholder="Sell Price 2"
             {...register('sellPrice2')}
           />
@@ -187,6 +191,7 @@ const EditProduct: React.FC<EditProductProps> = ({
           <Input
             id="sellPrice3"
             type="number"
+            step="any"
             placeholder="Sell Price 3"
             {...register('sellPrice3')}
           />

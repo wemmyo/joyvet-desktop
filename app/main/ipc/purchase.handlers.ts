@@ -23,10 +23,10 @@ export function registerPurchaseHandlers(): void {
     'purchase:getAll',
     withAppReady(async (_event, input: unknown = {}) => {
       const query = purchaseListQuerySchema.parse(input);
-      const { page, pageSize } = query;
+      const { page, pageSize, all } = query;
       const { rows, count } = await Purchase.findAndCountAll({
         distinct: true,
-        ...toPaginationOptions({ page, pageSize }),
+        ...toPaginationOptions({ page, pageSize, all }),
         include: [{ model: Supplier }],
         order: [['createdAt', 'DESC']],
       });
@@ -464,7 +464,7 @@ export function registerPurchaseHandlers(): void {
     'purchase:search',
     withAppReady(async (_event, input: unknown = {}) => {
       const query = purchaseListQuerySchema.parse(input);
-      const { page, pageSize, search } = query;
+      const { page, pageSize, search, all } = query;
 
       if (!search) {
         return toPaginatedResult([], 0, page, pageSize);
@@ -472,7 +472,7 @@ export function registerPurchaseHandlers(): void {
 
       const { rows, count } = await Purchase.findAndCountAll({
         distinct: true,
-        ...toPaginationOptions({ page, pageSize }),
+        ...toPaginationOptions({ page, pageSize, all }),
         where: {
           invoiceNumber: {
             [Op.substring]: search,

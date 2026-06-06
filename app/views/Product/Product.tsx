@@ -5,6 +5,7 @@ import { useReactToPrint } from 'react-to-print';
 import { toast } from 'sonner';
 
 import PaginationControls from '../../components/PaginationControls/PaginationControls';
+import { usePagination } from '../../hooks/usePagination';
 import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
 import {
@@ -42,7 +43,14 @@ const ProductsScreen: React.FC = () => {
   const [products, setProducts] = useState<IProduct[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [page, setPage] = useState(DEFAULT_PAGE);
+  const {
+    page,
+    setPage,
+    pageSize,
+    showAll,
+    onPageSizeChange,
+    onShowAllChange,
+  } = usePagination();
   const [total, setTotal] = useState(0);
   const [stockValue, setStockValue] = useState(0);
   const [printRows, setPrintRows] = useState<IProduct[]>([]);
@@ -64,12 +72,14 @@ const ProductsScreen: React.FC = () => {
       const response = search
         ? await searchProductFn({
             page: nextPage,
-            pageSize: DEFAULT_PAGE_SIZE,
+            pageSize,
+            all: showAll || undefined,
             search,
           })
         : await getProductsFn({
             page: nextPage,
-            pageSize: DEFAULT_PAGE_SIZE,
+            pageSize,
+            all: showAll || undefined,
           });
       setProducts(response.rows ?? []);
       setTotal(response.total ?? 0);
@@ -98,7 +108,9 @@ const ProductsScreen: React.FC = () => {
           });
       setPrintRows(response.rows ?? []);
     } catch (err: unknown) {
-      toast.error(err instanceof Error ? err.message : 'Failed to prepare print');
+      toast.error(
+        err instanceof Error ? err.message : 'Failed to prepare print'
+      );
     }
   };
 
@@ -126,7 +138,7 @@ const ProductsScreen: React.FC = () => {
       };
       closeSideContent();
     };
-  }, [appliedSearch, page]);
+  }, [appliedSearch, page, pageSize, showAll]);
 
   const handleNewProduct = async (values: Partial<IProduct>) => {
     try {
@@ -301,9 +313,12 @@ const ProductsScreen: React.FC = () => {
           {renderProductsTable(products, true)}
           <PaginationControls
             page={page}
-            pageSize={DEFAULT_PAGE_SIZE}
+            pageSize={pageSize}
             total={total}
             onPageChange={setPage}
+            onPageSizeChange={onPageSizeChange}
+            showAll={showAll}
+            onShowAllChange={onShowAllChange}
           />
         </div>
       )}

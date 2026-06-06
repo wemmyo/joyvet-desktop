@@ -101,6 +101,7 @@ const CreateCustomer: React.FC<CreateCustomerProps> = ({
           id="balance"
           placeholder="Balance"
           type="number"
+          step="any"
           {...register('balance')}
         />
         {errors.balance && (

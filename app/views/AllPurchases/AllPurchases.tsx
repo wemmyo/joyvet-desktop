@@ -4,6 +4,7 @@ import type React from 'react';
 import { useEffect, useState } from 'react';
 
 import PaginationControls from '../../components/PaginationControls/PaginationControls';
+import { usePagination } from '../../hooks/usePagination';
 import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
 import {
@@ -23,7 +24,7 @@ import {
   searchPurchaseFn,
 } from '../../controllers/purchase.controller';
 import type { IPurchase } from '../../models/purchase';
-import { DEFAULT_PAGE, DEFAULT_PAGE_SIZE } from '../../types/pagination';
+import { DEFAULT_PAGE } from '../../types/pagination';
 import { numberWithCommas } from '../../utils/helpers';
 import PurchaseDetail from './components/PurchaseDetail';
 
@@ -39,7 +40,14 @@ const AllPurchasesScreen: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [purchases, setPurchases] = useState<IPurchase[]>([]);
-  const [page, setPage] = useState(DEFAULT_PAGE);
+  const {
+    page,
+    setPage,
+    pageSize,
+    showAll,
+    onPageSizeChange,
+    onShowAllChange,
+  } = usePagination();
   const [total, setTotal] = useState(0);
 
   const openSideContent = (content: string) => {
@@ -54,12 +62,14 @@ const AllPurchasesScreen: React.FC = () => {
       const paginatedResponse = search
         ? await searchPurchaseFn({
             page: nextPage,
-            pageSize: DEFAULT_PAGE_SIZE,
+            pageSize,
+            all: showAll || undefined,
             search,
           })
         : await getPurchasesFn({
             page: nextPage,
-            pageSize: DEFAULT_PAGE_SIZE,
+            pageSize,
+            all: showAll || undefined,
           });
       setPurchases(paginatedResponse.rows ?? []);
       setTotal(paginatedResponse.total ?? 0);
@@ -79,7 +89,7 @@ const AllPurchasesScreen: React.FC = () => {
       setSideContent('');
       setPurchasesId('');
     };
-  }, [appliedSearch, page]);
+  }, [appliedSearch, page, pageSize, showAll]);
 
   const openSinglePurchase = (id) => {
     setPurchasesId(id);
@@ -188,9 +198,12 @@ const AllPurchasesScreen: React.FC = () => {
           </TableFrame>
           <PaginationControls
             page={page}
-            pageSize={DEFAULT_PAGE_SIZE}
+            pageSize={pageSize}
             total={total}
             onPageChange={setPage}
+            onPageSizeChange={onPageSizeChange}
+            showAll={showAll}
+            onShowAllChange={onShowAllChange}
           />
         </>
       )}

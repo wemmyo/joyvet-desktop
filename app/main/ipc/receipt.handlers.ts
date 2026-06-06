@@ -36,10 +36,10 @@ export function registerReceiptHandlers(): void {
     'receipt:getAll',
     withAppReady(async (_event, input: unknown = {}) => {
       const query = receiptListQuerySchema.parse(input);
-      const { page, pageSize } = query;
+      const { page, pageSize, all } = query;
       const { rows, count } = await Receipt.findAndCountAll({
         distinct: true,
-        ...toPaginationOptions({ page, pageSize }),
+        ...toPaginationOptions({ page, pageSize, all }),
         include: [{ model: Customer }],
         order: [['createdAt', 'DESC']],
       });
@@ -225,7 +225,7 @@ export function registerReceiptHandlers(): void {
     'receipt:search',
     withAppReady(async (_event, input: unknown = {}) => {
       const query = receiptListQuerySchema.parse(input);
-      const { page, pageSize, search } = query;
+      const { page, pageSize, search, all } = query;
       const receiptId = Number(search);
 
       if (!search || Number.isNaN(receiptId)) {
@@ -234,7 +234,7 @@ export function registerReceiptHandlers(): void {
 
       const { rows, count } = await Receipt.findAndCountAll({
         distinct: true,
-        ...toPaginationOptions({ page, pageSize }),
+        ...toPaginationOptions({ page, pageSize, all }),
         where: { id: receiptId },
         include: [{ model: Customer }],
         order: [['createdAt', 'DESC']],

@@ -174,6 +174,15 @@ const InvoiceScreen: React.FC = () => {
     ? productOptions.getItemByValue(watchedProduct)
     : null;
 
+  // Non-admins can only edit a sale created today; admins can edit any sale.
+  const isLocked = (() => {
+    if (isAdmin()) return false;
+    const invoiceDate = invoice?.createdAt
+      ? new Date(invoice.createdAt).toDateString()
+      : '';
+    return invoiceDate !== new Date().toDateString();
+  })();
+
   const removeInvoiceItem = async (
     invoiceItemId: number,
     productId: number
@@ -303,9 +312,10 @@ const InvoiceScreen: React.FC = () => {
           ) : (
             <button
               type="button"
-              className="underline-offset-2 hover:underline cursor-pointer"
+              className="underline-offset-2 hover:underline cursor-pointer disabled:cursor-default disabled:no-underline"
               onClick={() => startEditQty(invoiceItem)}
-              title="Click to edit quantity"
+              disabled={isLocked}
+              title={isLocked ? undefined : 'Click to edit quantity'}
             >
               {invoiceItem.quantity}
             </button>
@@ -324,6 +334,7 @@ const InvoiceScreen: React.FC = () => {
             }}
             variant="destructive"
             size="sm"
+            disabled={isLocked}
           >
             Remove
           </Button>
@@ -356,16 +367,6 @@ const InvoiceScreen: React.FC = () => {
       handlePrint?.();
     }
   }, [printInvoice, handlePrint]);
-
-  // Admins can add items at any time; non-admins are restricted to same-day
-  const disabledAdditem = () => {
-    if (isAdmin()) return false;
-    const invoiceDate = invoice?.createdAt
-      ? new Date(invoice.createdAt).toDateString()
-      : '';
-    const todaysDate = new Date().toDateString();
-    return invoiceDate !== todaysDate;
-  };
 
   const onSubmit = async (values: InvoiceItemFormValues) => {
     if (!hasValidInvoiceId) {
@@ -446,9 +447,15 @@ const InvoiceScreen: React.FC = () => {
               </TableFooter>
             </Table>
           </TableFrame>
-          <p className="text-sm text-muted-foreground mt-2">
-            Note: Use same price level when updating existing product quantity
-          </p>
+          {isLocked ? (
+            <p className="text-sm text-destructive mt-2">
+              This sale is from a previous day and can no longer be edited.
+            </p>
+          ) : (
+            <p className="text-sm text-muted-foreground mt-2">
+              Note: Use same price level when updating existing product quantity
+            </p>
+          )}
         </div>
         <div className="w-72 shrink-0">
           <div className="border rounded p-4">
@@ -533,11 +540,7 @@ const InvoiceScreen: React.FC = () => {
                     )}
                   </div>
 
-                  <Button
-                    type="submit"
-                    className="w-full"
-                    disabled={disabledAdditem()}
-                  >
+                  <Button type="submit" className="w-full" disabled={isLocked}>
                     Add Item
                   </Button>
                 </div>

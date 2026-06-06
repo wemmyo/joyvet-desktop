@@ -1,5 +1,6 @@
 import fs from 'fs';
 import path from 'path';
+import dayjs from 'dayjs';
 import { BrowserWindow, app, dialog, ipcMain } from 'electron';
 import log from 'electron-log';
 import { autoUpdater } from 'electron-updater';
@@ -120,6 +121,185 @@ app.whenReady().then(async () => {
     }, 0);
 
     return { changed: true, path: selectedPath };
+  });
+
+  // --- Database backup ---------------------------------------------------
+  // Admin-configurable folder + manual "Backup now" with last-7 rotation.
+  const backupConfigPath = path.join(
+    app.getPath('userData'),
+    'backupConfig.json'
+  );
+  const BACKUP_RETENTION = 7;
+  const BACKUP_PREFIX = 'joyvet-backup-';
+
+  const readBackupConfig = (): { location: string } => {
+    try {
+      if (fs.existsSync(backupConfigPath)) {
+        const parsed = JSON.parse(fs.readFileSync(backupConfigPath, 'utf8'));
+        if (parsed && typeof parsed.location === 'string') {
+          return { location: parsed.location };
+        }
+      }
+    } catch (error) {
+      log.error('Failed to read backup config', error);
+    }
+    return { location: '' };
+  };
+
+  // Backup filenames are timestamped so they sort chronologically (oldest first).
+  const listBackups = (location: string): string[] => {
+    try {
+      return fs
+        .readdirSync(location)
+        .filter(
+          (name) => name.startsWith(BACKUP_PREFIX) && name.endsWith('.db')
+        )
+        .sort();
+    } catch {
+      return [];
+    }
+  };
+
+  ipcMain.handle('backup:getConfig', () => {
+    const { location } = readBackupConfig();
+    let lastBackupAt: string | null = null;
+    if (location) {
+      const backups = listBackups(location);
+      const latest = backups[backups.length - 1];
+      if (latest) {
+        try {
+          lastBackupAt = fs
+            .statSync(path.join(location, latest))
+            .mtime.toISOString();
+        } catch {
+          // ignore unreadable file
+        }
+      }
+    }
+    return { location, lastBackupAt };
+  });
+
+  ipcMain.handle('backup:chooseLocation', async () => {
+    const result = await dialog.showOpenDialog({
+      properties: ['openDirectory', 'createDirectory'],
+    });
+    const selected = result.filePaths[0];
+    if (result.canceled || !selected) {
+      return { changed: false };
+    }
+    fs.writeFileSync(backupConfigPath, JSON.stringify({ location: selected }));
+    return { changed: true, location: selected };
+  });
+
+  ipcMain.handle('backup:now', () => {
+    const { location } = readBackupConfig();
+    if (!location) {
+      throw new Error('No backup location set. Please choose a folder first.');
+    }
+    try {
+      fs.accessSync(location, fs.constants.W_OK);
+    } catch {
+      throw new Error(
+        'Backup location is not writable. Please choose another folder.'
+      );
+    }
+
+    const dbPath = fs.existsSync(dbPointerPath)
+      ? fs.readFileSync(dbPointerPath, 'utf8').trim()
+      : '';
+    if (!dbPath || !fs.existsSync(dbPath)) {
+      throw new Error('Database file not found.');
+    }
+
+    const timestamp = dayjs().format('YYYY-MM-DD-HHmmss');
+    const destination = path.join(location, `${BACKUP_PREFIX}${timestamp}.db`);
+    fs.copyFileSync(dbPath, destination);
+
+    // Rotate: keep only the newest BACKUP_RETENTION backups.
+    const backups = listBackups(location);
+    if (backups.length > BACKUP_RETENTION) {
+      for (const name of backups.slice(0, backups.length - BACKUP_RETENTION)) {
+        try {
+          fs.unlinkSync(path.join(location, name));
+        } catch (error) {
+          log.error('Failed to delete old backup', error);
+        }
+      }
+    }
+
+    return { path: destination, backedUpAt: new Date().toISOString() };
+  });
+
+  ipcMain.handle('backup:restore', async () => {
+    const dbPath = fs.existsSync(dbPointerPath)
+      ? fs.readFileSync(dbPointerPath, 'utf8').trim()
+      : '';
+    if (!dbPath) {
+      throw new Error('Database location is unknown.');
+    }
+
+    const { location } = readBackupConfig();
+    const picked = await dialog.showOpenDialog({
+      properties: ['openFile'],
+      defaultPath: location || undefined,
+      filters: [{ name: 'Backup', extensions: ['db', 'sqlite', 'sql'] }],
+    });
+    const selected = picked.filePaths[0];
+    if (picked.canceled || !selected) {
+      return { restored: false };
+    }
+    if (!fs.existsSync(selected)) {
+      throw new Error('Selected backup file not found.');
+    }
+
+    const confirm = await dialog.showMessageBox({
+      type: 'warning',
+      buttons: ['Cancel', 'Restore'],
+      defaultId: 0,
+      cancelId: 0,
+      title: 'Restore database',
+      message: 'Restore from this backup?',
+      detail:
+        'This replaces your current database with the selected backup and ' +
+        'restarts the app. Your current database is first saved as a ' +
+        '".pre-restore" copy so this can be undone.',
+    });
+    if (confirm.response !== 1) {
+      return { restored: false };
+    }
+
+    // Safety: snapshot the current DB before overwriting so a wrong restore
+    // can be recovered manually.
+    try {
+      if (fs.existsSync(dbPath)) {
+        const stamp = dayjs().format('YYYY-MM-DD-HHmmss');
+        fs.copyFileSync(dbPath, `${dbPath}.pre-restore-${stamp}`);
+      }
+    } catch (error) {
+      log.error('Failed to snapshot current DB before restore', error);
+    }
+
+    fs.copyFileSync(selected, dbPath);
+
+    // Remove stale WAL/journal sidecars belonging to the OLD database — left in
+    // place they would be replayed onto the restored file and corrupt it.
+    for (const suffix of ['-wal', '-shm', '-journal']) {
+      try {
+        if (fs.existsSync(`${dbPath}${suffix}`)) {
+          fs.unlinkSync(`${dbPath}${suffix}`);
+        }
+      } catch (error) {
+        log.error(`Failed to remove ${suffix} sidecar`, error);
+      }
+    }
+
+    // Relaunch so the singleton Sequelize instance reopens the restored file.
+    setTimeout(() => {
+      app.relaunch();
+      app.exit(0);
+    }, 0);
+
+    return { restored: true };
   });
 
   await createWindow();

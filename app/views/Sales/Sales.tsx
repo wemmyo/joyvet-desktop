@@ -26,6 +26,7 @@ import {
 import { TableEmptyRow, TableFrame } from '../../components/ui/table-helpers';
 import { useSidebarContext } from '../../contexts/SidebarContext';
 import { filterInvoiceFn } from '../../controllers/invoice.controller';
+import { usePagination } from '../../hooks/usePagination';
 import DashboardLayout from '../../layouts/DashboardLayout/DashboardLayout';
 import type { IInvoice } from '../../models/invoice';
 import { DEFAULT_PAGE, DEFAULT_PAGE_SIZE } from '../../types/pagination';
@@ -44,7 +45,14 @@ const SalesScreen: React.FC = () => {
   const [startDate, setStartDate] = useState(TODAYS_DATE);
   const [endDate, setEndDate] = useState(TODAYS_DATE);
   const [invoices, setInvoices] = useState<IInvoice[]>([]);
-  const [page, setPage] = useState(DEFAULT_PAGE);
+  const {
+    page,
+    setPage,
+    pageSize,
+    showAll,
+    onPageSizeChange,
+    onShowAllChange,
+  } = usePagination();
   const [total, setTotal] = useState(0);
   const [amountTotal, setAmountTotal] = useState(0);
   const [profitTotal, setProfitTotal] = useState(0);
@@ -74,7 +82,8 @@ const SalesScreen: React.FC = () => {
       try {
         const response = await filterInvoiceFn({
           page: nextPage,
-          pageSize: DEFAULT_PAGE_SIZE,
+          pageSize,
+          all: showAll || undefined,
           startDate,
           endDate,
           saleType,
@@ -90,7 +99,7 @@ const SalesScreen: React.FC = () => {
         setLoading(false);
       }
     },
-    [appliedSearch, endDate, saleType, startDate]
+    [appliedSearch, endDate, saleType, startDate, pageSize, showAll]
   );
 
   // Fetch the entire filtered set and print it (all pages, not just the current one).
@@ -325,9 +334,12 @@ const SalesScreen: React.FC = () => {
           {renderSalesTable(invoices, true)}
           <PaginationControls
             page={page}
-            pageSize={DEFAULT_PAGE_SIZE}
+            pageSize={pageSize}
             total={total}
             onPageChange={setPage}
+            onPageSizeChange={onPageSizeChange}
+            showAll={showAll}
+            onShowAllChange={onShowAllChange}
           />
         </>
       )}
