@@ -43,6 +43,16 @@ const database = (() => {
       app.quit();
       return null;
     }
+    // Persist the chosen path so backup/restore (which read the pathToDB
+    // pointer) can locate the live database in dev too, matching production.
+    try {
+      fs.writeFileSync(
+        path.join(app.getPath('userData'), 'pathToDB'),
+        testPath
+      );
+    } catch {
+      // Non-fatal: the DB still opens; only backup/restore is affected.
+    }
     return new Sequelize({
       dialect: 'sqlite',
       storage: testPath,
