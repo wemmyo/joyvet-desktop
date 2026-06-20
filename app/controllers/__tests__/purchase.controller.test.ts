@@ -114,15 +114,23 @@ describe('purchase controller', () => {
     it('calls toast.success and cb on success', async () => {
       mockApi.purchase.delete.mockResolvedValue(undefined);
       const cb = vi.fn();
-      await deletePurchaseFn(1, cb);
+      await deletePurchaseFn(1, undefined, cb);
+      expect(mockApi.purchase.delete).toHaveBeenCalledWith(1, undefined);
       expect(toast.success).toHaveBeenCalledWith('Purchase deleted');
       expect(cb).toHaveBeenCalled();
     });
 
-    it('calls toast.error on failure', async () => {
+    it('forwards the force flag to the api', async () => {
+      mockApi.purchase.delete.mockResolvedValue(undefined);
+      await deletePurchaseFn(1, { force: true });
+      expect(mockApi.purchase.delete).toHaveBeenCalledWith(1, true);
+    });
+
+    it('rethrows without toasting on failure (caller surfaces the error)', async () => {
       mockApi.purchase.delete.mockRejectedValue(new Error('Delete failed'));
-      await deletePurchaseFn(1);
-      expect(toast.error).toHaveBeenCalled();
+      await expect(deletePurchaseFn(1)).rejects.toThrow('Delete failed');
+      expect(toast.success).not.toHaveBeenCalled();
+      expect(toast.error).not.toHaveBeenCalled();
     });
   });
 });

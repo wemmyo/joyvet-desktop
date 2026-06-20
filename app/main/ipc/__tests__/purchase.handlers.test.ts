@@ -106,7 +106,7 @@ describe('purchase IPC handlers', () => {
         rows: [mockPurchase.toJSON()],
         total: 1,
         page: 1,
-        pageSize: 25,
+        pageSize: 50,
       });
     });
   });
@@ -169,6 +169,107 @@ describe('purchase IPC handlers', () => {
         'Purchase not found'
       );
     });
+
+    it('decrements stock, restores prices, reverses supplier balance, and destroys the purchase', async () => {
+      const destroy = vi.fn().mockResolvedValue(undefined);
+      (PurchaseModel.findByPk as any).mockResolvedValue({
+        id: 1,
+        amount: 500,
+        supplierId: 7,
+        postedBy: 'Jane Doe',
+        destroy,
+        products: [
+          {
+            id: 42,
+            title: 'Widget',
+            stock: 15,
+            buyPrice: 120,
+            sellPrice: 160,
+            purchaseItem: {
+              quantity: 5,
+              oldBuyPrice: 100,
+              oldSellPrice: 150,
+              oldSellPrice2: 140,
+              oldSellPrice3: 130,
+            },
+          },
+        ],
+      });
+
+      await handlers['purchase:delete'](mockEvent, 1);
+
+      // Stock is reduced by the quantity recorded on the purchase line.
+      expect(ProductModel.decrement).toHaveBeenCalledWith(
+        'stock',
+        expect.objectContaining({ by: 5, where: { id: 42 } })
+      );
+      // Prices are rolled back to the values from before the purchase.
+      expect(ProductModel.update).toHaveBeenCalledWith(
+        expect.objectContaining({ buyPrice: 100, sellPrice: 150 }),
+        expect.objectContaining({ where: { id: 42 } })
+      );
+      // Supplier balance is reversed by the purchase amount.
+      expect(SupplierModel.decrement).toHaveBeenCalledWith(
+        'balance',
+        expect.objectContaining({ by: 500, where: { id: 7 } })
+      );
+      expect(destroy).toHaveBeenCalled();
+    });
+
+    it('refuses to delete when reverting would push stock negative (items already sold)', async () => {
+      const destroy = vi.fn();
+      (PurchaseModel.findByPk as any).mockResolvedValue({
+        id: 1,
+        amount: 500,
+        supplierId: 7,
+        products: [
+          {
+            id: 42,
+            title: 'Widget',
+            stock: 2, // only 2 left but purchase recorded 5 -> some were sold
+            buyPrice: 120,
+            sellPrice: 160,
+            purchaseItem: { quantity: 5 },
+          },
+        ],
+        destroy,
+      });
+
+      await expect(handlers['purchase:delete'](mockEvent, 1)).rejects.toThrow(
+        /Cannot delete purchase/
+      );
+      expect(ProductModel.decrement).not.toHaveBeenCalled();
+      expect(destroy).not.toHaveBeenCalled();
+    });
+
+    it('force-deletes past the guard, allowing stock to go negative', async () => {
+      const destroy = vi.fn().mockResolvedValue(undefined);
+      (PurchaseModel.findByPk as any).mockResolvedValue({
+        id: 1,
+        amount: 500,
+        supplierId: 7,
+        postedBy: 'Jane Doe',
+        destroy,
+        products: [
+          {
+            id: 42,
+            title: 'Widget',
+            stock: 2, // reverting 5 would land at -3
+            buyPrice: 120,
+            sellPrice: 160,
+            purchaseItem: { quantity: 5, oldBuyPrice: 100, oldSellPrice: 150 },
+          },
+        ],
+      });
+
+      await handlers['purchase:delete'](mockEvent, 1, true);
+
+      expect(ProductModel.decrement).toHaveBeenCalledWith(
+        'stock',
+        expect.objectContaining({ by: 5, where: { id: 42 } })
+      );
+      expect(destroy).toHaveBeenCalled();
+    });
   });
 
   describe('purchase:filter', () => {
@@ -184,7 +285,7 @@ describe('purchase IPC handlers', () => {
         rows: [mockPurchase.toJSON()],
         total: 1,
         page: 1,
-        pageSize: 25,
+        pageSize: 50,
       });
       const callArg = (PurchaseModel.findAndCountAll as any).mock.calls[0][0];
       expect(callArg.where).toEqual(expect.objectContaining({ supplierId: 1 }));
@@ -196,7 +297,7 @@ describe('purchase IPC handlers', () => {
       const result = await handlers['purchase:search'](mockEvent, {
         search: '',
       });
-      expect(result).toEqual({ rows: [], total: 0, page: 1, pageSize: 25 });
+      expect(result).toEqual({ rows: [], total: 0, page: 1, pageSize: 50 });
     });
   });
 });

@@ -3,10 +3,19 @@ import { AlertTriangle } from 'lucide-react';
 import type React from 'react';
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { Bar, BarChart, CartesianGrid, XAxis, YAxis } from 'recharts';
 import { toast } from 'sonner';
 
 import PaginationControls from '../../components/PaginationControls/PaginationControls';
 import { Button } from '../../components/ui/button';
+import {
+  type ChartConfig,
+  ChartContainer,
+  ChartLegend,
+  ChartLegendContent,
+  ChartTooltip,
+  ChartTooltipContent,
+} from '../../components/ui/chart';
 import { Input } from '../../components/ui/input';
 import { Label } from '../../components/ui/label';
 import {
@@ -32,6 +41,72 @@ import { isAdmin, numberWithCommas } from '../../utils/helpers';
 
 const DEFAULT_START = dayjs().subtract(30, 'day').format('YYYY-MM-DD');
 const DEFAULT_END = dayjs().format('YYYY-MM-DD');
+
+const revenueChartConfig = {
+  revenue: {
+    label: 'Revenue',
+    color: 'hsl(221 83% 53%)',
+  },
+  profit: {
+    label: 'Profit',
+    color: 'hsl(142 71% 45%)',
+  },
+} satisfies ChartConfig;
+
+const RankedBarChart: React.FC<{
+  data: Array<Record<string, unknown>>;
+  valueKey: string;
+  labelKey: string;
+  label: string;
+  color: string;
+  prefix?: string;
+}> = ({ data, valueKey, labelKey, label, color, prefix = '₦' }) => {
+  const config = {
+    [valueKey]: { label, color },
+  } satisfies ChartConfig;
+  return (
+    <div className="rounded-lg border bg-card p-4 shadow-sm mb-3">
+      <ChartContainer config={config} className="h-[280px] w-full">
+        <BarChart
+          accessibilityLayer
+          data={data}
+          layout="vertical"
+          margin={{ left: 8, right: 16 }}
+        >
+          <CartesianGrid horizontal={false} />
+          <XAxis type="number" hide />
+          <YAxis
+            type="category"
+            dataKey={labelKey}
+            tickLine={false}
+            axisLine={false}
+            width={120}
+            tickFormatter={(v: string) =>
+              typeof v === 'string' && v.length > 18 ? `${v.slice(0, 18)}…` : v
+            }
+          />
+          <ChartTooltip
+            content={
+              <ChartTooltipContent
+                formatter={(value) => (
+                  <span className="font-mono font-medium">
+                    {prefix}
+                    {numberWithCommas(Number(value) || 0)}
+                  </span>
+                )}
+              />
+            }
+          />
+          <Bar
+            dataKey={valueKey}
+            fill={`var(--color-${valueKey})`}
+            radius={4}
+          />
+        </BarChart>
+      </ChartContainer>
+    </div>
+  );
+};
 
 const Analytics: React.FC = () => {
   const navigate = useNavigate();
@@ -317,6 +392,45 @@ const Analytics: React.FC = () => {
         <h2 className="text-base font-semibold mb-2">
           Revenue Over Time (Last 12 Months)
         </h2>
+        {revenueOverTime.length > 0 && (
+          <div className="rounded-lg border bg-card p-4 shadow-sm mb-3">
+            <ChartContainer
+              config={revenueChartConfig}
+              className="h-[260px] w-full"
+            >
+              <BarChart accessibilityLayer data={revenueOverTime}>
+                <CartesianGrid vertical={false} />
+                <XAxis
+                  dataKey="month"
+                  tickLine={false}
+                  tickMargin={10}
+                  axisLine={false}
+                />
+                <ChartTooltip
+                  content={
+                    <ChartTooltipContent
+                      formatter={(value, name) => (
+                        <div className="flex w-full justify-between gap-4">
+                          <span className="text-muted-foreground">
+                            {revenueChartConfig[
+                              name as keyof typeof revenueChartConfig
+                            ]?.label ?? name}
+                          </span>
+                          <span className="font-mono font-medium">
+                            ₦{numberWithCommas(Number(value) || 0)}
+                          </span>
+                        </div>
+                      )}
+                    />
+                  }
+                />
+                <ChartLegend content={<ChartLegendContent />} />
+                <Bar dataKey="revenue" fill="var(--color-revenue)" radius={4} />
+                <Bar dataKey="profit" fill="var(--color-profit)" radius={4} />
+              </BarChart>
+            </ChartContainer>
+          </div>
+        )}
         <TableFrame>
           <Table>
             <TableHeader>
@@ -354,6 +468,15 @@ const Analytics: React.FC = () => {
       <div className="grid grid-cols-1 gap-6 mb-6 lg:grid-cols-2">
         <section>
           <h2 className="text-base font-semibold mb-2">Top Customers</h2>
+          {topCustomers.length > 0 && (
+            <RankedBarChart
+              data={topCustomers}
+              valueKey="total"
+              labelKey="fullName"
+              label="Total"
+              color="hsl(221 83% 53%)"
+            />
+          )}
           <TableFrame>
             <Table>
               <TableHeader>
@@ -386,6 +509,15 @@ const Analytics: React.FC = () => {
           <h2 className="text-base font-semibold mb-2">
             Best Selling Products
           </h2>
+          {bestProducts.length > 0 && (
+            <RankedBarChart
+              data={bestProducts}
+              valueKey="revenue"
+              labelKey="title"
+              label="Revenue"
+              color="hsl(142 71% 45%)"
+            />
+          )}
           <TableFrame>
             <Table>
               <TableHeader>
@@ -426,6 +558,15 @@ const Analytics: React.FC = () => {
       {/* Top Suppliers */}
       <section className="mb-6">
         <h2 className="text-base font-semibold mb-2">Top Suppliers by Spend</h2>
+        {topSuppliers.length > 0 && (
+          <RankedBarChart
+            data={topSuppliers}
+            valueKey="total"
+            labelKey="fullName"
+            label="Total Purchases"
+            color="hsl(25 95% 53%)"
+          />
+        )}
         <TableFrame>
           <Table>
             <TableHeader>

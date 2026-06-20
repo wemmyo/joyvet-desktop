@@ -138,7 +138,8 @@ const api = {
       ipcRenderer.invoke('purchase:create', purchaseItems, purchase),
     update: (id: number, purchaseItems: any[], meta: any) =>
       ipcRenderer.invoke('purchase:update', id, purchaseItems, meta),
-    delete: (id: number) => ipcRenderer.invoke('purchase:delete', id),
+    delete: (id: number, force?: boolean) =>
+      ipcRenderer.invoke('purchase:delete', id, force),
     search: (query: SearchPaginationQuery) =>
       ipcRenderer.invoke('purchase:search', query),
     filter: (query: PurchaseListQuery) =>

@@ -90,13 +90,14 @@ export const updatePurchaseFn = async (
 
 export const deletePurchaseFn = async (
   id: number | string,
+  options?: { force?: boolean },
   cb?: () => void
 ) => {
-  try {
-    await window.api.purchase.delete(id as number);
-    toast.success('Purchase deleted');
-    if (cb) cb();
-  } catch (error: unknown) {
-    toast.error(error instanceof Error ? error.message : '');
-  }
+  // On success we toast and run the callback. On failure the error propagates
+  // (no toast here) so the caller can decide how to surface it — e.g. the
+  // stock-revert guard rejection should offer an admin a force-delete dialog
+  // rather than a dead-end error toast.
+  await window.api.purchase.delete(id as number, options?.force);
+  toast.success('Purchase deleted');
+  if (cb) cb();
 };

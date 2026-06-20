@@ -161,7 +161,7 @@ declare global {
           purchaseItems: any[],
           meta: { invoiceNumber: string; amount: number; postedBy?: string }
         ) => Promise<void>;
-        delete: (id: number) => Promise<void>;
+        delete: (id: number, force?: boolean) => Promise<void>;
         search: (
           query: SearchPaginationQuery
         ) => Promise<PaginatedResult<IPurchase>>;

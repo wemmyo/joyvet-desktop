@@ -347,7 +347,7 @@ export function registerPurchaseHandlers(): void {
 
   ipcMain.handle(
     'purchase:delete',
-    withAppReady(async (_event, id: number) => {
+    withAppReady(async (_event, id: number, force = false) => {
       await database.transaction(async (t: any) => {
         const purchase = await Purchase.findByPk(id, {
           include: [{ model: Product }],
@@ -363,7 +363,9 @@ export function registerPurchaseHandlers(): void {
 
             // Guard: ensure reverting this purchase won't push stock negative.
             // (Items from this purchase may have already been sold.)
-            if (stockAfter < 0) {
+            // An admin can override this with `force`, accepting that stock
+            // may drop to zero or below.
+            if (stockAfter < 0 && !force) {
               throw new Error(
                 `Cannot delete purchase. Product "${each.title}" only has ${stockBefore} in stock but the purchase recorded ${each.purchaseItem.quantity}. Some items may have already been sold.`
               );
@@ -394,7 +396,7 @@ export function registerPurchaseHandlers(): void {
                 delta: -each.purchaseItem.quantity,
                 stockBefore,
                 stockAfter,
-                reason: 'purchase_delete',
+                reason: force ? 'purchase_force_delete' : 'purchase_delete',
                 referenceId: id,
                 referenceType: 'purchase',
                 postedBy: (purchase as any).postedBy ?? 'unknown',

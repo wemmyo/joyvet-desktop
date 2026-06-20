@@ -173,7 +173,7 @@ declare global {
             | 'supplierId'
           >
         ) => Promise<void>;
-        delete: (id: number) => Promise<void>;
+        delete: (id: number, force?: boolean) => Promise<void>;
         search: (
           query: SearchPaginationQuery
         ) => Promise<PaginatedResult<IPurchase>>;
