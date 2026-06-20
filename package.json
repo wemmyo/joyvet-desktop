@@ -11,6 +11,7 @@
     "package": "npm run build && electron-builder build --publish never",
     "package-all": "npm run build && electron-builder build -mwl",
     "package-mac": "npm run build && electron-rebuild -f -v 14.2.9 --arch x64 --module-dir app && electron-builder build --mac --x64",
+    "rebuild-dev": "electron-rebuild -f -v 14.2.9 --module-dir app",
     "package-linux": "npm run build && electron-builder build --linux",
     "package-win": "npm run build && electron-builder build --win --x64",
     "lint": "biome check .",
