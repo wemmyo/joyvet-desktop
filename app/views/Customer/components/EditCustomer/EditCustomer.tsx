@@ -3,7 +3,6 @@ import type React from 'react';
 import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { Link } from 'react-router-dom';
-import { toast } from 'sonner';
 import { z } from 'zod';
 import { Button } from '../../../../components/ui/button';
 import { Input } from '../../../../components/ui/input';
@@ -67,33 +66,33 @@ const EditCustomer: React.FC<EditCustomerProps> = ({
     fetchData();
   }, [customerId, reset]);
 
+  // The controller owns success/error toasts; the callback runs only on
+  // success, so a rejected update (e.g. a non-admin hitting the server-side
+  // role guard) no longer closes the panel or shows a false success.
+  const onSuccess = () => {
+    closeSideContent();
+    onRefresh?.();
+  };
+
   const handleDeleteCustomer = async () => {
-    try {
-      await deleteCustomerFn(Number(customerId));
-      toast.success('Customer deleted');
-      closeSideContent();
-      onRefresh?.();
-    } catch {
-      toast.error('Failed to delete customer');
-    }
+    await deleteCustomerFn(Number(customerId), onSuccess);
   };
 
   const onSubmit = async (values: FormValues) => {
-    try {
-      await updateCustomerFn(
-        {
-          ...values,
-          balance: Number(values.balance),
-          maxPriceLevel: Number(values.maxPriceLevel),
-        },
-        customerId
-      );
-      toast.success('Customer updated');
-      closeSideContent();
-      onRefresh?.();
-    } catch {
-      toast.error('Failed to update customer');
+    // balance and maxPriceLevel are admin-only (the inputs are disabled for
+    // non-admins). Only send them when admin so a non-admin save can't wipe
+    // these values via the disabled-field default. The server re-checks the
+    // role; this is just the UI half of the boundary.
+    const payload: Partial<ICustomer> = {
+      fullName: values.fullName,
+      address: values.address,
+      phoneNumber: values.phoneNumber,
+    };
+    if (isAdmin()) {
+      payload.balance = Number(values.balance);
+      payload.maxPriceLevel = Number(values.maxPriceLevel);
     }
+    await updateCustomerFn(payload, customerId, onSuccess);
   };
 
   return (

@@ -89,6 +89,7 @@ import ReceiptModel from '../../../models/receipt';
 import * as customerService from '../../../services/customer.service';
 import * as invoiceService from '../../../services/invoice.service';
 import * as receiptService from '../../../services/receipt.service';
+import { setActiveSession } from '../../session';
 import { registerCustomerHandlers } from '../customer.handlers';
 
 const mockEvent = {} as any;
@@ -118,6 +119,8 @@ describe('customer IPC handlers', () => {
     vi.clearAllMocks();
     // Default aggregate (SUM of balance) used by the totals feature.
     (CustomerModel.sum as any).mockResolvedValue(0);
+    // Default to an admin session; tests that need a non-admin override it.
+    setActiveSession({ id: 1, role: 'admin', fullName: 'Admin' });
   });
 
   // ------------------------------------------------------------------ getAll
@@ -213,9 +216,9 @@ describe('customer IPC handlers', () => {
       });
     });
 
-    it('throws when maxPriceLevel exceeds 3', async () => {
+    it('throws when maxPriceLevel exceeds 4', async () => {
       await expect(
-        handlers['customer:update'](mockEvent, 1, { maxPriceLevel: 4 })
+        handlers['customer:update'](mockEvent, 1, { maxPriceLevel: 5 })
       ).rejects.toThrow();
     });
 
@@ -231,6 +234,39 @@ describe('customer IPC handlers', () => {
           phoneNumber: 'x'.repeat(51),
         })
       ).rejects.toThrow();
+    });
+
+    it('lets an admin set maxPriceLevel up to 4', async () => {
+      (customerService.updateCustomer as any).mockResolvedValue([1]);
+      await handlers['customer:update'](mockEvent, 1, { maxPriceLevel: 4 });
+      expect(customerService.updateCustomer).toHaveBeenCalledWith(1, {
+        maxPriceLevel: 4,
+      });
+    });
+
+    it('blocks a non-admin from updating maxPriceLevel', async () => {
+      setActiveSession({ id: 2, role: 'staff', fullName: 'Staff' });
+      await expect(
+        handlers['customer:update'](mockEvent, 1, { maxPriceLevel: 2 })
+      ).rejects.toThrow(/permission/i);
+      expect(customerService.updateCustomer).not.toHaveBeenCalled();
+    });
+
+    it('blocks a non-admin from updating balance', async () => {
+      setActiveSession({ id: 2, role: 'staff', fullName: 'Staff' });
+      await expect(
+        handlers['customer:update'](mockEvent, 1, { balance: 100 })
+      ).rejects.toThrow(/permission/i);
+      expect(customerService.updateCustomer).not.toHaveBeenCalled();
+    });
+
+    it('lets a non-admin update non-privileged fields', async () => {
+      setActiveSession({ id: 2, role: 'staff', fullName: 'Staff' });
+      (customerService.updateCustomer as any).mockResolvedValue([1]);
+      await handlers['customer:update'](mockEvent, 1, { fullName: 'Renamed' });
+      expect(customerService.updateCustomer).toHaveBeenCalledWith(1, {
+        fullName: 'Renamed',
+      });
     });
   });
 

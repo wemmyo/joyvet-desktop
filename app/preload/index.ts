@@ -107,6 +107,8 @@ const api = {
     login: (credentials: { username: string; password: string }) =>
       ipcRenderer.invoke('user:login', credentials),
     logout: () => ipcRenderer.invoke('user:logout'),
+    restoreSession: (id: number) =>
+      ipcRenderer.invoke('user:restoreSession', id),
   },
   supplier: {
     getAll: (query?: PaginationQuery) =>

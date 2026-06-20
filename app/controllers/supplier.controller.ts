@@ -95,9 +95,7 @@ export const updateSupplierFn = async (
 ) => {
   try {
     await window.api.supplier.update(id, values);
-    toast.success('Successfully updated, refresh to see changes', {
-      duration: 5000,
-    });
+    toast.success('Supplier updated');
     if (cb) cb();
   } catch (error: unknown) {
     toast.error(error instanceof Error ? error.message : '');

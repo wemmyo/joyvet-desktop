@@ -129,6 +129,7 @@ declare global {
           password: string;
         }) => Promise<IUser>;
         logout: () => Promise<void>;
+        restoreSession: (id: number) => Promise<IUser | null>;
       };
       supplier: {
         getAll: (

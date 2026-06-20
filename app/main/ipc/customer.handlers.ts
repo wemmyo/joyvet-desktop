@@ -15,6 +15,7 @@ import { getInvoices } from '../../services/invoice.service';
 import { getReceipts } from '../../services/receipt.service';
 import database from '../database';
 import { withAppReady } from '../runtime';
+import { requireRole } from '../session';
 import {
   searchPaginationSchema,
   toPaginatedResult,
@@ -74,9 +75,15 @@ export function registerCustomerHandlers(): void {
         phoneNumber: z.string().max(50).optional().nullable(),
         address: z.string().max(500).optional().nullable(),
         balance: z.number().optional(),
-        maxPriceLevel: z.number().min(0).max(3).optional(),
+        maxPriceLevel: z.number().min(0).max(4).optional(),
       });
       const parsed = updateSchema.parse(values);
+      // balance and maxPriceLevel are admin-only fields (mirrors the UI gate in
+      // EditCustomer). Enforce server-side so the boundary is real, not just
+      // a disabled input. Other fields stay editable by any authenticated user.
+      if (parsed.balance !== undefined || parsed.maxPriceLevel !== undefined) {
+        requireRole(['admin']);
+      }
       await updateCustomer(id, parsed);
     })
   );

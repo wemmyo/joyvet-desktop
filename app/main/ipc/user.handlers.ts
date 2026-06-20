@@ -185,4 +185,29 @@ export function registerUserHandlers(): void {
       setActiveSession(null);
     })
   );
+
+  // Re-establish the main-process session after an app restart. The renderer
+  // persists its session in localStorage, but the main process holds the
+  // authoritative role used by requireRole and loses it on restart. We take
+  // only the user id from the renderer and re-load the role from the DB, so a
+  // renderer can't claim a role it doesn't have.
+  ipcMain.handle(
+    'user:restoreSession',
+    withAppReady(async (_event, id: number) => {
+      await ensureAuthReady();
+      const parsedId = z.number().int().positive().parse(id);
+      const user = await getUserById(parsedId);
+      const session = toUserSession(user);
+      if (!session) {
+        setActiveSession(null);
+        return null;
+      }
+      setActiveSession({
+        id: session.id,
+        role: session.role,
+        fullName: session.fullName,
+      });
+      return session;
+    })
+  );
 }

@@ -55,7 +55,7 @@ export const updateCustomerFn = async (
 ) => {
   try {
     await window.api.customer.update(id, values);
-    toast.success('Successfully updated, refresh to see changes');
+    toast.success('Customer updated');
     if (cb) cb();
   } catch (error: unknown) {
     toast.error(error instanceof Error ? error.message : '');
