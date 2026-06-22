@@ -3,6 +3,7 @@ import {
   BarChart2,
   ClipboardList,
   CreditCard,
+  DatabaseBackup,
   LogOut,
   Package,
   ReceiptText,
@@ -56,6 +57,10 @@ const financeNavItems: NavItem[] = [
   { to: routes.PURCHASE, label: 'Purchase', icon: ShoppingBag },
   { to: routes.ALL_PURCHASES, label: 'All Purchases', icon: ClipboardList },
   { to: routes.EXPENSE, label: 'Expenditure', icon: BadgeDollarSign },
+];
+
+const systemNavItems: NavItem[] = [
+  { to: routes.BACKUP, label: 'Backup', icon: DatabaseBackup },
 ];
 
 const adminNavItems: NavItem[] = [
@@ -156,6 +161,13 @@ const SideNav = () => {
         {renderNavGroup(
           'Finance',
           financeNavItems,
+          handleNavigate,
+          handlePreload
+        )}
+        <SidebarSeparator />
+        {renderNavGroup(
+          'System',
+          systemNavItems,
           handleNavigate,
           handlePreload
         )}

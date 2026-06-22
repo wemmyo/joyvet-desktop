@@ -9,6 +9,7 @@ import PrivateRoute from './PrivateRoute';
 import {
   AllPurchasesScreen,
   AnalyticsScreen,
+  BackupScreen,
   CustomerHistory,
   CustomersScreen,
   EditInvoiceScreen,
@@ -80,6 +81,7 @@ export default function RoutesComponent() {
             <Route path={routes.INVOICE} element={<InvoiceScreen />} />
             <Route path={routes.CUSTOMER} element={<CustomersScreen />} />
             <Route path={routes.ANALYTICS} element={<AnalyticsScreen />} />
+            <Route path={routes.BACKUP} element={<BackupScreen />} />
           </Route>
         </Routes>
       </Suspense>

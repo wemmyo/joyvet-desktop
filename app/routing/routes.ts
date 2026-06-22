@@ -14,4 +14,5 @@ export default {
   EXPENSE: '/expense',
   STORE_INFO: '/store-info',
   ANALYTICS: '/analytics',
+  BACKUP: '/backup',
 };

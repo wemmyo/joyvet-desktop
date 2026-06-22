@@ -67,6 +67,9 @@ export const StoreInfoScreen = createRouteScreen(
 export const AnalyticsScreen = createRouteScreen(
   () => import('../views/Analytics/Analytics')
 );
+export const BackupScreen = createRouteScreen(
+  () => import('../views/Backup/Backup')
+);
 
 const routePreloaders: Record<string, RouteLoader> = {
   [routes.LOGIN]: LoginScreen.preload,
@@ -83,6 +86,7 @@ const routePreloaders: Record<string, RouteLoader> = {
   [routes.EXPENSE]: ExpenseScreen.preload,
   [routes.STORE_INFO]: StoreInfoScreen.preload,
   [routes.ANALYTICS]: AnalyticsScreen.preload,
+  [routes.BACKUP]: BackupScreen.preload,
 };
 
 export const preloadRoute = (route: string) => {
