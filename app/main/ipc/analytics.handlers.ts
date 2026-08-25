@@ -17,14 +17,24 @@ const dateRangeSchema = z.object({
   endDate: z.string(),
 });
 
+const toDayBounds = (startDate: string, endDate: string) => {
+  const startStr = `${dayjs(startDate).format('YYYY-MM-DD')} 00:00:00`;
+  const endStr = `${dayjs(endDate).format('YYYY-MM-DD')} 23:59:59`;
+  return {
+    startStr,
+    endStr,
+    between: { [Op.between]: [startStr, endStr] },
+  };
+};
+
+const toAmount = (value: unknown) => Number(value) || 0;
+
 export function registerAnalyticsHandlers(): void {
   ipcMain.handle(
     'analytics:getSummary',
     withAppReady(async (_event, input: unknown = {}) => {
       const { startDate, endDate } = dateRangeSchema.parse(input);
-      const startStr = `${dayjs(startDate).format('YYYY-MM-DD')} 00:00:00`;
-      const endStr = `${dayjs(endDate).format('YYYY-MM-DD')} 23:59:59`;
-      const dateRange = { [Op.between]: [startStr, endStr] };
+      const { between } = toDayBounds(startDate, endDate);
 
       const [
         invoiceTotal,
@@ -36,25 +46,26 @@ export function registerAnalyticsHandlers(): void {
         customerBalanceSum,
         supplierBalanceSum,
       ] = await Promise.all([
-        Invoice.sum('amount', { where: { createdAt: dateRange } }),
-        Invoice.sum('profit', { where: { createdAt: dateRange } }),
-        Purchase.sum('amount', { where: { createdAt: dateRange } }),
-        Receipt.sum('amount', { where: { createdAt: dateRange } }),
-        Payment.sum('amount', { where: { createdAt: dateRange } }),
-        Expense.sum('amount', { where: { createdAt: dateRange } }),
+        Invoice.sum('amount', { where: { createdAt: between } }),
+        Invoice.sum('profit', { where: { createdAt: between } }),
+        Purchase.sum('amount', { where: { createdAt: between } }),
+        Receipt.sum('amount', { where: { createdAt: between } }),
+        Payment.sum('amount', { where: { createdAt: between } }),
+        // Expenses use the user-entered `date`, not row createdAt.
+        Expense.sum('amount', { where: { date: between } }),
         Customer.sum('balance'),
         Supplier.sum('balance'),
       ]);
 
       return {
-        invoiceTotal: invoiceTotal || 0,
-        invoiceProfit: invoiceProfit || 0,
-        purchaseTotal: purchaseTotal || 0,
-        receiptTotal: receiptTotal || 0,
-        paymentTotal: paymentTotal || 0,
-        expenseTotal: expenseTotal || 0,
-        customerBalanceSum: customerBalanceSum || 0,
-        supplierBalanceSum: supplierBalanceSum || 0,
+        invoiceTotal: toAmount(invoiceTotal),
+        invoiceProfit: toAmount(invoiceProfit),
+        purchaseTotal: toAmount(purchaseTotal),
+        receiptTotal: toAmount(receiptTotal),
+        paymentTotal: toAmount(paymentTotal),
+        expenseTotal: toAmount(expenseTotal),
+        customerBalanceSum: toAmount(customerBalanceSum),
+        supplierBalanceSum: toAmount(supplierBalanceSum),
       };
     })
   );
@@ -63,8 +74,7 @@ export function registerAnalyticsHandlers(): void {
     'analytics:getTopCustomers',
     withAppReady(async (_event, input: unknown = {}) => {
       const { startDate, endDate } = dateRangeSchema.parse(input);
-      const startStr = `${dayjs(startDate).format('YYYY-MM-DD')} 00:00:00`;
-      const endStr = `${dayjs(endDate).format('YYYY-MM-DD')} 23:59:59`;
+      const { startStr, endStr } = toDayBounds(startDate, endDate);
 
       const results = await database.query(
         `SELECT i.customerId, c.fullName, SUM(i.amount) as total
@@ -80,7 +90,10 @@ export function registerAnalyticsHandlers(): void {
         }
       );
 
-      return results;
+      return (results as any[]).map((row: any) => ({
+        ...row,
+        total: toAmount(row.total),
+      }));
     })
   );
 
@@ -88,8 +101,7 @@ export function registerAnalyticsHandlers(): void {
     'analytics:getBestSellingProducts',
     withAppReady(async (_event, input: unknown = {}) => {
       const { startDate, endDate } = dateRangeSchema.parse(input);
-      const startStr = `${dayjs(startDate).format('YYYY-MM-DD')} 00:00:00`;
-      const endStr = `${dayjs(endDate).format('YYYY-MM-DD')} 23:59:59`;
+      const { startStr, endStr } = toDayBounds(startDate, endDate);
 
       const results = await database.query(
         `SELECT ii.productId, p.title, p.buyPrice,
@@ -109,11 +121,17 @@ export function registerAnalyticsHandlers(): void {
         }
       );
 
-      return (results as any[]).map((row: any) => ({
-        ...row,
-        marginPct:
-          row.revenue > 0 ? Math.round((row.profit / row.revenue) * 100) : 0,
-      }));
+      return (results as any[]).map((row: any) => {
+        const revenue = toAmount(row.revenue);
+        const profit = toAmount(row.profit);
+        return {
+          ...row,
+          totalQty: toAmount(row.totalQty),
+          revenue,
+          profit,
+          marginPct: revenue > 0 ? Math.round((profit / revenue) * 100) : 0,
+        };
+      });
     })
   );
 
@@ -121,8 +139,7 @@ export function registerAnalyticsHandlers(): void {
     'analytics:getTopSuppliersBySpend',
     withAppReady(async (_event, input: unknown = {}) => {
       const { startDate, endDate } = dateRangeSchema.parse(input);
-      const startStr = `${dayjs(startDate).format('YYYY-MM-DD')} 00:00:00`;
-      const endStr = `${dayjs(endDate).format('YYYY-MM-DD')} 23:59:59`;
+      const { startStr, endStr } = toDayBounds(startDate, endDate);
 
       const results = await database.query(
         `SELECT p.supplierId, s.fullName, SUM(p.amount) as total
@@ -138,7 +155,10 @@ export function registerAnalyticsHandlers(): void {
         }
       );
 
-      return results;
+      return (results as any[]).map((row: any) => ({
+        ...row,
+        total: toAmount(row.total),
+      }));
     })
   );
 
@@ -190,7 +210,11 @@ export function registerAnalyticsHandlers(): void {
          ORDER BY month ASC`,
         { type: QueryTypes.SELECT }
       );
-      return results;
+      return (results as any[]).map((row: any) => ({
+        ...row,
+        revenue: toAmount(row.revenue),
+        profit: toAmount(row.profit),
+      }));
     })
   );
 
@@ -198,13 +222,12 @@ export function registerAnalyticsHandlers(): void {
     'analytics:getExpenseBreakdown',
     withAppReady(async (_event, input: unknown = {}) => {
       const { startDate, endDate } = dateRangeSchema.parse(input);
-      const startStr = `${dayjs(startDate).format('YYYY-MM-DD')} 00:00:00`;
-      const endStr = `${dayjs(endDate).format('YYYY-MM-DD')} 23:59:59`;
+      const { startStr, endStr } = toDayBounds(startDate, endDate);
 
       const results = await database.query(
         `SELECT COALESCE(type, 'Uncategorized') as type, SUM(amount) as total
          FROM expenses
-         WHERE createdAt BETWEEN :startStr AND :endStr
+         WHERE expenses.date BETWEEN :startStr AND :endStr
          GROUP BY type
          ORDER BY total DESC`,
         {
@@ -214,15 +237,19 @@ export function registerAnalyticsHandlers(): void {
       );
 
       const totalExpenses = (results as any[]).reduce(
-        (acc: number, row: any) => acc + (row.total || 0),
+        (acc: number, row: any) => acc + toAmount(row.total),
         0
       );
 
-      return (results as any[]).map((row: any) => ({
-        ...row,
-        pct:
-          totalExpenses > 0 ? Math.round((row.total / totalExpenses) * 100) : 0,
-      }));
+      return (results as any[]).map((row: any) => {
+        const total = toAmount(row.total);
+        return {
+          ...row,
+          total,
+          pct:
+            totalExpenses > 0 ? Math.round((total / totalExpenses) * 100) : 0,
+        };
+      });
     })
   );
 }
