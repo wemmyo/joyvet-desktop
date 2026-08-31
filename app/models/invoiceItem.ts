@@ -26,8 +26,8 @@ export default sequelize.define('invoiceItem', {
     allowNull: false,
     primaryKey: true,
   },
-  quantity: { type: Sequelize.INTEGER, allowNull: false },
-  unitPrice: { type: Sequelize.INTEGER, allowNull: false },
-  amount: { type: Sequelize.INTEGER, allowNull: false },
-  profit: Sequelize.INTEGER,
+  quantity: { type: Sequelize.DOUBLE, allowNull: false },
+  unitPrice: { type: Sequelize.DOUBLE, allowNull: false },
+  amount: { type: Sequelize.DOUBLE, allowNull: false },
+  profit: Sequelize.DOUBLE,
 });

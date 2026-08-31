@@ -25,6 +25,6 @@ export default sequelize.define('purchase', {
     primaryKey: true,
   },
   invoiceNumber: Sequelize.STRING,
-  amount: { type: Sequelize.INTEGER, allowNull: false },
+  amount: { type: Sequelize.DOUBLE, allowNull: false },
   postedBy: Sequelize.STRING,
 });

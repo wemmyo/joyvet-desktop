@@ -25,7 +25,7 @@ export default sequelize.define('receipt', {
     allowNull: false,
     primaryKey: true,
   },
-  amount: { type: Sequelize.INTEGER, allowNull: false },
+  amount: { type: Sequelize.DOUBLE, allowNull: false },
   paymentType: Sequelize.STRING,
   paymentMethod: Sequelize.STRING,
   bank: Sequelize.STRING,

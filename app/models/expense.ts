@@ -22,7 +22,7 @@ export default sequelize.define('expense', {
     primaryKey: true,
   },
   date: Sequelize.DATE,
-  amount: Sequelize.INTEGER,
+  amount: Sequelize.DOUBLE,
   type: Sequelize.STRING,
   note: Sequelize.STRING,
   postedBy: Sequelize.STRING,

@@ -1,6 +1,6 @@
 import dayjs from 'dayjs';
 import { ipcMain } from 'electron';
-import { Op, QueryTypes } from 'sequelize';
+import { DataTypes, Op, QueryTypes } from 'sequelize';
 import { z } from 'zod';
 import Customer from '../../models/customer';
 import Expense from '../../models/expense';
@@ -29,6 +29,9 @@ const toDayBounds = (startDate: string, endDate: string) => {
 
 const toAmount = (value: unknown) => Number(value) || 0;
 
+// Model.sum() on INTEGER columns runs parseInt and drops kobo.
+const decimalSum = { dataType: DataTypes.FLOAT() };
+
 export function registerAnalyticsHandlers(): void {
   ipcMain.handle(
     'analytics:getSummary',
@@ -46,15 +49,15 @@ export function registerAnalyticsHandlers(): void {
         customerBalanceSum,
         supplierBalanceSum,
       ] = await Promise.all([
-        Invoice.sum('amount', { where: { createdAt: between } }),
-        Invoice.sum('profit', { where: { createdAt: between } }),
-        Purchase.sum('amount', { where: { createdAt: between } }),
-        Receipt.sum('amount', { where: { createdAt: between } }),
-        Payment.sum('amount', { where: { createdAt: between } }),
+        Invoice.sum('amount', { where: { createdAt: between }, ...decimalSum }),
+        Invoice.sum('profit', { where: { createdAt: between }, ...decimalSum }),
+        Purchase.sum('amount', { where: { createdAt: between }, ...decimalSum }),
+        Receipt.sum('amount', { where: { createdAt: between }, ...decimalSum }),
+        Payment.sum('amount', { where: { createdAt: between }, ...decimalSum }),
         // Expenses use the user-entered `date`, not row createdAt.
-        Expense.sum('amount', { where: { date: between } }),
-        Customer.sum('balance'),
-        Supplier.sum('balance'),
+        Expense.sum('amount', { where: { date: between }, ...decimalSum }),
+        Customer.sum('balance', decimalSum),
+        Supplier.sum('balance', decimalSum),
       ]);
 
       return {
