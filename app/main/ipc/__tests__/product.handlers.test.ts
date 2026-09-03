@@ -123,7 +123,7 @@ describe('product IPC handlers', () => {
         rows: [mockProduct.toJSON()],
         total: 1,
         page: 1,
-        pageSize: 25,
+        pageSize: 50,
         totals: { stockValue: 0 },
       });
     });
@@ -146,7 +146,34 @@ describe('product IPC handlers', () => {
       });
       await handlers['product:getAll'](mockEvent, { filter: 'inStock' });
       expect(ProductModel.findAndCountAll).toHaveBeenCalledWith(
-        expect.objectContaining({ where: expect.any(Object) })
+        expect.objectContaining({
+          where: expect.objectContaining({
+            stock: expect.any(Object),
+            discontinued: false,
+          }),
+        })
+      );
+    });
+
+    it('excludes discontinued products when filter is "active"', async () => {
+      (ProductModel.findAndCountAll as any).mockResolvedValue({
+        rows: [],
+        count: 0,
+      });
+      await handlers['product:getAll'](mockEvent, { filter: 'active' });
+      expect(ProductModel.findAndCountAll).toHaveBeenCalledWith(
+        expect.objectContaining({ where: { discontinued: false } })
+      );
+    });
+
+    it('returns only discontinued products when filter is "discontinued"', async () => {
+      (ProductModel.findAndCountAll as any).mockResolvedValue({
+        rows: [],
+        count: 0,
+      });
+      await handlers['product:getAll'](mockEvent, { filter: 'discontinued' });
+      expect(ProductModel.findAndCountAll).toHaveBeenCalledWith(
+        expect.objectContaining({ where: { discontinued: true } })
       );
     });
 
@@ -225,11 +252,22 @@ describe('product IPC handlers', () => {
         expect.objectContaining({ where: { id: 1 } })
       );
     });
+
+    it('allows marking a product as discontinued', async () => {
+      vi.mocked(ProductModel.findByPk).mockResolvedValue(mockProduct as any);
+      (ProductModel.update as any).mockResolvedValue([1]);
+      await handlers['product:update'](mockEvent, 1, { discontinued: true });
+      expect(ProductModel.update).toHaveBeenCalledWith(
+        { discontinued: true },
+        expect.objectContaining({ where: { id: 1 } })
+      );
+    });
   });
 
   // ------------------------------------------------------------------ delete
   describe('product:delete', () => {
     it('deletes a product', async () => {
+      vi.mocked(ProductModel.findByPk).mockResolvedValue(mockProduct as any);
       vi.mocked(InvoiceItemModel.count).mockResolvedValue(0 as any);
       vi.mocked(PurchaseItemModel.count).mockResolvedValue(0 as any);
       vi.mocked(ProductModel.destroy).mockResolvedValue(1 as any);
@@ -240,26 +278,29 @@ describe('product IPC handlers', () => {
     });
 
     it('throws if product has invoice items', async () => {
+      vi.mocked(ProductModel.findByPk).mockResolvedValue(mockProduct as any);
       vi.mocked(InvoiceItemModel.count).mockResolvedValue(4 as any);
       vi.mocked(PurchaseItemModel.count).mockResolvedValue(0 as any);
 
       await expect(handlers['product:delete'](mockEvent, 1)).rejects.toThrow(
-        'Cannot delete product referenced by existing invoices'
+        'Mark it as discontinued to hide it from invoicing instead'
       );
       expect(ProductModel.destroy).not.toHaveBeenCalled();
     });
 
     it('throws if product has purchase items', async () => {
+      vi.mocked(ProductModel.findByPk).mockResolvedValue(mockProduct as any);
       vi.mocked(InvoiceItemModel.count).mockResolvedValue(0 as any);
       vi.mocked(PurchaseItemModel.count).mockResolvedValue(2 as any);
 
       await expect(handlers['product:delete'](mockEvent, 1)).rejects.toThrow(
-        'Cannot delete product referenced by existing purchases'
+        'Mark it as discontinued to hide it from invoicing instead'
       );
       expect(ProductModel.destroy).not.toHaveBeenCalled();
     });
 
     it('deletes successfully when not referenced', async () => {
+      vi.mocked(ProductModel.findByPk).mockResolvedValue(mockProduct as any);
       vi.mocked(InvoiceItemModel.count).mockResolvedValue(0 as any);
       vi.mocked(PurchaseItemModel.count).mockResolvedValue(0 as any);
       vi.mocked(ProductModel.destroy).mockResolvedValue(1 as any);
@@ -286,7 +327,7 @@ describe('product IPC handlers', () => {
         rows: [mockProduct.toJSON()],
         total: 1,
         page: 1,
-        pageSize: 25,
+        pageSize: 50,
         totals: { stockValue: 0 },
       });
     });
@@ -316,6 +357,7 @@ describe('product IPC handlers', () => {
           where: expect.objectContaining({
             stock: expect.any(Object),
             title: expect.any(Object),
+            discontinued: false,
           }),
         })
       );
@@ -329,7 +371,7 @@ describe('product IPC handlers', () => {
         rows: [],
         total: 0,
         page: 1,
-        pageSize: 25,
+        pageSize: 50,
         totals: { stockValue: 0 },
       });
     });

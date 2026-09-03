@@ -122,16 +122,21 @@ describe('payment controller', () => {
   describe('deletePaymentFn', () => {
     it('calls toast.success on success', async () => {
       mockApi.payment.delete.mockResolvedValue(undefined);
-      await deletePaymentFn(1);
+      const cb = vi.fn();
+      await deletePaymentFn(1, cb);
       expect(toast.success).toHaveBeenCalledWith(
         'Payment successfully deleted'
       );
+      expect(cb).toHaveBeenCalled();
     });
 
     it('calls toast.error on failure', async () => {
       mockApi.payment.delete.mockRejectedValue(new Error('Delete failed'));
-      await deletePaymentFn(1);
+      const cb = vi.fn();
+      await deletePaymentFn(1, cb);
       expect(toast.error).toHaveBeenCalled();
+      expect(toast.success).not.toHaveBeenCalled();
+      expect(cb).not.toHaveBeenCalled();
     });
   });
 });

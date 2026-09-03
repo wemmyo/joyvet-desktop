@@ -115,16 +115,21 @@ describe('receipt controller', () => {
   describe('deleteReceiptFn', () => {
     it('calls toast.success on success', async () => {
       mockApi.receipt.delete.mockResolvedValue(undefined);
-      await deleteReceiptFn(1);
+      const cb = vi.fn();
+      await deleteReceiptFn(1, cb);
       expect(toast.success).toHaveBeenCalledWith(
         'Receipt successfully deleted'
       );
+      expect(cb).toHaveBeenCalled();
     });
 
     it('calls toast.error on failure', async () => {
       mockApi.receipt.delete.mockRejectedValue(new Error('Delete failed'));
-      await deleteReceiptFn(1);
+      const cb = vi.fn();
+      await deleteReceiptFn(1, cb);
       expect(toast.error).toHaveBeenCalled();
+      expect(toast.success).not.toHaveBeenCalled();
+      expect(cb).not.toHaveBeenCalled();
     });
   });
 

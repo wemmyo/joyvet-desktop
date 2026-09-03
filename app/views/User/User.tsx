@@ -91,8 +91,9 @@ const UserScreen: React.FC = () => {
   }, [page, pageSize, showAll]);
 
   const handleNewUser = async (values) => {
-    await createUserFn(values);
-    await fetchUsers();
+    return createUserFn(values, () => {
+      void fetchUsers();
+    });
   };
 
   const openSingleUser = (id) => {

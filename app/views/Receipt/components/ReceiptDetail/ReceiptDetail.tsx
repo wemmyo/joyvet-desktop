@@ -1,6 +1,5 @@
 import type React from 'react';
 import { useEffect, useState } from 'react';
-import { toast } from 'sonner';
 import {
   deleteReceiptFn,
   getSingleReceiptFn,
@@ -40,15 +39,9 @@ const ReceiptDetail: React.FC<ReceiptDetailProps> = ({
   }, [receiptId]);
 
   const handleDelete = async () => {
-    try {
-      await deleteReceiptFn(receiptId);
-      toast.success('Receipt deleted');
+    await deleteReceiptFn(receiptId, () => {
       closeSideContent();
-    } catch (err: unknown) {
-      toast.error(
-        err instanceof Error ? err.message : 'Failed to delete receipt'
-      );
-    }
+    });
   };
 
   const {

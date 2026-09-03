@@ -42,7 +42,7 @@ export interface ReceiptListQuery extends SearchPaginationQuery {
 }
 
 export interface ProductListQuery extends SearchPaginationQuery {
-  filter?: 'inStock';
+  filter?: 'inStock' | 'active' | 'discontinued';
 }
 
 export interface PaginatedResult<T> {

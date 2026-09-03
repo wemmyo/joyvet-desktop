@@ -1,7 +1,6 @@
 import dayjs from 'dayjs';
 import React, { useEffect, useState } from 'react';
 
-import { toast } from 'sonner';
 import { Button } from '../../../../components/ui/button';
 import {
   Table,
@@ -40,16 +39,10 @@ const PaymentDetail = ({ paymentId, refreshPayments }: PaymentDetailProps) => {
   }, [paymentId]);
 
   const handleDelete = async () => {
-    try {
-      await deletePaymentFn(paymentId);
-      toast.success('Payment deleted');
+    await deletePaymentFn(paymentId, () => {
       refreshPayments();
       closeSideContent();
-    } catch (err: unknown) {
-      toast.error(
-        err instanceof Error ? err.message : 'Failed to delete payment'
-      );
-    }
+    });
   };
 
   const { supplier, amount, note, createdAt, paymentMethod, bank } =

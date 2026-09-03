@@ -2,7 +2,6 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import type React from 'react';
 import { useEffect } from 'react';
 import { Controller, useForm } from 'react-hook-form';
-import { toast } from 'sonner';
 import { z } from 'zod';
 import AsyncCombobox from '../../../../components/ui/async-combobox';
 import { Button } from '../../../../components/ui/button';
@@ -81,21 +80,18 @@ const EditReceipt: React.FC<EditReceiptProps> = ({
   }, [receiptId, reset]);
 
   const onSubmit = async (values: FormValues) => {
-    try {
-      await updateReceiptFn(
-        {
-          ...values,
-          customerId: Number(values.customerId),
-          amount: Number(values.amount),
-        },
-        receiptId
-      )();
-      toast.success('Receipt updated');
-      closeSideContent();
-      onRefresh?.();
-    } catch {
-      toast.error('Failed to update receipt');
-    }
+    await updateReceiptFn(
+      {
+        ...values,
+        customerId: Number(values.customerId),
+        amount: Number(values.amount),
+      },
+      receiptId,
+      () => {
+        closeSideContent();
+        onRefresh?.();
+      }
+    )();
   };
 
   return (

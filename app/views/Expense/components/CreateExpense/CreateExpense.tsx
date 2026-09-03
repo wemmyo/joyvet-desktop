@@ -23,7 +23,7 @@ const schema = z.object({
 type FormValues = z.infer<typeof schema>;
 
 export interface CreateExpenseProps {
-  createExpenseFn: (values: any) => Promise<void>;
+  createExpenseFn: (values: any) => Promise<unknown>;
 }
 
 const CreateExpense: React.FC<CreateExpenseProps> = ({
@@ -46,7 +46,8 @@ const CreateExpense: React.FC<CreateExpenseProps> = ({
   });
 
   const onSubmit = async (values: FormValues) => {
-    await createExpenseFn(values);
+    const created = await createExpenseFn(values);
+    if (!created) return;
     reset();
   };
 

@@ -83,6 +83,7 @@ vi.mock('../../../services/invoice.service', () => ({
   deleteInvoice: vi.fn(),
 }));
 
+import { Op } from 'sequelize';
 import CustomerModel from '../../../models/customer';
 import InvoiceModel from '../../../models/invoice';
 import ReceiptModel from '../../../models/receipt';
@@ -135,7 +136,7 @@ describe('customer IPC handlers', () => {
         rows: [mockCustomer.toJSON()],
         total: 1,
         page: 1,
-        pageSize: 25,
+        pageSize: 50,
         totals: { balance: 0 },
       });
     });
@@ -319,7 +320,7 @@ describe('customer IPC handlers', () => {
         rows: [mockCustomer.toJSON()],
         total: 1,
         page: 1,
-        pageSize: 25,
+        pageSize: 50,
         totals: { balance: 0 },
       });
     });
@@ -331,8 +332,12 @@ describe('customer IPC handlers', () => {
       });
       await handlers['customer:search'](mockEvent, { search: 'Query' });
       const callArg = (CustomerModel.findAndCountAll as any).mock.calls[0][0];
-      expect(callArg.where).toBeDefined();
-      expect(callArg.where.fullName).toBeDefined();
+      expect(callArg.where).toEqual({
+        [Op.or]: [
+          { fullName: { [Op.substring]: 'Query' } },
+          { phoneNumber: { [Op.substring]: 'Query' } },
+        ],
+      });
     });
 
     it('returns empty paginated result for empty search string', async () => {
@@ -343,7 +348,7 @@ describe('customer IPC handlers', () => {
         rows: [],
         total: 0,
         page: 1,
-        pageSize: 25,
+        pageSize: 50,
         totals: { balance: 0 },
       });
     });

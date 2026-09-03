@@ -69,7 +69,7 @@ export const createExpenseFn = async (
     const response = await window.api.expense.create(values);
     toast.success('Expense created successfully');
     if (cb) cb();
-    return response;
+    return response ?? true;
   } catch (error: unknown) {
     toast.error(error instanceof Error ? error.message : '');
     return undefined;

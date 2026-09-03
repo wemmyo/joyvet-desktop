@@ -134,7 +134,9 @@ export const createSupplierFn = async (
     });
     toast.success('Supplier successfully created');
     if (cb) cb();
+    return true;
   } catch (error: unknown) {
     toast.error(error instanceof Error ? error.message : '');
+    return undefined;
   }
 };

@@ -2,7 +2,6 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import type React from 'react';
 import { useEffect } from 'react';
 import { Controller, useForm } from 'react-hook-form';
-import { toast } from 'sonner';
 import { z } from 'zod';
 
 import AsyncCombobox from '../../../../components/ui/async-combobox';
@@ -87,21 +86,18 @@ const EditPayment: React.FC<EditPaymentProps> = ({
   }, [paymentId, reset]);
 
   const onSubmit = async (values: EditPaymentFormValues) => {
-    try {
-      await updatePaymentFn(
-        {
-          ...values,
-          supplierId: Number(values.supplierId),
-          amount: Number(values.amount),
-        },
-        Number(paymentId)
-      );
-      toast.success('Payment updated');
-      closeSideContent();
-      onRefresh?.();
-    } catch {
-      toast.error('Failed to update payment');
-    }
+    await updatePaymentFn(
+      {
+        ...values,
+        supplierId: Number(values.supplierId),
+        amount: Number(values.amount),
+      },
+      Number(paymentId),
+      () => {
+        closeSideContent();
+        onRefresh?.();
+      }
+    );
   };
 
   return (

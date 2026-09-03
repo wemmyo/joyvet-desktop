@@ -2,7 +2,6 @@ import dayjs from 'dayjs';
 import React, { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useReactToPrint } from 'react-to-print';
-import { toast } from 'sonner';
 
 import ComponentToPrint from '../../../components/PrintedReceipt/ReceiptWrapper';
 import { Button } from '../../../components/ui/button';
@@ -83,14 +82,12 @@ const SalesDetail = ({ salesId, onRefresh }: SalesDetailProps) => {
 
   const handleDeleteInvoice = async () => {
     try {
-      await deleteInvoiceFn(Number(salesId));
-      toast.success('Invoice deleted');
-      closeSideContent();
-      onRefresh?.();
-    } catch (err: unknown) {
-      toast.error(
-        err instanceof Error ? err.message : 'Failed to delete invoice'
-      );
+      await deleteInvoiceFn(Number(salesId), () => {
+        closeSideContent();
+        onRefresh?.();
+      });
+    } catch {
+      // deleteInvoiceFn already toasted the error
     }
   };
 

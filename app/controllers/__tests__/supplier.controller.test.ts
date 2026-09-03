@@ -107,7 +107,7 @@ describe('supplier controller', () => {
     it('passes postedBy from session; calls toast.success and cb', async () => {
       mockApi.supplier.create.mockResolvedValue(undefined);
       const cb = vi.fn();
-      await createSupplierFn(
+      const result = await createSupplierFn(
         { fullName: 'Test Supplier', phoneNumber: '123', address: 'Addr' },
         cb
       );
@@ -118,6 +118,7 @@ describe('supplier controller', () => {
         'Supplier successfully created'
       );
       expect(cb).toHaveBeenCalled();
+      expect(result).toBe(true);
     });
   });
 

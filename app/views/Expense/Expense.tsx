@@ -3,7 +3,6 @@ import { Plus, Printer } from 'lucide-react';
 import type React from 'react';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useReactToPrint } from 'react-to-print';
-import { toast } from 'sonner';
 
 import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
@@ -111,15 +110,9 @@ const ExpensesScreen: React.FC = () => {
   }, [filterExpenses]);
 
   const handleNewExpense = async (values) => {
-    try {
-      await createExpenseFn(values);
-      toast.success('Expense created');
-      filterExpenses();
-    } catch (err: unknown) {
-      toast.error(
-        err instanceof Error ? err.message : 'Failed to create expense'
-      );
-    }
+    return createExpenseFn(values, () => {
+      void filterExpenses();
+    });
   };
 
   const openSingleExpense = (id: any) => {

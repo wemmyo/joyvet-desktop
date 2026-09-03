@@ -139,16 +139,10 @@ const SuppliersScreen: React.FC = () => {
     };
   }, [appliedSearch, page, pageSize, showAll]);
 
-  const handleNewSupplier = async (values) => {
-    try {
-      await createSupplierFn(values);
-      toast.success('Supplier created');
-      fetchSuppliers();
-    } catch (err: unknown) {
-      toast.error(
-        err instanceof Error ? err.message : 'Failed to create supplier'
-      );
-    }
+  const handleNewSupplier = async (values: Partial<ISupplier>) => {
+    return createSupplierFn(values, () => {
+      void fetchSuppliers();
+    });
   };
 
   const openSingleSupplier = (id) => {

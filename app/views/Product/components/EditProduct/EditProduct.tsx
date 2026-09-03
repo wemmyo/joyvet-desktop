@@ -3,7 +3,6 @@ import type React from 'react';
 import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { Link } from 'react-router-dom';
-import { toast } from 'sonner';
 import { z } from 'zod';
 
 import { Button } from '../../../../components/ui/button';
@@ -76,40 +75,36 @@ const EditProduct: React.FC<EditProductProps> = ({
     fetchData();
   }, [productId, reset]);
 
+  const onSuccess = () => {
+    closeSideContent();
+    refreshProducts();
+  };
+
   const onDeleteProduct = async () => {
-    try {
-      await deleteProductFn(Number(productId));
-      toast.success('Product deleted');
-      closeSideContent();
-      refreshProducts();
-    } catch (err: unknown) {
-      toast.error(
-        err instanceof Error ? err.message : 'Failed to delete product'
-      );
-    }
+    await deleteProductFn(Number(productId), onSuccess);
+  };
+
+  const onToggleDiscontinued = async () => {
+    await updateProductFn(
+      { discontinued: !product.discontinued },
+      Number(productId),
+      onSuccess
+    );
   };
 
   const onSubmit = async (values: EditProductFormValues) => {
-    try {
-      await updateProductFn(
-        {
-          ...values,
-          stock: Number(values.stock),
-          sellPrice: Number(values.sellPrice),
-          sellPrice2: Number(values.sellPrice2),
-          sellPrice3: Number(values.sellPrice3),
-          buyPrice: Number(values.buyPrice),
-        },
-        Number(productId)
-      );
-      toast.success('Product updated');
-      closeSideContent();
-      refreshProducts();
-    } catch (err: unknown) {
-      toast.error(
-        err instanceof Error ? err.message : 'Failed to update product'
-      );
-    }
+    await updateProductFn(
+      {
+        ...values,
+        stock: Number(values.stock),
+        sellPrice: Number(values.sellPrice),
+        sellPrice2: Number(values.sellPrice2),
+        sellPrice3: Number(values.sellPrice3),
+        buyPrice: Number(values.buyPrice),
+      },
+      Number(productId),
+      onSuccess
+    );
   };
 
   return (
@@ -203,6 +198,18 @@ const EditProduct: React.FC<EditProductProps> = ({
         <Button className="w-full mt-2" variant="outline" asChild>
           <Link to={`${routes.PRODUCT}/${productId}`}>History</Link>
         </Button>
+        <Button
+          variant="outline"
+          className="w-full mt-2"
+          type="button"
+          onClick={onToggleDiscontinued}
+        >
+          {product.discontinued ? 'Restore to catalog' : 'Discontinue'}
+        </Button>
+        <p className="text-sm text-muted-foreground">
+          Discontinue hides this product from invoicing. Use it for items you no
+          longer sell.
+        </p>
         <Button
           variant="destructive"
           className="w-full mt-2"

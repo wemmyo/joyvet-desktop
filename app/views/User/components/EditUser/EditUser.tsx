@@ -54,27 +54,18 @@ const EditUser: React.FC<EditUserProps> = ({
     fetchData();
   }, [userId]);
 
+  const onSuccess = () => {
+    onUpdate?.();
+    closeSideContent();
+  };
+
   const deleteUser = async () => {
-    try {
-      await deleteUserFn(Number(userId));
-      toast.success('User deleted');
-      onUpdate?.();
-      closeSideContent();
-    } catch {
-      toast.error('Failed to delete user');
-    }
+    await deleteUserFn(Number(userId), onSuccess);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    try {
-      await updateUserFn(values, Number(userId));
-      toast.success('User updated');
-      onUpdate?.();
-      closeSideContent();
-    } catch {
-      toast.error('Failed to update user');
-    }
+    await updateUserFn(values, Number(userId), onSuccess);
   };
 
   return (

@@ -78,19 +78,24 @@ describe('customer controller', () => {
     it('creates a customer and calls toast.success', async () => {
       mockApi.customer.create.mockResolvedValue(mockCustomer);
       const cb = vi.fn();
-      await createCustomerFn(
+      const result = await createCustomerFn(
         { fullName: 'Test Customer', phoneNumber: '123', address: 'Addr' },
         cb
       );
       expect(mockApi.customer.create).toHaveBeenCalled();
       expect(toast.success).toHaveBeenCalledWith('Successfully created');
-      expect(cb).toHaveBeenCalled();
+      expect(cb).toHaveBeenCalledWith(mockCustomer);
+      expect(result).toEqual(mockCustomer);
     });
 
-    it('calls toast.error on failure', async () => {
+    it('calls toast.error on failure and does not run the success callback', async () => {
       mockApi.customer.create.mockRejectedValue(new Error('Create failed'));
-      await createCustomerFn({ fullName: 'Test' });
-      expect(toast.error).toHaveBeenCalled();
+      const cb = vi.fn();
+      const result = await createCustomerFn({ fullName: 'Test' }, cb);
+      expect(toast.error).toHaveBeenCalledWith('Create failed');
+      expect(toast.success).not.toHaveBeenCalled();
+      expect(cb).not.toHaveBeenCalled();
+      expect(result).toBeUndefined();
     });
   });
 

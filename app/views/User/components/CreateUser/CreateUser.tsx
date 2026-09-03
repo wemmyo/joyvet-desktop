@@ -28,7 +28,7 @@ export interface CreateUserProps {
     username: string;
     password: string;
     role: string;
-  }) => Promise<void>;
+  }) => Promise<unknown>;
 }
 
 const CreateUser: React.FC<CreateUserProps> = ({
@@ -51,12 +51,13 @@ const CreateUser: React.FC<CreateUserProps> = ({
   });
 
   const onSubmit = async (values: FormValues) => {
-    await createUserFn({
+    const created = await createUserFn({
       fullName: values.fullName,
       username: values.username || '',
       password: values.password || '',
       role: values.role || '',
     });
+    if (!created) return;
     reset();
   };
 

@@ -3,7 +3,6 @@ import dayjs from 'dayjs';
 import type React from 'react';
 import { useEffect } from 'react';
 import { Controller, useForm } from 'react-hook-form';
-import { toast } from 'sonner';
 import { z } from 'zod';
 import { Button } from '../../../../components/ui/button';
 import { Input } from '../../../../components/ui/input';
@@ -68,37 +67,25 @@ const EditExpense: React.FC<EditExpenseProps> = ({
     fetchData();
   }, [expenseId, reset]);
 
+  const onSuccess = () => {
+    refreshExpenses();
+    closeSideContent();
+  };
+
   const handleDeleteExpense = async () => {
-    try {
-      await deleteExpenseFn(expenseId);
-      toast.success('Expense deleted');
-      refreshExpenses();
-      closeSideContent();
-    } catch (err: unknown) {
-      toast.error(
-        err instanceof Error ? err.message : 'Failed to delete expense'
-      );
-    }
+    await deleteExpenseFn(expenseId, onSuccess);
   };
 
   const onSubmit = async (values: FormValues) => {
-    try {
-      await updateExpenseFn(
-        {
-          ...values,
-          amount: Number(values.amount),
-          date: new Date(values.date || ''),
-        },
-        Number(expenseId)
-      );
-      toast.success('Expense updated');
-      refreshExpenses();
-      closeSideContent();
-    } catch (err: unknown) {
-      toast.error(
-        err instanceof Error ? err.message : 'Failed to update expense'
-      );
-    }
+    await updateExpenseFn(
+      {
+        ...values,
+        amount: Number(values.amount),
+        date: new Date(values.date || ''),
+      },
+      Number(expenseId),
+      onSuccess
+    );
   };
 
   return (

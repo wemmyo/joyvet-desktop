@@ -16,6 +16,7 @@ export interface IProduct {
   productCode: string;
   numberInPack: number;
   postedBy: string;
+  discontinued?: boolean;
   createdAt?: Date;
   updatedAt?: Date;
   invoiceItem?: IInvoiceItem;
@@ -38,6 +39,7 @@ export default sequelize.define('product', {
   productCode: Sequelize.STRING,
   numberInPack: Sequelize.INTEGER,
   postedBy: Sequelize.STRING,
+  discontinued: { type: Sequelize.BOOLEAN, defaultValue: false },
 });
 
 // module.exports = Product;

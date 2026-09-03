@@ -134,9 +134,19 @@ describe('expense controller', () => {
     it('calls create and cb on success', async () => {
       mockApi.expense.create.mockResolvedValue(mockExpense);
       const cb = vi.fn();
-      await createExpenseFn({ type: 'Medicine', amount: 500 }, cb);
+      const result = await createExpenseFn(
+        { type: 'Medicine', amount: 500 },
+        cb
+      );
       expect(mockApi.expense.create).toHaveBeenCalled();
       expect(cb).toHaveBeenCalled();
+      expect(result).toEqual(mockExpense);
+    });
+
+    it('still reports success when the API returns no body', async () => {
+      mockApi.expense.create.mockResolvedValue(undefined);
+      const result = await createExpenseFn({ type: 'Medicine', amount: 500 });
+      expect(result).toBe(true);
     });
 
     it('calls toast.error on failure', async () => {

@@ -18,7 +18,7 @@ const schema = z.object({
 type FormValues = z.infer<typeof schema>;
 
 export interface CreateProductProps {
-  createProductFn: (values: Partial<IProduct>) => void | Promise<void>;
+  createProductFn: (values: Partial<IProduct>) => Promise<unknown>;
   refreshProducts: () => void;
 }
 
@@ -43,13 +43,14 @@ const CreateProduct: React.FC<CreateProductProps> = ({
   });
 
   const onSubmit = async (values: FormValues) => {
-    await createProductFn({
+    const created = await createProductFn({
       ...values,
       sellPrice: Number(values.sellPrice),
       sellPrice2: Number(values.sellPrice2),
       sellPrice3: Number(values.sellPrice3),
       buyPrice: Number(values.buyPrice),
     });
+    if (!created) return;
     refreshProducts();
     reset();
   };

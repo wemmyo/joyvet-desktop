@@ -48,7 +48,7 @@ export const receiptListQuerySchema = searchPaginationSchema.extend({
 });
 
 export const productListQuerySchema = searchPaginationSchema.extend({
-  filter: z.enum(['inStock']).optional(),
+  filter: z.enum(['inStock', 'active', 'discontinued']).optional(),
 });
 
 export const expenseListQuerySchema = searchPaginationSchema.extend({

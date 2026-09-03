@@ -16,7 +16,7 @@ const schema = z.object({
 type FormValues = z.infer<typeof schema>;
 
 export interface CreateSupplierProps {
-  createSupplierFn: (values: any) => Promise<void>;
+  createSupplierFn: (values: any) => Promise<unknown>;
 }
 
 const CreateSupplier: React.FC<CreateSupplierProps> = ({
@@ -38,7 +38,8 @@ const CreateSupplier: React.FC<CreateSupplierProps> = ({
   });
 
   const onSubmit = async (values: FormValues) => {
-    await createSupplierFn(values);
+    const created = await createSupplierFn(values);
+    if (!created) return;
     reset();
   };
 

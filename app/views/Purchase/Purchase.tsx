@@ -2,7 +2,6 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import type React from 'react';
 import { useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
-import { toast } from 'sonner';
 import { z } from 'zod';
 
 import AsyncCombobox from '../../components/ui/async-combobox';
@@ -98,10 +97,12 @@ const PurchaseScreen: React.FC = () => {
   });
   const productOptions = useAsyncComboboxOptions<IProduct>({
     // No inStock filter: purchases restock items, so out-of-stock products
-    // (stock === 0) must be selectable too.
-    getInitialOptions: () => getProductsFn({ pageSize: MAX_PAGE_SIZE }),
+    // (stock === 0) must be selectable too. Discontinued items stay hidden.
+    getInitialOptions: () =>
+      getProductsFn({ filter: 'active', pageSize: MAX_PAGE_SIZE }),
     searchOptions: (search) =>
       searchProductFn({
+        filter: 'active',
         pageSize: MAX_PAGE_SIZE,
         search,
       }),
@@ -184,7 +185,7 @@ const PurchaseScreen: React.FC = () => {
   const createPurchase = async () => {
     setIsSubmitting(true);
     try {
-      await createPurchaseFn(
+      const created = await createPurchaseFn(
         orders as any,
         {
           supplierId: Number(watchedValues.supplierId),
@@ -193,13 +194,9 @@ const PurchaseScreen: React.FC = () => {
           products: orders,
         } as any
       );
-      toast.success('Purchase created');
+      if (!created) return;
       reset();
       setOrders([]);
-    } catch (err: unknown) {
-      toast.error(
-        err instanceof Error ? err.message : 'Failed to create purchase'
-      );
     } finally {
       setIsSubmitting(false);
     }

@@ -27,14 +27,35 @@ const sumStockValue = async (where: any): Promise<number> => {
   return Number(result?.value ?? 0);
 };
 
+const productListWhere = (
+  filter?: 'inStock' | 'active' | 'discontinued',
+  search?: string
+) => {
+  const where: Record<string, unknown> = {};
+
+  if (filter === 'inStock') {
+    where.stock = { [Op.gt]: 0 };
+    where.discontinued = false;
+  } else if (filter === 'active') {
+    where.discontinued = false;
+  } else if (filter === 'discontinued') {
+    where.discontinued = true;
+  }
+
+  if (search) {
+    where.title = { [Op.substring]: search };
+  }
+
+  return Object.keys(where).length > 0 ? where : undefined;
+};
+
 export function registerProductHandlers(): void {
   ipcMain.handle(
     'product:getAll',
     withAppReady(async (_event, input: unknown = {}) => {
       const query = productListQuerySchema.parse(input);
       const { filter, page, pageSize, all } = query;
-      const where =
-        filter === 'inStock' ? { stock: { [Op.gt]: 0 } } : undefined;
+      const where = productListWhere(filter);
       const { rows, count } = await Product.findAndCountAll({
         ...toPaginationOptions({ page, pageSize, all }),
         where,
@@ -91,6 +112,7 @@ export function registerProductHandlers(): void {
         reorderLevel: z.number().optional(),
         productCode: z.string().optional().nullable(),
         numberInPack: z.number().optional().nullable(),
+        discontinued: z.boolean().optional(),
         _postedBy: z.string().optional(),
       });
       updateSchema.parse(values);
@@ -167,13 +189,22 @@ export function registerProductHandlers(): void {
     'product:delete',
     withAppReady(async (_event, id: number) => {
       await database.transaction(async (t: any) => {
+        const product = await Product.findByPk(id, {
+          attributes: ['id', 'title'],
+          transaction: t,
+        });
+        if (!product) {
+          throw new Error('Product not found');
+        }
+
+        const title = (product as any).title as string;
         const invoiceItemCount = await InvoiceItem.count({
           where: { productId: id },
           transaction: t,
         });
         if (invoiceItemCount > 0) {
           throw new Error(
-            `Cannot delete product referenced by existing invoices (${invoiceItemCount} line items). Remove invoices first.`
+            `Cannot delete "${title}" because it is on existing invoices (${invoiceItemCount} line items). Mark it as discontinued to hide it from invoicing instead.`
           );
         }
 
@@ -183,7 +214,7 @@ export function registerProductHandlers(): void {
         });
         if (purchaseItemCount > 0) {
           throw new Error(
-            `Cannot delete product referenced by existing purchases (${purchaseItemCount} line items). Remove purchases first.`
+            `Cannot delete "${title}" because it is on existing purchases (${purchaseItemCount} line items). Mark it as discontinued to hide it from invoicing instead.`
           );
         }
 
@@ -204,10 +235,7 @@ export function registerProductHandlers(): void {
         });
       }
 
-      const where = {
-        ...(filter === 'inStock' ? { stock: { [Op.gt]: 0 } } : {}),
-        title: { [Op.substring]: search },
-      };
+      const where = productListWhere(filter, search);
 
       const { rows, count } = await Product.findAndCountAll({
         ...toPaginationOptions({ page, pageSize, all }),

@@ -61,10 +61,11 @@ export const getPaymentsFn = async (
   }
 };
 
-export const deletePaymentFn = async (id: number) => {
+export const deletePaymentFn = async (id: number, cb?: () => void) => {
   try {
     await window.api.payment.delete(id);
     toast.success('Payment successfully deleted');
+    if (cb) cb();
   } catch (error: unknown) {
     toast.error(error instanceof Error ? error.message : '');
   }
@@ -82,7 +83,9 @@ export const createPaymentFn = async (
     });
     toast.success('Payment successfully created');
     if (cb) cb();
+    return true;
   } catch (error: unknown) {
     toast.error(error instanceof Error ? error.message : '');
+    return undefined;
   }
 };

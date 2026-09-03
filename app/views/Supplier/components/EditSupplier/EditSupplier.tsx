@@ -3,7 +3,6 @@ import type React from 'react';
 import { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { Link } from 'react-router-dom';
-import { toast } from 'sonner';
 import { z } from 'zod';
 
 import { Button } from '../../../../components/ui/button';
@@ -61,29 +60,21 @@ const EditSupplier: React.FC<EditSupplierProps> = ({
     fetchData();
   }, [supplierId, reset]);
 
+  const onSuccess = () => {
+    closeSideContent();
+    onRefresh?.();
+  };
+
   const handleDeleteSupplier = async () => {
-    try {
-      await deleteSupplierFn(supplierId);
-      toast.success('Supplier deleted');
-      closeSideContent();
-      onRefresh?.();
-    } catch {
-      toast.error('Failed to delete supplier');
-    }
+    await deleteSupplierFn(supplierId, onSuccess);
   };
 
   const onSubmit = async (values: FormValues) => {
-    try {
-      await updateSupplierFn(
-        { ...values, balance: Number(values.balance) },
-        supplierId
-      );
-      toast.success('Supplier updated');
-      closeSideContent();
-      onRefresh?.();
-    } catch {
-      toast.error('Failed to update supplier');
-    }
+    await updateSupplierFn(
+      { ...values, balance: Number(values.balance) },
+      supplierId,
+      onSuccess
+    );
   };
 
   return (

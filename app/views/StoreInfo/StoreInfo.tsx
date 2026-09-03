@@ -88,22 +88,14 @@ const StoreInfoScreen: React.FC = () => {
   }, []);
 
   const onSubmit = async (values: FormValues) => {
-    try {
-      if (storeInfo?.id) {
-        await updateStoreInfoFn(values, storeInfo.id);
-        toast.success('Store information updated');
-      } else {
-        await createStoreInfoFn(values, async () => {
-          const records = await getStoreInfoFn();
-          setStoreInfo(records?.[0]);
-        });
-        toast.success('Store information saved');
-      }
-    } catch (err: unknown) {
-      toast.error(
-        err instanceof Error ? err.message : 'Failed to save store info'
-      );
+    if (storeInfo?.id) {
+      await updateStoreInfoFn(values, storeInfo.id);
+      return;
     }
+    await createStoreInfoFn(values, async () => {
+      const records = await getStoreInfoFn();
+      setStoreInfo(records?.[0]);
+    });
   };
 
   return (

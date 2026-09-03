@@ -114,14 +114,18 @@ const CreatePayment = ({ refreshPayments }: ICreatePayment) => {
   };
 
   const onSubmit = async (values: CreatePaymentFormValues) => {
-    await createPaymentFn({
-      ...values,
-      supplierId: Number(values.supplierId),
-      amount: Number(values.amount),
-    });
-    refreshPayments();
-    reset();
-    setSingleSupplier({} as ISupplier);
+    await createPaymentFn(
+      {
+        ...values,
+        supplierId: Number(values.supplierId),
+        amount: Number(values.amount),
+      },
+      () => {
+        refreshPayments();
+        reset();
+        setSingleSupplier({} as ISupplier);
+      }
+    );
   };
 
   return (

@@ -129,7 +129,12 @@ export function registerCustomerHandlers(): void {
         });
       }
 
-      const where = { fullName: { [Op.substring]: search } };
+      const where = {
+        [Op.or]: [
+          { fullName: { [Op.substring]: search } },
+          { phoneNumber: { [Op.substring]: search } },
+        ],
+      };
       const { rows, count } = await Customer.findAndCountAll({
         ...toPaginationOptions({ page, pageSize, all }),
         where,

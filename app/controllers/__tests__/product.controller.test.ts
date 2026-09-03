@@ -87,7 +87,7 @@ describe('product controller', () => {
     it('creates a product and shows success toast', async () => {
       mockApi.product.create.mockResolvedValue(undefined);
       const cb = vi.fn();
-      await createProductFn(
+      const result = await createProductFn(
         {
           title: 'Test',
           sellPrice: 500,
@@ -99,6 +99,7 @@ describe('product controller', () => {
       );
       expect(toast.success).toHaveBeenCalledWith('Successfully created');
       expect(cb).toHaveBeenCalled();
+      expect(result).toBe(true);
     });
 
     it('calls toast.error on failure', async () => {
@@ -115,6 +116,19 @@ describe('product controller', () => {
       await deleteProductFn(1, cb);
       expect(toast.success).toHaveBeenCalledWith('Successfully deleted');
       expect(cb).toHaveBeenCalled();
+    });
+
+    it('does not run the success callback when delete is blocked', async () => {
+      mockApi.product.delete.mockRejectedValue(
+        new Error(
+          'Cannot delete "Test Product" because it is on existing invoices'
+        )
+      );
+      const cb = vi.fn();
+      await deleteProductFn(1, cb);
+      expect(toast.error).toHaveBeenCalled();
+      expect(toast.success).not.toHaveBeenCalled();
+      expect(cb).not.toHaveBeenCalled();
     });
   });
 

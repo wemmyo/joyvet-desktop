@@ -5,9 +5,15 @@ import { useReactToPrint } from 'react-to-print';
 import { toast } from 'sonner';
 
 import PaginationControls from '../../components/PaginationControls/PaginationControls';
-import { usePagination } from '../../hooks/usePagination';
 import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '../../components/ui/select';
 import {
   Table,
   TableBody,
@@ -18,6 +24,7 @@ import {
   TableRow,
 } from '../../components/ui/table';
 import { TableEmptyRow, TableFrame } from '../../components/ui/table-helpers';
+import { usePagination } from '../../hooks/usePagination';
 import DashboardLayout from '../../layouts/DashboardLayout/DashboardLayout';
 
 import { useSidebarContext } from '../../contexts/SidebarContext';
@@ -27,7 +34,11 @@ import {
   searchProductFn,
 } from '../../controllers/product.controller';
 import type { IProduct } from '../../models/product';
-import { DEFAULT_PAGE, DEFAULT_PAGE_SIZE } from '../../types/pagination';
+import {
+  DEFAULT_PAGE,
+  DEFAULT_PAGE_SIZE,
+  type ProductListQuery,
+} from '../../types/pagination';
 import { numberWithCommas } from '../../utils/helpers';
 import CreateProduct from './components/CreateProduct/CreateProduct';
 import EditProduct from './components/EditProduct/EditProduct';
@@ -35,11 +46,14 @@ import EditProduct from './components/EditProduct/EditProduct';
 const CONTENT_CREATE = 'create';
 const CONTENT_EDIT = 'edit';
 
+type CatalogFilter = 'active' | 'discontinued' | 'all';
+
 const ProductsScreen: React.FC = () => {
   const [sideContent, setSideContent] = useState('');
   const [productId, setProductId] = useState('');
   const [searchValue, setSearchValue] = useState('');
   const [appliedSearch, setAppliedSearch] = useState('');
+  const [catalogFilter, setCatalogFilter] = useState<CatalogFilter>('active');
   const [products, setProducts] = useState<IProduct[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -65,6 +79,9 @@ const ProductsScreen: React.FC = () => {
     onAfterPrint: () => setPrintRows([]),
   });
 
+  const catalogQuery = (): Pick<ProductListQuery, 'filter'> =>
+    catalogFilter === 'all' ? {} : { filter: catalogFilter };
+
   const fetchProducts = async (nextPage = page, search = appliedSearch) => {
     setLoading(true);
     setError(null);
@@ -75,11 +92,13 @@ const ProductsScreen: React.FC = () => {
             pageSize,
             all: showAll || undefined,
             search,
+            ...catalogQuery(),
           })
         : await getProductsFn({
             page: nextPage,
             pageSize,
             all: showAll || undefined,
+            ...catalogQuery(),
           });
       setProducts(response.rows ?? []);
       setTotal(response.total ?? 0);
@@ -100,11 +119,13 @@ const ProductsScreen: React.FC = () => {
             pageSize: DEFAULT_PAGE_SIZE,
             search: appliedSearch,
             all: true,
+            ...catalogQuery(),
           })
         : await getProductsFn({
             page: DEFAULT_PAGE,
             pageSize: DEFAULT_PAGE_SIZE,
             all: true,
+            ...catalogQuery(),
           });
       setPrintRows(response.rows ?? []);
     } catch (err: unknown) {
@@ -138,22 +159,16 @@ const ProductsScreen: React.FC = () => {
       };
       closeSideContent();
     };
-  }, [appliedSearch, page, pageSize, showAll]);
+  }, [appliedSearch, catalogFilter, page, pageSize, showAll]);
 
   const handleNewProduct = async (values: Partial<IProduct>) => {
-    try {
-      await createProductFn(values);
-      toast.success('Product created');
-      await fetchProducts();
-    } catch (err: unknown) {
-      toast.error(
-        err instanceof Error ? err.message : 'Failed to create product'
-      );
-    }
+    return createProductFn(values, () => {
+      void fetchProducts();
+    });
   };
 
-  const openSingleProduct = (id: any) => {
-    setProductId(id);
+  const openSingleProduct = (id: string | number) => {
+    setProductId(String(id));
     openSideContent(CONTENT_EDIT);
   };
 
@@ -163,9 +178,20 @@ const ProductsScreen: React.FC = () => {
         <TableRow
           onClick={() => openSingleProduct(each.id)}
           key={each.id}
-          className="cursor-pointer"
+          className={
+            each.discontinued ? 'cursor-pointer opacity-60' : 'cursor-pointer'
+          }
         >
-          <TableCell>{each.title}</TableCell>
+          <TableCell>
+            <span className="flex items-center gap-2">
+              {each.title}
+              {each.discontinued ? (
+                <span className="text-xs text-muted-foreground">
+                  Discontinued
+                </span>
+              ) : null}
+            </span>
+          </TableCell>
           <TableCell className="text-right">{each.stock}</TableCell>
           <TableCell className="text-right">
             {numberWithCommas(each.buyPrice)}
@@ -274,6 +300,22 @@ const ProductsScreen: React.FC = () => {
           <RefreshCw className="mr-1 h-4 w-4" />
           Refresh
         </Button>
+        <Select
+          value={catalogFilter}
+          onValueChange={(value) => {
+            setCatalogFilter(value as CatalogFilter);
+            setPage(DEFAULT_PAGE);
+          }}
+        >
+          <SelectTrigger className="h-9 w-[160px]">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="active">Active</SelectItem>
+            <SelectItem value="discontinued">Discontinued</SelectItem>
+            <SelectItem value="all">All</SelectItem>
+          </SelectContent>
+        </Select>
         <form
           onSubmit={(e) => {
             e.preventDefault();

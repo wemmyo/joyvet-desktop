@@ -31,7 +31,7 @@ export const getCustomersFn = async (
 
 export const createCustomerFn = async (
   values: Partial<ICustomer>,
-  cb?: () => void
+  cb?: (customer: ICustomer) => void
 ) => {
   try {
     const user = getUserSession();
@@ -40,10 +40,14 @@ export const createCustomerFn = async (
       postedBy: user?.fullName ?? '',
     });
     toast.success('Successfully created');
-    if (cb) cb();
+    if (cb) cb(customer);
     return customer;
   } catch (error: unknown) {
-    toast.error(error instanceof Error ? error.message : '');
+    toast.error(
+      error instanceof Error && error.message
+        ? error.message
+        : 'Failed to create customer'
+    );
     return undefined;
   }
 };

@@ -96,7 +96,7 @@ describe('purchase controller', () => {
     it('passes postedBy from session; calls toast.success and cb', async () => {
       mockApi.purchase.create.mockResolvedValue(undefined);
       const cb = vi.fn();
-      await createPurchaseFn(
+      const result = await createPurchaseFn(
         [],
         { supplierId: 1, invoiceNumber: 'INV-001', amount: 5000 } as any,
         cb
@@ -107,6 +107,7 @@ describe('purchase controller', () => {
       );
       expect(toast.success).toHaveBeenCalledWith('Purchase created');
       expect(cb).toHaveBeenCalled();
+      expect(result).toBe(true);
     });
   });
 

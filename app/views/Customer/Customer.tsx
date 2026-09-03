@@ -1,11 +1,10 @@
-import { Plus, Printer, RefreshCw } from 'lucide-react';
+import { Plus, Printer, RefreshCw, Search } from 'lucide-react';
 import type React from 'react';
 import { useEffect, useRef, useState } from 'react';
 import { useReactToPrint } from 'react-to-print';
 import { toast } from 'sonner';
 
 import PaginationControls from '../../components/PaginationControls/PaginationControls';
-import { usePagination } from '../../hooks/usePagination';
 import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
 import {
@@ -24,6 +23,7 @@ import {
   getCustomersFn,
   searchCustomerFn,
 } from '../../controllers/customer.controller';
+import { usePagination } from '../../hooks/usePagination';
 import DashboardLayout from '../../layouts/DashboardLayout/DashboardLayout';
 import type { ICustomer } from '../../models/customer';
 import { DEFAULT_PAGE, DEFAULT_PAGE_SIZE } from '../../types/pagination';
@@ -139,9 +139,25 @@ const CustomersScreen: React.FC = () => {
     };
   }, [appliedSearch, page, pageSize, showAll]);
 
-  const handleNewCustomer = async (values) => {
-    await createCustomerFn(values);
-    await fetchCustomers();
+  const handleNewCustomer = async (values: Partial<ICustomer>) => {
+    const customer = await createCustomerFn(values);
+    if (!customer) {
+      return undefined;
+    }
+
+    closeSideBar();
+    setSideContent('');
+    setCustomerId('');
+
+    const name = customer.fullName;
+    const alreadyShowing = appliedSearch === name && page === DEFAULT_PAGE;
+    setSearchValue(name);
+    setAppliedSearch(name);
+    setPage(DEFAULT_PAGE);
+    if (alreadyShowing) {
+      await fetchCustomers(DEFAULT_PAGE, name);
+    }
+    return customer;
   };
 
   const openSingleCustomer = (id) => {
@@ -250,28 +266,31 @@ const CustomersScreen: React.FC = () => {
         >
           <Printer className="h-4 w-4" />
         </Button>
-        <div className="flex gap-2">
-          <form
-            onSubmit={(event) => {
-              event.preventDefault();
-              setAppliedSearch(searchValue.trim());
-              setPage(DEFAULT_PAGE);
+        <form
+          className="flex gap-2"
+          onSubmit={(event) => {
+            event.preventDefault();
+            setAppliedSearch(searchValue.trim());
+            setPage(DEFAULT_PAGE);
+          }}
+        >
+          <Input
+            placeholder="Search name or phone"
+            value={searchValue}
+            onChange={(e) => {
+              const nextSearchValue = e.target.value;
+              setSearchValue(nextSearchValue);
+              if (nextSearchValue.trim() === '' && appliedSearch !== '') {
+                setAppliedSearch('');
+                setPage(DEFAULT_PAGE);
+              }
             }}
-          >
-            <Input
-              placeholder="Search Customer"
-              value={searchValue}
-              onChange={(e) => {
-                const nextSearchValue = e.target.value;
-                setSearchValue(nextSearchValue);
-                if (nextSearchValue.trim() === '' && appliedSearch !== '') {
-                  setAppliedSearch('');
-                  setPage(DEFAULT_PAGE);
-                }
-              }}
-            />
-          </form>
-        </div>
+          />
+          <Button type="submit" variant="outline" size="sm">
+            <Search className="mr-2 h-4 w-4" />
+            Search
+          </Button>
+        </form>
       </>
     );
   };

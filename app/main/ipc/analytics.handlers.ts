@@ -184,14 +184,16 @@ export function registerAnalyticsHandlers(): void {
         database.query(
           `SELECT id, title, stock, reorderLevel, productCode
            FROM products
-           WHERE reorderLevel > 0 AND stock <= reorderLevel ${searchClause}
+           WHERE reorderLevel > 0 AND stock <= reorderLevel
+             AND IFNULL(discontinued, 0) = 0 ${searchClause}
            ORDER BY CAST(stock AS FLOAT) / reorderLevel ASC
            LIMIT ${pageSize} OFFSET ${offset}`,
           { type: QueryTypes.SELECT, replacements }
         ),
         database.query(
           `SELECT COUNT(*) as total FROM products
-           WHERE reorderLevel > 0 AND stock <= reorderLevel ${searchClause}`,
+           WHERE reorderLevel > 0 AND stock <= reorderLevel
+             AND IFNULL(discontinued, 0) = 0 ${searchClause}`,
           { type: QueryTypes.SELECT, replacements }
         ),
       ]);

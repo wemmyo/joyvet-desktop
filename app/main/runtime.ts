@@ -1,5 +1,6 @@
 import type { Model, ModelStatic, Sequelize } from 'sequelize';
 import { maybeSeedDevelopmentAdmin } from './bootstrap';
+import { ensureSchemaPatches } from './schemaPatches';
 
 type AnyModel = ModelStatic<Model>;
 
@@ -112,6 +113,10 @@ export const ensureAppReady = async () => {
       const models = await loadCoreModels();
       registerAssociations(models);
       await models.database.sync();
+      await ensureSchemaPatches(
+        models.database,
+        models.Product.getTableName()
+      );
       await maybeSeedDevelopmentAdmin(models.User as any);
     })();
   }

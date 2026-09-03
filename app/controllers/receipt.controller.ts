@@ -58,10 +58,14 @@ export const getReceiptsFn = async (query?: PaginationQuery) => {
   }
 };
 
-export const deleteReceiptFn = async (id: number | string) => {
+export const deleteReceiptFn = async (
+  id: number | string,
+  cb?: () => void
+) => {
   try {
     await window.api.receipt.delete(id as number);
     toast.success('Receipt successfully deleted');
+    if (cb) cb();
   } catch (error: unknown) {
     toast.error(error instanceof Error ? error.message : '');
   }

@@ -37,8 +37,10 @@ export const createProductFn = async (
     });
     toast.success('Successfully created');
     if (cb) cb();
+    return true;
   } catch (error: unknown) {
     toast.error(error instanceof Error ? error.message : '');
+    return undefined;
   }
 };
 
@@ -73,7 +75,11 @@ export const deleteProductFn = async (id: number, cb?: () => void) => {
     toast.success('Successfully deleted');
     if (cb) cb();
   } catch (error: unknown) {
-    toast.error(error instanceof Error ? error.message : '');
+    toast.error(
+      error instanceof Error && error.message
+        ? error.message
+        : 'Failed to delete product'
+    );
   }
 };
 

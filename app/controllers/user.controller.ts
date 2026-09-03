@@ -67,8 +67,10 @@ export const createUserFn = async (
     await window.api.user.create(values);
     toast.success('User created successfully');
     if (cb) cb();
+    return true;
   } catch (error: unknown) {
     toast.error(error instanceof Error ? error.message : '');
+    return undefined;
   }
 };
 

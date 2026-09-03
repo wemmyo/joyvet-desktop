@@ -92,7 +92,7 @@ describe('user controller', () => {
     it('creates a user via IPC and calls cb', async () => {
       mockApi.user.create.mockResolvedValue(undefined);
       const cb = vi.fn();
-      await createUserFn(
+      const result = await createUserFn(
         {
           fullName: 'New User',
           username: 'newuser',
@@ -103,6 +103,7 @@ describe('user controller', () => {
       );
       expect(mockApi.user.create).toHaveBeenCalled();
       expect(cb).toHaveBeenCalled();
+      expect(result).toBe(true);
     });
   });
 

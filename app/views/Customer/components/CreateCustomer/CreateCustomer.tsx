@@ -18,7 +18,9 @@ const schema = z.object({
 type FormValues = z.infer<typeof schema>;
 
 export interface CreateCustomerProps {
-  createCustomerFn: (values: Partial<ICustomer>) => Promise<void>;
+  createCustomerFn: (
+    values: Partial<ICustomer>
+  ) => Promise<ICustomer | undefined>;
 }
 
 const CreateCustomer: React.FC<CreateCustomerProps> = ({
@@ -41,8 +43,10 @@ const CreateCustomer: React.FC<CreateCustomerProps> = ({
 
   const onSubmit = async (values: FormValues) => {
     try {
-      await createCustomerFn(values);
-      toast.success('Customer created');
+      const created = await createCustomerFn(values);
+      if (!created) {
+        return;
+      }
       reset();
     } catch (err: unknown) {
       toast.error(
