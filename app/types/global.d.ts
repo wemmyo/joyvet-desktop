@@ -5,7 +5,7 @@ import type { IInvoice } from '../models/invoice';
 import type { IInvoiceAuditLog } from '../models/invoiceAuditLog';
 import type { IInvoiceItem } from '../models/invoiceItem';
 import type { IPayment } from '../models/payment';
-import type { IProduct } from '../models/product';
+import type { IProduct, ProductRemovalResult } from '../models/product';
 import type { IPurchase } from '../models/purchase';
 import type { IReceipt } from '../models/receipt';
 import type { IStoreInfo } from '../models/storeInfo';
@@ -98,7 +98,7 @@ declare global {
         getById: (id: number) => Promise<IProduct>;
         create: (values: Partial<IProduct>) => Promise<void>;
         update: (id: number, values: Partial<IProduct>) => Promise<void>;
-        delete: (id: number) => Promise<void>;
+        delete: (id: number) => Promise<ProductRemovalResult>;
         search: (query: ProductListQuery) => Promise<PaginatedResult<IProduct>>;
         getInvoices: (
           productId: number,

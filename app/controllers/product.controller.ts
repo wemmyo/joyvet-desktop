@@ -71,15 +71,21 @@ export const getSingleProductFn = async (id: number, cb?: () => void) => {
 
 export const deleteProductFn = async (id: number, cb?: () => void) => {
   try {
-    await window.api.product.delete(id);
-    toast.success('Successfully deleted');
+    const result = await window.api.product.delete(id);
+    toast.success(
+      result.action === 'discontinued'
+        ? 'Product removed from catalog; sales history was preserved'
+        : 'Product permanently deleted'
+    );
     if (cb) cb();
+    return result;
   } catch (error: unknown) {
     toast.error(
       error instanceof Error && error.message
         ? error.message
         : 'Failed to delete product'
     );
+    return undefined;
   }
 };
 

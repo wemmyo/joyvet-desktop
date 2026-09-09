@@ -111,18 +111,36 @@ describe('product controller', () => {
 
   describe('deleteProductFn', () => {
     it('deletes a product and shows success toast', async () => {
-      mockApi.product.delete.mockResolvedValue(undefined);
+      mockApi.product.delete.mockResolvedValue({
+        action: 'deleted',
+        invoiceItemCount: 0,
+        purchaseItemCount: 0,
+      });
       const cb = vi.fn();
       await deleteProductFn(1, cb);
-      expect(toast.success).toHaveBeenCalledWith('Successfully deleted');
+      expect(toast.success).toHaveBeenCalledWith('Product permanently deleted');
       expect(cb).toHaveBeenCalled();
     });
 
-    it('does not run the success callback when delete is blocked', async () => {
+    it('reports when a product with history is removed from the catalog', async () => {
+      mockApi.product.delete.mockResolvedValue({
+        action: 'discontinued',
+        invoiceItemCount: 3,
+        purchaseItemCount: 1,
+      });
+      const cb = vi.fn();
+
+      await deleteProductFn(1, cb);
+
+      expect(toast.success).toHaveBeenCalledWith(
+        'Product removed from catalog; sales history was preserved'
+      );
+      expect(cb).toHaveBeenCalled();
+    });
+
+    it('does not run the success callback when removal fails', async () => {
       mockApi.product.delete.mockRejectedValue(
-        new Error(
-          'Cannot delete "Test Product" because it is on existing invoices'
-        )
+        new Error('Database unavailable')
       );
       const cb = vi.fn();
       await deleteProductFn(1, cb);

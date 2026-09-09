@@ -26,7 +26,7 @@ export function registerCustomerHandlers(): void {
   ipcMain.handle(
     'customer:getAll',
     withAppReady(async (_event, input: unknown = {}) => {
-      const query = searchPaginationSchema.parse(input);
+      const query = searchPaginationSchema.omit({ search: true }).parse(input);
       const { page, pageSize, all } = query;
       const { rows, count } = await Customer.findAndCountAll({
         ...toPaginationOptions({ page, pageSize, all }),
@@ -146,7 +146,11 @@ export function registerCustomerHandlers(): void {
         count,
         page,
         pageSize,
-        { totals: { balance: Number((await Customer.sum('balance', { where })) ?? 0) } }
+        {
+          totals: {
+            balance: Number((await Customer.sum('balance', { where })) ?? 0),
+          },
+        }
       );
     })
   );

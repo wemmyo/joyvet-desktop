@@ -188,7 +188,7 @@ export function registerProductHandlers(): void {
   ipcMain.handle(
     'product:delete',
     withAppReady(async (_event, id: number) => {
-      await database.transaction(async (t: any) => {
+      return database.transaction(async (t: any) => {
         const product = await Product.findByPk(id, {
           attributes: ['id', 'title'],
           transaction: t,
@@ -197,28 +197,29 @@ export function registerProductHandlers(): void {
           throw new Error('Product not found');
         }
 
-        const title = (product as any).title as string;
-        const invoiceItemCount = await InvoiceItem.count({
-          where: { productId: id },
-          transaction: t,
-        });
-        if (invoiceItemCount > 0) {
-          throw new Error(
-            `Cannot delete "${title}" because it is on existing invoices (${invoiceItemCount} line items). Mark it as discontinued to hide it from invoicing instead.`
-          );
-        }
+        const [invoiceItemCount, purchaseItemCount] = await Promise.all([
+          InvoiceItem.count({ where: { productId: id }, transaction: t }),
+          PurchaseItem.count({ where: { productId: id }, transaction: t }),
+        ]);
 
-        const purchaseItemCount = await PurchaseItem.count({
-          where: { productId: id },
-          transaction: t,
-        });
-        if (purchaseItemCount > 0) {
-          throw new Error(
-            `Cannot delete "${title}" because it is on existing purchases (${purchaseItemCount} line items). Mark it as discontinued to hide it from invoicing instead.`
+        if (invoiceItemCount > 0 || purchaseItemCount > 0) {
+          await Product.update(
+            { discontinued: true },
+            { where: { id }, transaction: t }
           );
+          return {
+            action: 'discontinued' as const,
+            invoiceItemCount,
+            purchaseItemCount,
+          };
         }
 
         await Product.destroy({ where: { id }, transaction: t });
+        return {
+          action: 'deleted' as const,
+          invoiceItemCount,
+          purchaseItemCount,
+        };
       });
     })
   );

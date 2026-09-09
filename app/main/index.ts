@@ -12,7 +12,9 @@ class AppUpdater {
   constructor() {
     log.transports.file.level = 'info';
     autoUpdater.logger = log;
-    autoUpdater.checkForUpdatesAndNotify();
+    void autoUpdater.checkForUpdatesAndNotify().catch((error) => {
+      log.error('Automatic update check failed', error);
+    });
   }
 }
 
@@ -302,16 +304,10 @@ app.whenReady().then(async () => {
     return { restored: true };
   });
 
-  await createWindow();
-
-  mainWindow?.webContents.once('did-finish-load', () => {
-    setTimeout(() => {
-      // eslint-disable-next-line no-new
-      new AppUpdater();
-    }, 0);
-  });
-
-  void (async () => {
+  // Register every renderer-facing handler before creating the window. The
+  // renderer starts requesting data as soon as it loads, so registering these
+  // handlers in a detached task after createWindow introduces a startup race.
+  try {
     const { registerInvoiceHandlers } = await import('./ipc/invoice.handlers');
     const { registerCustomerHandlers } = await import(
       './ipc/customer.handlers'
@@ -345,9 +341,22 @@ app.whenReady().then(async () => {
     registerExpenseHandlers();
     registerStoreInfoHandlers();
     registerAnalyticsHandlers();
+  } catch (error) {
+    log.error('IPC handler registration failed', error);
+    app.quit();
+    return;
+  }
 
-    await ensureAppReady();
-  })().catch((error) => {
+  await createWindow();
+
+  mainWindow?.webContents.once('did-finish-load', () => {
+    setTimeout(() => {
+      // eslint-disable-next-line no-new
+      new AppUpdater();
+    }, 0);
+  });
+
+  void ensureAppReady().catch((error) => {
     log.error('App initialization failed', error);
   });
 

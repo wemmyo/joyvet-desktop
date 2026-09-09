@@ -76,7 +76,7 @@ describe('SalesScreen', () => {
             rows: searchedInvoices,
             total: 1,
             page: 1,
-            pageSize: 25,
+            pageSize: 50,
           };
         }
 
@@ -84,7 +84,7 @@ describe('SalesScreen', () => {
           rows: defaultInvoices,
           total: 1,
           page: 1,
-          pageSize: 25,
+          pageSize: 50,
         };
       }
     );
@@ -104,7 +104,8 @@ describe('SalesScreen', () => {
     expect(await screen.findByText('Alice Customer')).toBeTruthy();
     expect(filterInvoiceFnMock).toHaveBeenCalledWith({
       page: 1,
-      pageSize: 25,
+      pageSize: 50,
+      all: undefined,
       startDate: today,
       endDate: today,
       saleType: 'all',
@@ -117,7 +118,8 @@ describe('SalesScreen', () => {
     await waitFor(() => {
       expect(filterInvoiceFnMock).toHaveBeenLastCalledWith({
         page: 1,
-        pageSize: 25,
+        pageSize: 50,
+        all: undefined,
         startDate: today,
         endDate: today,
         saleType: 'all',
@@ -131,7 +133,8 @@ describe('SalesScreen', () => {
     await waitFor(() => {
       expect(filterInvoiceFnMock).toHaveBeenLastCalledWith({
         page: 1,
-        pageSize: 25,
+        pageSize: 50,
+        all: undefined,
         startDate: today,
         endDate: today,
         saleType: 'all',
@@ -149,7 +152,8 @@ describe('SalesScreen', () => {
     await waitFor(() => {
       expect(filterInvoiceFnMock).toHaveBeenLastCalledWith({
         page: 1,
-        pageSize: 25,
+        pageSize: 50,
+        all: undefined,
         startDate: today,
         endDate: today,
         saleType: 'all',

@@ -13,13 +13,32 @@ export const openDialog = () => {
   return undefined;
 };
 
-const checkForDB = (): string => {
-  const userDataDir = app.getPath('userData');
-  const absolutePath = path.join(userDataDir, 'pathToDB');
+const getDatabasePointerPath = (): string =>
+  path.join(app.getPath('userData'), 'pathToDB');
 
-  if (fs.existsSync(absolutePath)) {
-    return fs.readFileSync(absolutePath, 'utf8');
+const readPersistedDatabasePath = (): string | undefined => {
+  try {
+    const pointerPath = getDatabasePointerPath();
+    if (!fs.existsSync(pointerPath)) {
+      return undefined;
+    }
+
+    const databasePath = fs.readFileSync(pointerPath, 'utf8').trim();
+    return databasePath && fs.existsSync(databasePath)
+      ? databasePath
+      : undefined;
+  } catch {
+    return undefined;
   }
+};
+
+const checkForDB = (): string => {
+  const persistedPath = readPersistedDatabasePath();
+  if (persistedPath) {
+    return persistedPath;
+  }
+
+  const pointerPath = getDatabasePointerPath();
 
   const pathContent = dialog.showSaveDialogSync({
     title: 'Select folder for database',
@@ -32,13 +51,13 @@ const checkForDB = (): string => {
     return '';
   }
 
-  fs.writeFileSync(absolutePath, pathContent);
-  return fs.readFileSync(absolutePath, 'utf8');
+  fs.writeFileSync(pointerPath, pathContent);
+  return pathContent;
 };
 
 const database = (() => {
   if (process.env.NODE_ENV === 'development') {
-    const testPath = openDialog();
+    const testPath = readPersistedDatabasePath() ?? openDialog();
     if (!testPath) {
       app.quit();
       return null;
@@ -46,10 +65,7 @@ const database = (() => {
     // Persist the chosen path so backup/restore (which read the pathToDB
     // pointer) can locate the live database in dev too, matching production.
     try {
-      fs.writeFileSync(
-        path.join(app.getPath('userData'), 'pathToDB'),
-        testPath
-      );
+      fs.writeFileSync(getDatabasePointerPath(), testPath);
     } catch {
       // Non-fatal: the DB still opens; only backup/restore is affected.
     }

@@ -62,7 +62,9 @@ describe('CreateReceipt', () => {
     await user.click(screen.getByRole('combobox', { name: 'Select Customer' }));
 
     await waitFor(() => {
-      expect(getCustomersFn).toHaveBeenCalledWith({ pageSize: MAX_PAGE_SIZE });
+      expect(getCustomersFn).toHaveBeenCalledWith({
+        pageSize: MAX_PAGE_SIZE,
+      });
     });
 
     await user.type(screen.getByPlaceholderText('Search customers'), 'Beta');

@@ -91,7 +91,7 @@ describe('payment IPC handlers', () => {
         rows: [mockPayment.toJSON()],
         total: 1,
         page: 1,
-        pageSize: 25,
+        pageSize: 50,
       });
       const callArg = (PaymentModel.findAndCountAll as any).mock.calls[0][0];
       expect(callArg.include).toBeDefined();
@@ -220,7 +220,7 @@ describe('payment IPC handlers', () => {
         rows: [mockPayment.toJSON()],
         total: 1,
         page: 1,
-        pageSize: 25,
+        pageSize: 50,
       });
     });
   });

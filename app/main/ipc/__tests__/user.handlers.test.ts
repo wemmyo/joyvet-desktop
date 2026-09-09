@@ -159,7 +159,7 @@ describe('user IPC handlers', () => {
         ],
         total: 1,
         page: 1,
-        pageSize: 25,
+        pageSize: 50,
       });
       expect(result.rows[0]).not.toHaveProperty('password');
     });

@@ -132,7 +132,7 @@ describe('invoice IPC handlers', () => {
         rows: [mockInvoice.toJSON()],
         total: 1,
         page: 1,
-        pageSize: 25,
+        pageSize: 50,
       });
     });
 
@@ -179,7 +179,7 @@ describe('invoice IPC handlers', () => {
         rows: [mockInvoice.toJSON()],
         total: 1,
         page: 1,
-        pageSize: 25,
+        pageSize: 50,
         totals: { amount: 0, profit: 0 },
       });
     });
@@ -196,7 +196,7 @@ describe('invoice IPC handlers', () => {
         rows: [mockInvoice.toJSON()],
         total: 1,
         page: 1,
-        pageSize: 25,
+        pageSize: 50,
         totals: { amount: 0, profit: 0 },
       });
       // When no dates, no where clause should be added for createdAt
@@ -335,7 +335,7 @@ describe('invoice IPC handlers', () => {
         rows: [mockInvoice.toJSON()],
         total: 1,
         page: 1,
-        pageSize: 25,
+        pageSize: 50,
       });
     });
   });

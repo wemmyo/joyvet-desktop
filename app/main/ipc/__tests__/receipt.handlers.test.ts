@@ -91,7 +91,7 @@ describe('receipt IPC handlers', () => {
         rows: [mockReceipt.toJSON()],
         total: 1,
         page: 1,
-        pageSize: 25,
+        pageSize: 50,
       });
       const callArg = (ReceiptModel.findAndCountAll as any).mock.calls[0][0];
       expect(callArg.include).toBeDefined();
@@ -221,7 +221,7 @@ describe('receipt IPC handlers', () => {
         rows: [mockReceipt.toJSON()],
         total: 1,
         page: 1,
-        pageSize: 25,
+        pageSize: 50,
       });
     });
   });

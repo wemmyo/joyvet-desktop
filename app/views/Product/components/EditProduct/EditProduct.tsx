@@ -5,6 +5,16 @@ import { useForm } from 'react-hook-form';
 import { Link } from 'react-router-dom';
 import { z } from 'zod';
 
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '../../../../components/ui/alert-dialog';
 import { Button } from '../../../../components/ui/button';
 import { Input } from '../../../../components/ui/input';
 import { Label } from '../../../../components/ui/label';
@@ -39,6 +49,7 @@ const EditProduct: React.FC<EditProductProps> = ({
   refreshProducts,
 }: EditProductProps) => {
   const [product, setProduct] = useState<IProduct>({} as IProduct);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const { closeSideContent } = useSidebarContext();
 
   const {
@@ -84,9 +95,14 @@ const EditProduct: React.FC<EditProductProps> = ({
     await deleteProductFn(Number(productId), onSuccess);
   };
 
-  const onToggleDiscontinued = async () => {
+  const onConfirmDelete = async () => {
+    setDeleteDialogOpen(false);
+    await onDeleteProduct();
+  };
+
+  const onRestoreProduct = async () => {
     await updateProductFn(
-      { discontinued: !product.discontinued },
+      { discontinued: false },
       Number(productId),
       onSuccess
     );
@@ -198,27 +214,43 @@ const EditProduct: React.FC<EditProductProps> = ({
         <Button className="w-full mt-2" variant="outline" asChild>
           <Link to={`${routes.PRODUCT}/${productId}`}>History</Link>
         </Button>
-        <Button
-          variant="outline"
-          className="w-full mt-2"
-          type="button"
-          onClick={onToggleDiscontinued}
-        >
-          {product.discontinued ? 'Restore to catalog' : 'Discontinue'}
-        </Button>
-        <p className="text-sm text-muted-foreground">
-          Discontinue hides this product from invoicing. Use it for items you no
-          longer sell.
-        </p>
-        <Button
-          variant="destructive"
-          className="w-full mt-2"
-          type="button"
-          onClick={onDeleteProduct}
-        >
-          Delete
-        </Button>
+        {product.discontinued ? (
+          <Button
+            variant="outline"
+            className="w-full mt-2"
+            type="button"
+            onClick={onRestoreProduct}
+          >
+            Restore to catalog
+          </Button>
+        ) : (
+          <Button
+            variant="destructive"
+            className="w-full mt-2"
+            type="button"
+            onClick={() => setDeleteDialogOpen(true)}
+          >
+            Delete
+          </Button>
+        )}
       </div>
+
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete this product?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete this product?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={onConfirmDelete}>
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </form>
   );
 };

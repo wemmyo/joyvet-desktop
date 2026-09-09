@@ -110,7 +110,7 @@ describe('supplier IPC handlers', () => {
         rows: [mockSupplier.toJSON()],
         total: 1,
         page: 1,
-        pageSize: 25,
+        pageSize: 50,
         totals: { balance: 0 },
       });
       const callArg = (SupplierModel.findAndCountAll as any).mock.calls[0][0];
@@ -231,7 +231,7 @@ describe('supplier IPC handlers', () => {
         rows: [],
         total: 0,
         page: 1,
-        pageSize: 25,
+        pageSize: 50,
         totals: { balance: 0 },
       });
     });

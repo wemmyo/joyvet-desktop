@@ -22,6 +22,12 @@ export interface IProduct {
   invoiceItem?: IInvoiceItem;
 }
 
+export interface ProductRemovalResult {
+  action: 'deleted' | 'discontinued';
+  invoiceItemCount: number;
+  purchaseItemCount: number;
+}
+
 export default sequelize.define('product', {
   id: {
     type: Sequelize.INTEGER,

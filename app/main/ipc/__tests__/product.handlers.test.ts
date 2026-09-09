@@ -271,32 +271,55 @@ describe('product IPC handlers', () => {
       vi.mocked(InvoiceItemModel.count).mockResolvedValue(0 as any);
       vi.mocked(PurchaseItemModel.count).mockResolvedValue(0 as any);
       vi.mocked(ProductModel.destroy).mockResolvedValue(1 as any);
-      await handlers['product:delete'](mockEvent, 1);
+      const result = await handlers['product:delete'](mockEvent, 1);
       expect(ProductModel.destroy).toHaveBeenCalledWith(
         expect.objectContaining({ where: { id: 1 } })
       );
+      expect(result).toEqual({
+        action: 'deleted',
+        invoiceItemCount: 0,
+        purchaseItemCount: 0,
+      });
     });
 
-    it('throws if product has invoice items', async () => {
+    it('discontinues a product with invoice items and preserves history', async () => {
       vi.mocked(ProductModel.findByPk).mockResolvedValue(mockProduct as any);
       vi.mocked(InvoiceItemModel.count).mockResolvedValue(4 as any);
       vi.mocked(PurchaseItemModel.count).mockResolvedValue(0 as any);
+      vi.mocked(ProductModel.update).mockResolvedValue([1] as any);
 
-      await expect(handlers['product:delete'](mockEvent, 1)).rejects.toThrow(
-        'Mark it as discontinued to hide it from invoicing instead'
+      const result = await handlers['product:delete'](mockEvent, 1);
+
+      expect(ProductModel.update).toHaveBeenCalledWith(
+        { discontinued: true },
+        expect.objectContaining({ where: { id: 1 } })
       );
       expect(ProductModel.destroy).not.toHaveBeenCalled();
+      expect(result).toEqual({
+        action: 'discontinued',
+        invoiceItemCount: 4,
+        purchaseItemCount: 0,
+      });
     });
 
-    it('throws if product has purchase items', async () => {
+    it('discontinues a product with purchase items and preserves history', async () => {
       vi.mocked(ProductModel.findByPk).mockResolvedValue(mockProduct as any);
       vi.mocked(InvoiceItemModel.count).mockResolvedValue(0 as any);
       vi.mocked(PurchaseItemModel.count).mockResolvedValue(2 as any);
+      vi.mocked(ProductModel.update).mockResolvedValue([1] as any);
 
-      await expect(handlers['product:delete'](mockEvent, 1)).rejects.toThrow(
-        'Mark it as discontinued to hide it from invoicing instead'
+      const result = await handlers['product:delete'](mockEvent, 1);
+
+      expect(ProductModel.update).toHaveBeenCalledWith(
+        { discontinued: true },
+        expect.objectContaining({ where: { id: 1 } })
       );
       expect(ProductModel.destroy).not.toHaveBeenCalled();
+      expect(result).toEqual({
+        action: 'discontinued',
+        invoiceItemCount: 0,
+        purchaseItemCount: 2,
+      });
     });
 
     it('deletes successfully when not referenced', async () => {
@@ -310,6 +333,16 @@ describe('product IPC handlers', () => {
       expect(ProductModel.destroy).toHaveBeenCalledWith(
         expect.objectContaining({ where: { id: 1 } })
       );
+    });
+
+    it('throws when the product no longer exists', async () => {
+      vi.mocked(ProductModel.findByPk).mockResolvedValue(null);
+
+      await expect(handlers['product:delete'](mockEvent, 999)).rejects.toThrow(
+        'Product not found'
+      );
+      expect(ProductModel.destroy).not.toHaveBeenCalled();
+      expect(ProductModel.update).not.toHaveBeenCalled();
     });
   });
 
